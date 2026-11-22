@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { applyBillDiscounts, coinCheckoutSummary, smartIncentiveFor, ticketDiscountFor } from '@duncit/utils';
+import { applyBillDiscounts, coinCheckoutSummary, round2, smartIncentiveFor } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 import { usePodSmartIncentive } from '../../utils/smartIncentive';
 import { buildBreakup } from './checkoutMath';
@@ -19,11 +19,10 @@ interface Args {
 
 /**
  * The pod bill, in the order the server takes its deductions: ticket gross →
- * multi-ticket discount → the member's unlocked Smart Incentive → coupon
- * (previewed on the discounted tickets) → Duncit Coins → GST extracted from
- * what is left. mWeb previews locally, so this has to match the server's
- * pricing exactly; the ticket maths is the shared `ticketDiscountFor` and
- * `smartIncentiveFor`, never a copy. Native twin: the checkout screen's bill.
+ * the member's unlocked Smart Incentive → coupon (previewed on the discounted
+ * tickets) → Duncit Coins → GST extracted from what is left. mWeb previews
+ * locally, so this has to match the server's pricing exactly; the incentive
+ * maths is the shared `smartIncentiveFor`, never a copy. Native twin: the checkout screen's bill.
  */
 export function usePodCheckoutBill({ session, pod, seats, linkTotal }: Readonly<Args>) {
   const { t } = useTranslation();
@@ -33,28 +32,28 @@ export function usePodCheckoutBill({ session, pod, seats, linkTotal }: Readonly<
   // and the page still renders a working Pay button when the pod query fails,
   // so that fallback was reachable.
   const unitAmount = Number(pod?.pod_amount ?? 0) || linkTotal / seats;
-  const ticket = useMemo(() => ticketDiscountFor(unitAmount, seats, pod ?? {}), [unitAmount, seats, pod]);
+  const gross = round2(unitAmount * seats);
   // The member's offer, cache-first: the pod page has usually just read (or
-  // unlocked) it. Only an unlocked one comes off, and only off what the tier
-  // leaves — the two pod discounts compound, as the server prices them.
+  // unlocked) it. Only an unlocked one comes off, and it comes off the full
+  // ticket gross, as the server prices it.
   const offer = usePodSmartIncentive(pod?.id, { skip: !pod?.smart_incentive_enabled, fetchPolicy: 'cache-first' });
   const incentive = useMemo(
-    () => smartIncentiveFor(ticket.net, offer.unlockedPct),
-    [ticket.net, offer.unlockedPct],
+    () => smartIncentiveFor(gross, offer.unlockedPct),
+    [gross, offer.unlockedPct],
   );
-  // What the coupon is evaluated on: the ticket money once both pod discounts are taken.
+  // What the coupon is evaluated on: the ticket money once the Smart Incentive is taken.
   const base = incentive.net;
   // Unpriced (null) until the offer is known too, so the total never moves
   // under the buyer once the page shows it.
   const breakup = useMemo(
-    () => (offer.loading ? null : buildBreakup(ticket.gross, session.finance)),
-    [offer.loading, ticket.gross, session.finance],
+    () => (offer.loading ? null : buildBreakup(gross, session.finance)),
+    [offer.loading, gross, session.finance],
   );
   const coupon = session.coupon?.ok ? session.coupon : null;
   // The coupon discounts the whole post-discount bill, so coins redeem against its result.
   const coins = useCoinRedemption(session, coupon ? coupon.final_total : base);
-  // What is actually charged, broken up the same way. The tier, coupon and coins
-  // all cut the GROSS, and the server re-quotes on what is left, so the tax owed
+  // What is actually charged, broken up the same way. The incentive, coupon and
+  // coins all cut the GROSS, and the server re-quotes on what is left, so the tax owed
   // drops with it — the undiscounted breakup would print a GST nobody pays.
   // Broken up on the TAXABLE value: the round-off that takes the charge to a
   // whole rupee is not taxed, so it is its own row and never inside these lines.
@@ -75,18 +74,12 @@ export function usePodCheckoutBill({ session, pod, seats, linkTotal }: Readonly<
       }),
     [session.coinBalance, session.coinEarnPct, coins.applied, coins.effectiveTotal],
   );
-  // Taken off the gross in order and stopped at zero. The tier row goes FIRST
-  // and the Smart Incentive second: they are taken first, and a coupon worth
-  // more than the tickets would otherwise leave them printing zero. A row that
-  // comes to nothing is dropped.
+  // Taken off the gross in order and stopped at zero. The Smart Incentive row
+  // goes FIRST: it is taken first, and a coupon worth more than the tickets
+  // would otherwise leave it printing zero. A row that comes to nothing is
+  // dropped.
   const discounts = useMemo(() => {
     const rows: CheckoutDiscount[] = [
-      {
-        key: 'ticketDiscount',
-        testId: 'checkout-ticket-discount-row',
-        label: t('mweb.checkout.ticketDiscount', { vars: { pct: ticket.pct, count: seats } }),
-        amount: ticket.amount,
-      },
       {
         key: 'smartIncentive',
         testId: 'checkout-smart-incentive-row',
@@ -105,13 +98,13 @@ export function usePodCheckoutBill({ session, pod, seats, linkTotal }: Readonly<
       rows.push({ key: 'coins', label: t('mweb.coin.checkoutTitle'), amount: coins.applied });
     }
     // applyBillDiscounts spreads each row, so `testId` rides through with it.
-    return applyBillDiscounts(ticket.gross, rows).discounts;
-  }, [ticket, incentive, seats, coupon, base, coins.applied, t]);
+    return applyBillDiscounts(gross, rows).discounts;
+  }, [gross, incentive, coupon, base, coins.applied, t]);
 
   return {
     unitAmount,
     /** The undiscounted ticket gross — what the pay input and the link carry. */
-    amount: ticket.gross,
+    amount: gross,
     base,
     breakup,
     coins,

@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { formatStatementMoney, minSpendShortfallText, openingOfferMinSpendShortfall, venueOfferFloor } from '@duncit/utils';
 import { usePricing } from '../../../hooks/usePricing';
-import { useTicketDiscountMaxPct } from '../../../utils/dateFormat';
 import { useSmartIncentiveSettings } from '../../../utils/smartIncentive';
 import type { Translate } from '../../../i18n/fallback';
 import { makeCreatePodSchema } from './create-pod.form';
@@ -12,9 +11,8 @@ import type { CreatePodVenue } from './create-pod.types';
  * The Create Pod schema for this reader.
  *
  * The schema cannot call `t` at module scope, so it is built from the reader's
- * own catalogue — the validation messages are copy like any other. The
- * multi-ticket discount cap is the admin's public setting and the Smart
- * Incentive cap is Loyalty's, so a discount above either is caught on Step 4
+ * own catalogue — the validation messages are copy like any other. The Smart
+ * Incentive cap is Loyalty's, so a discount above it is caught on Step 4
  * rather than by the server at publish. The Smart Incentive is only checked
  * while its programme is on — otherwise its editor is hidden. An offer below
  * the picked venue's business amount on its basis, or short of its minimum
@@ -22,7 +20,6 @@ import type { CreatePodVenue } from './create-pod.types';
  * (BELOW_MIN_BUSINESS, BELOW_MIN_SPEND).
  */
 export function useCreatePodSchema(t: Translate, venues: readonly CreatePodVenue[]) {
-  const ticketDiscountMaxPct = useTicketDiscountMaxPct();
   const smartIncentive = useSmartIncentiveSettings();
   const { currency } = usePricing();
   const smartIncentiveMaxPct = smartIncentive.enabled ? smartIncentive.maxPct : null;
@@ -32,7 +29,6 @@ export function useCreatePodSchema(t: Translate, venues: readonly CreatePodVenue
     const venueOf = (venueId: string) => venues.find((venue) => venue.id === venueId) ?? null;
     return makeCreatePodSchema(
       t,
-      ticketDiscountMaxPct,
       smartIncentiveMaxPct,
       (values) => venueOfferFloor(venueOf(values.venue_id)?.offer_min_business, values.venue_offer_model, t, money),
       minAdvance,
@@ -48,5 +44,5 @@ export function useCreatePodSchema(t: Translate, venues: readonly CreatePodVenue
         return short ? minSpendShortfallText(short, t, money) : null;
       },
     );
-  }, [t, ticketDiscountMaxPct, smartIncentiveMaxPct, venues, currency, minAdvance]);
+  }, [t, smartIncentiveMaxPct, venues, currency, minAdvance]);
 }

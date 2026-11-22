@@ -2,7 +2,7 @@ import { usePodCheckoutBill } from '../usePodCheckoutBill';
 import CheckoutFlow from './CheckoutFlow';
 import { useCheckoutContext } from './useCheckoutContext';
 
-/** One pod: ticket gross → multi-ticket tier → Smart Incentive → coupon →
+/** One pod: ticket gross → Smart Incentive → coupon →
  * coins → GST, the server's order, previewed locally. */
 export default function CheckoutPage() {
   const ctx = useCheckoutContext();

@@ -39,7 +39,6 @@ vi.mock('@duncit/ui', async (orig) => ({
     h.spotProps = p;
     return <div data-testid="spots" data-readonly={String(p.readOnly)} data-slidable={String(p.slidable)} data-hint={p.boundsHint ?? ''} data-fixed={p.labels.fixedHint ?? ''} />;
   },
-  TicketDiscountField: () => <div data-testid="tier-field" />,
 }));
 vi.mock('../create-pod/price-panel', async (orig) => ({
   ...(await orig<object>()),
@@ -48,7 +47,6 @@ vi.mock('../create-pod/price-panel', async (orig) => ({
 }));
 vi.mock('../../../hooks/usePricing', () => ({ usePricing: () => ({ currency: '₹', format: (v: number) => `₹${v}` }) }));
 vi.mock('../../../hooks/useBrandingAssets', () => ({ useBrandingAssets: () => ({ termsUrl: 'https://t.example' }) }));
-vi.mock('../../../utils/dateFormat', async (orig) => ({ ...(await orig<object>()), useTicketDiscountMaxPct: () => 40 }));
 
 type Form = ReturnType<typeof useForm<CreatePodFormValues>>;
 function Harness({ values, errors = {}, children }: Readonly<{ values?: Partial<CreatePodFormValues>; errors?: Record<string, string>; children: (form: Form) => ReactNode }>) {
@@ -178,21 +176,19 @@ describe('PricingStep', () => {
   const spotsField = (values: Partial<CreatePodFormValues>, spots: object = { min: 2, max: 10, slidable: true }) =>
     render(<Harness values={values}>{(form) => <PodSpotsField form={form} spots={spots as never} />}</Harness>);
 
-  it('shows the price, discount, panel, payment terms and charges for a paid physical pod', () => {
+  it('shows the price, panel, payment terms and charges for a paid physical pod', () => {
     step({ pod_type: 'PAID', pod_mode: 'PHYSICAL' });
     expect(screen.getByTestId('suggested-price-link')).toBeInTheDocument();
-    expect(screen.getByTestId('tier-field')).toBeInTheDocument();
     expect(screen.getByTestId('price-panel')).toBeInTheDocument();
     expect(screen.getByTestId('payment_terms')).toBeInTheDocument();
     expect(screen.getByTestId('place-charges-field')).toBeInTheDocument();
     expect(screen.queryByTestId('free-note')).not.toBeInTheDocument();
   });
 
-  it('shows a short note instead of price, discount and terms for a free pod, and no charges for a virtual one', () => {
+  it('shows a short note instead of price and terms for a free pod, and no charges for a virtual one', () => {
     step({ pod_type: 'FREE', pod_mode: 'VIRTUAL' });
     expect(screen.getByTestId('free-note')).toBeInTheDocument();
     expect(screen.queryByTestId('suggested-price-link')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('tier-field')).not.toBeInTheDocument();
     expect(screen.queryByTestId('payment_terms')).not.toBeInTheDocument();
     expect(screen.queryByTestId('place-charges-field')).not.toBeInTheDocument();
   });

@@ -54,7 +54,7 @@ describe('createPodSchema', () => {
   });
 
   it("holds an offer below the venue's business amount on its basis at the rate field", () => {
-    const floored = makeCreatePodSchema(undefined, undefined, undefined, () => ({ min: 300, text: '₹300 per guest' }));
+    const floored = makeCreatePodSchema(undefined, undefined, () => ({ min: 300, text: '₹300 per guest' }));
     const below = floored.safeParse(valid({ venue_offer_rate: '299' }));
     expect(below.success).toBe(false);
     const issue = below.error?.issues.find((entry) => entry.path.join('.') === 'venue_offer_rate');

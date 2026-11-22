@@ -6,7 +6,7 @@ import {
   type DateInput,
 } from '@duncit/app-settings';
 import { DEFAULT_MIN_ACCOUNT_AGE_YEARS } from '@duncit/datetime';
-import { DEFAULT_HAPPENING_NEARBY_DAYS, DEFAULT_TICKET_DISCOUNT_MAX_PCT } from '@duncit/utils';
+import { DEFAULT_HAPPENING_NEARBY_DAYS } from '@duncit/utils';
 
 /**
  * mWeb's date/time entry point. The implementation lives in @duncit/datetime
@@ -55,13 +55,6 @@ export function useMinSignupAge(): number {
 export function useDraftRetentionDays(): number {
   const { data } = useQuery<any>(PUBLIC_APP_SETTINGS, { fetchPolicy: 'cache-first' });
   return (data?.publicAppSettings?.draft_retention_days as number) ?? FALLBACK_DRAFT_RETENTION_DAYS;
-}
-
-/** Admin-configured cap on a multi-ticket discount tier's % (Admin > Pods > Pod
- * Settings). The shared default only stands in while the settings load. */
-export function useTicketDiscountMaxPct(): number {
-  const { data } = useQuery<any>(PUBLIC_APP_SETTINGS, { fetchPolicy: 'cache-first' });
-  return (data?.publicAppSettings?.ticket_discount_max_pct as number) ?? DEFAULT_TICKET_DISCOUNT_MAX_PCT;
 }
 
 /** Admin-configured "Happening nearby" window in days (Pods > Pod Settings): Home

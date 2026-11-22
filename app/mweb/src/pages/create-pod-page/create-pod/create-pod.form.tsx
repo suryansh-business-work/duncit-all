@@ -1,10 +1,9 @@
 import { z } from 'zod';
 import { freeJustificationFields } from '@duncit/forms/schemas';
-import { DEFAULT_SMART_INCENTIVE_MAX_PCT, DEFAULT_TICKET_DISCOUNT_MAX_PCT } from '@duncit/utils';
+import { DEFAULT_SMART_INCENTIVE_MAX_PCT } from '@duncit/utils';
 import { fallbackT, type Translate } from '../../../i18n/fallback';
 import { refineFreeJustification, refinePublish, refineVenueOrMeeting, type OfferFloorOf, type OfferShortfallOf } from './create-pod.refine';
 import { refineSmartIncentive } from './create-pod.smart-incentive';
-import { refineTicketDiscount } from './create-pod.ticket-discount';
 
 export { hasImageLine, buildCreatePodInput, buildModerationInput, MODERATION_FIELD_MAP } from './create-pod.payload';
 export {
@@ -32,7 +31,6 @@ const MIN_POD_DURATION_MS = MIN_POD_DURATION_MINUTES * 60_000;
  * The messages are copy, so they come from the shared catalogue (rule 38): the
  * stepper passes its live `t`, and the export below resolves against the
  * bundled English for callers that parse the schema outside React.
- * `ticketDiscountMaxPct` is the admin's public `ticket_discount_max_pct`;
  * `smartIncentiveMaxPct` is Loyalty > Smart Incentive's `max_discount_pct`, or
  * null while the programme is not known to be on (its editor is hidden then).
  * `offerFloor` is the picked venue's business amount on the offer's basis: an
@@ -42,7 +40,6 @@ const MIN_POD_DURATION_MS = MIN_POD_DURATION_MINUTES * 60_000;
  * refused, as the server refuses it. */
 export function makeCreatePodSchema(
   t: Translate = fallbackT,
-  ticketDiscountMaxPct = DEFAULT_TICKET_DISCOUNT_MAX_PCT,
   smartIncentiveMaxPct: number | null = DEFAULT_SMART_INCENTIVE_MAX_PCT,
   offerFloor: OfferFloorOf = () => null,
   minAdvance: { days: number; startMs: number } | null = null,
@@ -124,9 +121,6 @@ export function makeCreatePodSchema(
           })
         )
         .max(10),
-      // Shape only — the tier rules run in refineTicketDiscount below.
-      ticket_discount_enabled: z.boolean(),
-      ticket_discount_tiers: z.array(z.object({ min_tickets: z.number(), discount_pct: z.number() })),
       // Shape only — the percentage is checked in refineSmartIncentive below.
       smart_incentive_enabled: z.boolean(),
       smart_incentive_pct: z.string(),
@@ -158,7 +152,6 @@ export function makeCreatePodSchema(
         ctx.addIssue({ code: 'custom', path: ['pod_end_date_time'], message: t('mweb.createPod.validation.endMinDuration') });
       }
       refinePublish(values, ctx, t);
-      refineTicketDiscount(values, ctx, t, ticketDiscountMaxPct);
       refineSmartIncentive(values, ctx, t, smartIncentiveMaxPct);
     });
 }

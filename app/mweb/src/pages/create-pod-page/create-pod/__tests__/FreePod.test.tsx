@@ -3,7 +3,7 @@
  *
  * A physical pod may now be free (`pod_type: 'FREE'`, `pod_amount: 0`). A free
  * pod shows no calculation anywhere: no amount field, no suggested prices, no
- * multi-ticket discount and no earnings panel — and it never asks the server
+ * Smart Incentive and no earnings panel — and it never asks the server
  * for earnings. When the slot it books costs something at a venue the host does
  * not own, the host is told to settle with the venue directly. A PAID pod is
  * unchanged. Native twin: create-pod-free-pod.test.tsx (rule 27).
@@ -140,11 +140,10 @@ const choose = (testId: 'create-pod-free' | 'create-pod-paid') =>
 const settleLine = fallbackT('mweb.createPod.freeVenueSettle');
 
 describe('Pricing — a paid physical pod is unchanged', () => {
-  it('shows the amount, suggested prices, the discount and the earnings panel, and no free note', () => {
+  it('shows the amount, suggested prices and the earnings panel, and no free note', () => {
     renderStep(physical());
     expect(screen.getByTestId('create-pod-ticket-price-input')).toHaveValue(500);
     expect(screen.getByTestId('suggested-price-link')).toBeInTheDocument();
-    expect(screen.getByTestId('pricing-step-ticket-discount-card')).toBeInTheDocument();
     expect(screen.getByTestId('create-pod-price-panel')).toBeInTheDocument();
     expect(screen.queryByTestId('create-pod-free-note')).not.toBeInTheDocument();
     expect(screen.getByTestId('payment_terms-input')).toBeInTheDocument();
@@ -167,7 +166,6 @@ describe('Pricing — a free physical pod', () => {
 
     expect(screen.queryByTestId('create-pod-ticket-price-input')).not.toBeInTheDocument();
     expect(screen.queryByTestId('suggested-price-link')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('pricing-step-ticket-discount-card')).not.toBeInTheDocument();
     expect(screen.queryByTestId('create-pod-price-panel')).not.toBeInTheDocument();
     // Payment terms describe refunds and charges a free pod does not have.
     expect(screen.queryByTestId('payment_terms-input')).not.toBeInTheDocument();
@@ -177,8 +175,8 @@ describe('Pricing — a free physical pod', () => {
     expect(values()).toMatchObject({
       pod_type: 'FREE',
       pod_amount: 0,
-      ticket_discount_enabled: false,
-      ticket_discount_tiers: [],
+      smart_incentive_enabled: false,
+      smart_incentive_pct: '',
     });
   });
 
@@ -206,8 +204,8 @@ describe('Pricing — a free physical pod', () => {
       free_justification: { reason: 'CAMPAIGN', details: '', accepted: true },
       pod_amount: 0,
       venue_slot_id: 'slot-1',
-      ticket_discount_enabled: false,
-      ticket_discount_tiers: [],
+      smart_incentive_enabled: false,
+      smart_incentive_pct: 0,
       payment_terms: null,
     });
     // The same terms on a paid pod still travel; a paid pod carries no justification.

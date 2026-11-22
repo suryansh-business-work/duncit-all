@@ -70,19 +70,19 @@ describe('makeCreatePodSchema — Minimum Advance Days', () => {
 
   it('refuses a start before the first allowed day with the host-facing sentence', () => {
     expect(tooSoon).toBe('You can only create a Pod scheduled at least 3 days in advance from the current date.');
-    expect(startIssues(makeCreatePodSchema(fallbackT, undefined, undefined, undefined, rule), new Date(future - 60_000))).toEqual([
+    expect(startIssues(makeCreatePodSchema(fallbackT, undefined, undefined, rule), new Date(future - 60_000))).toEqual([
       tooSoon,
     ]);
   });
 
   it('accepts a start exactly on the first allowed midnight, and later', () => {
-    const schema = makeCreatePodSchema(fallbackT, undefined, undefined, undefined, rule);
+    const schema = makeCreatePodSchema(fallbackT, undefined, undefined, rule);
     expect(startIssues(schema, new Date(future))).toEqual([]);
     expect(startIssues(schema, new Date(future + 86_400_000))).toEqual([]);
   });
 
   it('keeps the past-start message for a start in the past, rather than both', () => {
-    const schema = makeCreatePodSchema(fallbackT, undefined, undefined, undefined, rule);
+    const schema = makeCreatePodSchema(fallbackT, undefined, undefined, rule);
     expect(startIssues(schema, new Date(Date.now() - 60_000))).toEqual([fallbackT('mweb.createPod.validation.startFuture')]);
   });
 

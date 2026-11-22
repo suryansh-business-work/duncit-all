@@ -38,7 +38,6 @@ const settingsMock = {
         server_time: null,
         min_signup_age: 13,
         draft_retention_days: 7,
-        ticket_discount_max_pct: null,
         happening_nearby_days: null,
       },
     },

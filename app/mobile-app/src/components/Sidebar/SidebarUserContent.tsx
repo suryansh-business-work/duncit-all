@@ -1,5 +1,10 @@
 import { YStack } from 'tamagui';
-import { studioEntryFor, studioModeFor, type ProfileMenuFlags, type ProfileMenuKey } from '@duncit/utils';
+import {
+  studioEntryFor,
+  studioModeFor,
+  type ProfileMenuFlags,
+  type ProfileMenuKey,
+} from '@duncit/utils';
 
 import { profileCompletion, type ProfileForCompletion } from '@/utils/profile-completion';
 import type { MenuRoute } from '@/navigation/types';

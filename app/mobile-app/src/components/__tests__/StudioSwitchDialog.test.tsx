@@ -97,7 +97,9 @@ describe('StudioSwitchDialog', () => {
       );
       expect(screen.queryByTestId('studio-switch-email-gate')).toBeNull();
       fireEvent.press(screen.getByTestId(`studio-switch-${mode}`));
-      expect(screen.getByTestId('studio-switch-email-gate')).toHaveTextContent(/Verify your email first/);
+      expect(screen.getByTestId('studio-switch-email-gate')).toHaveTextContent(
+        /Verify your email first/,
+      );
       const confirm = screen.getByTestId('studio-switch-confirm');
       expect(confirm).toHaveTextContent('Verify email');
       fireEvent.press(confirm);

@@ -169,7 +169,9 @@ describe('Sidebar', () => {
     expand('account');
     fireEvent.press(screen.getByTestId('sidebar-switch-role'));
     fireEvent.press(screen.getByTestId('studio-switch-HOST'));
-    expect(screen.getByTestId('studio-switch-email-gate')).toHaveTextContent(/Verify your email first/);
+    expect(screen.getByTestId('studio-switch-email-gate')).toHaveTextContent(
+      /Verify your email first/,
+    );
     const confirm = screen.getByTestId('studio-switch-confirm');
     expect(confirm).toHaveTextContent('Verify email');
     fireEvent.press(confirm);

@@ -14,7 +14,9 @@ jest.mock('@/hooks/useActiveAds', () => ({
   useActiveAds: () => ({ ads: [], loading: false }),
 }));
 const mockNavigate = jest.fn();
-jest.mock('@react-navigation/native', () => ({ useNavigation: () => ({ navigate: mockNavigate }) }));
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ navigate: mockNavigate }),
+}));
 // `me.is_email_verified` — false keeps Host, Venue and Club Admin shut.
 let mockEmailVerified: boolean | null = true;
 jest.mock('@/hooks/useMe', () => ({

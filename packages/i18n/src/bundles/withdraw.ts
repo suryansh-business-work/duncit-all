@@ -21,6 +21,18 @@ export const WITHDRAW_BUNDLE: NestedCatalogue = {
     enterYourUpiId: 'Enter your UPI ID',
     enterAccountNumber: 'Enter account number',
     enterIfscCode: 'Enter IFSC code',
+    // A withdrawal in the wallet's history once RazorpayX has it: the payout id
+    // from the moment it is sent, then the bank's reference (UTR) once the bank
+    // confirms it — the two numbers a person quotes to their bank. mWeb and the
+    // native app word them identically.
+    history: {
+      paymentId: 'Payment ID: {id}',
+      utr: 'Bank reference (UTR): {utr}',
+      copyPaymentId: 'Copy payment ID',
+      copyUtr: 'Copy bank reference',
+      copied: 'Copied',
+      copyFailed: 'Could not copy. Select the text instead.',
+    },
     // The wallet's "Download statement" dialog. Here, not under a surface's own
     // namespace, for the same reason as the rules above: the partner console,
     // mWeb and the native app render the same form from the same presets.

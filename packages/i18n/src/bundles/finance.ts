@@ -273,6 +273,14 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       kindPartial: 'Part',
       kindPartialHint: 'Only some of the seats came back — the buyer is still attending on the rest, so the payment stays successful.',
       initiatedByConsole: 'Finance console',
+      // Where the refund's money stands at Razorpay. Accepted is not refunded.
+      colGatewayStatus: 'Razorpay refund',
+      gatewayRequested: 'Sending',
+      gatewayProcessing: 'Processing',
+      gatewaySucceeded: 'Refunded',
+      gatewayFailed: 'Failed, retrying',
+      gatewayReconcile: 'Check Razorpay',
+      gatewayNotApplicable: 'Not via Razorpay',
     },
     /**
      * Finance > Round Offs: every payment whose bill was rounded up to a whole
@@ -1092,6 +1100,26 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       venueBilling: 'Venue Billing',
       venueRental: 'Venue Rented Items',
       noPaymentReleaseRequestsFound: 'No payment release requests found.',
+      // A completion whose payouts send out more than its pod collected: the
+      // host's side of the pool came to less than zero while the venue and the
+      // club admin are still paid in full. The server approves it only with a
+      // note saying who funds the difference, recorded on every payout approved.
+      shortfallTitle: 'These payouts are {amount} more than the pod collected',
+      shortfallBody:
+        'The host’s share came to less than zero, but the venue and any club admin are still paid in full, so this amount has to come from outside the pod’s takings.',
+      shortfallNeedsNote: 'Approving needs a note saying who funds it.',
+      fundingTitle: 'Who funds the shortfall?',
+      fundingIntro:
+        'Approving these payouts ({total} in total) sends out {shortfall} more than the pod collected. Say who covers that amount — the note is saved on every payout approved.',
+      fundingReviewIntro:
+        'This request pays out {amount} more than the pod collected. Approving this payout needs a note saying who funds that amount.',
+      fundingNote: 'Funding note',
+      fundingNoteHint: 'Who pays the shortfall, in at least {min} characters.',
+      fundingNoteTooShort: 'Say who funds the shortfall in at least {min} characters.',
+      fundingNoteTooLong: 'Keep the funding note to {max} characters or fewer.',
+      fundingNoteRecorded: 'Shortfall funding: {note}',
+      // The typed bill did not set the venue's money — the booked price was paid.
+      billEvidenceOnly: 'Final bill uploaded (recorded as evidence only, not paid)',
     },
     payoutCycles: {
       hostPayout: 'Host payout',

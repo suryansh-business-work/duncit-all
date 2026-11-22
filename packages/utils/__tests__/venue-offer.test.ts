@@ -31,6 +31,7 @@ import {
   moneyRangeText,
   offerCalendarPicks,
   offerCountersLeft,
+  offerBookingArgs,
   offerEarningsArgs,
   offerGuestFloor,
   offerGuestsText,
@@ -651,6 +652,47 @@ describe('offerEarningsArgs', () => {
     expect(offerEarningsArgs(most, fewest, Number.NaN, 20)).toEqual(atSpots);
     expect(offerEarningsArgs(most, fewest, 20, 20)).toEqual(atSpots);
     expect(offerEarningsArgs(most, fewest, 25, 20)).toEqual(atSpots);
+  });
+
+  it("adds how the offer pays the venue and for how long, so the verdict holds it to the venue's minimum business", () => {
+    const booking = { model: 'PER_HOUR', start_at: '2027-01-04T18:00:00+05:30', end_at: '2027-01-04T20:30:00+05:30' };
+    expect(offerEarningsArgs(most, fewest, 6, 20, booking)).toEqual({
+      venue_amount: 10000,
+      venue_commission_on_top: 1000,
+      venue_offer_model: 'PER_HOUR',
+      venue_hours: 2.5,
+      min_spots: 6,
+      venue_amount_at_min: 3000,
+      venue_commission_on_top_at_min: 300,
+    });
+    expect(offerEarningsArgs(most, null, 6, 20, null)).toEqual({ venue_amount: 10000, venue_commission_on_top: 1000 });
+  });
+});
+
+describe('offerBookingArgs', () => {
+  const evening = { start_at: '2027-01-04T18:00:00Z', end_at: '2027-01-04T19:20:00Z' };
+
+  it("rounds the window's hours to two places, the way the server's create guard does", () => {
+    // 80 minutes is 1.333… hours; the guard multiplies a per-hour minimum by 1.33.
+    expect(offerBookingArgs({ model: 'PER_GUEST', ...evening })).toEqual({ venue_offer_model: 'PER_GUEST', venue_hours: 1.33 });
+  });
+
+  it('names a free ask too — the server gives it no minimum business', () => {
+    expect(offerBookingArgs({ model: 'FREE', ...evening })).toEqual({ venue_offer_model: 'FREE', venue_hours: 1.33 });
+  });
+
+  it('sends 0 hours for a missing or reversed window', () => {
+    expect(offerBookingArgs({ model: 'FLAT', start_at: null, end_at: evening.end_at })).toEqual({ venue_offer_model: 'FLAT', venue_hours: 0 });
+    expect(offerBookingArgs({ model: 'FLAT', start_at: evening.start_at, end_at: undefined })).toEqual({ venue_offer_model: 'FLAT', venue_hours: 0 });
+    expect(offerBookingArgs({ model: 'FLAT', start_at: evening.end_at, end_at: evening.start_at })).toEqual({ venue_offer_model: 'FLAT', venue_hours: 0 });
+    expect(offerBookingArgs({ model: 'FLAT', start_at: 'not a date', end_at: evening.end_at })).toEqual({ venue_offer_model: 'FLAT', venue_hours: 0 });
+  });
+
+  it('sends nothing without a booking or for an option this build does not know — an unknown enum would fail the query', () => {
+    expect(offerBookingArgs(null)).toEqual({});
+    expect(offerBookingArgs(undefined)).toEqual({});
+    expect(offerBookingArgs({ model: 'PER_NIGHT', ...evening })).toEqual({});
+    expect(offerBookingArgs({ model: null, ...evening })).toEqual({});
   });
 });
 

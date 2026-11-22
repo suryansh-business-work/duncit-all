@@ -626,6 +626,11 @@ exports:
   - 'offeringsFromText'
   - 'offerQuoteRange'
   - 'offerEarningsArgs'
+  - 'offerBookingArgs'
+  - 'paidPodSubmitBlocked'
+  - 'podViabilityNotice'
+  - 'podViabilityReasonOf'
+  - 'MWEB_POD_VIABILITY_KEYS'
   - 'hostOfferActions'
   - 'offerCountersLeft'
   - 'mayCounter'
@@ -1447,6 +1452,34 @@ because native's codegen refuses an interpolated one.
 | `EarningsStatementOptions.has_venue` | `boolean` (required) | Renders the Venue Charges section. |
 | `EarningsStatementOptions.symbol` | `string` (required) | Symbol used inside the formula strings. |
 | `StatementSection.description` | `string` | Why the charge exists; rendered behind the section's info button. Resolved from `earnings.statement.<key>Description`. |
+
+#### Paid-pod viability — `pod-viability`
+
+The server judges whether a PAID pod's money works with every spot filled (the host's own seat
+is free, so N spots are N − 1 paying seats) and says so on every earnings projection
+(`potentialPodEarnings`, `adminPotentialPodEarnings`): `viable`, `viability_reason`
+(`BELOW_MIN_BUSINESS` → `VENUE_NOT_COVERED` → `NO_EARNINGS`, the order a host fixes them),
+`minimum_viable_ticket_price` and `venue_min_business`. It is the same rule the create and edit
+guard throws on. This module computes none of it: it gates the submit button and picks the copy,
+so mWeb Create Pod, the app's Create Pod and the admin pod form behave identically.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `paidPodSubmitBlocked` | `(isFree, fresh, verdict) => boolean` | `false` for a free pod; otherwise `true` until a projection answered for exactly the inputs on screen (`fresh`) says `viable`. Loading, a running debounce, a failed request or no projection all block. |
+| `podViabilityNotice` | `(verdict, keys, t, money) => PodViabilityNotice \| null` | The reason's `title` and a `body` naming `{minimum}` (the venue's minimum business) and `{price}` (the lowest ticket price that works); the price-less body when none up to ₹99,999 works. `null` when viable or absent. |
+| `podViabilityReasonOf` | `(reason) => PodViabilityReason` | A reason this build does not know reads as `NO_EARNINGS`. |
+| `MWEB_POD_VIABILITY_KEYS` | `PodViabilityCopyKeys` | The `mweb.createPod.*` keys mWeb and the app share; the pod form passes its own `podForm.priceBreakdown.viability.*` map. |
+| `offerBookingArgs` | `(booking: OfferBooking \| null) => { venue_offer_model?, venue_hours? }` | What `potentialPodEarnings` needs to hold a venue OFFER to the venue's minimum business: the offer's model and its window in hours, rounded to two places like the server's guard. `{}` for an unknown model. `offerEarningsArgs(quote, quoteMin, minGuests, spots, booking)` spreads it in. |
+
+```ts
+paidPodSubmitBlocked(false, true, { viable: true });   // false — Create Pod enabled
+paidPodSubmitBlocked(false, false, { viable: true });  // true — the answer is for older inputs
+podViabilityNotice(
+  { viable: false, viability_reason: 'BELOW_MIN_BUSINESS', minimum_viable_ticket_price: 93, venue_min_business: 1000 },
+  MWEB_POD_VIABILITY_KEYS, t, money,
+); // { reason: 'BELOW_MIN_BUSINESS', title: "Below the venue's minimum business", body: "This venue's minimum business is ₹1,000.00. … at least ₹93.00, or add spots." }
+offerBookingArgs({ model: 'PER_HOUR', start_at: '…T18:00Z', end_at: '…T19:20Z' }); // { venue_offer_model: 'PER_HOUR', venue_hours: 1.33 }
+```
 
 ### Errors
 

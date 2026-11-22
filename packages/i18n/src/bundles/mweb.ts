@@ -2839,13 +2839,33 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       priceTier3: 'Better earnings — still comfortable for most guests.',
       priceTier4: 'Premium — fewer but more committed guests.',
       priceTier5: 'Best for high-value pods and exclusive experiences.',
-      // The two rules that keep Create Pod disabled: a ₹0 projected payout, and
-      // a pod worth less than the venue slot it books.
+      // A ₹0 projected payout, and a pod worth less than the venue slot it books
+      // (the venue row's error) — also the NO_EARNINGS / VENUE_NOT_COVERED
+      // copy when no ticket price works (viability, below).
       zeroEarningsTitle: 'No Earnings Generated',
       zeroEarningsBody:
         'Based on the current Ticket Price, your estimated earnings are ₹0 after applicable deductions. Please increase the Ticket Price to earn from this Pod.',
       venueShortfall:
         'Your venue price is greater than the total Pod value. Please increase the Ticket Price so that the total Pod value is equal to or greater than the Venue Price.',
+      // Why the server would refuse this paid pod (PodEarningsProjection
+      // .viability_reason), judged with every spot filled. NO_EARNINGS reuses
+      // zeroEarningsTitle; a reason with no working price falls back to
+      // zeroEarningsBody / venueShortfall. Create Pod stays off until a fresh
+      // projection says the pod works.
+      viability: {
+        belowMinBusinessTitle: "Below the venue's minimum business",
+        belowMinBusiness:
+          "This venue's minimum business is {minimum}. With every spot filled, your ticket money minus Duncit's venue commission has to be more than that. Set the ticket price to at least {price}, or add spots.",
+        belowMinBusinessNoPrice:
+          "This venue's minimum business is {minimum}. With every spot filled, your ticket money minus Duncit's venue commission has to be more than that. Add spots or raise the ticket price.",
+        venueNotCoveredTitle: 'The pod does not cover the venue',
+        venueNotCovered:
+          'With every spot filled, your ticket money is less than the venue costs. Set the ticket price to at least {price}.',
+        noEarnings:
+          'After GST, fees, the venue and commissions you would earn nothing at this ticket price. Set it to at least {price} to earn from this pod.',
+        checkFailed: "We couldn't check your earnings for this price. Check your connection and try again.",
+        retry: 'Try again',
+      },
       earningsEstimateNote:
         'This is an estimate based on the spots you set. When you complete the pod we recalculate it on the people who actually attended — your own spot is always free.',
       totalSpots: 'Total spots',

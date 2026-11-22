@@ -119,6 +119,7 @@ import { attachChallengeHandlers } from '@modules/engagement/challenge/runtime/c
 import { attachCallHandlers } from '@modules/crm/call/call.socket';
 import { buildCallWebhookRouter } from '@modules/crm/call/call.webhook';
 import { buildShiprocketWebhookRouter } from '@modules/commerce/shiprocket/shiprocket.webhook';
+import { buildPayoutWebhookRouter } from '@modules/finance/payout/payout.webhook';
 import { buildVenueApiRouter } from '@modules/venues/publicApi/venueApi.router';
 import { buildCampaignTrackingRouter } from '@modules/crm/marketing/tracking.router';
 import { buildShortLinkRouter } from '@modules/crm/marketing/shortLink.router';
@@ -988,6 +989,10 @@ async function bootstrap() {
 
   // CRM softphone + AI call Twilio webhooks (parses its own urlencoded bodies).
   app.use('/twilio', buildCallWebhookRouter());
+
+  // RazorpayX payout outcomes at /webhooks/razorpay-payouts (signed, reads its own raw
+  // body): the only thing that can mark a withdrawal or a Send Money transfer paid.
+  app.use('/webhooks', buildPayoutWebhookRouter());
 
   // ShipRocket tracking webhook at /webhooks/courier-updates (parses its own
   // JSON, verifies the Tech portal's x-api-key). ShipRocket refuses a URL that

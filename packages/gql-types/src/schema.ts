@@ -821,6 +821,8 @@ export type AiProductDescribeInput = {
  */
 export type AiPrompt = {
   __typename?: 'AiPrompt';
+  /** Set when an AI prompt was archived; archived prompts are off the tabs, the feed and their public link. */
+  archived_at?: Maybe<Scalars['String']['output']>;
   category: Scalars['String']['output'];
   content: Scalars['String']['output'];
   created_at?: Maybe<Scalars['String']['output']>;
@@ -840,6 +842,8 @@ export type AiPrompt = {
   /** Usage-log task keys this prompt bills to, for joining spend back to it. */
   tasks: Array<Scalars['String']['output']>;
   token_count: Scalars['Int']['output'];
+  /** Every recorded interaction with this prompt, all time (views, copies, public visits, feed hits). */
+  total_hits: Scalars['Int']['output'];
   updated_at?: Maybe<Scalars['String']['output']>;
   usage: Array<AiPromptUsage>;
   variables: Array<AiPromptVariable>;
@@ -909,6 +913,8 @@ export type AiPromptEventType =
   | 'QUICK_VIEW';
 
 export type AiPromptFilter = {
+  /** True lists only archived prompts; otherwise archived prompts are left out. */
+  archived?: InputMaybe<Scalars['Boolean']['input']>;
   category?: InputMaybe<Scalars['String']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   kind?: InputMaybe<AiPromptKind>;
@@ -2226,10 +2232,13 @@ export type ApprovalRequestTablePage = {
   total: Scalars['Int']['output'];
 };
 
+/** A Finance decision on a withdrawal. Separate from the payout: an approved withdrawal can still fail to pay. */
 export type ApprovalStatus =
   | 'APPROVED'
   | 'DENIED'
-  | 'PENDING';
+  | 'PARTIALLY_APPROVED'
+  | 'PENDING'
+  | 'REJECTED';
 
 /**
  * One bot in the Ask Bot list behind the portal header's Apps drawer. Which bots
@@ -8502,6 +8511,16 @@ export type DbRestoreCollection = {
   documents: Scalars['Int']['output'];
   error?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
+};
+
+export type DecideWithdrawalInput = {
+  /** Finance confirms paying an account that is not on a verified record. */
+  acknowledge_unverified_account?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Required for PARTIAL: the amount to pay. Less than the request, at least 1. */
+  approved_amount?: InputMaybe<Scalars['Float']['input']>;
+  decision: WithdrawalDecision;
+  /** Required for PARTIAL and REJECT. */
+  reason?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** A party on the domain's registrar record. */
@@ -15820,6 +15839,16 @@ export type ModerationViolation = {
   type: Scalars['String']['output'];
 };
 
+/** The single status Finance tables show: the decision until a payout starts, then the payout's own state. */
+export type MoneyOutStatus =
+  | 'APPROVED'
+  | 'FAILED'
+  | 'PAID'
+  | 'PARTIALLY_APPROVED'
+  | 'PENDING'
+  | 'PROCESSING'
+  | 'REJECTED';
+
 export type Msg91WidgetAnalytics = {
   __typename?: 'Msg91WidgetAnalytics';
   days: Array<Msg91WidgetDay>;
@@ -16474,6 +16503,8 @@ export type Mutation = {
   decideMarketingRun: MarketingRun;
   /** Onboarding staff approve or deny a DONE meeting themselves — approval drafts the onboarded host/venue/seller (or grants the club-admin role). No admin round-trip. */
   decideMeeting: OnboardingMeeting;
+  /** Approve, partially approve or reject a pending withdrawal; an approval pays through Razorpay. */
+  decideWithdrawal: WalletWithdrawal;
   /** Owner declines a pending booking request — the slot frees up again. round: the offer round read. */
   declineVenueSlotRequest: VenueSlot;
   /** Permanently remove an ad request. */
@@ -17588,8 +17619,11 @@ export type Mutation = {
   retryProductOrderRefund: ProductOrder;
   /** Send the networks that refused it again; the ones it reached are left alone. */
   retryScheduledSocialPost: SocialScheduledPost;
+  retrySendMoneyTransfer: SendMoneyTransfer;
   /** Re-attempt only the people this campaign did not reach. Returns immediately. */
   retryWaCampaign: WaCampaign;
+  /** Start a failed or stalled payout again (a failed one is a new, deliberate attempt). */
+  retryWithdrawalPayout: WalletWithdrawal;
   /** Validate a logged address again. The earlier validation is kept. */
   revalidateEmail: EmailValidation;
   /** Marketing approves (freezes cost) or rejects, with remarks. */
@@ -17607,6 +17641,7 @@ export type Mutation = {
   reviewSocialComment: SocialComment;
   /** Approve or reject a user's IDENTITY/ADDRESS verification — admin only. */
   reviewVerification: Verification;
+  /** @deprecated Use decideWithdrawal: it approves, partially approves or rejects, and pays through Razorpay. */
   reviewWithdrawal: WalletWithdrawal;
   revokeAdminAccess: User;
   revokeApiKey: ApiKey;
@@ -17750,6 +17785,8 @@ export type Mutation = {
   /** Admin. Sends the WhatsApp launch message to the city's subscribers who are not SENT yet. The city must be launched. */
   sendLocationLaunchMessage: LocationLaunchSendResult;
   sendMarketingCampaign: MarketingCampaign;
+  /** Pay a person from the Finance Portal, to one of their verified accounts. */
+  sendMoney: SendMoneyTransfer;
   /**
    * Send the LIVE link or the RESULT link to confirmed attendees who have not
    * had it yet; retry_failed instead retries WhatsApp for those already sent.
@@ -20131,6 +20168,12 @@ export type MutationDecideMeetingArgs = {
 };
 
 
+export type MutationDecideWithdrawalArgs = {
+  input: DecideWithdrawalInput;
+  withdrawal_id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeclineVenueSlotRequestArgs = {
   reason?: InputMaybe<Scalars['String']['input']>;
   round?: InputMaybe<Scalars['Int']['input']>;
@@ -22381,8 +22424,18 @@ export type MutationRetryScheduledSocialPostArgs = {
 };
 
 
+export type MutationRetrySendMoneyTransferArgs = {
+  transfer_id: Scalars['ID']['input'];
+};
+
+
 export type MutationRetryWaCampaignArgs = {
   campaign_id: Scalars['ID']['input'];
+};
+
+
+export type MutationRetryWithdrawalPayoutArgs = {
+  withdrawal_id: Scalars['ID']['input'];
 };
 
 
@@ -22728,6 +22781,11 @@ export type MutationSendLocationLaunchMessageArgs = {
 
 export type MutationSendMarketingCampaignArgs = {
   campaign_id: Scalars['ID']['input'];
+};
+
+
+export type MutationSendMoneyArgs = {
+  input: SendMoneyInput;
 };
 
 
@@ -27325,10 +27383,49 @@ export type PaymentTotals = {
   ticket_discount_total: Scalars['Float']['output'];
 };
 
+/** One row of the immutable money-out audit trail. */
+export type PayoutAuditEntry = {
+  __typename?: 'PayoutAuditEntry';
+  action: Scalars['String']['output'];
+  actor_id?: Maybe<Scalars['ID']['output']>;
+  actor_name: Scalars['String']['output'];
+  actor_role: Scalars['String']['output'];
+  approved_amount?: Maybe<Scalars['Float']['output']>;
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  payment_status: Scalars['String']['output'];
+  razorpay_payout_id: Scalars['String']['output'];
+  reason: Scalars['String']['output'];
+  requested_amount: Scalars['Float']['output'];
+  subject: PayoutSubject;
+  subject_id: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+  user_name: Scalars['String']['output'];
+  utr: Scalars['String']['output'];
+};
+
+export type PayoutAuditPage = {
+  __typename?: 'PayoutAuditPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<PayoutAuditEntry>;
+  total: Scalars['Int']['output'];
+};
+
 export type PayoutMode =
   | 'IMMEDIATE'
   | 'MONTH_END'
   | 'WEEKLY';
+
+/** What the bank says about one payout, as Razorpay reports it. */
+export type PayoutStatus =
+  | 'FAILED'
+  | 'PAID'
+  | 'PROCESSING';
+
+export type PayoutSubject =
+  | 'SEND_MONEY'
+  | 'WITHDRAWAL';
 
 export type PetProfile = {
   __typename?: 'PetProfile';
@@ -33155,6 +33252,8 @@ export type Query = {
   paymentTotals: PaymentTotals;
   payments: Array<Payment>;
   paymentsTable: PaymentTablePage;
+  /** The money-out audit trail, newest first. Withdrawal Logs reads kind WITHDRAWAL. */
+  payoutAuditTable: PayoutAuditPage;
   pexelsSearch: PexelsSearchResult;
   pexelsSearchVideos: PexelsVideoSearchResult;
   /** Loyalty > Physical Gift Cards > one card. */
@@ -33591,6 +33690,13 @@ export type Query = {
   searchStaffMessages: Array<StaffMessage>;
   /** Type-ahead suggestions across clubs, categories, pods and activities. */
   searchSuggestions: Array<SearchSuggestion>;
+  sendMoneyOptions: SendMoneyOptions;
+  /** One person's profile details and verified accounts. */
+  sendMoneyRecipient: SendMoneyRecipient;
+  /** Search people to send money to (name, email or phone). */
+  sendMoneyRecipients: Array<SendMoneyRecipient>;
+  /** Send Money Logs: every manual transfer. */
+  sendMoneyTransfersTable: SendMoneyTransferPage;
   /** This server's live pulse. Tech/Super admin only. */
   serverPulse: ServerPulse;
   /**
@@ -34146,6 +34252,8 @@ export type Query = {
   withdrawalMinimums: WithdrawalMinimums;
   withdrawalRequests: Array<WalletWithdrawal>;
   withdrawalRequestsTable: WalletWithdrawalTablePage;
+  /** The approval dialog's data for one withdrawal. */
+  withdrawalReview: WithdrawalReview;
 };
 
 
@@ -36653,6 +36761,12 @@ export type QueryPaymentsTableArgs = {
 };
 
 
+export type QueryPayoutAuditTableArgs = {
+  kind: PayoutSubject;
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryPexelsSearchArgs = {
   orientation?: InputMaybe<Scalars['String']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
@@ -37564,6 +37678,22 @@ export type QuerySearchStaffMessagesArgs = {
 export type QuerySearchSuggestionsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   query: Scalars['String']['input'];
+};
+
+
+export type QuerySendMoneyRecipientArgs = {
+  user_id: Scalars['ID']['input'];
+};
+
+
+export type QuerySendMoneyRecipientsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  search: Scalars['String']['input'];
+};
+
+
+export type QuerySendMoneyTransfersTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -38662,6 +38792,11 @@ export type QueryWithdrawalRequestsArgs = {
 
 export type QueryWithdrawalRequestsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryWithdrawalReviewArgs = {
+  withdrawal_id: Scalars['ID']['input'];
 };
 
 export type RaiseSosInput = {
@@ -40596,6 +40731,84 @@ export type SendAppReleaseEmailInput = {
   /** Optional override; defaults to the built-in release distribution list. */
   recipients?: InputMaybe<Array<Scalars['String']['input']>>;
   version: Scalars['String']['input'];
+};
+
+export type SendMoneyCategory =
+  | 'ADJUSTMENT'
+  | 'OTHER'
+  | 'REFUND'
+  | 'REIMBURSEMENT'
+  | 'SALARY';
+
+export type SendMoneyInput = {
+  /** One of the recipient's verified_accounts. */
+  account_id: Scalars['ID']['input'];
+  amount: Scalars['Float']['input'];
+  category: SendMoneyCategory;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  /** IMPS or NEFT for a bank account. Ignored for UPI. */
+  payout_method?: InputMaybe<WithdrawalMethod>;
+  reason: Scalars['String']['input'];
+  recipient_user_id: Scalars['ID']['input'];
+  /** Minted by the form when it opens. A repeat of the same id returns the transfer already made. */
+  request_id: Scalars['String']['input'];
+  supporting_reference?: InputMaybe<Scalars['String']['input']>;
+  supporting_url?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type SendMoneyOptions = {
+  __typename?: 'SendMoneyOptions';
+  categories: Array<SendMoneyCategory>;
+  currency_symbol: Scalars['String']['output'];
+  payouts_configured: Scalars['Boolean']['output'];
+};
+
+export type SendMoneyRecipient = {
+  __typename?: 'SendMoneyRecipient';
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+  verified_accounts: Array<VerifiedBankAccount>;
+};
+
+export type SendMoneyTransfer = {
+  __typename?: 'SendMoneyTransfer';
+  account_holder_name: Scalars['String']['output'];
+  account_number: Scalars['String']['output'];
+  amount: Scalars['Float']['output'];
+  approved_by_name: Scalars['String']['output'];
+  attempt: Scalars['Int']['output'];
+  category: SendMoneyCategory;
+  completed_at?: Maybe<Scalars['String']['output']>;
+  created_at: Scalars['String']['output'];
+  failure_reason: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  ifsc_code: Scalars['String']['output'];
+  initiated_by_name: Scalars['String']['output'];
+  notes: Scalars['String']['output'];
+  payout_method: WithdrawalMethod;
+  payout_status: PayoutStatus;
+  razorpay_payout_id: Scalars['String']['output'];
+  reason: Scalars['String']['output'];
+  recipient_email: Scalars['String']['output'];
+  recipient_name: Scalars['String']['output'];
+  recipient_phone: Scalars['String']['output'];
+  recipient_user_id: Scalars['ID']['output'];
+  status: MoneyOutStatus;
+  supporting_reference: Scalars['String']['output'];
+  supporting_url: Scalars['String']['output'];
+  transfer_id: Scalars['String']['output'];
+  upi_id: Scalars['String']['output'];
+  utr: Scalars['String']['output'];
+};
+
+export type SendMoneyTransferPage = {
+  __typename?: 'SendMoneyTransferPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<SendMoneyTransfer>;
+  total: Scalars['Int']['output'];
 };
 
 export type SendPodPartnerRequestInput = {
@@ -50741,6 +50954,20 @@ export type VerificationType =
   | 'EMAIL'
   | 'IDENTITY';
 
+/** A bank or UPI account Duncit has verified for a person (it sits on an approved host, venue or brand). */
+export type VerifiedBankAccount = {
+  __typename?: 'VerifiedBankAccount';
+  account_holder_name: Scalars['String']['output'];
+  account_number: Scalars['String']['output'];
+  /** Pass this back to pick the account — the destination is never sent from the client. */
+  id: Scalars['ID']['output'];
+  ifsc_code: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  payout_method: WithdrawalMethod;
+  source: Scalars['String']['output'];
+  upi_id: Scalars['String']['output'];
+};
+
 export type VerifyPasswordResetCodeInput = {
   channel: PasswordResetChannel;
   email?: InputMaybe<Scalars['String']['input']>;
@@ -51482,16 +51709,33 @@ export type WalletWithdrawal = {
   /** Empty on a rejected request — the money went back, so the pods are free again. */
   allocations: Array<WithdrawalAllocation>;
   amount: Scalars['Float']['output'];
+  /** Finance's decision — separate from the payout, which can still fail after an approval. */
+  approval_status: ApprovalStatus;
+  approved_amount?: Maybe<Scalars['Float']['output']>;
   beneficiary_email: Scalars['String']['output'];
   beneficiary_name: Scalars['String']['output'];
   created_at: Scalars['String']['output'];
+  decision_reason: Scalars['String']['output'];
+  /** The one label to show: the decision until a payout starts, then the payout's state. */
+  display_status: MoneyOutStatus;
   id: Scalars['ID']['output'];
   ifsc_code: Scalars['String']['output'];
   paid_at?: Maybe<Scalars['String']['output']>;
+  payout_attempt: Scalars['Int']['output'];
+  payout_completed_at?: Maybe<Scalars['String']['output']>;
+  payout_failure_reason: Scalars['String']['output'];
+  payout_initiated_at?: Maybe<Scalars['String']['output']>;
   payout_method: WithdrawalMethod;
+  /** What the bank says. Null until a payout is started. */
+  payout_status?: Maybe<PayoutStatus>;
+  payout_utr: Scalars['String']['output'];
+  razorpay_payout_id: Scalars['String']['output'];
   reject_reason: Scalars['String']['output'];
+  /** What the person asked for. amount is what was approved once Finance partially approves. */
+  requested_amount: Scalars['Float']['output'];
   requested_at: Scalars['String']['output'];
   reviewed_at?: Maybe<Scalars['String']['output']>;
+  reviewed_by_name: Scalars['String']['output'];
   scheduled_for: Scalars['String']['output'];
   status: WithdrawalStatus;
   upi_id: Scalars['String']['output'];
@@ -51765,6 +52009,11 @@ export type WithdrawalAllocation = {
   role: WithdrawerRole;
 };
 
+export type WithdrawalDecision =
+  | 'APPROVE'
+  | 'PARTIAL'
+  | 'REJECT';
+
 export type WithdrawalMethod =
   | 'IMPS'
   | 'NEFT'
@@ -51777,6 +52026,20 @@ export type WithdrawalMinimums = {
   ecomm_manager: Scalars['Float']['output'];
   host: Scalars['Float']['output'];
   venue_owner: Scalars['Float']['output'];
+};
+
+/** Everything the approval dialog shows for one withdrawal. */
+export type WithdrawalReview = {
+  __typename?: 'WithdrawalReview';
+  account_verified: Scalars['Boolean']['output'];
+  currency_symbol: Scalars['String']['output'];
+  /** False until the Razorpay keys and the RazorpayX account number are set in the Tech portal. */
+  payouts_configured: Scalars['Boolean']['output'];
+  /** The verified account the requested destination matches, or null when it is not on a verified record. */
+  verified_account?: Maybe<VerifiedBankAccount>;
+  /** The person's wallet balance right now (the requested amount has already left it). */
+  wallet_balance: Scalars['Float']['output'];
+  withdrawal: WalletWithdrawal;
 };
 
 export type WithdrawalStatus =

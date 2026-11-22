@@ -1125,6 +1125,46 @@ export const WA_EVENTS: readonly WaEvent[] = [
     fires: 'A product listing is declined at review, with the reviewer reason',
     params: ['Recipient name', 'Product', 'Brand', 'Reason'],
   },
+  {
+    key: 'WITHDRAWAL_APPROVED',
+    campaign: 'withdrawal_approved',
+    audience: 'USER',
+    category: 'billing',
+    fires: 'Finance approves a withdrawal in full (Finance > Withdrawal Payments)',
+    params: ['Recipient name', 'Approved amount', 'Payment status'],
+  },
+  {
+    key: 'WITHDRAWAL_PARTIALLY_APPROVED',
+    campaign: 'withdrawal_partially_approved',
+    audience: 'USER',
+    category: 'billing',
+    fires: 'Finance approves only part of a withdrawal; the rest goes back to the wallet',
+    params: ['Recipient name', 'Requested amount', 'Approved amount', 'Reason'],
+  },
+  {
+    key: 'WITHDRAWAL_REJECTED',
+    campaign: 'withdrawal_rejected',
+    audience: 'USER',
+    category: 'billing',
+    fires: 'Finance rejects a withdrawal; the full amount goes back to the wallet',
+    params: ['Recipient name', 'Requested amount', 'Reason'],
+  },
+  {
+    key: 'WITHDRAWAL_PAID',
+    campaign: 'withdrawal_paid',
+    audience: 'USER',
+    category: 'billing',
+    fires: 'Razorpay confirms the withdrawal payout reached the bank account',
+    params: ['Recipient name', 'Paid amount', 'Transaction reference'],
+  },
+  {
+    key: 'SEND_MONEY_PAID',
+    campaign: 'send_money_paid',
+    audience: 'USER',
+    category: 'billing',
+    fires: 'Razorpay confirms a manual Send Money transfer reached the bank account (Finance > Send Money)',
+    params: ['Recipient name', 'Amount', 'Reason', 'Transaction reference'],
+  },
 ];
 
 /** Lookup by event key. */

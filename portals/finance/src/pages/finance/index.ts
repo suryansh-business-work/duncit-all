@@ -16,7 +16,9 @@ export {
   default as WithdrawalsPage,
   PodWithdrawalDetailPage,
   WithdrawalSettingsPage,
+  WithdrawalLogsPage,
 } from './withdrawals-page';
+export { default as SendMoneyPage, SendMoneyLogsPage } from './send-money-page';
 export { default as InvoiceManagementPage } from './InvoiceManagementPage';
 export { default as InvoiceTemplatePage } from './invoice-template-page';
 export { default as LedgerPage } from './LedgerPage';

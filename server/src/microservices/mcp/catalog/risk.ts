@@ -77,7 +77,16 @@ const CONFIRM_WORDS = new Set([
  * `controlCrmCall` mutes, holds or hangs up a phone call in progress.
  * `enableAiPromptPublicShare` makes a prompt readable by anyone with the link.
  */
-const CONFIRM_FIELDS = new Set(['generatePhysicalGiftCards', 'controlCrmCall', 'enableAiPromptPublicShare']);
+const CONFIRM_FIELDS = new Set([
+  'generatePhysicalGiftCards',
+  'controlCrmCall',
+  'enableAiPromptPublicShare',
+  // Money leaving the company's bank account. "withdrawal" is not the word
+  // "withdraw", so the keyword rules would let these run unconfirmed.
+  'decideWithdrawal',
+  'reviewWithdrawal',
+  'sendMoney',
+]);
 
 /** Words that mean a mutation reaches people or systems outside Duncit. */
 const OUTWARD_WORDS = new Set([

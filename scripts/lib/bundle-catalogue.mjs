@@ -143,6 +143,7 @@ const EMAIL_SPREAD_FILES = {
   CORE_EMAIL_FALLBACK: "server/src/services/email/catalogue/catalogue.bundle.core.ts",
   LIFECYCLE_FALLBACK: "server/src/services/email/catalogue/catalogue.lifecycle.bundle.ts",
   VENUE_OFFER_EMAIL_FALLBACK: "server/src/services/email/catalogue/catalogue.offers.ts",
+  PAYOUT_EMAIL_FALLBACK: "server/src/services/email/catalogue/catalogue.payouts.ts",
 };
 
 /** Turns a backslash escape into the character it stands for. */

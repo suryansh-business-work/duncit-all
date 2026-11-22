@@ -121,6 +121,11 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
       secret: true,
       hint: 'Used to verify Razorpay webhooks',
     },
+    {
+      name: 'x_account_number',
+      label: 'RazorpayX Account Number (payouts)',
+      hint: 'The RazorpayX current-account number withdrawals and Send Money are paid from. Leave empty to keep payouts switched off.',
+    },
   ],
   SHIPROCKET: [
     { name: 'email', label: 'Account Email', hint: 'ShipRocket API user email' },
@@ -730,6 +735,7 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   RAZORPAY_KEY_ID: { category: 'RAZORPAY', field: 'key_id' },
   RAZORPAY_KEY_SECRET: { category: 'RAZORPAY', field: 'key_secret' },
   RAZORPAY_WEBHOOK_SECRET: { category: 'RAZORPAY', field: 'webhook_secret' },
+  RAZORPAYX_ACCOUNT_NUMBER: { category: 'RAZORPAY', field: 'x_account_number' },
   SHIPROCKET_EMAIL: { category: 'SHIPROCKET', field: 'email' },
   SHIPROCKET_PASSWORD: { category: 'SHIPROCKET', field: 'password' },
   SHIPROCKET_PICKUP_LOCATION: { category: 'SHIPROCKET', field: 'pickup_location' },

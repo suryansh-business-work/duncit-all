@@ -693,6 +693,56 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'Hi Kavya, your product Tug Rope Large for Pawsome was not approved at review. ' +
       'Reason: The product photos are blurred. You can update the listing and submit it again from the Partners console. Team Duncit',
   },
+  WITHDRAWAL_APPROVED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your Duncit withdrawal of {{2}} was approved. Payment status: {{3}}. ' +
+      'We will message you again once the money reaches your bank account. Team Duncit',
+    sample:
+      'Hi Meera, your Duncit withdrawal of Rs 2500.00 was approved. Payment status: Processing. ' +
+      'We will message you again once the money reaches your bank account. Team Duncit',
+  },
+  WITHDRAWAL_PARTIALLY_APPROVED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, you asked to withdraw {{2}} and we approved {{3}}. Reason: {{4}}. ' +
+      'The rest has gone back to your Duncit wallet. Team Duncit',
+    sample:
+      'Hi Meera, you asked to withdraw Rs 2500.00 and we approved Rs 1800.00. Reason: Part of the balance is on hold for a pending refund. ' +
+      'The rest has gone back to your Duncit wallet. Team Duncit',
+  },
+  WITHDRAWAL_REJECTED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your Duncit withdrawal of {{2}} was not approved. Reason: {{3}}. ' +
+      'The full amount has gone back to your wallet. Team Duncit',
+    sample:
+      'Hi Meera, your Duncit withdrawal of Rs 2500.00 was not approved. Reason: The bank details need to be checked. ' +
+      'The full amount has gone back to your wallet. Team Duncit',
+  },
+  WITHDRAWAL_PAID: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your Duncit withdrawal of {{2}} has been paid to your bank account. ' +
+      'Transaction reference: {{3}}. Team Duncit',
+    sample:
+      'Hi Meera, your Duncit withdrawal of Rs 2500.00 has been paid to your bank account. ' +
+      'Transaction reference: 412345678901. Team Duncit',
+  },
+  SEND_MONEY_PAID: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, Duncit has sent you {{2}} for: {{3}}. ' +
+      'Transaction reference: {{4}}. Team Duncit',
+    sample:
+      'Hi Meera, Duncit has sent you Rs 15000.00 for: October salary. ' +
+      'Transaction reference: 412345678901. Team Duncit',
+  },
 };
 
 /** Highest `{{n}}` in a body — what the registry's param count has to equal. */

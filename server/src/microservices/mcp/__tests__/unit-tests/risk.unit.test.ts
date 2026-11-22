@@ -88,3 +88,24 @@ describe('reachesOutside', () => {
     expect(reachesOutside('QUERY', 'sendLogs')).toBe(false);
   });
 });
+
+describe('money-out mutations (withdrawals and Send Money)', () => {
+  it.each(['decideWithdrawal', 'reviewWithdrawal', 'sendMoney', 'retryWithdrawalPayout', 'retrySendMoneyTransfer'])(
+    'requires the person to confirm %s before it runs',
+    (field) => {
+      expect(needsConfirmation('MUTATION', field)).toBe(true);
+    }
+  );
+
+  it('does not ask for confirmation to read the review dialog, the audit trail or the transfer log', () => {
+    for (const field of ['withdrawalReview', 'payoutAuditTable', 'sendMoneyTransfersTable', 'sendMoneyRecipients']) {
+      expect(needsConfirmation('QUERY', field)).toBe(false);
+      expect(riskOf('QUERY', field)).toBe('READ');
+    }
+  });
+
+  it('tells the caller Send Money reaches outside Duncit', () => {
+    expect(reachesOutside('MUTATION', 'sendMoney')).toBe(true);
+    expect(reachesOutside('MUTATION', 'retryWithdrawalPayout')).toBe(true);
+  });
+});

@@ -166,6 +166,8 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   podExpenseTypeDefs: 'finance',
   podCalculatorTypeDefs: 'finance',
   walletTypeDefs: 'finance',
+  // Withdrawal approvals, Send Money and the payout audit trail.
+  payoutTypeDefs: 'finance',
   founderTypeDefs: 'finance',
 
   coinTypeDefs: 'loyalty',

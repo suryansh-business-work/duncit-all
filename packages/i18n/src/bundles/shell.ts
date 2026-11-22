@@ -1108,6 +1108,13 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       withdrawal: 'Withdrawal',
       withdrawalPayments: 'Withdrawal Payments',
       withdrawalSettings: 'Withdrawal Settings',
+      withdrawalLogs: 'Withdrawal Logs',
+      sendMoney: 'Send Money',
+      sendMoneyLogs: 'Send Money Logs',
+      groupOverview: 'Overview',
+      groupPodSettlements: 'Pods & Settlements',
+      groupPayments: 'Payments',
+      groupMoneyOut: 'Money Out',
       // Partner console: one studio at a time, picked by the switcher above the menu.
       studio: 'Studio',
       switchStudio: 'Switch studio',

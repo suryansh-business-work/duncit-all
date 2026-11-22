@@ -1,6 +1,7 @@
 import { Schema, model, Types, type Document } from 'mongoose';
 import { WITHDRAWER_ROLES, type WithdrawerRole } from '@modules/finance/finance/finance.model';
 import type { PaymentReleaseKind } from '@modules/finance/finance/paymentRelease.model';
+import { APPROVAL_STATES, payoutStateSchema, type ApprovalState, type IPayoutState } from '@modules/finance/payout/payout.model';
 
 export type WalletTxnType = 'CREDIT' | 'DEBIT';
 export type WalletTxnSource = 'POD_COMPLETION' | 'WITHDRAWAL' | 'WITHDRAWAL_REVERSAL';
@@ -87,6 +88,16 @@ export interface IWalletWithdrawal extends Document {
   reviewed_by?: Types.ObjectId | null;
   reviewed_at?: Date | null;
   paid_at?: Date | null;
+  /** What the user asked for. Null until a partial approval lowers amount to what was approved. */
+  requested_amount?: number | null;
+  /** The Finance decision. Absent on a row from before approvals existed; read it through approvalOf. */
+  approval_status?: ApprovalState;
+  /** Equals amount once a decision is made; the rest of a partial request went back to the wallet. */
+  approved_amount?: number | null;
+  decision_reason: string;
+  reviewed_by_name: string;
+  /** RazorpayX payout state. Absent until a payout is started (and on a legacy manually-paid row). */
+  payout?: IPayoutState | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -158,10 +169,19 @@ const withdrawalSchema = new Schema<IWalletWithdrawal>(
     reviewed_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     reviewed_at: { type: Date, default: null },
     paid_at: { type: Date, default: null },
+    // Deliberately NO default on approval_status / payout: a legacy PAID row must
+    // not read back as PENDING. They are derived on read until a decision is made.
+    requested_amount: { type: Number, default: null, min: 1 },
+    approval_status: { type: String, enum: APPROVAL_STATES },
+    approved_amount: { type: Number, default: null, min: 0 },
+    decision_reason: { type: String, default: '', trim: true, maxlength: 500 },
+    reviewed_by_name: { type: String, default: '', trim: true, maxlength: 160 },
+    payout: { type: payoutStateSchema, default: undefined },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
 withdrawalSchema.index({ status: 1, created_at: -1 });
+withdrawalSchema.index({ approval_status: 1, 'payout.status': 1 });
 // The Finance pod drill-down reads every withdrawal attributed to one pod.
 withdrawalSchema.index({ 'allocations.pod_id': 1, status: 1 });
 

@@ -52,7 +52,7 @@ export default function UserHeader({
       actions={
         <Stack spacing={1} sx={{ alignItems: 'flex-end' }}>
           {/* Top-right corner: every platform this person has used Duncit from. */}
-          <PlatformIcons platforms={user.platforms_used ?? []} t={t} focusable />
+          <PlatformIcons platforms={user.platforms_used ?? []} t={t} />
           <Stack direction="row" spacing={1}>
             <DuncitButton size="small" variant="outlined" startIcon={<CallIcon />} onClick={onCallClick} data-testid="admin-user-call">
               {t('admin.contact.call')}

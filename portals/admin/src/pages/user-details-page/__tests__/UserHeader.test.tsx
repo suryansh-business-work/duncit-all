@@ -45,7 +45,7 @@ describe('UserHeader — title', () => {
 });
 
 describe('UserHeader — platforms used', () => {
-  it('shows every platform the user has used, in order, beside the actions and reachable by keyboard', () => {
+  it('shows every platform the user has used, in order, as named images beside the actions', () => {
     renderWithProviders(
       <UserHeader user={{ ...baseUser, platforms_used: ['ANDROID', 'IOS', 'WEB'] }} status="ACTIVE" busy={false} {...spies()} />,
     );
@@ -53,7 +53,8 @@ describe('UserHeader — platforms used', () => {
     const group = within(screen.getByTestId('back-header')).getByRole('group', { name: 'Platforms Used' });
     const icons = within(group).getAllByRole('img');
     expect(icons.map((icon) => icon.getAttribute('aria-label'))).toEqual(['Android', 'iOS', 'Web']);
-    for (const icon of icons) expect(icon).toHaveAttribute('tabindex', '0');
+    // Nothing to operate, so nothing for the keyboard to stop on (jsx-a11y/no-noninteractive-tabindex).
+    for (const icon of icons) expect(icon).not.toHaveAttribute('tabindex');
   });
 
   it('names a platform in a tooltip when it is pointed at', async () => {

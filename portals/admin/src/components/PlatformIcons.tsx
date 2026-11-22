@@ -15,20 +15,16 @@ interface Props {
   /** In display order, as the server sends them. */
   platforms: readonly UserPlatform[];
   t: (key: string) => string;
-  /**
-   * Puts each icon in the tab order so a keyboard can open its tooltip. Left
-   * off inside grid cells, where the grid owns focus and the row's text value
-   * already names the platforms.
-   */
-  focusable?: boolean;
 }
 
 /**
  * The platforms an account uses Duncit from, as icons side by side: Android,
- * Apple for iOS, a globe for the web. Each one is named by its tooltip, and the
- * same name is its accessible name.
+ * Apple for iOS, a globe for the web. Each one is named by its tooltip on hover,
+ * and the same name is its accessible name (`role="img"` + `aria-label`). The
+ * icons stay out of the tab order: they do nothing, and a focusable image tells
+ * a keyboard user there is something to operate when there is not.
  */
-export default function PlatformIcons({ platforms, t, focusable = false }: Readonly<Props>) {
+export default function PlatformIcons({ platforms, t }: Readonly<Props>) {
   if (platforms.length === 0) {
     return (
       <Typography variant="caption" sx={{ color: 'text.secondary' }} data-testid="admin-user-platforms-empty">
@@ -54,7 +50,6 @@ export default function PlatformIcons({ platforms, t, focusable = false }: Reado
               component="span"
               role="img"
               aria-label={label}
-              tabIndex={focusable ? 0 : undefined}
               data-testid={`admin-user-platform-${platform}`}
               sx={{ display: 'inline-flex', borderRadius: 1 }}
             >

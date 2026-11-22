@@ -71,6 +71,26 @@ jest.mock('expo-video', () => ({
   VideoView: (props) => require('react').createElement(require('react-native').View, props),
 }));
 
+// expo-audio's native module is absent under jest (its classes extend it), so
+// importing it throws at load. Ask Duncit's voice hook records and plays with it.
+jest.mock('expo-audio', () => ({
+  __esModule: true,
+  AudioModule: { requestRecordingPermissionsAsync: jest.fn(async () => ({ granted: true })) },
+  RecordingPresets: { HIGH_QUALITY: {} },
+  setAudioModeAsync: jest.fn(async () => undefined),
+  useAudioRecorder: jest.fn(() => ({
+    uri: null,
+    prepareToRecordAsync: jest.fn(async () => undefined),
+    record: jest.fn(),
+    stop: jest.fn(async () => undefined),
+  })),
+  createAudioPlayer: jest.fn(() => ({
+    addListener: jest.fn(() => ({ remove: jest.fn() })),
+    play: jest.fn(),
+    remove: jest.fn(),
+  })),
+}));
+
 // The header cart (rendered by AppHeader and every StackScreen back-bar) reads
 // the active route through the navigation container ref. Unit tests render
 // components with no <NavigationContainer> — and many of them mock

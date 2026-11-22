@@ -282,6 +282,26 @@ describe('uploadBase64Image', () => {
     });
   });
 
+  it('uploads payment evidence as an ImageKit private file and never sends it to the AI scan', async () => {
+    okUpload({ url: 'https://ik.example.test/production/payment_evidence/u1/evidence/s.jpg', fileId: 'f-p' });
+    await uploadBase64Image({
+      fileBase64: Buffer.from('img').toString('base64'),
+      fileName: 's.jpg',
+      mimeType: 'image/jpeg',
+      folder: '/production/payment_evidence/u1/evidence',
+      userId: 'u1',
+    });
+    expect(sentForm().get('isPrivateFile')).toBe('true');
+    expect(sentForm().get('folder')).toBe('/production/payment_evidence/u1/evidence');
+    expect(scan).not.toHaveBeenCalled();
+  });
+
+  it('leaves every other upload public', async () => {
+    okUpload();
+    await uploadBase64Image({ fileBase64: Buffer.from('img').toString('base64'), fileName: 'a.jpg', mimeType: 'image/jpeg', folder: '/avatars' });
+    expect(sentForm().get('isPrivateFile')).toBeNull();
+  });
+
   it('never lets a failed AI scan fail the upload', async () => {
     okUpload();
     scan.mockRejectedValue(new Error('scanner down'));

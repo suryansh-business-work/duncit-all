@@ -81,6 +81,8 @@ export const ticketTypeDefs = /* GraphQL */ `
     "The pod this ticket is about, if it was raised from a pod."
     pod_id: ID
     pod_title: String!
+    "The payment (Payment.id) this ticket is about, when it was raised from a checkout."
+    payment_id: ID
     status: TicketStatus!
     priority: TicketPriority!
     assignee_id: ID
@@ -112,6 +114,8 @@ export const ticketTypeDefs = /* GraphQL */ `
     "Attach the pod this ticket is about (from Contact Support on a pod)."
     pod_id: ID
     pod_title: String
+    "Link the ticket to one of the caller's own payments (Payment.id); ignored when it is not theirs."
+    payment_id: ID
   }
 
   "A page of tickets for the agent list (server-side pagination + sort + search)."

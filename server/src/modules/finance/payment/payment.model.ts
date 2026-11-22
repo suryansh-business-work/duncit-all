@@ -263,6 +263,13 @@ paymentSchema.index(
   { name: 'smart_incentive_created_at', partialFilterExpression: { smart_incentive_amount: { $gt: 0 } } }
 );
 
+// The Razorpay webhook finds the payment a `payment.failed` / `payment.captured`
+// belongs to by its order id. PARTIAL: only Razorpay checkouts carry one.
+paymentSchema.index(
+  { 'metadata.razorpay_order_id': 1 },
+  { partialFilterExpression: { 'metadata.razorpay_order_id': { $exists: true } } }
+);
+
 // The dates of one multi-date booking of a (now retired) recurring pod, found
 // together when the first date's payment is verified. Partial: most payments
 // are not grouped.

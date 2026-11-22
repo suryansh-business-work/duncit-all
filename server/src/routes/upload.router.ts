@@ -8,6 +8,7 @@ import { pipeline } from 'node:stream/promises';
 import { logs } from '@observability/log';
 import { uploadSpooledFileToImagekit } from '@modules/platform/upload/upload.service';
 import { spendUploadTicket } from '@modules/platform/upload/uploadTicket';
+import { isPrivateUploadFolder } from '@modules/platform/upload/uploadFolder';
 import { mediaScanService } from '@modules/ai/aiMonitoring/aiMonitoring.service';
 import {
   artifactUrl,
@@ -248,7 +249,8 @@ export function buildUploadRouter(): Router {
           folder: ticket.folder,
           surface: ticket.surface,
         });
-        if (isImage) recordImageForReview(ticket, uploaded.url, storedFileName);
+        // Private payment evidence is never sent to the AI scan or listed on its dashboard.
+        if (isImage && !isPrivateUploadFolder(ticket.folder)) recordImageForReview(ticket, uploaded.url, storedFileName);
         res.json(uploaded);
       } catch (error: any) {
         answerUploadFailure(res, ticket, error, fileName, spooled.bytes);

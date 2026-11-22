@@ -114,12 +114,62 @@ export async function createRazorpayOrder(args: {
   return { id: String(json.id) };
 }
 
+/**
+ * One Razorpay payment as far as refunds and evidence checks read it. Card,
+ * contact and VPA details are deliberately NOT carried: nothing downstream needs
+ * them and they must never reach a log or an event trail.
+ */
+export interface RazorpayPaymentSummary {
+  id: string;
+  /** created | authorized | captured | refunded | failed */
+  status: string;
+  /** Paise. */
+  amount: number;
+  /** Paise already refunded on this payment. */
+  amount_refunded: number;
+  order_id: string;
+  /** Bank-side references a buyer may quote: RRN, UPI transaction id, bank transaction id. */
+  references: string[];
+  error_code: string;
+  error_description: string;
+}
+
+interface RazorpayPaymentJson {
+  id?: unknown;
+  status?: unknown;
+  amount?: unknown;
+  amount_refunded?: unknown;
+  order_id?: unknown;
+  error_code?: unknown;
+  error_description?: unknown;
+  acquirer_data?: Record<string, unknown> | null;
+  error?: { description?: string };
+}
+
+const text = (value: unknown): string => (typeof value === 'string' || typeof value === 'number' ? String(value) : '');
+
+const toPaymentSummary = (item: RazorpayPaymentJson): RazorpayPaymentSummary => {
+  const acquirer = item?.acquirer_data ?? {};
+  return {
+    id: text(item?.id),
+    status: text(item?.status),
+    amount: Number(item?.amount ?? 0),
+    amount_refunded: Number(item?.amount_refunded ?? 0),
+    order_id: text(item?.order_id),
+    references: ['rrn', 'upi_transaction_id', 'bank_transaction_id']
+      .map((key) => text(acquirer[key]).trim())
+      .filter(Boolean),
+    error_code: text(item?.error_code),
+    error_description: text(item?.error_description),
+  };
+};
+
 /** Payments Razorpay has recorded against one order — the source of truth when a
  * client disappeared before it could verify. */
 export async function fetchRazorpayOrderPayments(
   orderId: string,
   account?: RazorpayAccount
-): Promise<Array<{ id: string; status: string; amount: number }>> {
+): Promise<RazorpayPaymentSummary[]> {
   const { keyId, keySecret } = await getRazorpayKeys(account);
   const auth = 'Basic ' + Buffer.from(`${keyId}:${keySecret}`).toString('base64');
   const res = await outboundFetch('Razorpay', `${RAZORPAY_API}/orders/${orderId}/payments`, {
@@ -132,12 +182,51 @@ export async function fetchRazorpayOrderPayments(
       extensions: { code: 'BAD_GATEWAY' },
     });
   }
-  const items: any[] = Array.isArray(json?.items) ? json.items : [];
-  return items.map((item) => ({
-    id: String(item?.id ?? ''),
-    status: String(item?.status ?? ''),
-    amount: Number(item?.amount ?? 0),
-  }));
+  const items: RazorpayPaymentJson[] = Array.isArray(json?.items) ? json.items : [];
+  return items.map(toPaymentSummary);
+}
+
+/** One payment, live from Razorpay — what a refund re-checks right before it sends money. */
+export async function fetchRazorpayPayment(
+  paymentId: string,
+  account?: RazorpayAccount
+): Promise<RazorpayPaymentSummary> {
+  const { keyId, keySecret } = await getRazorpayKeys(account);
+  const auth = 'Basic ' + Buffer.from(`${keyId}:${keySecret}`).toString('base64');
+  const res = await outboundFetch('Razorpay', `${RAZORPAY_API}/payments/${encodeURIComponent(paymentId)}`, {
+    headers: { Authorization: auth },
+  });
+  const json = ((await res.json().catch(() => ({}))) ?? {}) as RazorpayPaymentJson;
+  if (!res.ok || !json.id) {
+    const detail = json.error?.description || `HTTP ${res.status}`;
+    throw new GraphQLError(`Razorpay payment lookup failed: ${detail}`, { extensions: { code: 'BAD_GATEWAY' } });
+  }
+  return toPaymentSummary(json);
+}
+
+/**
+ * Whether a webhook body was signed by Razorpay: HMAC_SHA256(raw body, webhook
+ * secret) as hex in `x-razorpay-signature`. Checked against every configured
+ * secret (one per Razorpay account), in constant time.
+ */
+export function verifyRazorpayWebhookSignature(rawBody: Buffer, signature: string, secrets: readonly string[]): boolean {
+  const given = Buffer.from(signature || '');
+  if (given.length === 0) return false;
+  return secrets.some((secret) => {
+    if (!secret) return false;
+    const expected = Buffer.from(crypto.createHmac('sha256', secret).update(rawBody).digest('hex'));
+    return expected.length === given.length && crypto.timingSafeEqual(expected, given);
+  });
+}
+
+/** Every webhook secret saved on an active Razorpay account, plus the default one. */
+export async function razorpayWebhookSecrets(): Promise<string[]> {
+  const [fallback, entries] = await Promise.all([
+    getRuntimeEnvValue('RAZORPAY_WEBHOOK_SECRET'),
+    EnvEntryModel.find({ category: 'RAZORPAY', is_active: true }).select('config').lean(),
+  ]);
+  const fromEntries = entries.map((entry) => text((entry?.config as Record<string, unknown> | undefined)?.webhook_secret));
+  return Array.from(new Set([fallback, ...fromEntries].map((s) => s.trim()).filter(Boolean)));
 }
 
 /** True when Razorpay says this order has a captured (money-taken) payment. */

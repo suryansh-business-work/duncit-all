@@ -4131,6 +4131,8 @@ export type BackgroundJobKind =
   | 'AI_TRANSLATE'
   | 'BULK_DELETE'
   | 'EMAIL_VERIFY'
+  | 'LEAD_DISCOVERY'
+  | 'LEAD_QUALITY_RECALC'
   | 'MEDIA_ORGANIZE';
 
 export type BackgroundJobStatus =
@@ -7320,6 +7322,8 @@ export type CommunityLead = {
   platform?: Maybe<Scalars['String']['output']>;
   priority: Scalars['String']['output'];
   profile_photo_url?: Maybe<Scalars['String']['output']>;
+  /** Lead Quality Score summary (score, classification, qualification); null until the lead is first scored. */
+  quality?: Maybe<CrmLeadQualitySummary>;
   services_offered: Array<CrmServiceOffered>;
   social_links: Array<CrmSocialLink>;
   super_category?: Maybe<CrmSuperCategoryRef>;
@@ -8430,6 +8434,8 @@ export type CreatorLead = {
   priority: Scalars['String']['output'];
   profile_links: Array<Scalars['String']['output']>;
   profile_photo_url?: Maybe<Scalars['String']['output']>;
+  /** Lead Quality Score summary (score, classification, qualification); null until the lead is first scored. */
+  quality?: Maybe<CrmLeadQualitySummary>;
   rate_card?: Maybe<Scalars['String']['output']>;
   services_offered: Array<CrmServiceOffered>;
   social_links: Array<CrmSocialLink>;
@@ -9045,6 +9051,207 @@ export type CrmLeadAiThread = {
   messages: Array<CrmLeadAiMessage>;
 };
 
+/** A researched lead in the CRM › Lead Research review queue, scored like a CRM lead. */
+export type CrmLeadCandidate = {
+  __typename?: 'CrmLeadCandidate';
+  address: Scalars['String']['output'];
+  area: Scalars['String']['output'];
+  category: Scalars['String']['output'];
+  city: Scalars['String']['output'];
+  classification_label: Scalars['String']['output'];
+  config_version?: Maybe<Scalars['Int']['output']>;
+  created_at: Scalars['String']['output'];
+  created_by: CrmLeadQualityActor;
+  crm_lead_id?: Maybe<Scalars['ID']['output']>;
+  decided_at?: Maybe<Scalars['String']['output']>;
+  decided_by?: Maybe<CrmLeadQualityActor>;
+  decision_note: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  duplicates: Array<CrmLeadCandidateDuplicate>;
+  emails: Array<Scalars['String']['output']>;
+  evidence: Array<CrmLeadQualityEvidence>;
+  id: Scalars['ID']['output'];
+  instagram_handle: Scalars['String']['output'];
+  instagram_url: Scalars['String']['output'];
+  job_id?: Maybe<Scalars['ID']['output']>;
+  lead_type: CrmEntityType;
+  /** Items still unverified — what to research next. */
+  missing_evidence: Array<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  /** DISCOVERY (found by a discovery job) or MCP (handed in by an AI assistant). */
+  origin: Scalars['String']['output'];
+  phones: Array<Scalars['String']['output']>;
+  qualification: CrmLeadQualification;
+  result?: Maybe<CrmLeadQualityResult>;
+  score?: Maybe<Scalars['Float']['output']>;
+  skipped_checks: Array<Scalars['String']['output']>;
+  sources: Array<CrmLeadCandidateSource>;
+  status: CrmLeadCandidateStatus;
+  tone: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+  website: Scalars['String']['output'];
+};
+
+export type CrmLeadCandidateApproval = {
+  __typename?: 'CrmLeadCandidateApproval';
+  candidate_id: Scalars['ID']['output'];
+  crm_lead_id?: Maybe<Scalars['ID']['output']>;
+  message: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  /** ADDED, DUPLICATE, NOT_QUALIFIED, SKIPPED or FAILED */
+  outcome: Scalars['String']['output'];
+};
+
+export type CrmLeadCandidateDuplicate = {
+  __typename?: 'CrmLeadCandidateDuplicate';
+  entity_type: CrmEntityType;
+  lead_id: Scalars['ID']['output'];
+  lead_name: Scalars['String']['output'];
+  /** What matched, e.g. PHONE 98765 43210 or INSTAGRAM @thebarn. */
+  match: Scalars['String']['output'];
+};
+
+/** A researched lead. Use only facts found on public pages, and list those pages in sources — never invent handles, numbers or evidence. */
+export type CrmLeadCandidateInput = {
+  address?: InputMaybe<Scalars['String']['input']>;
+  area?: InputMaybe<Scalars['String']['input']>;
+  category?: InputMaybe<Scalars['String']['input']>;
+  city?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  emails?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Quality items already verified, each with its evidence and public source link. */
+  evidence?: InputMaybe<Array<CrmLeadEvidenceDecisionInput>>;
+  /** Instagram profile link or handle. */
+  instagram?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  phones?: InputMaybe<Array<Scalars['String']['input']>>;
+  sources?: InputMaybe<Array<CrmLeadCandidateSourceInput>>;
+  website?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type CrmLeadCandidateQueued = {
+  __typename?: 'CrmLeadCandidateQueued';
+  candidate_id: Scalars['ID']['output'];
+  index: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+};
+
+export type CrmLeadCandidateRefusal = {
+  __typename?: 'CrmLeadCandidateRefusal';
+  index: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  reasons: Array<Scalars['String']['output']>;
+};
+
+export type CrmLeadCandidateSaveReport = {
+  __typename?: 'CrmLeadCandidateSaveReport';
+  /** Not saved: the same lead is already in the queue. */
+  already_queued: Array<CrmLeadCandidateQueued>;
+  /** Queued as DUPLICATE: they match an existing CRM lead and can never be added. */
+  duplicates: Array<CrmLeadCandidate>;
+  /** Not saved: invalid or untraceable input, with the reasons. */
+  refused: Array<CrmLeadCandidateRefusal>;
+  /** New candidates queued for review. */
+  saved: Array<CrmLeadCandidate>;
+};
+
+/** A public page a candidate was found on, with the text read from it. */
+export type CrmLeadCandidateSource = {
+  __typename?: 'CrmLeadCandidateSource';
+  kind: CrmLeadSourceKind;
+  text: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
+export type CrmLeadCandidateSourceInput = {
+  kind?: InputMaybe<CrmLeadSourceKind>;
+  /** The text read on that page (bio, listing, snippet). */
+  text?: InputMaybe<Scalars['String']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
+  /** The public page (http/https) this lead was found on. */
+  url: Scalars['String']['input'];
+};
+
+/** NEW: waiting for review. ADDED: now a CRM lead. REJECTED: dismissed. DUPLICATE: already in the CRM, can never be added. */
+export type CrmLeadCandidateStatus =
+  | 'ADDED'
+  | 'DUPLICATE'
+  | 'NEW'
+  | 'REJECTED';
+
+export type CrmLeadCandidateTablePage = {
+  __typename?: 'CrmLeadCandidateTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<CrmLeadCandidate>;
+  total: Scalars['Int']['output'];
+};
+
+export type CrmLeadDiscoveryInput = {
+  /** Let the AI quote evidence from each candidate's public text (default true). */
+  ai_evidence?: InputMaybe<Scalars['Boolean']['input']>;
+  category?: InputMaybe<Scalars['String']['input']>;
+  city: Scalars['String']['input'];
+  keywords?: InputMaybe<Scalars['String']['input']>;
+  lead_type: CrmEntityType;
+  locality?: InputMaybe<Scalars['String']['input']>;
+  /** Count only candidates scoring at least this (0-100). */
+  min_score?: InputMaybe<Scalars['Float']['input']>;
+  /** INSTAGRAM and/or GOOGLE_MAPS; defaults by lead type. */
+  sources?: InputMaybe<Array<CrmLeadSourceKind>>;
+  /** How many qualifying new leads to find, 1-100 (default 20). */
+  target_count?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** A lead discovery running (or finished) in the background. */
+export type CrmLeadDiscoveryJob = {
+  __typename?: 'CrmLeadDiscoveryJob';
+  candidates: Array<CrmLeadCandidate>;
+  category: Scalars['String']['output'];
+  city: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  error_message: Scalars['String']['output'];
+  failed: Scalars['Int']['output'];
+  failures: Array<BackgroundJobFailure>;
+  finished_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  keywords: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  lead_type: CrmEntityType;
+  locality: Scalars['String']['output'];
+  min_score?: Maybe<Scalars['Float']['output']>;
+  plan_note: Scalars['String']['output'];
+  queries: Array<Scalars['String']['output']>;
+  searches_run: Scalars['Int']['output'];
+  sources: Array<CrmLeadSourceKind>;
+  stats: CrmLeadDiscoveryStats;
+  status: BackgroundJobStatus;
+  /** Qualifying new leads found so far. */
+  succeeded: Scalars['Int']['output'];
+  target_count: Scalars['Int']['output'];
+  /** The number of qualifying new leads asked for. */
+  total: Scalars['Int']['output'];
+};
+
+export type CrmLeadDiscoveryStats = {
+  __typename?: 'CrmLeadDiscoveryStats';
+  already_queued: Scalars['Int']['output'];
+  duplicates: Scalars['Int']['output'];
+  found: Scalars['Int']['output'];
+  qualifying: Scalars['Int']['output'];
+  refused: Scalars['Int']['output'];
+  saved: Scalars['Int']['output'];
+};
+
+export type CrmLeadDuplicateCheck = {
+  __typename?: 'CrmLeadDuplicateCheck';
+  crm_matches: Array<CrmLeadCandidateDuplicate>;
+  is_duplicate: Scalars['Boolean']['output'];
+  lead_type: CrmEntityType;
+  queued_candidates: Array<CrmLeadQueuedCandidate>;
+};
+
 export type CrmLeadDuplicateCheckInput = {
   contacts?: InputMaybe<Array<CrmContactInput>>;
   /** The kind of the lead being edited — with lead_id, so it never matches itself. */
@@ -9066,6 +9273,28 @@ export type CrmLeadDuplicateMatch = {
   /** The value as it was typed. */
   value: Scalars['String']['output'];
 };
+
+/** One decision on one item. VERIFIED needs the evidence (and, from MCP, the public source link); PENDING clears an earlier decision. */
+export type CrmLeadEvidenceDecisionInput = {
+  evidence?: InputMaybe<Scalars['String']['input']>;
+  item_key: Scalars['String']['input'];
+  notes?: InputMaybe<Scalars['String']['input']>;
+  source_url?: InputMaybe<Scalars['String']['input']>;
+  status: CrmLeadEvidenceStatus;
+};
+
+/** VERIFIED earns the item's points; PENDING (unknown) and FAILED (checked, not met) earn none. */
+export type CrmLeadEvidenceStatus =
+  | 'FAILED'
+  | 'PENDING'
+  | 'VERIFIED';
+
+/** Who decided an item: a person in the console, an AI assistant through MCP, the server's own check, or the discovery AI quoting a source. */
+export type CrmLeadEvidenceVia =
+  | 'AI'
+  | 'MANUAL'
+  | 'MCP'
+  | 'SYSTEM';
 
 export type CrmLeadFilter = {
   city?: InputMaybe<Scalars['String']['input']>;
@@ -9127,6 +9356,457 @@ export type CrmLeadNearInput = {
   lng?: InputMaybe<Scalars['Float']['input']>;
   radius_km: Scalars['Float']['input'];
 };
+
+export type CrmLeadQualification =
+  | 'NOT_QUALIFIED'
+  | 'PENDING_VERIFICATION'
+  | 'QUALIFIED';
+
+export type CrmLeadQualityActor = {
+  __typename?: 'CrmLeadQualityActor';
+  id?: Maybe<Scalars['ID']['output']>;
+  name: Scalars['String']['output'];
+};
+
+export type CrmLeadQualityAnalytics = {
+  __typename?: 'CrmLeadQualityAnalytics';
+  by_type: Array<CrmLeadQualityTypeStats>;
+  cities: Array<CrmLeadQualityCityStat>;
+  conversion: Array<CrmLeadQualityConversion>;
+  duplicate_leads: Scalars['Int']['output'];
+  generated_at: Scalars['String']['output'];
+  missing_evidence: Array<CrmLeadQualityMissing>;
+  origins: Array<CrmLeadQualityOrigin>;
+  research_queue: Array<CrmLeadQualityQueueStat>;
+  top_leads: Array<CrmLeadQualityTopLead>;
+  trend: Array<CrmLeadQualityTrendPoint>;
+};
+
+/** An automatic check the server runs against a real source. NONE: a person or an AI assistant records the evidence. */
+export type CrmLeadQualityAutoCheck =
+  | 'CRM_UNIQUENESS'
+  | 'EMAIL_DELIVERABLE'
+  | 'GOOGLE_MAPS_LISTING'
+  | 'GOOGLE_REVIEWS_MIN'
+  | 'INSTAGRAM_BUSINESS_PROFILE'
+  | 'INSTAGRAM_FOLLOWERS_MIN'
+  | 'INSTAGRAM_RECENT_POST_DAYS'
+  | 'NONE'
+  | 'WEBSITE_REACHABLE';
+
+export type CrmLeadQualityBand = {
+  __typename?: 'CrmLeadQualityBand';
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  min: Scalars['Float']['output'];
+  tone: Scalars['String']['output'];
+};
+
+export type CrmLeadQualityBandInput = {
+  key?: InputMaybe<Scalars['String']['input']>;
+  label: Scalars['String']['input'];
+  min: Scalars['Float']['input'];
+  /** success, warning or error */
+  tone: Scalars['String']['input'];
+};
+
+export type CrmLeadQualityCityStat = {
+  __typename?: 'CrmLeadQualityCityStat';
+  average_score?: Maybe<Scalars['Float']['output']>;
+  city: Scalars['String']['output'];
+  leads: Scalars['Int']['output'];
+  qualified: Scalars['Int']['output'];
+};
+
+/** One version of a lead type's scoring model. Published versions are never edited; a new draft is published instead. */
+export type CrmLeadQualityConfig = {
+  __typename?: 'CrmLeadQualityConfig';
+  archived_at?: Maybe<Scalars['String']['output']>;
+  bands: Array<CrmLeadQualityBand>;
+  change_note: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  created_by: CrmLeadQualityActor;
+  criteria: Array<CrmLeadQualityCriterion>;
+  id: Scalars['ID']['output'];
+  lead_type: CrmEntityType;
+  /** Null: qualification depends on the mandatory gates only. */
+  min_qualification_score?: Maybe<Scalars['Float']['output']>;
+  published_at?: Maybe<Scalars['String']['output']>;
+  published_by?: Maybe<CrmLeadQualityActor>;
+  revision: Scalars['Int']['output'];
+  status: CrmLeadQualityConfigStatus;
+  updated_at?: Maybe<Scalars['String']['output']>;
+  updated_by: CrmLeadQualityActor;
+  version: Scalars['Int']['output'];
+  /** Sum of the enabled criteria's weightage (exactly 100 once published). */
+  weightage_total: Scalars['Float']['output'];
+};
+
+/** A scoring model as an array of criteria, each with optional sub-criteria. Enabled weightage must total exactly 100 to publish. */
+export type CrmLeadQualityConfigInput = {
+  bands: Array<CrmLeadQualityBandInput>;
+  criteria: Array<CrmLeadQualityCriterionInput>;
+  min_qualification_score?: InputMaybe<Scalars['Float']['input']>;
+};
+
+export type CrmLeadQualityConfigStatus =
+  | 'ARCHIVED'
+  | 'DRAFT'
+  | 'PUBLISHED';
+
+export type CrmLeadQualityConversion = {
+  __typename?: 'CrmLeadQualityConversion';
+  classification: Scalars['String']['output'];
+  conversion_rate?: Maybe<Scalars['Float']['output']>;
+  label: Scalars['String']['output'];
+  leads: Scalars['Int']['output'];
+  won: Scalars['Int']['output'];
+};
+
+export type CrmLeadQualityCount = {
+  __typename?: 'CrmLeadQualityCount';
+  count: Scalars['Int']['output'];
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+};
+
+export type CrmLeadQualityCriterion = {
+  __typename?: 'CrmLeadQualityCriterion';
+  auto_check: CrmLeadQualityAutoCheck;
+  enabled: Scalars['Boolean']['output'];
+  guidance: Scalars['String']['output'];
+  key: Scalars['String']['output'];
+  /** A gate: the lead cannot qualify until at least one item of this criterion is verified. */
+  mandatory: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  sub_criteria: Array<CrmLeadQualitySubCriterion>;
+  threshold?: Maybe<Scalars['Int']['output']>;
+  weightage: Scalars['Float']['output'];
+};
+
+export type CrmLeadQualityCriterionInput = {
+  auto_check?: InputMaybe<CrmLeadQualityAutoCheck>;
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  guidance?: InputMaybe<Scalars['String']['input']>;
+  /** Stable id evidence is stored against. Leave empty on a new criterion; it is made from the name. */
+  key?: InputMaybe<Scalars['String']['input']>;
+  mandatory?: InputMaybe<Scalars['Boolean']['input']>;
+  name: Scalars['String']['input'];
+  sub_criteria?: InputMaybe<Array<CrmLeadQualitySubCriterionInput>>;
+  threshold?: InputMaybe<Scalars['Int']['input']>;
+  weightage: Scalars['Float']['input'];
+};
+
+export type CrmLeadQualityCriterionResult = {
+  __typename?: 'CrmLeadQualityCriterionResult';
+  earned: Scalars['Float']['output'];
+  items: Array<CrmLeadQualityItemResult>;
+  key: Scalars['String']['output'];
+  mandatory: Scalars['Boolean']['output'];
+  max: Scalars['Float']['output'];
+  name: Scalars['String']['output'];
+  /** VERIFIED, PARTIAL, PENDING or FAILED */
+  status: Scalars['String']['output'];
+};
+
+export type CrmLeadQualityDetails = {
+  __typename?: 'CrmLeadQualityDetails';
+  config: CrmLeadQualityConfig;
+  entity_type: CrmEntityType;
+  evidence: Array<CrmLeadQualityEvidence>;
+  lead_id: Scalars['ID']['output'];
+  lead_name: Scalars['String']['output'];
+  /** MANUAL or RESEARCH (added from a Lead Research candidate). */
+  origin: Scalars['String']['output'];
+  published_version: Scalars['Int']['output'];
+  result?: Maybe<CrmLeadQualityResult>;
+  scored_at?: Maybe<Scalars['String']['output']>;
+  scored_version?: Maybe<Scalars['Int']['output']>;
+  /** True when the stored score was worked out with an older configuration version (a recalculation is due). */
+  stale: Scalars['Boolean']['output'];
+};
+
+export type CrmLeadQualityEvent = {
+  __typename?: 'CrmLeadQualityEvent';
+  actor: CrmLeadQualityActor;
+  classification: Scalars['String']['output'];
+  config_version?: Maybe<Scalars['Int']['output']>;
+  created_at: Scalars['String']['output'];
+  entity_type: CrmEntityType;
+  evidence: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  item_key: Scalars['String']['output'];
+  /** SCORE, EVIDENCE, CONFIG_DRAFT, CONFIG_PUBLISH or CONFIG_DISCARD */
+  kind: Scalars['String']['output'];
+  lead_id?: Maybe<Scalars['ID']['output']>;
+  note: Scalars['String']['output'];
+  qualification: Scalars['String']['output'];
+  score_after?: Maybe<Scalars['Float']['output']>;
+  score_before?: Maybe<Scalars['Float']['output']>;
+  source_url: Scalars['String']['output'];
+  status_after: Scalars['String']['output'];
+  status_before: Scalars['String']['output'];
+  trigger?: Maybe<Scalars['String']['output']>;
+  via?: Maybe<CrmLeadEvidenceVia>;
+};
+
+export type CrmLeadQualityEvidence = {
+  __typename?: 'CrmLeadQualityEvidence';
+  actor: CrmLeadQualityActor;
+  decided_at: Scalars['String']['output'];
+  evidence: Scalars['String']['output'];
+  item_key: Scalars['String']['output'];
+  notes: Scalars['String']['output'];
+  source_url: Scalars['String']['output'];
+  status: CrmLeadEvidenceStatus;
+  via: CrmLeadEvidenceVia;
+};
+
+export type CrmLeadQualityGate = {
+  __typename?: 'CrmLeadQualityGate';
+  key: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  /** PASSED, FAILED or PENDING */
+  state: Scalars['String']['output'];
+};
+
+/** One problem with a scoring configuration: where, a stable code the console translates, and the English message. */
+export type CrmLeadQualityIssue = {
+  __typename?: 'CrmLeadQualityIssue';
+  amount?: Maybe<Scalars['Float']['output']>;
+  code: Scalars['String']['output'];
+  message: Scalars['String']['output'];
+  path: Scalars['String']['output'];
+};
+
+export type CrmLeadQualityItemResult = {
+  __typename?: 'CrmLeadQualityItemResult';
+  auto_check: CrmLeadQualityAutoCheck;
+  criterion_key: Scalars['String']['output'];
+  earned: Scalars['Float']['output'];
+  guidance?: Maybe<Scalars['String']['output']>;
+  /** The key evidence is recorded against: criterion_key or criterion_key.sub_key. */
+  key: Scalars['String']['output'];
+  mandatory: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  points: Scalars['Float']['output'];
+  status: CrmLeadEvidenceStatus;
+  sub_key?: Maybe<Scalars['String']['output']>;
+  threshold?: Maybe<Scalars['Int']['output']>;
+};
+
+export type CrmLeadQualityJobRef = {
+  __typename?: 'CrmLeadQualityJobRef';
+  /** Null when nothing matched (no leads to score). */
+  job_id?: Maybe<Scalars['ID']['output']>;
+  total: Scalars['Int']['output'];
+};
+
+export type CrmLeadQualityMissing = {
+  __typename?: 'CrmLeadQualityMissing';
+  criterion: Scalars['String']['output'];
+  entity_type: CrmEntityType;
+  leads: Scalars['Int']['output'];
+};
+
+export type CrmLeadQualityOrigin = {
+  __typename?: 'CrmLeadQualityOrigin';
+  average_score?: Maybe<Scalars['Float']['output']>;
+  leads: Scalars['Int']['output'];
+  origin: Scalars['String']['output'];
+  qualified: Scalars['Int']['output'];
+};
+
+export type CrmLeadQualityPublishResult = {
+  __typename?: 'CrmLeadQualityPublishResult';
+  config: CrmLeadQualityConfig;
+  /** The background job rescoring every lead of this type with the new version; null when the type has no leads. */
+  recalculation_job_id?: Maybe<Scalars['ID']['output']>;
+};
+
+export type CrmLeadQualityQueueStat = {
+  __typename?: 'CrmLeadQualityQueueStat';
+  average_score?: Maybe<Scalars['Float']['output']>;
+  count: Scalars['Int']['output'];
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+};
+
+/** The calculated score. The ring, the breakdown table and the qualification all read this one result. */
+export type CrmLeadQualityResult = {
+  __typename?: 'CrmLeadQualityResult';
+  classification: Scalars['String']['output'];
+  classification_label: Scalars['String']['output'];
+  criteria: Array<CrmLeadQualityCriterionResult>;
+  failed_items: Scalars['Int']['output'];
+  gates: Array<CrmLeadQualityGate>;
+  max_score: Scalars['Float']['output'];
+  min_qualification_score?: Maybe<Scalars['Float']['output']>;
+  pending_items: Scalars['Int']['output'];
+  potential_score: Scalars['Float']['output'];
+  qualification: CrmLeadQualification;
+  score: Scalars['Float']['output'];
+  tone: Scalars['String']['output'];
+  verification: CrmLeadVerificationProgress;
+  verified_items: Scalars['Int']['output'];
+};
+
+export type CrmLeadQualityScoreResponse = {
+  __typename?: 'CrmLeadQualityScoreResponse';
+  details: CrmLeadQualityDetails;
+  /** Automatic checks that could not run (no connected Instagram account, no Serper key…), and why. */
+  skipped_checks: Array<Scalars['String']['output']>;
+};
+
+export type CrmLeadQualitySettings = {
+  __typename?: 'CrmLeadQualitySettings';
+  draft?: Maybe<CrmLeadQualityConfig>;
+  lead_type: CrmEntityType;
+  published: CrmLeadQualityConfig;
+};
+
+export type CrmLeadQualitySubCriterion = {
+  __typename?: 'CrmLeadQualitySubCriterion';
+  auto_check: CrmLeadQualityAutoCheck;
+  guidance: Scalars['String']['output'];
+  key: Scalars['String']['output'];
+  /** A gate: the lead cannot qualify until this item is verified. */
+  mandatory: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  points: Scalars['Float']['output'];
+  threshold?: Maybe<Scalars['Int']['output']>;
+};
+
+export type CrmLeadQualitySubCriterionInput = {
+  auto_check?: InputMaybe<CrmLeadQualityAutoCheck>;
+  guidance?: InputMaybe<Scalars['String']['input']>;
+  key?: InputMaybe<Scalars['String']['input']>;
+  mandatory?: InputMaybe<Scalars['Boolean']['input']>;
+  name: Scalars['String']['input'];
+  points: Scalars['Float']['input'];
+  threshold?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** A lead's Lead Quality Score as listings show it; null until the lead is first scored. */
+export type CrmLeadQualitySummary = {
+  __typename?: 'CrmLeadQualitySummary';
+  classification: Scalars['String']['output'];
+  classification_label: Scalars['String']['output'];
+  config_version?: Maybe<Scalars['Int']['output']>;
+  failed_gates: Scalars['Int']['output'];
+  pending_gates: Scalars['Int']['output'];
+  pending_items: Scalars['Int']['output'];
+  qualification: CrmLeadQualification;
+  score: Scalars['Float']['output'];
+  scored_at?: Maybe<Scalars['String']['output']>;
+  /** success (green), warning (yellow) or error (red) — the score band's colour. */
+  tone: Scalars['String']['output'];
+  verification: CrmLeadVerificationProgress;
+};
+
+export type CrmLeadQualityTopLead = {
+  __typename?: 'CrmLeadQualityTopLead';
+  city: Scalars['String']['output'];
+  classification_label: Scalars['String']['output'];
+  entity_type: CrmEntityType;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  qualification: Scalars['String']['output'];
+  score: Scalars['Float']['output'];
+};
+
+export type CrmLeadQualityTrendPoint = {
+  __typename?: 'CrmLeadQualityTrendPoint';
+  average_score?: Maybe<Scalars['Float']['output']>;
+  leads: Scalars['Int']['output'];
+  week: Scalars['String']['output'];
+};
+
+export type CrmLeadQualityTypeStats = {
+  __typename?: 'CrmLeadQualityTypeStats';
+  average_score?: Maybe<Scalars['Float']['output']>;
+  classifications: Array<CrmLeadQualityCount>;
+  distribution: Array<CrmLeadQualityCount>;
+  entity_type: CrmEntityType;
+  failed_gate_leads: Scalars['Int']['output'];
+  not_qualified: Scalars['Int']['output'];
+  pending_items: Scalars['Int']['output'];
+  pending_verification: Scalars['Int']['output'];
+  qualified: Scalars['Int']['output'];
+  scored: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+};
+
+export type CrmLeadQualityValidationMode =
+  | 'DRAFT'
+  | 'PUBLISH';
+
+export type CrmLeadQueuedCandidate = {
+  __typename?: 'CrmLeadQueuedCandidate';
+  candidate_id: Scalars['ID']['output'];
+  lead_type: CrmEntityType;
+  name: Scalars['String']['output'];
+  status: CrmLeadCandidateStatus;
+};
+
+export type CrmLeadSearchInput = {
+  city?: InputMaybe<Scalars['String']['input']>;
+  classification?: InputMaybe<Scalars['String']['input']>;
+  /** Lead types to search; all five when empty. */
+  entity_types?: InputMaybe<Array<CrmEntityType>>;
+  has_failed_gates?: InputMaybe<Scalars['Boolean']['input']>;
+  max_score?: InputMaybe<Scalars['Float']['input']>;
+  min_score?: InputMaybe<Scalars['Float']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  /** 1-100, default 25. */
+  page_size?: InputMaybe<Scalars['Int']['input']>;
+  qualification?: InputMaybe<CrmLeadQualification>;
+  /** Name, city, phone, email or Instagram link contains this. */
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<CrmLeadSearchSort>;
+  /** Only leads that have never been scored. */
+  unscored?: InputMaybe<Scalars['Boolean']['input']>;
+  verification?: InputMaybe<CrmLeadVerificationProgress>;
+};
+
+export type CrmLeadSearchPage = {
+  __typename?: 'CrmLeadSearchPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<CrmLeadSearchRow>;
+  total: Scalars['Int']['output'];
+};
+
+export type CrmLeadSearchRow = {
+  __typename?: 'CrmLeadSearchRow';
+  area: Scalars['String']['output'];
+  city: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  emails: Array<Scalars['String']['output']>;
+  entity_type: CrmEntityType;
+  id: Scalars['ID']['output'];
+  instagram_link: Scalars['String']['output'];
+  lead_status: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  phones: Array<Scalars['String']['output']>;
+  quality?: Maybe<CrmLeadQualitySummary>;
+  website: Scalars['String']['output'];
+};
+
+export type CrmLeadSearchSort =
+  | 'NEWEST'
+  | 'SCORE_ASC'
+  | 'SCORE_DESC';
+
+export type CrmLeadSourceKind =
+  | 'GOOGLE_MAPS'
+  | 'INSTAGRAM'
+  | 'WEB';
+
+export type CrmLeadVerificationProgress =
+  | 'COMPLETE'
+  | 'IN_PROGRESS'
+  | 'PENDING';
 
 export type CrmLinkedHost = {
   __typename?: 'CrmLinkedHost';
@@ -10748,6 +11428,8 @@ export type EcommLead = {
   priority: Scalars['String']['output'];
   product_categories: Array<Scalars['String']['output']>;
   profile_photo_url?: Maybe<Scalars['String']['output']>;
+  /** Lead Quality Score summary (score, classification, qualification); null until the lead is first scored. */
+  quality?: Maybe<CrmLeadQualitySummary>;
   seller_name: Scalars['String']['output'];
   services_offered: Array<CrmServiceOffered>;
   social_links: Array<CrmSocialLink>;
@@ -13990,6 +14672,8 @@ export type HostLead = {
   previous_events_hosted: Scalars['Boolean']['output'];
   priority: Scalars['String']['output'];
   profile_photo_url?: Maybe<Scalars['String']['output']>;
+  /** Lead Quality Score summary (score, classification, qualification); null until the lead is first scored. */
+  quality?: Maybe<CrmLeadQualitySummary>;
   revenue_models: Array<Scalars['String']['output']>;
   services_offered: Array<CrmServiceOffered>;
   social_links: Array<CrmSocialLink>;
@@ -17686,6 +18370,8 @@ export type Mutation = {
   applyReferralCode: MyReferral;
   /** Approve the Club Admin — the table reads Active from here on. */
   approveClubAdminProfile: ClubAdminProfile;
+  /** Add candidates to the CRM as leads. Only QUALIFIED, non-duplicate candidates are added unless allow_unqualified is true. */
+  approveCrmLeadCandidates: Array<CrmLeadCandidateApproval>;
   /** Onboarding/admin: approve a brand (grants the owner the E-commerce Manager role). */
   approveEcommBrand: EcommBrand;
   approveHost: Host;
@@ -17809,6 +18495,8 @@ export type Mutation = {
   cancelBackgroundJob: BackgroundJob;
   /** Keep My Spot — cancel an in-process backout and restore the booking (seat must still be free). */
   cancelBackoutPod: PodMember;
+  /** Stop a running discovery after its current search. Candidates found so far stay queued. */
+  cancelCrmLeadDiscovery: CrmLeadDiscoveryJob;
   /** The requester withdraws their own pending ask (tapping Requested). */
   cancelFollowRequest: User;
   /**
@@ -18213,6 +18901,8 @@ export type Mutation = {
   deleteCrmDynamicField: Scalars['Boolean']['output'];
   deleteCrmEmailTemplate: Scalars['Boolean']['output'];
   deleteCrmLeadMedia: Scalars['Boolean']['output'];
+  /** Throw away the draft. The published version is untouched. */
+  deleteCrmLeadQualityDraft: Scalars['Boolean']['output'];
   deleteCrmManagedOption: Scalars['Boolean']['output'];
   /** Delete a manual log (its author, or a SUPER_ADMIN). It stays in the history as deleted, without its words. */
   deleteCrmManualLog: CrmActivity;
@@ -18794,6 +19484,8 @@ export type Mutation = {
   publishCmsPage: CmsPage;
   /** Makes that saved version live: it becomes the draft and is published. */
   publishCmsVersion: Scalars['Boolean']['output'];
+  /** Publish the draft (must total exactly 100% with every criterion's sub-criteria adding up to it). Every lead of this type is rescored with it in the background. */
+  publishCrmLeadQualityConfig: CrmLeadQualityPublishResult;
   /** Finalize & Publish. Republishing is a staff-only correction and needs a reason. */
   publishPodChallengeResult: PodChallenge;
   publishPodDraft: Pod;
@@ -18871,6 +19563,10 @@ export type Mutation = {
   reactToStaffMessage: StaffMessage;
   /** React to any line of a venue chat; the same emoji again takes the reaction back. */
   reactToVenueChatMessage: PodMessage;
+  /** Rescore one lead now. external: also run the checks that call Instagram, Google Maps and the website (reverify). */
+  recalculateCrmLeadQuality: CrmLeadQualityScoreResponse;
+  /** Rescore many leads in the background: the given ids, or every lead of the type when none are given. */
+  recalculateCrmLeadQualityScores: CrmLeadQualityJobRef;
   /** Partner: check the saved credential again without changing it. */
   recheckBrandIntegration: BrandIntegrationStatus;
   /** Partner: check a saved connection again; every brand using it takes the new result. */
@@ -18887,6 +19583,8 @@ export type Mutation = {
   recordAppEvent: Scalars['Boolean']['output'];
   /** Stores a batch of up to 50 product-analytics events; answers how many were new. Needs the analytics consent; works signed out. */
   recordAppEvents: Scalars['Int']['output'];
+  /** Record evidence decisions on a lead's quality items, then rescore it. VERIFIED needs evidence; from MCP it also needs the public source link. */
+  recordCrmLeadEvidence: CrmLeadQualityScoreResponse;
   recordInventoryStockMovement: InventoryProduct;
   /** Signed in. Marks one slide watched, so its ring stops showing as unseen. */
   recordOfficialStatusView: Scalars['Boolean']['output'];
@@ -18934,6 +19632,8 @@ export type Mutation = {
   rejectAccountDeletionRequest: AccountDeletionDetail;
   /** Reject the Club Admin. A reason is required. */
   rejectClubAdminProfile: ClubAdminProfile;
+  /** Dismiss candidates from the queue. Returns how many were rejected. */
+  rejectCrmLeadCandidates: Scalars['Int']['output'];
   /** Onboarding/admin: reject a brand with notes. */
   rejectEcommBrand: EcommBrand;
   /** The private profile's owner rejects. No follow is created. */
@@ -19267,6 +19967,8 @@ export type Mutation = {
   resumeAutomationTest: AutomationRun;
   /** Carry on a paused enrollment, or retry the step a failed one stopped on. */
   resumeEnrollment: OutreachEnrollment;
+  /** Run a finished, failed or cancelled discovery again with the same request. */
+  retryCrmLeadDiscovery: CrmLeadDiscoveryJob;
   /** Run a failed or partly completed run again, through its own workflow. */
   retryMarketingRun: MarketingRun;
   /**
@@ -19368,6 +20070,10 @@ export type Mutation = {
   saveBrandPickupLocation: BrandPickupLocation;
   saveCmsFragmentDraft: CmsFragment;
   saveCmsPageDraft: CmsPage;
+  /** Queue researched leads for review: validated, checked against every CRM lead and earlier batches for duplicates, and scored with the published model. */
+  saveCrmLeadCandidates: CrmLeadCandidateSaveReport;
+  /** Create or replace a lead type's draft scoring model. A draft may total under 100% but never over. Pass the revision you loaded to avoid overwriting someone else's save. */
+  saveCrmLeadQualityDraft: CrmLeadQualityConfig;
   /**
    * Store the caller's arrangement of one dashboard, replacing any previous
    * one. Positions only — widget ids the running build does not define are
@@ -19724,6 +20430,10 @@ export type Mutation = {
   startBulkDelete: BackgroundJob;
   /** Place an outbound AI call (Servam-driven) using a Static Content prompt and Servam voice. */
   startCrmAiCall: CrmAiCallResult;
+  /** Start a background discovery of new public leads (Instagram and Google Maps through Serper). Candidates go to the review queue, never straight into the CRM. */
+  startCrmLeadDiscovery: CrmLeadDiscoveryJob;
+  /** Start a draft from an existing version (edit the current one, or restore an older one). */
+  startCrmLeadQualityDraftFromVersion: CrmLeadQualityConfig;
   /** Place a portal call: Twilio dials the lead, then rings the agent leg (agent_number, else the user's profile phone) into the same conference. */
   startCrmPortalCall: CrmAiCallResult;
   /**
@@ -20361,6 +21071,8 @@ export type Mutation = {
   venueFoodFeedbackUploadPass: ImagekitAuth;
   /** The venue takes its slot back while the offer is still enrolling; the offer returns to venues' lists and the venue pays the Pod Settings penalty. */
   venueWithdrawAutoPod: AutoPod;
+  /** Record evidence on a queued candidate and rescore it. */
+  verifyCrmLeadCandidateEvidence: CrmLeadCandidate;
   verifyEmailVerificationOtp: User;
   verifyEnvAccessCode: EnvAccessStatus;
   verifyEventTicketQr: EventTicketVerifyResult;
@@ -20802,6 +21514,13 @@ export type MutationApproveClubAdminProfileArgs = {
 };
 
 
+export type MutationApproveCrmLeadCandidatesArgs = {
+  allow_unqualified?: InputMaybe<Scalars['Boolean']['input']>;
+  ids: Array<Scalars['ID']['input']>;
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationApproveEcommBrandArgs = {
   brand_doc_id: Scalars['ID']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
@@ -21054,6 +21773,11 @@ export type MutationCancelBackgroundJobArgs = {
 export type MutationCancelBackoutPodArgs = {
   backout_id?: InputMaybe<Scalars['ID']['input']>;
   pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationCancelCrmLeadDiscoveryArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -22078,6 +22802,11 @@ export type MutationDeleteCrmEmailTemplateArgs = {
 
 export type MutationDeleteCrmLeadMediaArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteCrmLeadQualityDraftArgs = {
+  lead_type: CrmEntityType;
 };
 
 
@@ -23413,6 +24142,13 @@ export type MutationPublishCmsVersionArgs = {
 };
 
 
+export type MutationPublishCrmLeadQualityConfigArgs = {
+  change_note?: InputMaybe<Scalars['String']['input']>;
+  lead_type: CrmEntityType;
+  revision?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type MutationPublishPodChallengeResultArgs = {
   id: Scalars['ID']['input'];
   reason?: InputMaybe<Scalars['String']['input']>;
@@ -23515,6 +24251,20 @@ export type MutationReactToVenueChatMessageArgs = {
 };
 
 
+export type MutationRecalculateCrmLeadQualityArgs = {
+  entity_type: CrmEntityType;
+  external?: InputMaybe<Scalars['Boolean']['input']>;
+  lead_id: Scalars['ID']['input'];
+};
+
+
+export type MutationRecalculateCrmLeadQualityScoresArgs = {
+  entity_type: CrmEntityType;
+  external?: InputMaybe<Scalars['Boolean']['input']>;
+  lead_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+
 export type MutationRecheckBrandIntegrationArgs = {
   brand_doc_id: Scalars['ID']['input'];
   provider: BrandIntegrationProvider;
@@ -23555,6 +24305,13 @@ export type MutationRecordAppEventArgs = {
 
 export type MutationRecordAppEventsArgs = {
   events: Array<AppEventInput>;
+};
+
+
+export type MutationRecordCrmLeadEvidenceArgs = {
+  decisions: Array<CrmLeadEvidenceDecisionInput>;
+  entity_type: CrmEntityType;
+  lead_id: Scalars['ID']['input'];
 };
 
 
@@ -23666,6 +24423,12 @@ export type MutationRejectAccountDeletionRequestArgs = {
 export type MutationRejectClubAdminProfileArgs = {
   id: Scalars['ID']['input'];
   notes: Scalars['String']['input'];
+};
+
+
+export type MutationRejectCrmLeadCandidatesArgs = {
+  ids: Array<Scalars['ID']['input']>;
+  note?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -24209,6 +24972,11 @@ export type MutationResumeEnrollmentArgs = {
 };
 
 
+export type MutationRetryCrmLeadDiscoveryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationRetryMarketingRunArgs = {
   id: Scalars['ID']['input'];
 };
@@ -24433,6 +25201,21 @@ export type MutationSaveCmsFragmentDraftArgs = {
 export type MutationSaveCmsPageDraftArgs = {
   input: CmsDraftInput;
   page_id: Scalars['ID']['input'];
+};
+
+
+export type MutationSaveCrmLeadCandidatesArgs = {
+  candidates: Array<CrmLeadCandidateInput>;
+  external_checks?: InputMaybe<Scalars['Boolean']['input']>;
+  lead_type: CrmEntityType;
+};
+
+
+export type MutationSaveCrmLeadQualityDraftArgs = {
+  change_note?: InputMaybe<Scalars['String']['input']>;
+  input: CrmLeadQualityConfigInput;
+  lead_type: CrmEntityType;
+  revision?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -25326,6 +26109,17 @@ export type MutationStartCrmAiCallArgs = {
   id: Scalars['ID']['input'];
   prompt_id: Scalars['ID']['input'];
   voice?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationStartCrmLeadDiscoveryArgs = {
+  input: CrmLeadDiscoveryInput;
+};
+
+
+export type MutationStartCrmLeadQualityDraftFromVersionArgs = {
+  lead_type: CrmEntityType;
+  version: Scalars['Int']['input'];
 };
 
 
@@ -27259,6 +28053,13 @@ export type MutationVenueFoodFeedbackUploadPassArgs = {
 
 export type MutationVenueWithdrawAutoPodArgs = {
   auto_pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationVerifyCrmLeadCandidateEvidenceArgs = {
+  decisions: Array<CrmLeadEvidenceDecisionInput>;
+  external_checks?: InputMaybe<Scalars['Boolean']['input']>;
+  id: Scalars['ID']['input'];
 };
 
 
@@ -34335,6 +35136,8 @@ export type Query = {
   chatPreview: ChatPreview;
   /** Unread lines across the viewer's pod and club rooms, muted rooms left out. */
   chatUnreadTotal: Scalars['Int']['output'];
+  /** Would this lead be a duplicate? Existing CRM leads (any type) and queued candidates sharing its phone, email, website or Instagram. */
+  checkCrmLeadDuplicates: CrmLeadDuplicateCheck;
   checkoutQuote: CheckoutQuote;
   /** GoDaddy's zone beside Cloudflare's, and the nameservers the domain uses today. */
   cloudflareMigration: CloudflareMigration;
@@ -34582,11 +35385,31 @@ export type Query = {
   crmExcelTemplate: CrmExcelFile;
   /**  The signed-in agent's Ask AI conversation about one lead, with a fresh context summary.  */
   crmLeadAiThread: CrmLeadAiThread;
+  /** One researched candidate with its score breakdown, evidence, sources and CRM duplicates. */
+  crmLeadCandidate?: Maybe<CrmLeadCandidate>;
+  /** The Lead Research review queue (search, filter by status, lead type, job or score; sort by score). */
+  crmLeadCandidatesTable: CrmLeadCandidateTablePage;
   crmLeadConfig: CrmOptionGroup;
+  /** A discovery job's progress, counts, failures and best candidates. */
+  crmLeadDiscoveryJob: CrmLeadDiscoveryJob;
+  /** Recent discovery jobs, newest first. */
+  crmLeadDiscoveryJobs: Array<CrmLeadDiscoveryJob>;
   /** Which of these phone numbers, emails or website already belong to a lead of any kind (the lead forms' live duplicate check). */
   crmLeadDuplicates: Array<CrmLeadDuplicateMatch>;
   /** Every logo and image of one lead: logos first, each kind in its upload order. */
   crmLeadMedia: Array<CrmLeadMedia>;
+  /** One lead's score, criterion-wise breakdown, evidence with sources and the configuration it was scored with. */
+  crmLeadQuality: CrmLeadQualityDetails;
+  /** Lead quality analytics from the stored scores, for one lead type or all five. */
+  crmLeadQualityAnalytics: CrmLeadQualityAnalytics;
+  /** One lead's score and evidence history, newest first. */
+  crmLeadQualityHistory: Array<CrmLeadQualityEvent>;
+  /** The published scoring model of a lead type (seeded with the default the first time) and its draft, if one is being edited. */
+  crmLeadQualitySettings: CrmLeadQualitySettings;
+  /** Settings changes (drafts saved, versions published, drafts discarded) of a lead type, newest first. */
+  crmLeadQualitySettingsHistory: Array<CrmLeadQualityEvent>;
+  /** Every version of a lead type's scoring model, newest first. */
+  crmLeadQualityVersions: Array<CrmLeadQualityConfig>;
   crmManagedOptions: Array<CrmManagedOption>;
   crmManagedOptionsTable: CrmManagedOptionTablePage;
   crmReminders: Array<CrmReminder>;
@@ -35848,6 +36671,8 @@ export type Query = {
   role?: Maybe<Role>;
   roles: Array<Role>;
   rolesTable: RoleTablePage;
+  /** Search existing CRM leads of every type by name, city and quality score, sorted by score. */
+  searchCrmLeads: CrmLeadSearchPage;
   /** Club-centric discovery search grouped by upcoming-pod availability. */
   searchDiscovery: SearchResults;
   /** Find something that was said on this line. */
@@ -36264,6 +37089,8 @@ export type Query = {
   usernameAvailability: UsernameAvailability;
   users: Array<User>;
   usersTable: UserTablePage;
+  /** Check a scoring model without saving it. Empty when valid. PUBLISH mode needs exactly 100%. */
+  validateCrmLeadQualityConfig: Array<CrmLeadQualityIssue>;
   /**
    * Check a reel against the networks it is going to: length within each
    * network's reel limit, a portrait frame where the network wants one, sound,
@@ -37024,6 +37851,12 @@ export type QueryChatPreviewArgs = {
 };
 
 
+export type QueryCheckCrmLeadDuplicatesArgs = {
+  input: CrmLeadCandidateInput;
+  lead_type: CrmEntityType;
+};
+
+
 export type QueryCheckoutQuoteArgs = {
   input: CheckoutQuoteInput;
 };
@@ -37562,6 +38395,27 @@ export type QueryCrmLeadAiThreadArgs = {
 };
 
 
+export type QueryCrmLeadCandidateArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryCrmLeadCandidatesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryCrmLeadDiscoveryJobArgs = {
+  candidate_limit?: InputMaybe<Scalars['Int']['input']>;
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryCrmLeadDiscoveryJobsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryCrmLeadDuplicatesArgs = {
   input: CrmLeadDuplicateCheckInput;
 };
@@ -37570,6 +38424,40 @@ export type QueryCrmLeadDuplicatesArgs = {
 export type QueryCrmLeadMediaArgs = {
   entity_type: CrmEntityType;
   lead_id: Scalars['ID']['input'];
+};
+
+
+export type QueryCrmLeadQualityArgs = {
+  entity_type: CrmEntityType;
+  lead_id: Scalars['ID']['input'];
+};
+
+
+export type QueryCrmLeadQualityAnalyticsArgs = {
+  entity_type?: InputMaybe<CrmEntityType>;
+};
+
+
+export type QueryCrmLeadQualityHistoryArgs = {
+  entity_type: CrmEntityType;
+  lead_id: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryCrmLeadQualitySettingsArgs = {
+  lead_type: CrmEntityType;
+};
+
+
+export type QueryCrmLeadQualitySettingsHistoryArgs = {
+  lead_type: CrmEntityType;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryCrmLeadQualityVersionsArgs = {
+  lead_type: CrmEntityType;
 };
 
 
@@ -40022,6 +40910,11 @@ export type QueryRolesTableArgs = {
 };
 
 
+export type QuerySearchCrmLeadsArgs = {
+  input: CrmLeadSearchInput;
+};
+
+
 export type QuerySearchDiscoveryArgs = {
   input?: InputMaybe<SearchDiscoveryInput>;
 };
@@ -40824,6 +41717,13 @@ export type QueryUsersArgs = {
 
 export type QueryUsersTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryValidateCrmLeadQualityConfigArgs = {
+  input: CrmLeadQualityConfigInput;
+  lead_type: CrmEntityType;
+  mode: CrmLeadQualityValidationMode;
 };
 
 
@@ -52795,6 +53695,8 @@ export type VenueLead = {
   photos: Array<Scalars['String']['output']>;
   pricing_models: Array<Scalars['String']['output']>;
   priority: Scalars['String']['output'];
+  /** Lead Quality Score summary (score, classification, qualification); null until the lead is first scored. */
+  quality?: Maybe<CrmLeadQualitySummary>;
   remarks?: Maybe<Scalars['String']['output']>;
   security_deposit?: Maybe<Scalars['Float']['output']>;
   services_offered: Array<CrmServiceOffered>;

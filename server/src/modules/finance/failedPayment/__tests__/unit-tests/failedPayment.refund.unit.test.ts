@@ -30,7 +30,10 @@ import {
 } from '@modules/finance/payment/razorpay.gateway';
 import { bookingFor } from '../../failedPayment.booking';
 import { completeRefund, failRefund } from '../../failedPayment.refundOutcome';
+import { recordPaymentEvent } from '../../paymentEvent.service';
+import { SYSTEM_ACTOR } from '../../failedPayment.types';
 import {
+  claimAndSend,
   initiateFailedPaymentRefund,
   refundEligibility,
   refundGuard,
@@ -146,6 +149,21 @@ describe('initiateFailedPaymentRefund', () => {
     const stampOrder = m(FailedPaymentCaseModel.updateOne).mock.invocationCallOrder[stamp];
     expect(stampOrder).toBeLessThan(m(createRazorpayRefund).mock.invocationCallOrder[0]);
     expect(completeRefund).toHaveBeenCalledWith(CASE_ID, 'rfnd_1', 'SERVER');
+  });
+
+  it('files an automatic refund\'s trail under SYSTEM, through the very same claim and send', async () => {
+    await claimAndSend(kase(), `auto_${CASE_ID}_1`, SYSTEM_ACTOR);
+
+    expect(FailedPaymentCaseModel.findOneAndUpdate).toHaveBeenCalledTimes(1);
+    expect(createRazorpayRefund).toHaveBeenCalledWith(expect.objectContaining({ receipt: `fpc_${CASE_ID}_1` }));
+    const sources = m(recordPaymentEvent).mock.calls.map(([event]) => [event.type, event.source]);
+    expect(sources).toEqual(
+      expect.arrayContaining([
+        ['REFUND_REQUESTED', 'SYSTEM'],
+        ['REFUND_INITIATED', 'SYSTEM'],
+      ]),
+    );
+    expect(sources.some(([, source]) => source === 'FINANCE')).toBe(false);
   });
 
   it('claims with one conditional write that only an idle or stale refund can win', async () => {

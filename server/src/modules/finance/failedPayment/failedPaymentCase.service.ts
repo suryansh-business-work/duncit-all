@@ -10,9 +10,12 @@ import type { CaseSource } from './failedPayment.types';
 /**
  * Creating and touching failed-payment cases.
  *
- * A case belongs to a POD booking paid through Razorpay. Product (Pod Shop / pet
- * store) and gift-card checkouts have their own refund flows and must not be
- * mixed into this one, so for them only the event trail is written.
+ * A buyer's claim, a client report or a `payment.failed` webhook opens a case
+ * only for a POD booking paid through Razorpay: product (Pod Shop / pet store)
+ * and gift-card orders that DID go through have their own refund flows, so for
+ * them only the event trail is written. A FINALIZE_FAILED case is different —
+ * Razorpay took the money and the order was never written, so no other flow
+ * owns that refund. Every Razorpay checkout gets one, whatever it was buying.
  */
 
 export interface CaseTouch {
@@ -27,6 +30,10 @@ export interface CaseTouch {
 /** Whether this payment is one the failed-payment workflow owns. */
 export const isCaseEligible = (payment: Pick<IPayment, 'gateway' | 'target_type'>): boolean =>
   payment.gateway === 'RAZORPAY' && payment.target_type === 'POD';
+
+/** Whether a touch from `source` may open a case for this payment. */
+const mayOpenCase = (payment: Pick<IPayment, 'gateway' | 'target_type'>, source: CaseSource): boolean =>
+  source === 'FINALIZE_FAILED' ? payment.gateway === 'RAZORPAY' : isCaseEligible(payment);
 
 async function podTitleOf(podId: unknown): Promise<string> {
   if (!podId) return '';
@@ -50,7 +57,7 @@ const cleanError = (error: Partial<ICaseError>, at: Date): ICaseError => ({
  * case. Returns null for a payment the workflow does not own.
  */
 export async function upsertCaseForPayment(payment: IPayment, touch: CaseTouch): Promise<IFailedPaymentCase | null> {
-  if (!isCaseEligible(payment)) return null;
+  if (!mayOpenCase(payment, touch.source)) return null;
   const now = new Date();
   const set: Record<string, unknown> = {};
   if (touch.error) set.latest_error = cleanError(touch.error, now);
@@ -98,8 +105,11 @@ export function caseForPayment(paymentDocId: unknown) {
 
 /**
  * The finalizer could not write the booking for captured money (or a sweep
- * found such a payment): open its case so Finance sees it with the rest.
- * Best-effort — called from the payment flow, which must never fail over it.
+ * found such a payment): open its case so Finance sees it with the rest. The
+ * reconciler's next pass (within two minutes) refunds it automatically — see
+ * failedPayment.autoRefund — so the buyer's verify never waits on Razorpay's
+ * refund API. Best-effort — called from the payment flow, which must never fail
+ * over it.
  */
 export async function openCaseForFinalizeFailure(paymentDocId: string, message: string): Promise<void> {
   try {
@@ -135,7 +145,6 @@ export async function openCasesForNeedsRefund(): Promise<number> {
   const payments = await PaymentModel.find({
     needs_refund: true,
     gateway: 'RAZORPAY',
-    target_type: 'POD',
     _id: { $nin: withCase.map((id) => new Types.ObjectId(String(id))) },
   })
     .select('_id finalize_error')

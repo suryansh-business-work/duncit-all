@@ -222,6 +222,18 @@ describe('retry', () => {
       'This payment has been refunded — there is nothing to re-run'
     );
 
+    // A refund of the capture is already on its way (Finance's or the automatic one):
+    // re-running the core would book a seat against money going back.
+    const refunding = await seedPayment({
+      finalize_state: 'FAILED',
+      needs_refund: true,
+      metadata: { failed_payment_refund_case: new Types.ObjectId().toHexString() },
+    });
+    await expect(paymentFinalizer.retry(String(refunding._id))).rejects.toThrow(
+      'A refund of this payment is already under way — there is nothing to re-run'
+    );
+    expect((await reload(refunding._id))?.finalize_attempts ?? 0).toBe(0);
+
     const done = await seedPayment({ status: 'SUCCESS', finalize_state: 'CORE_DONE' });
     await expect(paymentFinalizer.retry(String(done._id), ['SEATS_CLAIMED', 'bogus'])).rejects.toThrow(
       'These steps cannot be re-run on their own: SEATS_CLAIMED, bogus'

@@ -11,7 +11,10 @@ import { FailedPaymentCaseModel, type IFailedPaymentCase } from './failedPayment
 import { bookingFor, type BookingInfo } from './failedPayment.booking';
 import { completeRefund, failRefund } from './failedPayment.refundOutcome';
 import { recordPaymentEvent } from './paymentEvent.service';
-import type { ActorSnapshot } from './failedPayment.types';
+import { SYSTEM_ACTOR, type ActorSnapshot, type PaymentEventSource } from './failedPayment.types';
+
+/** Who the trail files a refund step under: Finance's button, or the automatic refund. */
+const eventSourceOf = (actor: ActorSnapshot): PaymentEventSource => (actor.id === SYSTEM_ACTOR.id ? 'SYSTEM' : 'FINANCE');
 
 /**
  * Sending a failed payment's money back through Razorpay — at most once.
@@ -118,7 +121,7 @@ async function releaseClaim(kase: IFailedPaymentCase, reason: string, actor: Act
     paymentDocId: kase.payment_doc_id,
     caseId: kase._id,
     type: 'REFUND_FAILED',
-    source: 'FINANCE',
+    source: eventSourceOf(actor),
     actor,
     data: { refused: true, reason },
   });
@@ -137,7 +140,7 @@ async function afterSend(kase: IFailedPaymentCase, refund: SentRefund, razorpayP
     paymentDocId: kase.payment_doc_id,
     caseId: kase._id,
     type: 'REFUND_INITIATED',
-    source: 'FINANCE',
+    source: eventSourceOf(actor),
     actor,
     data: { razorpay_refund_id: refund.id, razorpay_payment_id: razorpayPaymentId, amount_paise: amountPaise, status: refund.status },
   });
@@ -185,7 +188,20 @@ export async function initiateFailedPaymentRefund(
   if (current.refund.status === 'PENDING' && current.refund.client_request_id === clientRequestId) return current;
   const ineligible = refundEligibility(current);
   if (ineligible) throw new GraphQLError(ineligible, { extensions: { code: 'BAD_USER_INPUT' } });
+  return claimAndSend(current, clientRequestId, actor);
+}
 
+/**
+ * Steps 2–5 for a case its caller has already found eligible: one conditional
+ * claim, then the live re-check and the at-most-once send. Shared by Finance's
+ * button and the automatic refund, so both get the same guarantees.
+ */
+export async function claimAndSend(
+  current: IFailedPaymentCase,
+  clientRequestId: string,
+  actor: ActorSnapshot
+): Promise<IFailedPaymentCase | null> {
+  const caseId = current._id;
   const now = new Date();
   const claimed = await FailedPaymentCaseModel.findOneAndUpdate(
     {
@@ -218,7 +234,7 @@ export async function initiateFailedPaymentRefund(
     paymentDocId: claimed.payment_doc_id,
     caseId: claimed._id,
     type: 'REFUND_REQUESTED',
-    source: 'FINANCE',
+    source: eventSourceOf(actor),
     actor,
     data: { attempt: claimed.refund.attempts },
   });

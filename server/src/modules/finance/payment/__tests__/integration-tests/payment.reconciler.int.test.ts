@@ -13,6 +13,9 @@ jest.mock('../../razorpay.gateway', () => ({ findCapturedPaymentForOrder: jest.f
 jest.mock('../../payment.finalize', () => ({
   paymentFinalizer: { finalizePayment: jest.fn(), runSideEffects: jest.fn() },
 }));
+jest.mock('@modules/finance/failedPayment/failedPayment.autoRefund', () => ({
+  sweepAutoRefunds: jest.fn().mockResolvedValue(0),
+}));
 jest.mock('@observability/log', () => ({
   logs: { server: { info: jest.fn(), warn: jest.fn(), error: jest.fn() } },
 }));
@@ -23,6 +26,7 @@ import { startPaymentReconciler } from '../../payment.reconciler';
 import { findCapturedPaymentForOrder } from '../../razorpay.gateway';
 import { paymentFinalizer } from '../../payment.finalize';
 import { logs } from '@observability/log';
+import { sweepAutoRefunds } from '@modules/finance/failedPayment/failedPayment.autoRefund';
 
 const findCaptured = findCapturedPaymentForOrder as jest.Mock;
 const finalizePayment = paymentFinalizer.finalizePayment as jest.Mock;
@@ -30,6 +34,7 @@ const runSideEffects = paymentFinalizer.runSideEffects as jest.Mock;
 const warn = logs.server.warn as jest.Mock;
 const error = logs.server.error as jest.Mock;
 const info = logs.server.info as jest.Mock;
+const autoRefunds = sweepAutoRefunds as jest.Mock;
 
 const MIN = 60_000;
 let seq = 0;
@@ -78,13 +83,13 @@ beforeEach(() => {
 });
 
 describe('startPaymentReconciler', () => {
-  it('registers one cluster job: first sweep after 1 minute, then every 5 minutes', () => {
+  it('registers one cluster job: first sweep after 1 minute, then every 2 minutes', () => {
     startPaymentReconciler();
     expect(mockCaptured.job).toMatchObject({
       component: 'payment-reconciler',
       operation: 'sweep',
       firstDelayMs: MIN,
-      intervalMs: 5 * MIN,
+      intervalMs: 2 * MIN,
     });
   });
 });
@@ -107,14 +112,17 @@ describe('capture stage', () => {
       razorpay_account: 'SECONDARY',
       razorpay_order_id: 'order_A1',
       razorpay_payment_id: 'pay_A1',
+      adopted_by: 'RECONCILER',
     });
     expect(typeof row?.metadata.reconciled_at).toBe('string');
     expect(row?.reconcile_checked_at).toBeInstanceOf(Date);
     expect(finalizePayment).toHaveBeenCalledTimes(1);
     expect(finalizePayment).toHaveBeenCalledWith(String(p._id), 'Razorpay (reconciled)');
+    // Phase 2 is started right away rather than on the next side-effect sweep.
+    expect(runSideEffects).toHaveBeenCalledWith(String(p._id));
     expect(info).toHaveBeenCalledWith(
-      'payment-reconciler',
-      'capture',
+      'payment-capture',
+      'RECONCILER',
       expect.objectContaining({ payment_id: p.payment_id, razorpay_payment_id: 'pay_A1', amount_paise: 50000 })
     );
   });
@@ -139,19 +147,43 @@ describe('capture stage', () => {
     expect((await reload(p._id))?.reconcile_checked_at).toBeInstanceOf(Date);
   });
 
-  it('only looks inside the 5-minute grace / 24-hour window, at PENDING Razorpay rows not checked this sweep', async () => {
-    await seedPayment({ gateway_ref: 'order_young' }, { createdAgoMs: 2 * MIN });
+  it('only looks inside the 2-minute grace / 24-hour window, at PENDING Razorpay rows not checked recently', async () => {
+    await seedPayment({ gateway_ref: 'order_young' }, { createdAgoMs: MIN });
     await seedPayment({ gateway_ref: 'order_old' }, { createdAgoMs: 25 * 60 * MIN });
     await seedPayment({ gateway_ref: 'order_dummy', gateway: 'DUMMY' });
     await seedPayment({ gateway_ref: 'order_paid', status: 'SUCCESS' });
     await seedPayment({ gateway_ref: 'order_recent' }, { checkedAgoMs: MIN });
     await seedPayment({ gateway_ref: 'order_due' }, { checkedAgoMs: 6 * MIN });
     await seedPayment({ gateway_ref: 'order_fresh' }, { checkedAgoMs: null });
+    // An hours-old checkout is re-asked about only every 15 minutes.
+    await seedPayment({ gateway_ref: 'order_stale_recent' }, { createdAgoMs: 3 * 60 * MIN, checkedAgoMs: 10 * MIN });
+    await seedPayment({ gateway_ref: 'order_stale_due' }, { createdAgoMs: 3 * 60 * MIN, checkedAgoMs: 20 * MIN });
+    // A FAILED finalize already holds its capture: it is owed a refund, not a booking.
+    await seedPayment({ gateway_ref: 'pay_failed', finalize_state: 'FAILED', needs_refund: true });
 
     await sweep();
 
     const asked = findCaptured.mock.calls.map((c) => c[0]).sort();
-    expect(asked).toEqual(['order_due', 'order_fresh']);
+    expect(asked).toEqual(['order_due', 'order_fresh', 'order_stale_due']);
+  });
+
+  it('reads the order id from metadata once gateway_ref already holds the payment id', async () => {
+    // A verify that wrote the payment id and then died before finalizing.
+    const p = await seedPayment({ gateway_ref: 'pay_M1', metadata: { razorpay_order_id: 'order_M1' } });
+    findCaptured.mockResolvedValueOnce({ id: 'pay_M1', amount: 50000 });
+
+    await sweep();
+
+    expect(findCaptured).toHaveBeenCalledWith('order_M1', undefined);
+    expect((await reload(p._id))?.gateway_ref).toBe('pay_M1');
+    expect(finalizePayment).toHaveBeenCalledWith(String(p._id), 'Razorpay (reconciled)');
+  });
+
+  it('never books a capture Finance or the auto refund is already sending back', async () => {
+    await seedPayment({ gateway_ref: 'order_R1', metadata: { failed_payment_refund_case: 'case1' } });
+    await sweep();
+    expect(findCaptured).not.toHaveBeenCalled();
+    expect(finalizePayment).not.toHaveBeenCalled();
   });
 
   it('a gateway failure on one payment logs, stamps it, and does not stop the rest of the batch', async () => {
@@ -194,10 +226,10 @@ describe('side-effect stage', () => {
     expect(warn).not.toHaveBeenCalledWith('payment-reconciler', 'side-effects', expect.anything());
   });
 
-  it('skips payments still inside the 2-minute grace, out of budget, or checked this sweep', async () => {
+  it('skips payments still inside the 2-minute grace, out of budget, or retried in the last 5 minutes', async () => {
     await seedPayment({ finalize_state: 'CORE_DONE', status: 'SUCCESS' }, { updatedAgoMs: MIN });
     await seedPayment({ finalize_state: 'CORE_DONE', status: 'SUCCESS', side_effect_attempts: 6 });
-    await seedPayment({ finalize_state: 'CORE_DONE', status: 'SUCCESS' }, { checkedAgoMs: 2 * MIN });
+    await seedPayment({ finalize_state: 'CORE_DONE', status: 'SUCCESS' }, { checkedAgoMs: 3 * MIN });
     await seedPayment({ finalize_state: 'COMPLETE', status: 'SUCCESS' });
 
     await sweep();
@@ -275,6 +307,15 @@ describe('needs-human stage', () => {
       'needs-human',
       expect.objectContaining({ failed: 1, needs_refund: 2 })
     );
+    // Captured money with no booking is refunded without waiting for a person.
+    expect(autoRefunds).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not count a FAILED payment whose money is already back', async () => {
+    await seedPayment({ finalize_state: 'FAILED', status: 'REFUNDED', needs_refund: false });
+    await sweep();
+    expect(warn).not.toHaveBeenCalled();
+    expect(autoRefunds).not.toHaveBeenCalled();
   });
 
   it('stays silent when nothing is waiting on Finance', async () => {

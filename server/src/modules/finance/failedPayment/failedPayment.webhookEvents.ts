@@ -1,4 +1,6 @@
+import { logs } from '@observability/log';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
+import { adoptRazorpayCapture } from '@modules/finance/payment/payment.capture';
 import { FailedPaymentCaseModel } from './failedPaymentCase.model';
 import { isCaseEligible, upsertCaseForPayment } from './failedPaymentCase.service';
 import { completeRefund, failRefund } from './failedPayment.refundOutcome';
@@ -7,9 +9,11 @@ import { receiptPrefix } from './failedPayment.refund';
 
 /**
  * What each Razorpay webhook event does. Every handler is idempotent (a
- * redelivery or a race with the client/poller changes nothing twice) and none
- * books anything: `payment.captured` is only recorded — adopting a capture is
- * the reconciler's job, which runs the finalizer with all its guards.
+ * redelivery or a race with the client/poller changes nothing twice).
+ * `payment.captured` hands the payment to `adoptRazorpayCapture` — the same
+ * path the reconciler takes, which asks Razorpay again rather than trusting the
+ * body and runs the finalizer with all its guards — so a buyer whose app lost
+ * the success callback is booked in seconds instead of on the next sweep.
  */
 
 export type WebhookOutcome = 'APPLIED' | 'IGNORED';
@@ -92,6 +96,11 @@ async function onPaymentCaptured(body: Entity, eventId: string): Promise<Webhook
     data: { razorpay_payment_id: text(entity.id), amount_paise: Number(entity.amount ?? 0) || 0 },
     dedupeKey: `webhook:${eventId}`,
   });
+  // Not awaited: Razorpay times a delivery out after a few seconds and the
+  // finalizer can take longer. A run that dies is the reconciler's to finish.
+  adoptRazorpayCapture(payment, 'WEBHOOK').catch((error: unknown) =>
+    logs.server.error('razorpay', 'webhook', { error, event_id: eventId, msg: 'capture adoption failed' })
+  );
   return 'APPLIED';
 }
 

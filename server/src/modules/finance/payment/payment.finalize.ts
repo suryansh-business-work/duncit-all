@@ -1208,6 +1208,13 @@ export const paymentFinalizer = {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
+    // A refund of this capture has been sent (Finance's or the automatic one):
+    // re-running the core now would book a seat against money on its way back.
+    if (payment.metadata?.failed_payment_refund_case) {
+      throw new GraphQLError('A refund of this payment is already under way — there is nothing to re-run', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
     const requested = normalizeRetryKeys(stepKeys);
 
     // FAILED and only FAILED is the whole-core repair. `markFinalizeFailed`

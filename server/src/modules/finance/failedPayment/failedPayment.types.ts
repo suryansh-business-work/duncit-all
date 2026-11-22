@@ -63,6 +63,10 @@ export interface ActorSnapshot {
   roles: string[];
 }
 
+/** The server acting on its own — the automatic refund of a capture that bought nothing.
+ * Same 'SYSTEM' marker the workflow already writes when it resolves a case itself. */
+export const SYSTEM_ACTOR: ActorSnapshot = { id: 'SYSTEM', name: 'SYSTEM', roles: [] };
+
 /**
  * Who reads and who acts. Reading follows Payment Logs' finance read set (and
  * Support, who own the linked ticket, may open evidence); acting is Finance's

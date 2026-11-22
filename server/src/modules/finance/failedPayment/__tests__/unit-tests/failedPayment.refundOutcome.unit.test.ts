@@ -64,7 +64,7 @@ describe('completeRefund', () => {
   it('records the ledger, resolves the ticket with the refund id and tells the buyer', async () => {
     await completeRefund(CASE_ID, 'rfnd_1', 'WEBHOOK');
 
-    expect(recordPaymentRefund).toHaveBeenCalledWith(payment, 499, expect.any(String), FINANCE_USER_ID);
+    expect(recordPaymentRefund).toHaveBeenCalledWith(payment, 499, expect.any(String), FINANCE_USER_ID, 'rfnd_1');
     expect(ticketService.systemResolve).toHaveBeenCalledWith(
       TICKET_ID,
       FINANCE_USER_ID,
@@ -72,6 +72,23 @@ describe('completeRefund', () => {
     );
     expect(m(ticketService.systemResolve).mock.calls[0][2]).toContain('₹499.00');
     expect(m(ticketService.systemResolve).mock.calls[0][2]).toContain('7 business days');
+    expect(mailRefund).toHaveBeenCalledWith(payment, expect.any(String));
+  });
+
+  it('files an automatic refund\'s ticket under the buyer and its ledger stamp under SYSTEM', async () => {
+    const BUYER_ID = '65aa00000000000000000055';
+    const automatic = () =>
+      ({
+        ...(processedCase() as object),
+        user_id: BUYER_ID,
+        refund: { ...(processedCase() as { refund: object }).refund, initiated_by: 'SYSTEM', initiated_by_name: 'SYSTEM' },
+      }) as never;
+    m(FailedPaymentCaseModel.findOneAndUpdate).mockResolvedValue(automatic());
+
+    await completeRefund(CASE_ID, 'rfnd_1', 'SERVER');
+
+    expect(recordPaymentRefund).toHaveBeenCalledWith(payment, 499, expect.any(String), 'SYSTEM', 'rfnd_1');
+    expect(ticketService.systemResolve).toHaveBeenCalledWith(TICKET_ID, BUYER_ID, expect.stringContaining('rfnd_1'));
     expect(mailRefund).toHaveBeenCalledWith(payment, expect.any(String));
   });
 

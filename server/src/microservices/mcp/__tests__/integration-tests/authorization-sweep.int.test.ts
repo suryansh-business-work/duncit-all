@@ -99,8 +99,6 @@ const CHALLENGE_PLAY = [
   'setPodChallengeVoting',
   'submitPodChallengeEntry',
   'transitionPodChallenge',
-  'updatePodChallengeSettings',
-  'voidPodChallengeScore',
 ];
 const MEMBER_CHECKOUT = [
   'createRazorpayGiftCardOrder',
@@ -109,7 +107,6 @@ const MEMBER_CHECKOUT = [
   'dummyCheckout',
   'dummyGiftCardCheckout',
   'dummyProductCheckout',
-  'verifyRazorpayPayment',
 ];
 const OWN_ACCOUNT = [
   'cancelMyAccountDeletionRequest',
@@ -137,13 +134,7 @@ const OWN_WORKSPACE = [
   'saveShellWorkspaceState',
   'startBulkDelete',
 ];
-const MEMBER_UPLOADS = [
-  'getImagekitAuth',
-  'importRemoteImageToImagekit',
-  'importRemoteMediaToImagekit',
-  'startVideoCompression',
-  'uploadImageToImagekit',
-];
+const MEMBER_UPLOADS = ['getImagekitAuth', 'importRemoteImageToImagekit', 'importRemoteMediaToImagekit', 'startVideoCompression'];
 const REPORTING = ['reportChatMessage', 'reportPost', 'reportProfile', 'moderatePodContent', 'moderateProductContent'];
 
 /**
@@ -180,6 +171,22 @@ const MEMBER_MUTATIONS: Readonly<Record<string, string>> = {
   submitSurveyResponse: 'answering a survey they were sent',
   agentChat: 'the staff Agent answers anyone signed in; it only carries out what the caller’s roles allow',
   askBotChat: 'the in-app help bot',
+  ...allow(
+    'Ask Duncit, the in-app assistant: each call is scoped to the caller’s own conversations, messages, proposals and memory (another person’s id answers NOT_FOUND), and what it carries out runs through the caller’s own MCP session and roles',
+    [
+      'sendAskDuncitMessage',
+      'stopAskDuncitMessage',
+      'decideAskDuncitAction',
+      'rollbackAskDuncitAction',
+      'rateAskDuncitMessage',
+      'handOverAskDuncitConversation',
+      'renameAskDuncitConversation',
+      'deleteAskDuncitConversation',
+      'clearAskDuncitHistory',
+      'forgetAskDuncitFact',
+      'clearAskDuncitMemory',
+    ]
+  ),
 };
 
 const SAMPLE_ID = '64b7f0c2a1e4c9d3f0a1b2c3';

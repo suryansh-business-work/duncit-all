@@ -20,6 +20,7 @@ jest.mock('@modules/finance/giftcard/giftcard.service', () => ({
 import { Types } from 'mongoose';
 import { createRazorpayOrder, getRazorpayKeys, verifyRazorpaySignature } from '../../razorpay.gateway';
 import { giftcardService } from '@modules/finance/giftcard/giftcard.service';
+import { GiftCardOrderModel } from '@modules/finance/giftcardOrder/giftCardOrder.model';
 import { FinanceSettingsModel } from '@modules/finance/finance/finance.model';
 import { CoinBalanceModel, CoinTransactionModel } from '@modules/finance/coin/coin.model';
 import { UserModel } from '@modules/access/user/user.model';
@@ -311,6 +312,20 @@ describe('createRazorpayGiftCardCheckout', () => {
       gateway_ref: 'order_TEST1',
     });
     expect(doc?.metadata).toMatchObject({ source: 'app_giftcard_checkout', gift_card: facts, razorpay_order_id: 'order_TEST1' });
+    // The order exists from checkout on — unpaid, so nothing is issued yet.
+    const order = await GiftCardOrderModel.findOne({ payment_id: doc!.payment_id }).lean();
+    expect(order).toMatchObject({
+      payment_status: 'PENDING',
+      fulfilment_status: 'PENDING',
+      delivery_mode: 'DIGITAL',
+      amount: 1500,
+      quantity: 1,
+      shipping_fee: 0,
+      total: 1500,
+      recipient_email: 'friend@x.com',
+      gift_card_ids: [],
+    });
+    expect(order?.order_no).toMatch(/^GC-[A-HJ-NP-Z2-9]{10}$/);
   });
 
   it('a card with no scope name is a Pod Shop card; purchase switched off opens no order', async () => {

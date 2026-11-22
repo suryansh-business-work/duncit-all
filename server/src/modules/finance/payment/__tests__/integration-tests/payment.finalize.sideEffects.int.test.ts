@@ -389,7 +389,8 @@ describe('runSideEffects — gift cards and everything else', () => {
       total: 900,
       metadata: { gift_card: { amount: 1000, recipient_name: 'Ravi', recipient_email: 'ravi@x.com' } },
     });
-    mockGiftMail.mockResolvedValue({ to: 'ravi@x.com', cardId: 'card-1' });
+    // One email per card: the step's refs are every card that was mailed.
+    mockGiftMail.mockResolvedValue({ to: 'ravi@x.com', cardId: 'card-1', cardIds: ['card-1'] });
 
     await paymentFinalizer.runSideEffects(String(p._id));
 

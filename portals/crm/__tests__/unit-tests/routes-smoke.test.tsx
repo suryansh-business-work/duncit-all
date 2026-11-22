@@ -295,6 +295,12 @@ const fillEverything = async () => {
 
 const MAX_CLICKS = 14;
 /**
+ * The with-data pass presses every control on a fully populated page. The Lead
+ * Quality settings and analytics screens (a whole scoring form, charts and grids
+ * per lead type) need over 30 s of that on a CI runner; the rest finish in 16 s.
+ */
+const WITH_DATA_TIMEOUT = 90_000;
+/**
  * Two waves, because a console page is layered.
  *
  * The first wave opens the tabs, drawers and dialogs; their own controls only
@@ -373,7 +379,7 @@ describe('every route mounts with no data behind it', () => {
 
     expect(container.innerHTML).not.toBe('');
     unmount();
-  });
+  }, WITH_DATA_TIMEOUT);
 });
 
 /** Prints where the router ended up, so a redirect can be asserted. */

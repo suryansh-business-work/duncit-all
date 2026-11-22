@@ -573,7 +573,8 @@ describe('PodDetailsScreen', () => {
         isLoading: false,
       });
       renderWithProviders(<PodDetailsScreen />);
-      expect(screen.getByTestId('pod-info-time-chip')).toHaveTextContent('Pod ongoing');
+      // The chip's icon renders as a glyph in front of the label.
+      expect(screen.getByTestId('pod-info-time-chip')).toHaveTextContent(/Pod ongoing$/);
       expect(screen.queryByTestId('pod-booking-closed')).toBeNull();
       fireEvent.press(screen.getByTestId('pod-book'));
       expect(screen.getByText('This pod is already ongoing')).toBeOnTheScreen();

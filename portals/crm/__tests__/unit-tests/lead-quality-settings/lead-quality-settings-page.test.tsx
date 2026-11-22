@@ -94,7 +94,10 @@ describe('Lead Quality Score settings page', () => {
     fireEvent.click(screen.getByTestId('lead-quality-publish'));
     fireEvent.click(await screen.findByTestId('confirm-dialog-confirm'));
 
-    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Version 4 is live. There are no leads of this type to rescore yet.'));
+    // Save, publish and the awaited refetch each re-render the whole form, so this outlasts the default 1 s on CI.
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Version 4 is live. There are no leads of this type to rescore yet.'), {
+      timeout: 10_000,
+    });
     expect(notifySuccess).toHaveBeenCalledTimes(1);
   });
 

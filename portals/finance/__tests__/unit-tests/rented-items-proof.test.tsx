@@ -105,9 +105,11 @@ describe('Add proof', () => {
     fireEvent.change(dialog.getByLabelText('Note'), { target: { value: '  Strings frayed  ' } });
     fireEvent.click(dialog.getByRole('button', { name: 'Save proof' }));
     await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Proof added'));
+    // The drawer stays aria-hidden until the Add proof dialog has finished closing.
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add proof for Racket' })).toBeNull());
     expect(await view.findByText('Strings frayed')).toBeInTheDocument();
 
-    fireEvent.click(view.getByRole('button', { name: 'Proof photo 1.1' }));
+    fireEvent.click(await view.findByRole('button', { name: 'Proof photo 1.1' }));
     const lightbox = within(await screen.findByRole('dialog', { name: 'Proof photo 1.1' }));
     expect(lightbox.getByRole('img', { name: 'Proof photo 1.1' })).toHaveAttribute('src', 'https://ik.imagekit.io/duncit/proof-x.jpg');
     fireEvent.click(lightbox.getByRole('button', { name: 'Close' }));

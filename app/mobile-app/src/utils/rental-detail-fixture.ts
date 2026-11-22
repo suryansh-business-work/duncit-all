@@ -6,6 +6,9 @@ import type { RentalDetail } from '@/hooks/useRentalBookingDetail';
  * damaged, ₹300 of the ₹500 deposit being refunded through Razorpay, with a
  * proof and its activity. Tests override what they need.
  */
+/** The pod the fixture rental was booked for (test data, not interface copy). */
+export const FIXTURE_POD_TITLE = 'Sunday Smash';
+
 export function rentalDetailFixture(over: Partial<RentalDetail> = {}): RentalDetail {
   return {
     booking: {
@@ -44,7 +47,7 @@ export function rentalDetailFixture(over: Partial<RentalDetail> = {}): RentalDet
       address: '12 Court Road',
     },
     pod: {
-      title: 'Sunday Smash',
+      title: FIXTURE_POD_TITLE,
       starts_at: '2026-11-21T16:00:00.000Z',
       ends_at: '2026-11-21T18:00:00.000Z',
     },

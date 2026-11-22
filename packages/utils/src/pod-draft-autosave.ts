@@ -102,6 +102,7 @@ export function createDraftAutosaver<T>({
   let failures = 0;
   let stopped = false;
   let reportedUnsaved = false;
+  let sent = 0;
 
   // Every save moves through `saving`, so each call is a real change of state.
   const setStatus = (next: DraftSaveStatus) => {
@@ -125,6 +126,7 @@ export function createDraftAutosaver<T>({
     const value = read();
     const key = keyOf(value);
     if (key === savedKey) return true;
+    sent += 1;
     setStatus('saving');
     try {
       await save(value);
@@ -180,7 +182,11 @@ export function createDraftAutosaver<T>({
       if (status === 'error') setStatus('saved');
     },
     flush: async () => {
+      const sentBefore = sent;
       if (!(await run())) return false;
+      // Nothing was out, so the form as it stood when flush was called is
+      // saved; an edit made since is the debounce's to send, not this flush's.
+      if (sent === sentBefore) return true;
       // An edit made while that save was out is still unsaved: one more pass.
       if (hasUnsaved() && !(await run())) return false;
       return !hasUnsaved();

@@ -364,12 +364,21 @@ describe('CreatePodStepper', () => {
 
     it('hands the page the save status as it moves from saving to saved', async () => {
       const onAutosave = vi.fn();
-      setup({ initialStep: 3, onAutosave });
+      // The save is held open so the page can be seen in the "saving" state.
+      let finish: (id: string) => void = () => undefined;
+      const onSaveDraft = vi.fn(
+        () =>
+          new Promise<string>((resolve) => {
+            finish = resolve;
+          }),
+      );
+      setup({ initialStep: 3, onAutosave, onSaveDraft });
       expect(onAutosave).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'idle', unsaved: false }));
       await editTitle();
       expect(onAutosave).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'idle', unsaved: true }));
       await pause();
-      expect(onAutosave).toHaveBeenCalledWith(expect.objectContaining({ status: 'saving' }));
+      expect(onAutosave).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'saving', unsaved: true }));
+      await act(async () => finish('draft-1'));
       expect(onAutosave).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'saved', unsaved: false }));
     });
 

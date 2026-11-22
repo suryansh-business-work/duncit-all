@@ -323,6 +323,21 @@ describe('createDraftAutosaver', () => {
     expect(saver.hasUnsaved()).toBe(true);
   });
 
+  it('leaves an edit made right after a no-op flush to the debounce, not to that flush', async () => {
+    const { saver, save } = build();
+    // A step-change flush with nothing to save, and an edit in the same tick.
+    const flushed = saver.flush();
+    edit('Typed right after');
+    saver.schedule();
+    await expect(flushed).resolves.toBe(true);
+    expect(save).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(DRAFT_AUTOSAVE_DEBOUNCE_MS - 1);
+    expect(save).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledWith({ title: 'Typed right after' });
+  });
+
   it('flush on a form with nothing new sends nothing and says it is saved', async () => {
     const { saver, save } = build();
     await expect(saver.flush()).resolves.toBe(true);

@@ -1126,14 +1126,25 @@ describe('CreatePodStepper', () => {
 
     it('hands the screen its save status as it moves from unsaved to saved', async () => {
       const onAutosave = jest.fn();
-      setup({ onAutosave });
+      // The save is held open so the screen can be seen in the "saving" state.
+      let finish: (id: string) => void = () => undefined;
+      const onSaveDraft = jest.fn(
+        () =>
+          new Promise<string>((resolve) => {
+            finish = resolve;
+          }),
+      );
+      setup({ onAutosave, onSaveDraft });
       press('create-pod-mode-VIRTUAL');
       await act(async () => undefined);
       expect(onAutosave).toHaveBeenLastCalledWith(
         expect.objectContaining({ status: 'idle', unsaved: true }),
       );
       await pause();
-      expect(onAutosave).toHaveBeenCalledWith(expect.objectContaining({ status: 'saving' }));
+      expect(onAutosave).toHaveBeenLastCalledWith(
+        expect.objectContaining({ status: 'saving', unsaved: true }),
+      );
+      await act(async () => finish('draft-1'));
       expect(onAutosave).toHaveBeenLastCalledWith(
         expect.objectContaining({ status: 'saved', unsaved: false }),
       );

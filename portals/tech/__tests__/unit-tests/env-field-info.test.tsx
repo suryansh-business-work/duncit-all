@@ -52,7 +52,8 @@ describe('ConfigField with registry info', () => {
   it('puts the info button beside a switch', () => {
     const tls = makeEnvFieldDef({ name: 'secure', label: 'Use TLS', bool: true, description: 'TLS from the first byte.' });
     render(<ConfigField field={tls} value="true" helperText="" onChange={vi.fn()} onBlur={vi.fn()} onToggleBool={vi.fn()} />);
-    expect(screen.getByRole('checkbox', { name: 'Use TLS' })).toBeChecked();
+    // MUI's Switch exposes role="switch" (not "checkbox") to assistive tech.
+    expect(screen.getByRole('switch', { name: 'Use TLS' })).toBeChecked();
     expect(screen.getByRole('button', { name: /About Use TLS/ })).toBeInTheDocument();
   });
 });

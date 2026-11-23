@@ -16,6 +16,7 @@ import { POD_PROMO_PROMPTS } from './podPromo.prompts';
 import { LIBRARY_PROMPTS } from './library.prompts';
 import { ASK_DUNCIT_PROMPTS } from './askDuncit.prompts';
 import { FINANCE_PROMPTS } from './finance.prompts';
+import { INTEL_PROMPTS } from './intel.prompts';
 
 /**
  * Every CODE prompt the product runs on — the "Code Inside Prompt" half of the
@@ -49,6 +50,7 @@ export const CODE_PROMPTS: readonly InAppPromptDef[] = [
   ...LIBRARY_PROMPTS,
   ...ASK_DUNCIT_PROMPTS,
   ...FINANCE_PROMPTS,
+  ...INTEL_PROMPTS,
 ];
 
 export const CODE_PROMPT_BY_KEY = new Map(CODE_PROMPTS.map((p) => [p.key, p]));

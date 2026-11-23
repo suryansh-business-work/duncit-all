@@ -40,6 +40,8 @@ export const PROMPTLESS_TASKS: Readonly<Partial<Record<OpenAiTaskKey, string>>> 
   'automation.classify': 'Each AI sort step uses the AI Library prompt picked on that step in the flow builder.',
   'ask_duncit.transcribe': 'Speech-to-text: the audio is the whole input, there is no prompt.',
   'ask_duncit.speak': 'Text-to-speech: the answer being read aloud is the whole input, there is no prompt.',
+  'intel.embed': 'Embeddings: the text being indexed or searched is the whole input, there is no prompt.',
+  'intel.transcribe': 'Speech-to-text: the audio is the whole input, there is no prompt.',
 };
 
 /** The code prompts one feature runs on; empty for an unknown or prompt-less feature. */

@@ -330,6 +330,36 @@ export const OPENAI_TASKS = {
     description: 'Reads an Ask Duncit answer aloud.',
     when_off: 'The read-aloud button reports that voice output is unavailable.',
   },
+  'intel.chat': {
+    label: 'Duncit Intel answer',
+    module: 'Duncit Intel',
+    description: 'The Duncit Intel console (intel.duncit.com): streamed answers to staff questions and the searches, database reads and MCP calls they make.',
+    when_off: 'The Intel chat shows an error saying the AI feature is switched off; nothing is answered.',
+  },
+  'intel.title': {
+    label: 'Duncit Intel chat title',
+    module: 'Duncit Intel',
+    description: 'Names a new Duncit Intel conversation from its first question.',
+    when_off: 'New conversations are titled from the first words of the question.',
+  },
+  'intel.embed': {
+    label: 'Duncit Intel indexing',
+    module: 'Duncit Intel',
+    description: 'Embeds files, code, Slack, Gmail and database schemas for Duncit Intel search, and each search query.',
+    when_off: 'Syncs and uploads fail to index and searches return an error; nothing new is searchable.',
+  },
+  'intel.ocr': {
+    label: 'Duncit Intel image text',
+    module: 'Duncit Intel',
+    description: 'Reads the text in images uploaded to the Duncit Intel Media Manager so they can be searched.',
+    when_off: 'Images are stored but marked as not indexed.',
+  },
+  'intel.transcribe': {
+    label: 'Duncit Intel voice input',
+    module: 'Duncit Intel',
+    description: 'Turns a question spoken into the Duncit Intel microphone into text.',
+    when_off: 'The microphone reports that voice input is unavailable.',
+  },
   'agent.console': {
     label: 'Agent console turn',
     module: 'Agent',

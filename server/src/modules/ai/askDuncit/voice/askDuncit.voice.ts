@@ -62,13 +62,15 @@ async function ready(task: OpenAiTaskKey, model: string) {
   return { ok: true as const, config };
 }
 
-export async function transcribe(audio: Buffer, mime: string, opts: { model: string; userId: string; language?: string }): Promise<VoiceResult<string>> {
+export async function transcribe(audio: Buffer, mime: string, opts: { model: string; userId: string; language?: string; task?: OpenAiTaskKey }): Promise<VoiceResult<string>> {
   const startedAt = Date.now();
+  // Duncit Intel reuses this under its own AI Features switch and usage label.
+  const task: OpenAiTaskKey = opts.task ?? 'ask_duncit.transcribe';
   if (audio.byteLength === 0) return { ok: false, code: 'EMPTY', message: 'No audio was recorded' };
   if (audio.byteLength > HARD_LIMITS.maxAudioBytes) return { ok: false, code: 'TOO_LARGE', message: 'The recording is too long' };
-  const gate = await ready('ask_duncit.transcribe', opts.model);
+  const gate = await ready(task, opts.model);
   if (!gate.ok) {
-    await track('ask_duncit.transcribe', opts.model, 'SKIPPED', startedAt, 'voice message', opts.userId, gate.message);
+    await track(task, opts.model, 'SKIPPED', startedAt, 'voice message', opts.userId, gate.message);
     return gate;
   }
   const form = new FormData();
@@ -82,12 +84,12 @@ export async function transcribe(audio: Buffer, mime: string, opts: { model: str
   });
   if (!res.ok) {
     const message = await readError(res);
-    await track('ask_duncit.transcribe', gate.config.model, 'FAILED', startedAt, 'voice message', opts.userId, message);
+    await track(task, gate.config.model, 'FAILED', startedAt, 'voice message', opts.userId, message);
     return { ok: false, code: 'UPSTREAM', message };
   }
   const body = (await res.json().catch(() => ({}))) as { text?: string };
   const text = String(body.text ?? '').trim();
-  await track('ask_duncit.transcribe', gate.config.model, text ? 'SUCCESS' : 'FAILED', startedAt, `voice message · ${audio.byteLength} bytes`, opts.userId);
+  await track(task, gate.config.model, text ? 'SUCCESS' : 'FAILED', startedAt, `voice message · ${audio.byteLength} bytes`, opts.userId);
   return text ? { ok: true, value: text } : { ok: false, code: 'EMPTY', message: 'Nothing could be heard' };
 }
 

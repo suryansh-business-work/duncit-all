@@ -56,7 +56,7 @@ export interface ContextInput {
 
 const clip = (value: unknown, max: number) => String(value ?? '').trim().slice(0, max);
 
-async function firstName(userId: string): Promise<string> {
+export async function firstName(userId: string): Promise<string> {
   const doc = await UserModel.findById(userId)
     .select('profile.first_name')
     .lean<{ profile?: { first_name?: string } }>();

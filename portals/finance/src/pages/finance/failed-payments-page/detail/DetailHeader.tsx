@@ -57,6 +57,9 @@ export default function DetailHeader({ detail, canManage, reverifyBusy, onReveri
       {detail.highlight === 'YELLOW' && (
         <Alert severity="warning" sx={{ mt: 2 }}>{t('finance.failedPayments.yellowHint')}</Alert>
       )}
+      {detail.can_refund && detail.highlight !== 'GREEN' && (
+        <Alert severity="info" sx={{ mt: 2 }} data-testid="failed-payment-live-check-hint">{t('finance.failedPayments.liveCheckHint')}</Alert>
+      )}
       {detail.can_mark_not_refundable && (
         <Alert severity="info" sx={{ mt: 2 }}>{t('finance.failedPayments.notCapturedHint')}</Alert>
       )}

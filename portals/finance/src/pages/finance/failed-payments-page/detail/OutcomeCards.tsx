@@ -3,6 +3,7 @@ import { StatusChip } from '@duncit/ui';
 import { useTranslation, type DateFormatter } from '@duncit/app-settings';
 import { fmt } from '../../payment-logs-page/helpers';
 import DetailCard from './DetailCard';
+import { tracedId } from '../../../../components/TraceLink';
 import {
   REFUND_COLORS,
   RESOLUTION_COLORS,
@@ -37,8 +38,8 @@ export default function OutcomeCards({ detail, formatDateTime }: Readonly<Props>
             },
             { label: t('finance.failedPayments.refundableAmount'), value: detail.refundable_amount == null ? '' : fmt(detail.refundable_amount, detail.currency_symbol) },
             { label: t('finance.failedPayments.refundAmount'), value: refund.amount == null ? '' : fmt(refund.amount, detail.currency_symbol) },
-            { label: t('finance.failedPayments.razorpayRefundId'), value: refund.razorpay_refund_id },
-            { label: t('finance.failedPayments.refundPaymentId'), value: refund.razorpay_payment_id },
+            { label: t('finance.failedPayments.razorpayRefundId'), value: tracedId(refund.razorpay_refund_id) },
+            { label: t('finance.failedPayments.refundPaymentId'), value: tracedId(refund.razorpay_payment_id) },
             { label: t('finance.failedPayments.refundAttemptedAt'), value: when(refund.attempted_at) },
             { label: t('finance.failedPayments.refundedAt'), value: when(refund.refunded_at) },
             { label: t('finance.failedPayments.refundInitiatedBy'), value: refund.initiated_by_name },

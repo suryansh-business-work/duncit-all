@@ -5,6 +5,7 @@ import { QueryGuard } from '@duncit/ui';
 import { useDateFormat, useTranslation, type DateFormatter } from '@duncit/app-settings';
 import DetailHeader from './DetailHeader';
 import OverviewCards from './OverviewCards';
+import AiSummaryCard from './AiSummaryCard';
 import EvidenceCard from './EvidenceCard';
 import VerificationCard from './VerificationCard';
 import OutcomeCards from './OutcomeCards';
@@ -42,6 +43,7 @@ function FailedPaymentBody({ detail, formatDateTime }: Readonly<BodyProps>) {
         onAction={(kind) => actions.open(kind, { ...detail, user_name: detail.user.name })}
       />
       <Stack spacing={2}>
+        <AiSummaryCard detail={detail} formatDateTime={formatDateTime} />
         <OverviewCards detail={detail} formatDateTime={formatDateTime} />
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ alignItems: 'stretch' }}>
           <EvidenceCard detail={detail} formatDateTime={formatDateTime} />

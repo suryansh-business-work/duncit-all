@@ -57,6 +57,8 @@ export const appConfig = {
         // Checkouts that did not book: the buyer's evidence, the AI + Razorpay check, review and refund.
         { label: 'Failed Payments', labelKey: 'shell.nav.failedPayments', to: '/failed-payments', icon: 'flag' },
         { label: 'Round Offs', labelKey: 'shell.nav.roundOffs', to: '/round-offs', icon: 'percent' },
+        // Any payment id, and every payment and log it appears in.
+        { label: 'Payment Trace', labelKey: 'shell.nav.paymentTrace', to: '/payment-trace', icon: 'timeline' },
       ],
     },
     {

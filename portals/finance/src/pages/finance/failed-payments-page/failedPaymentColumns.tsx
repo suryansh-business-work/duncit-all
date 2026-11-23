@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
-import { Stack, Typography } from '@mui/material';
+import { Chip, Stack, Typography } from '@mui/material';
 import { EM_DASH, LabeledIds, type DuncitColumn } from '@duncit/table';
 import { formatDateTime, type Translator } from '@duncit/app-settings';
 import { StatusChip } from '@duncit/ui';
 import { fmt } from '../payment-logs-page/helpers';
+import { paymentSourceLabels } from '../payment-logs-page/paymentSource';
+import { traceIdValue } from '../../../components/TraceLink';
 import {
   REFUND_COLORS,
   RESOLUTION_COLORS,
@@ -50,6 +52,8 @@ export function buildFailedPaymentColumns(
   const resolution = resolutionLabels(t);
   const refund = refundLabels(t);
   const review = reviewLabels(t);
+  const checkout = paymentSourceLabels(t);
+  const checkoutOf = (r: FailedPaymentRow) => (r.payment_source ? checkout[r.payment_source] : EM_DASH);
 
   return [
     { field: 'created_at', headerName: t('finance.failedPayments.colCreated'), width: 170, type: 'date', valueGetter: (r) => dateText(r.created_at) },
@@ -63,6 +67,17 @@ export function buildFailedPaymentColumns(
       cellRenderer: (r) => twoLine(r.user_name, r.user_phone || r.user_email),
       valueGetter: (r) => [r.user_name, r.user_phone, r.user_email].filter(Boolean).join(' '),
     },
+    {
+      // Where the money was paid: a pod booking, the pod shop cart, the pet store or a gift card.
+      field: 'payment_source',
+      headerName: t('finance.failedPayments.colCheckout'),
+      width: 170,
+      type: 'text',
+      sortable: false,
+      filterable: false,
+      cellRenderer: (r) => (r.payment_source ? <Chip size="small" variant="outlined" label={checkoutOf(r)} /> : EM_DASH),
+      valueGetter: checkoutOf,
+    },
     { field: 'pod_title', headerName: t('finance.failedPayments.colPod'), minWidth: 160, type: 'text', sortable: false, filterable: false, valueGetter: (r) => r.pod_title || EM_DASH },
     { field: 'amount', headerName: t('finance.failedPayments.colAmount'), width: 120, type: 'number', filterable: false, valueGetter: (r) => fmt(r.amount, r.currency_symbol) },
     {
@@ -72,17 +87,20 @@ export function buildFailedPaymentColumns(
       type: 'text',
       sortable: false,
       filterable: false,
-      // Each Razorpay id under its own name, the refund's too once one was sent.
+      // Each Razorpay id under its own name, the refund's too once one was sent;
+      // each one opens Payment Trace (every payment and log it appears in).
       cellRenderer: (r) => (
         <LabeledIds
+          renderValue={traceIdValue}
           ids={[
             { label: t('finance.failedPayments.razorpayPaymentId'), value: r.razorpay_payment_id },
             { label: t('finance.failedPayments.razorpayOrderId'), value: r.razorpay_order_id },
             { label: t('finance.failedPayments.razorpayRefundId'), value: r.razorpay_refund_id },
+            { label: t('finance.failedPayments.duncitRef'), value: r.payment_id },
           ]}
         />
       ),
-      valueGetter: (r) => [r.razorpay_payment_id, r.razorpay_order_id, r.razorpay_refund_id].filter(Boolean).join(' '),
+      valueGetter: (r) => [r.razorpay_payment_id, r.razorpay_order_id, r.razorpay_refund_id, r.payment_id].filter(Boolean).join(' '),
     },
     {
       field: 'error_code',

@@ -1,7 +1,8 @@
-import { Link as RouterLink } from 'react-router';
-import { Link, Stack } from '@mui/material';
+import { Stack } from '@mui/material';
 import { useTranslation, type DateFormatter } from '@duncit/app-settings';
 import { fmt } from '../../payment-logs-page/helpers';
+import { paymentSourceLabels } from '../../payment-logs-page/paymentSource';
+import { tracedId as traced } from '../../../../components/TraceLink';
 import DetailCard from './DetailCard';
 import type { FailedPaymentDetail } from '../queries';
 
@@ -32,20 +33,20 @@ export default function OverviewCards({ detail, formatDateTime }: Readonly<Props
           lines={[
             {
               label: t('finance.failedPayments.duncitRef'),
-              value: (
-                <Link component={RouterLink} to={`/payment-logs/${detail.payment_doc_id}`}>
-                  {detail.payment_id}
-                </Link>
-              ),
+              value: traced(detail.payment_id),
+            },
+            {
+              label: t('finance.failedPayments.checkout'),
+              value: detail.payment_source ? paymentSourceLabels(t)[detail.payment_source] : null,
             },
             { label: t('finance.failedPayments.amount'), value: fmt(detail.amount, detail.currency_symbol) },
             { label: t('finance.failedPayments.pod'), value: detail.pod_title },
-            { label: t('finance.failedPayments.razorpayPaymentId'), value: detail.razorpay_payment_id },
-            { label: t('finance.failedPayments.razorpayOrderId'), value: detail.razorpay_order_id },
+            { label: t('finance.failedPayments.razorpayPaymentId'), value: traced(detail.razorpay_payment_id) },
+            { label: t('finance.failedPayments.razorpayOrderId'), value: traced(detail.razorpay_order_id) },
             { label: t('finance.failedPayments.paymentStatus'), value: booking.payment_status },
             { label: t('finance.failedPayments.finalizeState'), value: booking.finalize_state },
             { label: t('finance.failedPayments.bookingExists'), value: booking.exists ? yes : no },
-            { label: t('finance.failedPayments.bookedPaymentId'), value: booking.booked_razorpay_payment_id },
+            { label: t('finance.failedPayments.bookedPaymentId'), value: traced(booking.booked_razorpay_payment_id) },
             { label: t('finance.failedPayments.needsRefundFlag'), value: booking.needs_refund ? yes : no },
             { label: t('finance.failedPayments.paidAt'), value: when(booking.paid_at, formatDateTime) },
           ]}

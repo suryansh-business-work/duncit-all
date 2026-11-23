@@ -74,7 +74,7 @@ describe('DesignsPage', () => {
     expect(within(cell(0, 'front_image_url')).getByRole('img')).toHaveAttribute('src', FRONT);
     expect(screen.getByRole('link', { name: 'Add design' })).toHaveAttribute('href', '/gift-cards/designs/new');
 
-    fireEvent.click(screen.getAllByTestId('table-row')[1]);
+    fireEvent.click(within(screen.getAllByTestId('table-row')[1]).getByTestId('row-open'));
     expect(await screen.findByTestId('opened')).toBeInTheDocument();
   });
 

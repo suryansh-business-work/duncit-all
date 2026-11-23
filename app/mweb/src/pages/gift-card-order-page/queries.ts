@@ -1,37 +1,14 @@
 import { gql } from '@apollo/client';
 import type {
+  GiftCardOrderAddress,
   GiftCardOrderDeliveryMode,
   GiftCardOrderFulfilment,
   GiftCardOrderPayment,
+  GiftCardOrderShipment,
+  GiftCardOrderTrackingEvent,
 } from '@duncit/utils';
 
-export interface GiftCardOrderAddress {
-  name: string;
-  phone: string;
-  line1: string;
-  line2: string;
-  landmark: string;
-  city: string;
-  state: string;
-  pincode: string;
-  country: string;
-}
-
-export interface GiftCardOrderShipment {
-  courier_name: string;
-  awb: string;
-  tracking_status: string;
-  etd: string;
-  pickup_scheduled_date: string;
-  last_synced_at: string | null;
-}
-
-export interface GiftCardOrderTrackingEvent {
-  status: string;
-  location: string;
-  note: string;
-  at: string;
-}
+export type { GiftCardOrderAddress, GiftCardOrderShipment, GiftCardOrderTrackingEvent };
 
 /** A member's own gift card order — never a card code or passcode. */
 export interface GiftCardOrder {

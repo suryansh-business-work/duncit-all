@@ -98,7 +98,7 @@ describe('GiftCardOrdersPage', () => {
     expect(cell(2, 'awb')).toHaveTextContent('AWB123');
     expect(cell(2, 'buyer_name')).toHaveTextContent('Aarav Shah');
 
-    fireEvent.click(screen.getAllByTestId('table-row')[0]);
+    fireEvent.click(within(screen.getAllByTestId('table-row')[0]).getByTestId('row-open'));
     expect(await screen.findByTestId('opened')).toBeInTheDocument();
   });
 

@@ -63,7 +63,8 @@ export const makeDeliverySettingsSchema = (t: Translator['t']) =>
       parcel_height_cm: measure(t, DELIVERY_LIMITS.heightCm),
     })
     // Delivery is never free: printed cards cannot be switched on without a fee.
-    .refine((v) => !v.physical_enabled || Number(v.shipping_fee) > 0, {
+    // Only once the fee is a valid number — a blank or negative one already says so on its own.
+    .refine((v) => !v.physical_enabled || !between(v.shipping_fee, 0, 100_000) || Number(v.shipping_fee) > 0, {
       path: ['shipping_fee'],
       message: t('loyalty.giftSettings.feeRequired'),
     });

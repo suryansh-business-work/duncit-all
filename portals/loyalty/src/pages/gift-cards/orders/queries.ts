@@ -1,4 +1,7 @@
 import { gql } from '@apollo/client';
+import type { GiftCardOrderAddress, GiftCardOrderShipment, GiftCardOrderTrackingEvent } from '@duncit/utils';
+
+export type { GiftCardOrderAddress, GiftCardOrderShipment, GiftCardOrderTrackingEvent };
 
 export type GiftCardDeliveryMode = 'DIGITAL' | 'PHYSICAL';
 export type GiftCardOrderPaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
@@ -18,34 +21,6 @@ export type GiftCardOrderFulfilmentStatus =
   | 'LOST'
   | 'CANCELLED'
   | 'FAILED';
-
-export interface GiftCardOrderAddress {
-  name: string;
-  phone: string;
-  line1: string;
-  line2: string;
-  landmark: string;
-  city: string;
-  state: string;
-  pincode: string;
-  country: string;
-}
-
-export interface GiftCardOrderShipment {
-  courier_name: string;
-  awb: string;
-  tracking_status: string;
-  etd: string;
-  pickup_scheduled_date: string;
-  last_synced_at: string | null;
-}
-
-export interface GiftCardOrderTrackingEvent {
-  status: string;
-  location: string;
-  note: string;
-  at: string;
-}
 
 /** One order as the console reads it. */
 export interface GiftCardAdminOrder {

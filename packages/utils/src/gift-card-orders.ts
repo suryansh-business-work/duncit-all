@@ -23,6 +23,37 @@ export type GiftCardOrderFulfilment =
   | 'CANCELLED'
   | 'FAILED';
 
+/** Where a printed order goes — the order's ship-to as the API returns it. */
+export interface GiftCardOrderAddress {
+  name: string;
+  phone: string;
+  line1: string;
+  line2: string;
+  landmark: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+}
+
+/** The courier leg of a printed order, once booked. */
+export interface GiftCardOrderShipment {
+  courier_name: string;
+  awb: string;
+  tracking_status: string;
+  etd: string;
+  pickup_scheduled_date: string;
+  last_synced_at: string | null;
+}
+
+/** One courier scan. */
+export interface GiftCardOrderTrackingEvent {
+  status: string;
+  location: string;
+  note: string;
+  at: string;
+}
+
 export interface GiftCardOrderStatusFacts {
   delivery_mode: GiftCardOrderDeliveryMode;
   payment_status: GiftCardOrderPayment;
@@ -57,6 +88,9 @@ export const GIFT_CARD_ORDER_PAYMENT_KEYS: Record<GiftCardOrderPayment, string> 
 
 export type GiftCardOrderTone = 'success' | 'info' | 'warning' | 'error' | 'neutral';
 
+/** Where the cards will not arrive as ordered. */
+const WENT_WRONG: ReadonlySet<GiftCardOrderFulfilment> = new Set(['RTO', 'RTO_DELIVERED', 'LOST', 'CANCELLED', 'FAILED']);
+
 /** The order's headline: the payment while it is not paid, otherwise where the cards are. */
 export function giftCardOrderHeadline(order: GiftCardOrderStatusFacts): { key: string; tone: GiftCardOrderTone } {
   if (order.payment_status !== 'PAID') {
@@ -66,7 +100,7 @@ export function giftCardOrderHeadline(order: GiftCardOrderStatusFacts): { key: s
   const status = order.fulfilment_status;
   if (status === 'DELIVERED') return { key: GIFT_CARD_ORDER_STATUS_KEYS[status], tone: 'success' };
   if (status === 'NDR') return { key: GIFT_CARD_ORDER_STATUS_KEYS[status], tone: 'warning' };
-  if (['RTO', 'RTO_DELIVERED', 'LOST', 'CANCELLED', 'FAILED'].includes(status)) {
+  if (WENT_WRONG.has(status)) {
     return { key: GIFT_CARD_ORDER_STATUS_KEYS[status], tone: 'error' };
   }
   return { key: GIFT_CARD_ORDER_STATUS_KEYS[status], tone: 'info' };
@@ -121,7 +155,7 @@ export function giftCardOrderSteps(order: GiftCardOrderStatusFacts): GiftCardOrd
   return steps;
 }
 
-const AT_REST: readonly GiftCardOrderFulfilment[] = ['DELIVERED', 'RTO_DELIVERED', 'LOST', 'CANCELLED', 'FAILED'];
+const AT_REST: ReadonlySet<GiftCardOrderFulfilment> = new Set(['DELIVERED', 'RTO_DELIVERED', 'LOST', 'CANCELLED', 'FAILED']);
 
 /**
  * Still moving — worth re-reading while the member watches: a payment not yet
@@ -130,7 +164,7 @@ const AT_REST: readonly GiftCardOrderFulfilment[] = ['DELIVERED', 'RTO_DELIVERED
 export function isGiftCardOrderLive(order: GiftCardOrderStatusFacts): boolean {
   if (order.payment_status === 'PENDING') return true;
   if (order.payment_status !== 'PAID') return false;
-  return !AT_REST.includes(order.fulfilment_status);
+  return !AT_REST.has(order.fulfilment_status);
 }
 
 /** How often an open order page re-reads a live order (ms). */

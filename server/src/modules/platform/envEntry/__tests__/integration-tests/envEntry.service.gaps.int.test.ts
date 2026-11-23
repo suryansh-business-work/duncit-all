@@ -245,8 +245,8 @@ describe('portals', () => {
 
 describe('runtime resolution', () => {
   it('returns the entry asked for when it is active, else the category default, else nothing', async () => {
-    const a = await mail('A', { config: { host: 'a.test' } });
-    const b = await mail('B', { config: { host: 'b.test' }, is_active: false });
+    const a = await mail('A', { config: { host: 'a.test', password: 'secret' } });
+    const b = await mail('B', { config: { host: 'b.test', password: 'secret' }, is_active: false });
     await expect(envEntryService.resolveRuntime('EMAIL', a.id)).resolves.toMatchObject({ name: 'A', config: { host: 'a.test' } });
     await expect(envEntryService.resolveRuntime('EMAIL', b.id)).resolves.toMatchObject({ name: 'A' });
     await expect(envEntryService.resolveRuntime('EMAIL', '64b0000000000000000000ff')).resolves.toMatchObject({ name: 'A' });
@@ -265,8 +265,8 @@ describe('runtime resolution', () => {
   });
 
   it('prefers the entry assigned to the portal, then the default, and respects active', async () => {
-    const def = await mail('Default', { config: { host: 'def.test' } });
-    const mine = await mail('Mine', { config: { host: 'mine.test' }, assigned_portals: ['crm'] });
+    const def = await mail('Default', { config: { host: 'def.test', password: 'secret' } });
+    const mine = await mail('Mine', { config: { host: 'mine.test', password: 'secret' }, assigned_portals: ['crm'] });
     await expect(envEntryService.resolveForPortal(' crm ', 'EMAIL')).resolves.toMatchObject({ id: mine.id });
     await envEntryService.update(mine.id, { is_active: false });
     await expect(envEntryService.resolveForPortal('crm', 'EMAIL')).resolves.toMatchObject({ id: def.id });

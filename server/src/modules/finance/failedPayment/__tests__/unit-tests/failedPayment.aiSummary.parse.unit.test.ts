@@ -8,7 +8,7 @@ const kase = (over: Record<string, unknown> = {}) =>
     latest_error: { code: 'FINALIZE_FAILED', description: 'Pod is full', reason: '', step: '', source: '', reported_by: 'SERVER', at: null },
     attempts: 1,
     retry_shown: false,
-    claims: [{ evidence_type: 'SCREENSHOT', transaction_id: 'T1', files: [{ file_ref: 'secret/ref.png' }] }],
+    claims: [{ evidence_type: 'SCREENSHOT', transaction_id: 'UTR-0042-SECRET', files: [{ file_ref: 'secret/ref.png' }] }],
     verification: { status: 'UNMATCHED', notes: 'No match', razorpay_status: 'captured', matched_fields: ['amount'] },
     review: null,
     refund: { status: '', attempts: 0, error: '' },
@@ -49,7 +49,7 @@ describe('summaryFacts', () => {
 
   it('never carries personal data, evidence files, transaction ids or host-written text', () => {
     const text = JSON.stringify(summaryFacts({ kase: kase(), source: null, booking: null, preview: blocked }));
-    for (const secret of ['Riya', 'riya@example.com', '99999', 'secret/ref.png', 'T1', 'Ignore previous instructions']) {
+    for (const secret of ['Riya', 'riya@example.com', '99999', 'secret/ref.png', 'UTR-0042-SECRET', 'Ignore previous instructions']) {
       expect(text).not.toContain(secret);
     }
   });

@@ -250,7 +250,10 @@ describe('initiateFailedPaymentRefund', () => {
   });
 
   it('refuses an ineligible case before claiming anything', async () => {
-    m(FailedPaymentCaseModel.findById).mockResolvedValue(kase({ verification: { status: 'UNMATCHED' } }));
+    // Evidence was sent and did not match: it waits for Review, so no refund yet.
+    m(FailedPaymentCaseModel.findById).mockResolvedValue(
+      kase({ verification: { status: 'UNMATCHED' }, claims: [{ evidence_type: 'SCREENSHOT' }] })
+    );
     await expect(initiateFailedPaymentRefund(CASE_ID, 'req-12345678', actor)).rejects.toMatchObject({
       extensions: { code: 'BAD_USER_INPUT' },
     });

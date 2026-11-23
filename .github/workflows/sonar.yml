@@ -96,7 +96,7 @@ jobs:
   coverage-workspaces:
     name: Coverage — ${{ matrix.group.name }}
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: ${{ matrix.group.minutes || 75 }}
     needs: probe
     if: ${{ !inputs.skip_coverage }}
     strategy:
@@ -104,7 +104,10 @@ jobs:
       matrix:
         group:
           # Big suites: a runner each. Filters are pnpm --filter selectors.
-          - { name: server, filters: './server' }
+          # The server's jest run is serial (one shared in-memory MongoDB) and
+          # passed 60 minutes on 2026-11-22, so it alone gets a longer time box
+          # (timebox → COVERAGE_TIMEOUT) inside a longer job budget (minutes).
+          - { name: server, filters: './server', timebox: 85m, minutes: 100 }
           - { name: mweb, filters: './app/mweb' }
           - { name: admin, filters: './portals/admin' }
           - { name: crm, filters: './portals/crm' }
@@ -170,6 +173,8 @@ jobs:
       - name: Run coverage
         if: steps.reuse.outputs.cache-hit != 'true'
         continue-on-error: true
+        env:
+          COVERAGE_TIMEOUT: ${{ matrix.group.timebox || '60m' }}
         run: bash scripts/ci-coverage-run.sh ${{ matrix.group.name }} ${{ matrix.group.filters }}
       - name: Upload test logs
         if: always()

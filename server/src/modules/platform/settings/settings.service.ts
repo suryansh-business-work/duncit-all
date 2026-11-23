@@ -1048,6 +1048,8 @@ export const settingsService = {
       truecallerAppKey,
       truecallerIosAppLink,
       truecallerPartnerName,
+      appLinksSha256,
+      remotionLicenseKey,
       { serverUrl },
     ] = await Promise.all([
       getRuntimeEnvValue("GOOGLE_CLIENT_ID"),
@@ -1062,6 +1064,8 @@ export const settingsService = {
       getRuntimeEnvValue("TRUECALLER_APP_KEY"),
       getRuntimeEnvValue("TRUECALLER_IOS_APP_LINK"),
       getRuntimeEnvValue("TRUECALLER_PARTNER_NAME"),
+      getRuntimeEnvValue("GOOGLE_PLAY_APP_LINKS_SHA256"),
+      getRuntimeEnvValue("REMOTION_LICENSE_KEY"),
       getUrlConfigs(),
     ]);
     return {
@@ -1080,6 +1084,10 @@ export const settingsService = {
       truecaller_app_key: truecallerAppKey.trim(),
       truecaller_ios_app_link: truecallerIosAppLink.trim(),
       truecaller_partner_name: truecallerPartnerName.trim(),
+      // Public by nature: mWeb serves them in /.well-known/assetlinks.json.
+      android_app_links_sha256: appLinksSha256.trim(),
+      // Public by design: Remotion takes the licence key in client code.
+      remotion_license_key: remotionLicenseKey.trim(),
     };
   },
 

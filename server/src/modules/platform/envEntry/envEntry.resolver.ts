@@ -6,6 +6,7 @@ import {
   CATEGORY_DESCRIPTIONS,
   CATEGORY_DOCS,
   CATEGORY_FIELDS,
+  CATEGORY_USED_IN,
   groupOf,
   CATEGORY_LABELS,
 } from './envEntry.fields';
@@ -142,6 +143,7 @@ export const envEntryResolvers = {
         docUrl: CATEGORY_DOCS[category],
         apiDocsUrl: CATEGORY_API_DOCS[category] ?? null,
         description: CATEGORY_DESCRIPTIONS[category],
+        usedIn: CATEGORY_USED_IN[category],
         groupKey: groupOf(category).key,
         groupLabel: groupOf(category).label,
         groupDescription: groupOf(category).description,
@@ -153,6 +155,15 @@ export const envEntryResolvers = {
           bool: !!f.bool,
           phone: !!f.phone,
           hint: f.hint ?? null,
+          description: f.description,
+          envKey: f.envKey ?? null,
+          usedIn: f.usedIn,
+          validation: {
+            type: f.validation.type,
+            required: !!f.validation.required,
+            min: f.validation.min ?? null,
+            max: f.validation.max ?? null,
+          },
         })),
       }));
     },

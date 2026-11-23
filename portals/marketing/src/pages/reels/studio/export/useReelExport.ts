@@ -6,7 +6,7 @@ import { downloadBlob } from '@duncit/utils';
 import { frameOf } from '../../composition/aspect';
 import { ReelComposition } from '../../composition/ReelComposition';
 import { reelDurationInFrames, sceneTimings } from '../../composition/timing';
-import { remotionLicenseKey } from '../../license';
+import { useRemotionLicenseKey } from '../../license';
 import type { ReelProject } from '../../types';
 import { AssetDownloadError, downloadReelAssets } from './localAssets';
 
@@ -58,6 +58,7 @@ export function useReelExport(project: ReelProject) {
   const { t } = useTranslation();
   const [state, setState] = useState<ExportState>(IDLE);
   const abortRef = useRef<AbortController | null>(null);
+  const licenseKey = useRemotionLicenseKey();
 
   const start = useCallback(async () => {
     const { spec, assets, name } = project;
@@ -97,7 +98,7 @@ export function useReelExport(project: ReelProject) {
         container: CONTAINER,
         videoCodec: VIDEO_CODEC,
         signal: controller.signal,
-        licenseKey: remotionLicenseKey,
+        licenseKey,
         onProgress: ({ progress }) => setState({ phase: 'rendering', progress }),
       }).finally(local.release);
       const blob = await result.getBlob();
@@ -111,7 +112,7 @@ export function useReelExport(project: ReelProject) {
       logs.portal.marketing.error('reels', 'export', { error });
       setState({ phase: 'failed', message: failureMessage(error, t) });
     }
-  }, [project, t]);
+  }, [project, t, licenseKey]);
 
   const cancel = useCallback(() => abortRef.current?.abort(), []);
   const dismiss = useCallback(() => setState(IDLE), []);

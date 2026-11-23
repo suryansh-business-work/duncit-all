@@ -45,9 +45,27 @@ describe('get', () => {
 });
 
 describe('create', () => {
-  it('accepts an entry with no config at all', async () => {
-    const created = await envEntryService.create({ name: 'Bare', category: 'PEXELS' });
+  it('refuses a new entry without the value its category cannot work without, naming the field', async () => {
+    await expect(envEntryService.create({ name: 'Bare', category: 'PEXELS' })).rejects.toMatchObject({
+      message: 'API Key is required',
+      extensions: { code: 'BAD_USER_INPUT', field: 'config.api_key' },
+    });
+    expect(await EnvEntryModel.countDocuments({ name: 'Bare' })).toBe(0);
+  });
+
+  it('refuses a value in the wrong format and stores nothing', async () => {
+    await expect(
+      envEntryService.create({ name: 'Bad host', category: 'EMAIL', config: { host: 'https://smtp.test', password: 'p' } })
+    ).rejects.toMatchObject({ extensions: { code: 'BAD_USER_INPUT', field: 'config.host' } });
+    expect(await EnvEntryModel.countDocuments({ name: 'Bad host' })).toBe(0);
+  });
+
+  it('lets an import-style create through without its required value, still checking formats', async () => {
+    const created = await envEntryService.create({ name: 'Bare', category: 'PEXELS' }, { enforceRequired: false });
     expect(created.config.every((c) => c.value === '')).toBe(true);
+    await expect(
+      envEntryService.create({ name: 'Bad port', category: 'EMAIL', config: { port: 0 } }, { enforceRequired: false })
+    ).rejects.toMatchObject({ message: 'Port must be at least 1' });
   });
 
   it('refuses a category the platform does not know', async () => {
@@ -66,9 +84,11 @@ describe('create', () => {
   });
 
   it('trims the name, keeps the description and portals, and skips blank secrets and unset values', async () => {
-    const created = await envEntryService.create({
-      name: '  Spaced  ', category: 'EMAIL', description: 'Main', assigned_portals: ['tech'], config: { host: 'h', password: '', port: undefined as never },
-    });
+    // Import-style (no required check), so a blank secret can reach the merge.
+    const created = await envEntryService.create(
+      { name: '  Spaced  ', category: 'EMAIL', description: 'Main', assigned_portals: ['tech'], config: { host: 'smtp.h', password: '', port: undefined as never } },
+      { enforceRequired: false }
+    );
     expect(created).toMatchObject({ name: 'Spaced', description: 'Main', assigned_portals: ['tech'] });
     expect(created.secrets).toEqual([{ key: 'has_password', present: false }]);
     expect(created.config.find((c) => c.key === 'port')?.value).toBe('');
@@ -92,6 +112,23 @@ describe('update', () => {
     expect(updated).toMatchObject({ name: 'Same', description: 'keep', is_active: true });
     await envEntryService.update(entry.id, { name: null, description: null, is_default: null, is_active: null, config: null, assigned_portals: null });
     expect((await EnvEntryModel.findById(entry.id).lean())?.name).toBe('Same');
+  });
+
+  it('refuses a bad value on update and keeps what was stored', async () => {
+    const entry = await mail('Guarded');
+    await expect(envEntryService.update(entry.id, { config: { port: 70000 } })).rejects.toMatchObject({
+      message: 'Port must be at most 65535',
+      extensions: { code: 'BAD_USER_INPUT', field: 'config.port' },
+    });
+    expect((await EnvEntryModel.findById(entry.id).lean())?.config).toEqual({ host: 'smtp.test', password: 'secret' });
+  });
+
+  it('checks only the values being saved, so an older stored value never blocks an unrelated edit', async () => {
+    const { insertedId } = await EnvEntryModel.collection.insertOne({
+      name: 'Old host', category: 'EMAIL', config: { host: 'not a host', password: 'p' }, is_default: false, is_active: true, assigned_portals: [], description: '',
+    });
+    await envEntryService.update(String(insertedId), { config: { from_name: 'Duncit' } });
+    expect((await EnvEntryModel.findById(insertedId).lean())?.config).toMatchObject({ host: 'not a host', from_name: 'Duncit' });
   });
 
   it('updates an entry whose stored config is null', async () => {
@@ -168,6 +205,23 @@ describe('importEntries', () => {
       created: ['EMAIL · Fresh'], updated: ['EMAIL · Existing'], skipped: ['    (EMAIL)', 'Odd (TELEPATHY)', '(unnamed) (EMAIL)'],
     });
     expect((await EnvEntryModel.findOne({ name: 'Existing' }).lean())?.config).toMatchObject({ host: 'changed.test', password: 'secret' });
+  });
+
+  it('skips only the entry whose value is in the wrong format, with the reason, and imports the rest', async () => {
+    await mail('Kept');
+    const out = await envEntryService.importEntries([
+      { name: 'Bad URL', category: 'IMAGEKIT', config: { private_key: 'k', url_endpoint: 'ik.imagekit.io/x' } },
+      { name: 'Kept', category: 'EMAIL', config: { host: 'smtp test' } },
+      { name: 'Good', category: 'IMAGEKIT', config: { private_key: 'k', url_endpoint: 'https://ik.imagekit.io/x' } },
+    ]);
+    expect(out.created).toEqual(['IMAGEKIT · Good']);
+    expect(out.updated).toEqual([]);
+    expect(out.skipped).toEqual([
+      'IMAGEKIT · Bad URL — URL Endpoint must be a full URL, e.g. https://example.com',
+      'EMAIL · Kept — SMTP Host must be a host name such as smtp.example.com — no https:// or path',
+    ]);
+    expect(await EnvEntryModel.countDocuments({ name: 'Bad URL' })).toBe(0);
+    expect((await EnvEntryModel.findOne({ name: 'Kept' }).lean())?.config).toMatchObject({ host: 'smtp.test' });
   });
 });
 

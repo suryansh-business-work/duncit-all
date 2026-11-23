@@ -12,7 +12,7 @@ export { MapEmbedCard, type MapEmbedCardProps } from './MapEmbedCard';
 export { buildMapQuery, mapEmbedUrl, mapSearchUrl, type MapQueryPart } from './mapEmbed';
 export { RhfAdminLocation } from './RhfAdminLocation';
 export { Fieldset, type FieldsetProps } from './Fieldset';
-export { useAdminLocations, ADMIN_LOCATIONS } from './queries';
+export { useAdminLocations, ADMIN_LOCATIONS, useGoogleMapsApiKey, PUBLIC_MAPS_KEY } from './queries';
 export { buildLocationValue, useLocationValueFromId, buildLocationValueFromNames } from './resolve';
 export {
   countryOptions,

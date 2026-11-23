@@ -92,6 +92,7 @@ export const envEntryTypeDefs = gql`
     TRUECALLER
     SERPER
     ANTHROPIC
+    REMOTION
   }
 
   type EnvConfigPair {
@@ -113,6 +114,23 @@ export const envEntryTypeDefs = gql`
     bool: Boolean!
     phone: Boolean!
     hint: String
+    "Why the value is used — what stops working without it (env-registry.json)."
+    description: String
+    "The legacy env key the server resolves to this field, e.g. SMTP_HOST. Null when code reads the category directly."
+    envKey: String
+    "Repo files that read this field through its env key."
+    usedIn: [String!]!
+    "How the value is checked when it is saved."
+    validation: EnvFieldValidation!
+  }
+
+  "A field's save-time check. type: text, url, hostname, email, phone, number, bool, json, pem, list or fingerprints."
+  type EnvFieldValidation {
+    type: String!
+    "Must be filled when an entry is created."
+    required: Boolean!
+    min: Float
+    max: Float
   }
 
   type EnvCategoryDef {
@@ -125,6 +143,8 @@ export const envEntryTypeDefs = gql`
     apiDocsUrl: String
     "One line on what the keys power — the subtitle under the category title."
     description: String
+    "Repo files that read the category directly (env-registry.json)."
+    usedIn: [String!]!
     "The sidebar group this category sits in."
     groupKey: String!
     groupLabel: String!

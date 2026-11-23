@@ -420,6 +420,31 @@ describe('settingsService integration', () => {
     expect(cfg.apple_bundle_id).toBe('com.duncit.mobile');
   });
 
+  it('exposes the App Links fingerprints and the Remotion licence, trimmed, and blanks when unset', async () => {
+    const empty = await settingsService.getPublicClientConfig();
+    expect(empty.android_app_links_sha256).toBe('');
+    expect(empty.remotion_license_key).toBe('');
+
+    const fingerprint = Array.from({ length: 32 }, () => 'AB').join(':');
+    await EnvEntryModel.create({
+      name: 'play',
+      category: 'GOOGLE_PLAY',
+      is_active: true,
+      is_default: true,
+      config: { package_name: 'com.duncit.mobile', app_links_sha256: ` ${fingerprint} ` },
+    });
+    await EnvEntryModel.create({
+      name: 'remotion',
+      category: 'REMOTION',
+      is_active: true,
+      is_default: true,
+      config: { license_key: ' rem-licence-1 ' },
+    });
+    const cfg = await settingsService.getPublicClientConfig();
+    expect(cfg.android_app_links_sha256).toBe(fingerprint);
+    expect(cfg.remotion_license_key).toBe('rem-licence-1');
+  });
+
   it('seeds default flags idempotently and exposes public flags', async () => {
     await settingsService.seedDefaults();
     await settingsService.seedDefaults();

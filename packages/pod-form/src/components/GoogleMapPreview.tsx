@@ -1,6 +1,7 @@
 import { Box, Stack, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { DuncitButton } from '@duncit/buttons';
+import { useGoogleMapsApiKey } from '@duncit/location';
 import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
@@ -14,7 +15,8 @@ interface Props {
 export default function GoogleMapPreview({ title, parts, lat, lng }: Readonly<Props>) {
   const { t } = useTranslation();
   const heading = title ?? t('podForm.mapPreview.title');
-  const apiKey = import.meta.env.VITE_GOOGLE_MAP_API as string | undefined;
+  // Runtime, from Tech → Environment → Google Map — never baked into the bundle.
+  const apiKey = useGoogleMapsApiKey();
   const query =
     lat != null && lng != null
       ? `${lat},${lng}`

@@ -43,6 +43,8 @@ export const ENV_CATEGORIES = [
   'TRUECALLER',
   'SERPER',
   'ANTHROPIC',
+  // Reel Studio's Remotion company licence (was the REMOTION_LICENSE_KEY build arg).
+  'REMOTION',
 ] as const;
 export type EnvCategory = (typeof ENV_CATEGORIES)[number];
 

@@ -33,3 +33,28 @@ export function useAdminLocations() {
   });
   return { locations: data?.locations ?? [], loading, error };
 }
+
+/**
+ * The Google Maps key from the server's public client config, which reads it
+ * from Tech → Environment → Google Map. Resolved at runtime so rotating the key
+ * is a Tech-portal edit, not a rebuild of every app that shows a map.
+ */
+export const PUBLIC_MAPS_KEY = gql`
+  query LocationPublicMapsKey {
+    publicClientConfig {
+      google_maps_api_key
+    }
+  }
+`;
+
+/**
+ * The Maps key, or `''` until it arrives and when none is configured — which is
+ * what `MapEmbedCard`'s keyless fallback and "key missing" state expect.
+ * `cache-first`, so every map on a page shares one request.
+ */
+export function useGoogleMapsApiKey(): string {
+  const { data } = useQuery<{ publicClientConfig?: { google_maps_api_key?: string | null } }>(PUBLIC_MAPS_KEY, {
+    fetchPolicy: 'cache-first',
+  });
+  return data?.publicClientConfig?.google_maps_api_key?.trim() ?? '';
+}

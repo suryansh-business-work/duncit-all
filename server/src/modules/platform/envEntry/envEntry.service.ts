@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { EnvEntryModel, ENV_CATEGORIES, type EnvCategory } from './envEntry.model';
 import { CATEGORY_FIELDS, SECRET_FIELDS } from './envEntry.fields';
+import { assertValidEnvConfig, validateEnvConfig } from './envEntry.validation';
 import { recordTest } from './envTestLog.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
@@ -279,10 +280,12 @@ export const envEntryService = {
     is_active?: boolean | null;
     config?: EnvEntryConfig | null;
     assigned_portals?: string[] | null;
-  }) {
+  }, options: { enforceRequired?: boolean } = {}) {
     if (!ENV_CATEGORIES.includes(input.category)) {
       throw new GraphQLError('Unsupported environment category', { extensions: { code: 'BAD_USER_INPUT' } });
     }
+    // An import restores what an operator already had, so only formats apply there.
+    assertValidEnvConfig(CATEGORY_FIELDS[input.category], input.config ?? {}, { creating: options.enforceRequired !== false });
     const created = await EnvEntryModel.create({
       name: input.name.trim(),
       category: input.category,
@@ -319,7 +322,10 @@ export const envEntryService = {
     if (input.description != null) existing.description = input.description;
     if (input.is_default != null) existing.is_default = input.is_default;
     if (input.is_active != null) existing.is_active = input.is_active;
-    if (input.config) existing.config = mergeConfig((existing.config ?? {}) as EnvEntryConfig, input.config);
+    if (input.config) {
+      assertValidEnvConfig(CATEGORY_FIELDS[existing.category as EnvCategory], input.config, { creating: false });
+      existing.config = mergeConfig((existing.config ?? {}) as EnvEntryConfig, input.config);
+    }
     if (input.assigned_portals != null) existing.assigned_portals = input.assigned_portals;
     await existing.save();
     if (existing.is_default) await clearOtherDefaults(existing.category as EnvCategory, String(existing._id));
@@ -387,12 +393,18 @@ export const envEntryService = {
         skipped.push(`${entry.name || '(unnamed)'} (${entry.category})`);
         continue;
       }
+      // A bad value skips just that entry (with the reason) instead of aborting the file half-way.
+      const [issue] = validateEnvConfig(CATEGORY_FIELDS[entry.category], entry.config, { creating: false });
+      if (issue) {
+        skipped.push(`${entry.category} · ${name} — ${issue.message}`);
+        continue;
+      }
       const existing = await EnvEntryModel.findOne({ category: entry.category, name });
       if (existing) {
         await this.update(String(existing._id), { ...entry, name });
         updated.push(`${entry.category} · ${name}`);
       } else {
-        await this.create({ ...entry, name });
+        await this.create({ ...entry, name }, { enforceRequired: false });
         created.push(`${entry.category} · ${name}`);
       }
     }

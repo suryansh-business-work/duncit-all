@@ -46,8 +46,8 @@ describe('commsProviderService integration', () => {
     });
 
     it('TWILIO_CALL lists active TWILIO env entries (default first)', async () => {
-      await envEntryService.create({ name: 'Primary Twilio', category: 'TWILIO', is_default: true, config: { account_sid: 'AC', auth_token: 't', phone_number: '+1' } });
-      await envEntryService.create({ name: 'Backup Twilio', category: 'TWILIO', config: { account_sid: 'AC2', auth_token: 't2', phone_number: '+2' } });
+      await envEntryService.create({ name: 'Primary Twilio', category: 'TWILIO', is_default: true, config: { account_sid: 'AC', auth_token: 't', phone_number: '+14155550101' } });
+      await envEntryService.create({ name: 'Backup Twilio', category: 'TWILIO', config: { account_sid: 'AC2', auth_token: 't2', phone_number: '+14155550102' } });
 
       const calls = await commsProviderService.options('TWILIO_CALL');
       expect(calls.map((o) => o.name)).toEqual(['Primary Twilio', 'Backup Twilio']);
@@ -62,8 +62,8 @@ describe('commsProviderService integration', () => {
     });
 
     it('excludes inactive (disabled) entries from the picker', async () => {
-      await envEntryService.create({ name: 'Active Twilio', category: 'TWILIO', is_default: true, config: { account_sid: 'AC', auth_token: 't', phone_number: '+1' } });
-      const off = await envEntryService.create({ name: 'Disabled Twilio', category: 'TWILIO', config: { account_sid: 'AC2', auth_token: 't2', phone_number: '+2' } });
+      await envEntryService.create({ name: 'Active Twilio', category: 'TWILIO', is_default: true, config: { account_sid: 'AC', auth_token: 't', phone_number: '+14155550101' } });
+      const off = await envEntryService.create({ name: 'Disabled Twilio', category: 'TWILIO', config: { account_sid: 'AC2', auth_token: 't2', phone_number: '+14155550102' } });
       await envEntryService.update(off!.id, { is_active: false });
 
       const calls = await commsProviderService.options('TWILIO_CALL');

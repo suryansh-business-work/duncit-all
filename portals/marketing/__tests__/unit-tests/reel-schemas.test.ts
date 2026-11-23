@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { Translate } from '@duncit/shell';
 import { buildReelChatSchema, reelChatInitialValues } from '../../src/forms/reel-chat';
 import { buildReelProjectSchema, reelProjectInitialValues } from '../../src/forms/reel-project';
@@ -77,26 +77,3 @@ describe('reel prompt schema', () => {
   });
 });
 
-describe('remotionLicenseKey', () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
-    vi.resetModules();
-  });
-
-  it('is null while the build carries no licence', async () => {
-    const unset = await import('../../src/pages/reels/license');
-    expect(unset.remotionLicenseKey).toBeNull();
-
-    vi.stubEnv('VITE_REMOTION_LICENSE_KEY', '   ');
-    vi.resetModules();
-    const { remotionLicenseKey } = await import('../../src/pages/reels/license');
-    expect(remotionLicenseKey).toBeNull();
-  });
-
-  it('is the key the build was given', async () => {
-    vi.stubEnv('VITE_REMOTION_LICENSE_KEY', ' rm_pub_duncit ');
-    vi.resetModules();
-    const { remotionLicenseKey } = await import('../../src/pages/reels/license');
-    expect(remotionLicenseKey).toBe('rm_pub_duncit');
-  });
-});

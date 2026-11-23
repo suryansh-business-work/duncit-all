@@ -179,6 +179,10 @@ export const settingsTypeDefs = gql`
     truecaller_ios_app_link: String!
     "The name the mobile-web Truecaller sheet shows."
     truecaller_partner_name: String!
+    "SHA-256 fingerprints of the Android app's signing certificates, comma separated (Tech → Google Play → App Links SHA-256 fingerprints); blank when unset. mWeb's build writes them into /.well-known/assetlinks.json so Android opens mWeb links in the app."
+    android_app_links_sha256: String!
+    "Remotion company licence key Reel Studio renders under (Tech → Remotion); blank when unset."
+    remotion_license_key: String!
   }
 
   input UpdateAppSettingsInput {

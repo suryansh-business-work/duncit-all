@@ -112,7 +112,12 @@ timings for next month"*, *"create a badminton pod in Koramangala on Saturday 6â
   never instructions.
 - **Never exposed**: sign-in, OTPs, passwords, tokens, secrets, credentials,
   env vars, signing files, database backup downloads, and the MCP console's own
-  consent and settings. `mcp_audit_tools` lists every skipped operation and why.
+  consent and settings. Also the Security Verification screen's operations, the
+  opened login-verification record (it carries a person's IP address and GPS
+  coordinates) and the decision on an alternative verification; only the masked
+  log tables (`portalSecurityLogsTable`, `portalSecurityExceptionsTable`) reach
+  an AI client, and only for SUPER_ADMIN / TECH_MANAGER.
+  `mcp_audit_tools` lists every skipped operation and why.
 - **Kill switches** (MCP managers): turn off all write tools, any category, or
   any single tool â€” effective within seconds, no deploy.
 - Tokens: access 1 h, refresh 30 days (rotating; a replayed refresh token or

@@ -19,6 +19,22 @@ describe('deniedReason — fields named one by one', () => {
     }
   );
 
+  it.each([
+    'portalSecurityChallenge',
+    'portalSecurityException',
+    'submitPortalSecurityVerification',
+    'requestPortalSecurityException',
+    'portalSecurityLog',
+    'decidePortalSecurityException',
+  ])('keeps the Security Verification operation %s person-only: it carries an address, a position, a token or an approval', (field) => {
+    expect(deniedReason(field)).toEqual(expect.any(String));
+  });
+
+  it('leaves the two masked login-verification tables to the people allowed to read them', () => {
+    expect(deniedReason('portalSecurityLogsTable')).toBeNull();
+    expect(deniedReason('portalSecurityExceptionsTable')).toBeNull();
+  });
+
   it('matches a named field exactly, not by prefix or case', () => {
     expect(deniedReason('staffCallIceServersCount')).toBeNull();
     expect(deniedReason('StaffCallIceServers')).toBeNull();

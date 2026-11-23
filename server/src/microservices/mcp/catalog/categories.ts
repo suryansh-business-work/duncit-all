@@ -163,6 +163,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   financeTypeDefs: 'finance',
   paymentTypeDefs: 'finance',
   failedPaymentTypeDefs: 'finance',
+  paymentTraceTypeDefs: 'finance',
   couponTypeDefs: 'finance',
   expenseTypeDefs: 'finance',
   expenseOptionTypeDefs: 'finance',
@@ -330,6 +331,10 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   dbBackupTypeDefs: 'tech',
   dnsTypeDefs: 'tech',
   sslTypeDefs: 'tech',
+  // Tech > Security > Login verifications. Only the masked log tables reach an
+  // AI client; the opened record, the decision and the sign-in screen's own
+  // operations are person-only (see denylist.ts).
+  portalSecurityTypeDefs: 'tech',
   portMapTypeDefs: 'tech',
   cloudflareTypeDefs: 'tech',
   appReleaseTypeDefs: 'tech',

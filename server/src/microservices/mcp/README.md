@@ -200,8 +200,10 @@ after the person says yes. The gateway and `crm` connector instructions carry th
 Whole modules: sign-in, OTP, captcha, API keys, table API tokens, env vars.
 Fields: anything named with password / otp / token / login / signup / secret /
 credential / seed / impersonate / base64 / two-factor, TURN credentials, iOS
-signing files, DB backup downloads, CI hand-offs, and the MCP console's own
-consent and settings mutations. Result selections never include a field whose
+signing files, DB backup downloads, CI hand-offs, the MCP console's own
+consent and settings mutations, and the Security Verification operations that
+carry a person's IP address, GPS coordinates or sign-in token (or decide an
+alternative verification) — only the masked login-verification tables are tools. Result selections never include a field whose
 name is a credential. `mcp_audit_tools` lists every skipped field with its reason.
 
 ## Testing

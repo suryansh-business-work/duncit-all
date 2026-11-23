@@ -7,7 +7,7 @@ describe('riskOf', () => {
     expect(riskOf('QUERY', 'cancelledPodsReport')).toBe('READ');
   });
 
-  it.each(['deletePod', 'adminCancelPod', 'revokeMcpConnection', 'refundPayment', 'archiveClub', 'unassignHost', 'restorePodVersion', 'withdrawOffer', 'banUser'])(
+  it.each(['deletePod', 'adminCancelPod', 'revokeMcpConnection', 'refundPayment', 'refundPaymentToSource', 'archiveClub', 'unassignHost', 'restorePodVersion', 'withdrawOffer', 'banUser'])(
     'rates the mutation %s DESTRUCTIVE',
     (field) => {
       expect(riskOf('MUTATION', field)).toBe('DESTRUCTIVE');
@@ -29,6 +29,9 @@ describe('needsConfirmation', () => {
   it('requires confirmation for every destructive mutation', () => {
     expect(needsConfirmation('MUTATION', 'deletePod')).toBe(true);
     expect(needsConfirmation('MUTATION', 'adminCancelPod')).toBe(true);
+    // Sending a refund back to its Razorpay source moves money: an AI client must be told to ask first.
+    expect(needsConfirmation('MUTATION', 'refundPaymentToSource')).toBe(true);
+    expect(reachesOutside('MUTATION', 'refundPaymentToSource')).toBe(true);
   });
 
   it('requires confirmation for consequential writes: approvals, money and handed-over powers', () => {

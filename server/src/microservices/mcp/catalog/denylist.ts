@@ -36,6 +36,16 @@ const DENIED_FIELDS: ReadonlyMap<string, string> = new Map([
   ['markRentalRefunded', 'retired: rental refunds are sent through Razorpay, never marked paid by hand'],
   // A signed link to a buyer's private bank screenshot or statement.
   ['failedPaymentEvidenceLink', 'returns a signed link to private payment evidence'],
+  // Security Verification. The screen's own operations belong to the person who
+  // is signing in; the opened record carries a person's address and GPS
+  // coordinates, which never land in an AI provider's context window; and
+  // approving an alternative verification is a human reviewer's decision.
+  ['portalSecurityChallenge', 'part of the sign-in screen'],
+  ['portalSecurityException', 'part of the sign-in screen'],
+  ['submitPortalSecurityVerification', 'only the person signing in completes the screen'],
+  ['requestPortalSecurityException', 'only the person signing in asks for an alternative'],
+  ['portalSecurityLog', "returns a person's IP address and GPS coordinates"],
+  ['decidePortalSecurityException', 'approving an alternative verification is a human reviewer decision'],
 ]);
 
 /** Any field whose name carries one of these words is refused. */

@@ -262,6 +262,27 @@ describe('PodTypeCards', () => {
     await act(async () => undefined);
     expect(state().amount).toBe(0);
   });
+
+  const offering = (venue_offer_model: string) => ({ pod_mode: 'PHYSICAL' as const, venue_offer_model });
+
+  it('offers only the Free ticket, already picked, when the host asks the venue for it free', async () => {
+    cards({ ...offering('FREE'), pod_type: 'PAID', pod_amount: 300, smart_incentive_enabled: true, smart_incentive_pct: '10' });
+    await waitFor(() => expect(state()).toEqual({ type: 'FREE', amount: 0, enabled: false, pct: '' }));
+    expect(screen.getByTestId('create-pod-free')).toBeInTheDocument();
+    expect(screen.queryByTestId('create-pod-paid')).not.toBeInTheDocument();
+    expect(screen.getByTestId('create-pod-free-venue-ticket')).toHaveTextContent(fallbackT('mweb.createPod.freeVenueTicket'));
+  });
+
+  it('keeps both tickets for a priced offer, a held slot or a virtual pod', () => {
+    const cases = [offering('PER_GUEST'), { ...offering('FREE'), venue_slot_id: 'slot-1' }, { pod_mode: 'VIRTUAL' as const, venue_offer_model: 'FREE' }];
+    for (const values of cases) {
+      const { unmount } = cards({ ...values, pod_type: 'PAID', pod_amount: 300 });
+      expect(screen.getByTestId('create-pod-paid')).toBeInTheDocument();
+      expect(screen.queryByTestId('create-pod-free-venue-ticket')).not.toBeInTheDocument();
+      expect(state().type).toBe('PAID');
+      unmount();
+    }
+  });
 });
 
 describe('StepFooterBar', () => {

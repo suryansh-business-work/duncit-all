@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Stack, Typography } from '@mui/material';
-import { MinBusinessFields, MinSpendField } from '@duncit/availability-calendar';
+import { FreeBookingField, MinBusinessFields, MinSpendField } from '@duncit/availability-calendar';
 import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
 import { BOOKING_OFFER_LIMITS, makeBookingOffersSchema, type BookingOffersValues, type VenueOfferSettings } from './booking-offers.types';
@@ -22,8 +22,9 @@ interface Props {
  * for, the hours either side has to answer an offer or a counter (0 leaves each
  * to Duncit's default; each hint says what is in effect now), and the business
  * the venue takes on each basis — at least one amount — and the minimum spend one
- * booking's offer must reach; Create Pod refuses an offer below either. Same rules and
- * copy as the Partners console's card.
+ * booking's offer must reach; Create Pod refuses an offer below either. Last, whether the
+ * venue is open to free bookings for initiatives. Same rules and copy as the Partners
+ * console's card.
  */
 export default function BookingOffersForm({ initialValues, effective, saving, error, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -64,7 +65,8 @@ export default function BookingOffersForm({ initialValues, effective, saving, er
       />
       <MinBusinessFields control={form.control} idPrefix="booking-offers" disabled={saving} />
       <MinSpendField control={form.control} idPrefix="booking-offers" disabled={saving} />
-      {error && <Alert severity="error" data-testid="booking-offers-error">{error}</Alert>}
+      <FreeBookingField control={form.control} idPrefix="booking-offers" disabled={saving} />
+      {error &&<Alert severity="error" data-testid="booking-offers-error">{error}</Alert>}
       <DuncitButton type="submit" variant="contained" size="large" fullWidth disabled={saving} data-testid="booking-offers-save">
         {saving ? t('venueSettings.saving') : t('venueSettings.offers.save')}
       </DuncitButton>

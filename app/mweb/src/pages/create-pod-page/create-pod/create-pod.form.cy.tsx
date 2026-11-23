@@ -203,6 +203,18 @@ describe('createPodSchema', () => {
     expect(issuesOf(valid({ pod_type: 'FREE', pod_amount: 250 }))).toContain('pod_amount');
   });
 
+  it('holds a free venue to a free pod: Paid is refused at the ticket, Free goes through', () => {
+    const freeVenue = { ...JUSTIFIED, venue_offer_model: 'FREE', venue_offer_rate: '' };
+    const paid = createPodSchema.safeParse(valid({ ...freeVenue, pod_type: 'PAID', pod_amount: 499 }));
+    expect(paid.success).toBe(false);
+    expect(paid.error?.issues.find((entry) => entry.path.join('.') === 'pod_type')?.message).toBe(
+      'A free venue booking is for a free pod. Pick Free.',
+    );
+    expect(createPodSchema.safeParse(valid({ ...freeVenue, pod_type: 'FREE', pod_amount: 0 })).success).toBe(true);
+    // A priced offer leaves the ticket to the host.
+    expect(issuesOf(valid({ pod_type: 'PAID', pod_amount: 499 }))).not.toContain('pod_type');
+  });
+
   it('treats products as optional — a pod with none, or with rows, both validate', () => {
     // The "Attach products" switch is gone: the shop is open exactly when the
     // pod carries rows, so "enabled but empty" is no longer a failure state.

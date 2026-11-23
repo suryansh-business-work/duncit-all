@@ -29,6 +29,7 @@ const offers = (over: Partial<BookingOffersValues> = {}): BookingOffersValues =>
   response_hours: '24',
   min_business: PER_GUEST_200,
   min_spend: '0',
+  free_booking: false,
   ...over,
 });
 
@@ -103,8 +104,8 @@ describe('booking offers mappers', () => {
   it('reads the stored numbers and amounts, and nothing stored as 0 with one empty amount to fill', () => {
     expect(
       toBookingOffersValues({ min_guests: 12, response_hours: 48, min_business: [{ model: 'PER_HOUR', amount: 400 }] }),
-    ).toEqual({ min_guests: '12', response_hours: '48', min_business: [{ model: 'PER_HOUR', amount: '400' }], min_spend: '0' });
-    const blank = { min_guests: '0', response_hours: '0', min_business: [{ model: 'PER_GUEST', amount: '' }], min_spend: '0' };
+    ).toEqual({ min_guests: '12', response_hours: '48', min_business: [{ model: 'PER_HOUR', amount: '400' }], min_spend: '0', free_booking: false });
+    const blank = { min_guests: '0', response_hours: '0', min_business: [{ model: 'PER_GUEST', amount: '' }], min_spend: '0', free_booking: false };
     expect(toBookingOffersValues(null)).toEqual(blank);
     // A record saved before the amounts existed.
     expect(toBookingOffersValues({ min_guests: 0, response_hours: 0, min_business: null })).toEqual(blank);
@@ -116,13 +117,16 @@ describe('booking offers mappers', () => {
       response_hours: 48,
       min_business: [{ model: 'FLAT', amount: 5000.5 }],
       min_spend: 0,
+      free_booking: false,
     });
     expect(toBookingOffersInput(offers({ min_guests: '', response_hours: '' }))).toEqual({
       min_guests: 0,
       response_hours: 0,
       min_business: [{ model: 'PER_GUEST', amount: 200 }],
       min_spend: 0,
+      free_booking: false,
     });
+    expect(toBookingOffersInput(offers({ free_booking: true })).free_booking).toBe(true);
   });
 });
 
@@ -131,7 +135,7 @@ describe('BookingOffersForm', () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(
       <BookingOffersForm
-        initialValues={{ min_guests: '0', response_hours: '0', min_business: PER_GUEST_200, min_spend: '0' }}
+        initialValues={{ min_guests: '0', response_hours: '0', min_business: PER_GUEST_200, min_spend: '0', free_booking: false }}
         effective={{ min_guests: 8, response_hours: 24 }}
         saving={false}
         error={null}
@@ -166,7 +170,19 @@ describe('BookingOffersForm', () => {
       response_hours: '48',
       min_business: [{ model: 'PER_GUEST', amount: '250' }],
       min_spend: '1500',
+      free_booking: false,
     });
+  });
+
+  it('opens the venue to free bookings for initiatives with the switch, saying what a free booking is', async () => {
+    const onSubmit = renderForm();
+    const toggle = screen.getByRole('switch', { name: 'Your venue is open for free venue booking for initiatives' });
+    expect(toggle).not.toBeChecked();
+    expect(screen.getByText(/A free booking is ₹0: no venue charges, no Duncit commission and no earnings/)).toBeInTheDocument();
+    fireEvent.click(toggle);
+    save();
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0].free_booking).toBe(true);
   });
 
   it('adds the next basis not listed, up to one per basis, and removes down to one', async () => {
@@ -200,7 +216,7 @@ describe('BookingOffersForm', () => {
   });
 
   it('refuses a missing amount and does not submit', async () => {
-    const onSubmit = renderForm({ initialValues: { min_guests: '0', response_hours: '0', min_business: [{ model: 'PER_GUEST', amount: '' }], min_spend: '0' } });
+    const onSubmit = renderForm({ initialValues: { min_guests: '0', response_hours: '0', min_business: [{ model: 'PER_GUEST', amount: '' }], min_spend: '0', free_booking: false } });
     save();
     expect(await screen.findByText(/^Enter an amount above 0, up to/)).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
@@ -212,5 +228,6 @@ describe('BookingOffersForm', () => {
     expect(screen.getByTestId('booking-offers-min-business-add')).toBeDisabled();
     expect(within(row(0) as HTMLElement).getByRole('spinbutton')).toBeDisabled();
     expect(screen.getByTestId('booking-offers-error')).toHaveTextContent('Venue is suspended');
+    expect(screen.getByRole('switch', { name: 'Your venue is open for free venue booking for initiatives' })).toBeDisabled();
   });
 });

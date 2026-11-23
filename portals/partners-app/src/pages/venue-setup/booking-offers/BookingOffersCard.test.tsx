@@ -9,11 +9,11 @@ afterEach(cleanup);
 
 type Business = BookingOffersVenue['settings']['offers']['min_business'];
 
-const venue = (min_business: Business = [{ model: 'PER_GUEST', amount: 200 }], min_spend = 0): BookingOffersVenue => ({
+const venue = (min_business: Business = [{ model: 'PER_GUEST', amount: 200 }], min_spend = 0, free_booking = false): BookingOffersVenue => ({
   id: 'v1',
   offer_min_guests: 8,
   offer_response_hours: 24,
-  settings: { offers: { min_guests: 0, response_hours: 0, min_business, min_spend } },
+  settings: { offers: { min_guests: 0, response_hours: 0, min_business, min_spend, free_booking } },
 });
 
 const SAVED = { updateVenueSettings: { __typename: 'Venue', id: 'v1', offer_min_guests: 8, offer_response_hours: 24 } };
@@ -99,6 +99,7 @@ describe('BookingOffersCard — the business the venue hopes for', () => {
             { model: 'PER_HOUR', amount: 400.5 },
           ],
           min_spend: 0,
+          free_booking: false,
         },
       },
     });
@@ -115,6 +116,20 @@ describe('BookingOffersCard — the business the venue hopes for', () => {
     await waitFor(() => expect(onSaved).toHaveBeenCalledWith('Booking offers saved.'));
     expect(sent.find((op) => op.name === 'UpdateVenueOfferSettings')?.variables).toMatchObject({
       input: { offers: { min_business: [{ model: 'PER_GUEST', amount: 200 }], min_spend: 6000 } },
+    });
+  });
+
+  it('opens on the stored free-bookings switch and saves it turned off', async () => {
+    const sent: SentOperation[] = [];
+    const { onSaved } = mount(venue(undefined, 0, true), { UpdateVenueOfferSettings: SAVED }, sent);
+    const toggle = screen.getByRole('switch', { name: 'Your venue is open for free venue booking for initiatives' }) as HTMLInputElement;
+    expect(toggle.checked).toBe(true);
+    fireEvent.click(toggle);
+    await save();
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledWith('Booking offers saved.'));
+    expect(sent.find((op) => op.name === 'UpdateVenueOfferSettings')?.variables).toMatchObject({
+      input: { offers: { free_booking: false } },
     });
   });
 

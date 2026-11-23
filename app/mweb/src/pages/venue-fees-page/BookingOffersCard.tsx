@@ -25,10 +25,17 @@ export default function BookingOffersCard({ venue, onSaved }: Readonly<Props>) {
   const responseHours = venue.settings?.offers?.response_hours ?? 0;
   const business = JSON.stringify(venue.settings?.offers?.min_business ?? []);
   const minSpend = venue.settings?.offers?.min_spend ?? 0;
+  const freeBooking = venue.settings?.offers?.free_booking === true;
   const initialValues = useMemo(
     () =>
-      toBookingOffersValues({ min_guests: minGuests, response_hours: responseHours, min_business: JSON.parse(business), min_spend: minSpend }),
-    [minGuests, responseHours, business, minSpend]
+      toBookingOffersValues({
+        min_guests: minGuests,
+        response_hours: responseHours,
+        min_business: JSON.parse(business),
+        min_spend: minSpend,
+        free_booking: freeBooking,
+      }),
+    [minGuests, responseHours, business, minSpend, freeBooking]
   );
 
   const submit = async (values: BookingOffersValues) => {

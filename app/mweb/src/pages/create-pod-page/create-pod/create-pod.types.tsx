@@ -1,7 +1,7 @@
 /** Shared option lists + form value shape for the host Create Pod stepper. */
 import type { UseFormReturn } from 'react-hook-form';
 import { freeJustificationDefaults, type FreeJustificationValues } from '@duncit/forms/schemas';
-import { isFreeVenueOfferModel, type PodPickerProduct } from '@duncit/utils';
+import { createPodOffersFreeVenue, type PodPickerProduct } from '@duncit/utils';
 import type { Translate } from '../../../i18n/fallback';
 export type {
   CreatePodClub,
@@ -29,12 +29,8 @@ export const isFreePodType = (podType?: string | null) => podType === 'FREE';
 /** The values the free rules read: the pod's type and, for its venue, the offer that applies. */
 type FreeSource = Pick<CreatePodFormValues, 'pod_type' | 'pod_mode' | 'venue_slot_id' | 'partner_request_id' | 'venue_offer_model'>;
 
-/** The pod sends its venue an offer (physical, not a held slot) and asks for the venue free. */
-export const offersFreeVenue = (values: Readonly<FreeSource>) =>
-  values.pod_mode === 'PHYSICAL' &&
-  !values.venue_slot_id &&
-  !values.partner_request_id &&
-  isFreeVenueOfferModel(values.venue_offer_model);
+/** The pod sends its venue an offer (physical, not a held slot) and asks for the venue free — which locks the ticket to Free. */
+export const offersFreeVenue = (values: Readonly<FreeSource>) => createPodOffersFreeVenue(values);
 
 /** Whether the host owes Duncit's free justification: the pod is free, or its venue is. */
 export const needsFreeJustification = (values: Readonly<FreeSource>) =>

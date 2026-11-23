@@ -2,8 +2,8 @@ import { Controller } from 'react-hook-form';
 import { InputAdornment, MenuItem, Stack, TextField } from '@mui/material';
 import { toDigits } from '@duncit/regex';
 import {
-  HOST_OFFER_MODELS,
   VENUE_OFFER_MODEL_KEY,
+  hostOfferModelsFor,
   isFreeVenueOfferModel,
   isVenueOfferModel,
   venueOfferHelpKey,
@@ -16,17 +16,19 @@ import type { CreatePodForm } from '../create-pod.types';
 
 interface Props {
   form: CreatePodForm;
+  /** The picked venue is open to free bookings for initiatives: Free is listed after the priced options. */
+  allowFree: boolean;
 }
 
 /**
  * How the host offers to pay the venue — per guest, per hour, a flat price, or
- * asking for the venue free — with a line on how the picked option pays (per
+ * (only at a venue open to free bookings for initiatives) asking for it free — with a line on how the picked option pays (per
  * guest is a minimum order value per person), and the amount (none for a free
  * venue). The venue accepts, rejects or counters a priced offer and accepts or
  * declines a free one; the price card below shows the offer priced with the
  * venue's charges. Native twin: OfferTermsFields.
  */
-export default function OfferTermsFields({ form }: Readonly<Props>) {
+export default function OfferTermsFields({ form, allowFree }: Readonly<Props>) {
   const { t } = useTranslation();
   const { currency } = usePricing();
   const { control, formState } = form;
@@ -52,7 +54,7 @@ export default function OfferTermsFields({ form }: Readonly<Props>) {
             error={!!formState.errors.venue_offer_model}
             helperText={formState.errors.venue_offer_model?.message || modelHelp}
           >
-            {HOST_OFFER_MODELS.map((option) => (
+            {hostOfferModelsFor(allowFree).map((option) => (
               <MenuItem key={option} value={option} data-testid={`create-pod-offer-model-${option}`}>
                 {t(venueOfferModelKey(option))}
               </MenuItem>

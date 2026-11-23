@@ -26,6 +26,7 @@ export const MY_VENUES_OFFERS = gql`
             amount
           }
           min_spend
+          free_booking
         }
       }
     }

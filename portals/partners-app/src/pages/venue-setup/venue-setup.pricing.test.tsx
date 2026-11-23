@@ -75,6 +75,7 @@ const venueOffers = shapeOf(MY_VENUES_OFFERS, {
           response_hours: 0,
           min_business: [{ __typename: 'VenueMinBusiness', model: 'PER_GUEST', amount: 200 }],
           min_spend: 3000,
+          free_booking: false,
         },
       },
     },
@@ -164,7 +165,7 @@ describe('Fees & Minimum Spend page — booking offers & minimum spend', () => {
     await waitFor(() => expect(notices.notices.map((n) => n.message)).toContain('Booking offers saved.'));
     expect(sent.find((op) => op.name === 'UpdateVenueOfferSettings')?.variables).toEqual({
       venue_doc_id: 'v1',
-      input: { offers: { min_guests: 0, response_hours: 0, min_business: [{ model: 'PER_GUEST', amount: 200 }], min_spend: 5000 } },
+      input: { offers: { min_guests: 0, response_hours: 0, min_business: [{ model: 'PER_GUEST', amount: 200 }], min_spend: 5000, free_booking: false } },
     });
     expect(writes(sent)).toHaveLength(0);
     await waitFor(() => expect(sent.filter((op) => op.name === 'MyVenuesOffers').length).toBeGreaterThan(1));

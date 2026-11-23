@@ -40,6 +40,7 @@ export const CREATE_POD_OPTIONS = gql`
       offer_min_guests
       offer_min_business { model amount }
       offer_min_spend
+      offer_free_booking
       cover_image_url
       city
       locality

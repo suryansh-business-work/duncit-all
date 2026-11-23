@@ -3349,6 +3349,8 @@ const steps = giftCardOrderSteps(order); // [{ id, labelKey, done }]
 useQuery(MY_GIFT_CARD_ORDER, { pollInterval: isGiftCardOrderLive(order) ? GIFT_CARD_ORDER_POLL_MS : 0 });
 ```
 
+The shapes an order page reads are shared too, so mWeb and the Loyalty portal describe them once: `GiftCardOrderAddress` (where printed cards go), `GiftCardOrderShipment` (courier, AWB, ETA) and `GiftCardOrderTrackingEvent` (one courier scan).
+
 ## The buyer's order detail page — `order-tracking`
 
 mWeb's `/orders/:orderId` and the app's `OrderDetail` screen render one order in full (rule 27).

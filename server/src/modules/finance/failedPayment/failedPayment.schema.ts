@@ -52,6 +52,13 @@ export const failedPaymentTypeDefs = /* GraphQL */ `
     FAILED
   }
 
+  "What the AI note suggests. Advice only: the refund rules and Razorpay's live check decide."
+  enum FailedPaymentAiRecommendation {
+    REFUND
+    DO_NOT_REFUND
+    NEEDS_REVIEW
+  }
+
   "Row colour hint for the Failed Payments table."
   enum FailedPaymentHighlight {
     GREEN
@@ -113,6 +120,8 @@ export const failedPaymentTypeDefs = /* GraphQL */ `
     id: ID!
     payment_doc_id: ID!
     payment_id: String!
+    "The checkout the payment came from (pod booking, pod shop, pet store, gift card / other). Null when the payment is gone."
+    payment_source: PaymentSource
     user_id: ID
     user_name: String!
     user_email: String
@@ -140,7 +149,7 @@ export const failedPaymentTypeDefs = /* GraphQL */ `
     razorpay_refund_id: String
     resolution_state: FailedPaymentResolutionState!
     highlight: FailedPaymentHighlight!
-    "Refundable now (green, or yellow after approval). Only FINANCE_MANAGER / SUPER_ADMIN may act on it."
+    "Refund may be offered: the evidence was verified (green, or yellow after approval), or the buyer sent none and Razorpay's live check decides. Only FINANCE_MANAGER / SUPER_ADMIN may act on it."
     can_refund: Boolean!
     "Yellow: evidence waits for a person's Review."
     needs_review: Boolean!
@@ -256,10 +265,35 @@ export const failedPaymentTypeDefs = /* GraphQL */ `
     status: String!
   }
 
+  "The AI's short refund note on a case. Never moves money."
+  type FailedPaymentAiSummary {
+    "Null when the last run failed (see error)."
+    recommendation: FailedPaymentAiRecommendation
+    summary: String!
+    reasons: [String!]!
+    generated_at: String
+    generated_by_name: String
+    "Why the last run produced no note: AI switched off, an outage, an unreadable answer."
+    error: String
+    "True once the case changed after the note was written; ask for a fresh one."
+    stale: Boolean!
+  }
+
+  "What a refund would do right now, from Razorpay's live answer. Nothing is sent."
+  type FailedPaymentRefundPreview {
+    refundable: Boolean!
+    "Rupees Razorpay would send back, when refundable."
+    amount: Float
+    razorpay_payment_id: String
+    "Why it cannot be refunded, when not refundable."
+    reason: String
+  }
+
   type FailedPaymentDetail {
     id: ID!
     payment_doc_id: ID!
     payment_id: String!
+    payment_source: PaymentSource
     amount: Float!
     currency_symbol: String!
     pod_id: ID
@@ -284,6 +318,8 @@ export const failedPaymentTypeDefs = /* GraphQL */ `
     can_mark_not_refundable: Boolean!
     "Rupees a refund would send right now (captured − already refunded), when known."
     refundable_amount: Float
+    "The AI refund note, once someone asked for one."
+    ai_summary: FailedPaymentAiSummary
     revision: Int!
     created_at: String!
     updated_at: String!
@@ -319,6 +355,8 @@ export const failedPaymentTypeDefs = /* GraphQL */ `
     failedPaymentEvents(case_id: ID!): [PaymentEvent!]!
     "Short-lived signed link to one private evidence file. Finance and Support only."
     failedPaymentEvidenceLink(case_id: ID!, file_ref: String!): FailedPaymentEvidenceLink!
+    "What a refund of this case would send right now, from Razorpay's live answer; read-only, nothing is claimed or sent."
+    failedPaymentRefundPreview(case_id: ID!): FailedPaymentRefundPreview!
   }
 
   extend type Mutation {
@@ -339,5 +377,7 @@ export const failedPaymentTypeDefs = /* GraphQL */ `
     initiateFailedPaymentRefund(case_id: ID!, client_request_id: String!): FailedPaymentDetail!
     "Close a NOT_CAPTURED case as a bank reversal and resolve its ticket with that explanation."
     markFailedPaymentNotRefundable(case_id: ID!, note: String!, client_request_id: String): FailedPaymentDetail!
+    "Write the AI refund note for a case (advice only; moves no money). An unchanged case answers from its cached note unless force is true."
+    summarizeFailedPayment(case_id: ID!, force: Boolean): FailedPaymentDetail!
   }
 `;

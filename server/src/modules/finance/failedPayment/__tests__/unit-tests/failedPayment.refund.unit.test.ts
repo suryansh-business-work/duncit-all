@@ -35,8 +35,11 @@ import { SYSTEM_ACTOR } from '../../failedPayment.types';
 import {
   claimAndSend,
   initiateFailedPaymentRefund,
+  liveRefundCheck,
+  refundBasis,
   refundEligibility,
   refundGuard,
+  RefundRefusal,
 } from '../../failedPayment.refund';
 
 const m = (fn: unknown) => fn as jest.Mock;
@@ -91,14 +94,68 @@ describe('refundEligibility', () => {
     expect(refundEligibility(kase())).toBeNull();
   });
 
-  it('allows a yellow case only after it was approved', () => {
-    expect(refundEligibility(kase({ verification: { status: 'UNMATCHED' } }))).toMatch(/Approve/);
-    expect(refundEligibility(kase({ verification: { status: 'UNMATCHED' }, review: { decision: 'APPROVED' } }))).toBeNull();
+  it('allows a yellow case (evidence sent, not matched) only after it was approved', () => {
+    const claims = [{ evidence_type: 'SCREENSHOT' }];
+    expect(refundEligibility(kase({ verification: { status: 'UNMATCHED' }, claims }))).toBe('Approve the evidence in Review before refunding.');
+    expect(refundEligibility(kase({ verification: { status: 'UNMATCHED' }, review: { decision: 'APPROVED' }, claims }))).toBeNull();
+  });
+
+  it("allows a case nobody sent evidence for: Razorpay's live check decides", () => {
+    expect(refundEligibility(kase({ verification: { status: 'PENDING' }, claims: [] }))).toBeNull();
+    expect(refundEligibility(kase({ verification: { status: 'UNMATCHED' }, claims: undefined }))).toBeNull();
   });
 
   it('refuses a refunded or closed case', () => {
     expect(refundEligibility(kase({ refund: { status: 'PROCESSED' } }))).toMatch(/already been refunded/);
     expect(refundEligibility(kase({ resolution: { state: 'REJECTED' } }))).toMatch(/closed/);
+  });
+});
+
+describe('refundBasis', () => {
+  it('is VERIFIED for matched or approved evidence', () => {
+    expect(refundBasis(kase({ claims: [{}] }))).toBe('VERIFIED');
+    expect(refundBasis(kase({ verification: { status: 'UNMATCHED' }, review: { decision: 'APPROVED' }, claims: [{}] }))).toBe('VERIFIED');
+  });
+
+  it('is LIVE_CHECK when no evidence was ever sent', () => {
+    expect(refundBasis(kase({ verification: { status: 'PENDING' }, claims: [] }))).toBe('LIVE_CHECK');
+    expect(refundBasis(kase({ verification: { status: 'NOT_CAPTURED' }, claims: [] }))).toBe('LIVE_CHECK');
+  });
+
+  it('is null while sent evidence waits for Review (unmatched, errored or still being checked)', () => {
+    for (const status of ['UNMATCHED', 'ERROR', 'PENDING']) {
+      expect(refundBasis(kase({ verification: { status }, claims: [{}] }))).toBeNull();
+    }
+  });
+});
+
+describe('liveRefundCheck', () => {
+  const noEvidence = (over: Record<string, unknown> = {}) =>
+    kase({ verification: { status: 'PENDING', matched_payment_id: '' }, claims: [], ...over });
+
+  it("finds the order's one unbooked capture for a case without evidence and answers what is left", async () => {
+    m(fetchRazorpayOrderPayments).mockResolvedValue([live({ id: 'pay_9', status: 'captured' }), live({ id: 'pay_f', status: 'failed' })]);
+    m(fetchRazorpayPayment).mockResolvedValue(live({ id: 'pay_9', amount_refunded: 900 }));
+    const out = await liveRefundCheck(noEvidence());
+    expect(fetchRazorpayOrderPayments).toHaveBeenCalledWith('order_1', 'acct_1');
+    expect(out).toMatchObject({ razorpayPaymentId: 'pay_9', amountPaise: 49000 });
+  });
+
+  it('refuses a payment that never had a Razorpay order, without asking Razorpay', async () => {
+    await expect(liveRefundCheck(noEvidence({ razorpay_order_id: '' }))).rejects.toThrow(
+      'This payment never had a Razorpay order, so there is nothing to refund through Razorpay.'
+    );
+    expect(fetchRazorpayOrderPayments).not.toHaveBeenCalled();
+  });
+
+  it('refuses when Razorpay shows no capture on the order', async () => {
+    m(fetchRazorpayOrderPayments).mockResolvedValue([live({ status: 'failed' })]);
+    await expect(liveRefundCheck(noEvidence())).rejects.toBeInstanceOf(RefundRefusal);
+  });
+
+  it('refuses when the payment document is gone', async () => {
+    m(PaymentModel.findById).mockResolvedValue(null);
+    await expect(liveRefundCheck(noEvidence())).rejects.toThrow('The payment behind this case was not found.');
   });
 });
 

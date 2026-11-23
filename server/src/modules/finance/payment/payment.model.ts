@@ -262,6 +262,22 @@ paymentSchema.index(
   { partialFilterExpression: { 'metadata.razorpay_order_id': { $exists: true } } }
 );
 
+// Payment Trace and every table's Razorpay-id search match these exactly. With
+// them every branch of that `$or` is indexed, so a pasted id never scans the
+// collection. PARTIAL: only Razorpay checkouts carry them.
+paymentSchema.index(
+  { gateway_ref: 1 },
+  { name: 'gateway_ref_trace', partialFilterExpression: { gateway_ref: { $type: 'string' } } }
+);
+paymentSchema.index(
+  { 'metadata.razorpay_payment_id': 1 },
+  { name: 'razorpay_payment_id_trace', partialFilterExpression: { 'metadata.razorpay_payment_id': { $exists: true } } }
+);
+paymentSchema.index(
+  { 'metadata.razorpay_refund_ids': 1 },
+  { name: 'razorpay_refund_ids_trace', partialFilterExpression: { 'metadata.razorpay_refund_ids': { $exists: true } } }
+);
+
 // The dates of one multi-date booking of a (now retired) recurring pod, found
 // together when the first date's payment is verified. Partial: most payments
 // are not grouped.

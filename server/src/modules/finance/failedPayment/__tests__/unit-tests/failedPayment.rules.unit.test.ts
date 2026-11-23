@@ -64,8 +64,21 @@ describe('caseFlags', () => {
     expect(flags({ verification: { status: 'UNMATCHED' }, review: { decision: 'APPROVED' } })).toMatchObject({ highlight: 'GREEN', can_refund: true });
   });
 
-  it('a case with no claim yet needs no review', () => {
-    expect(flags({ verification: { status: 'PENDING' }, claims: [] })).toMatchObject({ highlight: 'NONE', needs_review: false });
+  it('a case with no claim needs no review and may be refunded, but is not green (Razorpay decides live)', () => {
+    expect(flags({ verification: { status: 'PENDING' }, claims: [] })).toEqual({
+      can_refund: true,
+      needs_review: false,
+      can_mark_not_refundable: false,
+      highlight: 'NONE',
+    });
+  });
+
+  it('a never-captured case with no claim offers both closing and the live-checked refund', () => {
+    expect(flags({ verification: { status: 'NOT_CAPTURED' }, claims: [] })).toMatchObject({ can_mark_not_refundable: true, can_refund: true, highlight: 'NONE' });
+  });
+
+  it('a claim still being checked offers nothing yet', () => {
+    expect(flags({ verification: { status: 'PENDING' } })).toEqual({ can_refund: false, needs_review: false, can_mark_not_refundable: false, highlight: 'NONE' });
   });
 
   it('a never-captured case can only be closed as not refundable', () => {

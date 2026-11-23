@@ -275,6 +275,29 @@ export async function processGatewayRefund(recordId: Types.ObjectId | string): P
 }
 
 /**
+ * Finance pressed Refund on a refund that is stuck: put it back in the queue
+ * and send it now. A refund whose retries are used up (RECONCILIATION_REQUIRED,
+ * or a FAILED one the webhook marked after the last attempt) gets a fresh set of
+ * attempts; one with attempts left is sent as it stands. Nothing is ever sent
+ * twice — the claim in `processGatewayRefund` still lets one worker through, and
+ * its look-up by receipt adopts any refund that already reached Razorpay. A
+ * refund with no Razorpay payment id is left alone: there is nothing to send it
+ * against, and only a person at the Razorpay dashboard can settle it.
+ */
+export async function retryGatewayRefund(recordId: Types.ObjectId | string): Promise<IPaymentGatewayRefund | null> {
+  await PaymentGatewayRefundModel.updateOne(
+    {
+      _id: recordId,
+      status: { $in: ['FAILED', 'RECONCILIATION_REQUIRED'] },
+      attempts: { $gte: GATEWAY_REFUND_MAX_ATTEMPTS },
+      razorpay_payment_id: { $ne: '' },
+    },
+    { $set: { status: 'QUEUED', attempts: 0, last_error: '', next_attempt_at: new Date() } }
+  );
+  return processGatewayRefund(recordId);
+}
+
+/**
  * Send what was just queued, without making the caller wait for Razorpay. Not
  * under NODE_ENV=test — the same rule the background jobs follow, so a suite
  * never reaches Razorpay; tests call processGatewayRefund themselves. A send

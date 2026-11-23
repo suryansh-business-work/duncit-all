@@ -142,6 +142,12 @@ export const OPENAI_TASKS = {
     description: 'Reads the payment id, bank reference and amount off a buyer’s payment screenshot so Finance › Failed Payments can match it to Razorpay.',
     when_off: 'Screenshot claims are left unmatched (yellow) for a person to review; transaction-id claims are still checked against Razorpay.',
   },
+  'finance.failed_payment_summary': {
+    label: 'Failed payment refund note',
+    module: 'Finance',
+    description: 'Writes a short refund / do-not-refund / needs-review note on a case in Finance › Failed Payments from its recorded facts and Razorpay’s live refund check.',
+    when_off: 'The case page says the AI note is switched off; Finance decides from the case details and the Refund dialog’s live Razorpay check as before.',
+  },
   'crm.lead_parse': {
     label: 'Lead text parsing',
     module: 'CRM',

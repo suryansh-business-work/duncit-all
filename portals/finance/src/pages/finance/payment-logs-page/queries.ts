@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { PaymentRefundStatus } from '@duncit/gql-types';
 
 /** The two shops Finance tracks separately — never mixed in one list. */
 export type PaymentShop = 'POD_SHOP' | 'ECOMM';
@@ -53,6 +54,10 @@ export interface PaymentRow {
   razorpay_payment_id?: string | null;
   razorpay_order_id?: string | null;
   razorpay_refund_ids?: string[];
+  /** Where its latest refund stands at Razorpay (null when none was sent through the refund engine). */
+  refund_status?: PaymentRefundStatus | null;
+  /** A capture that bought nothing and is still owed back. */
+  needs_refund?: boolean | null;
   paid_at: string | null;
   created_at: string;
 }
@@ -82,6 +87,8 @@ const PAYMENT_ROW_FIELDS = gql`
     razorpay_payment_id
     razorpay_order_id
     razorpay_refund_ids
+    refund_status
+    needs_refund
     paid_at
     created_at
   }
@@ -115,6 +122,13 @@ export const PAYMENTS_TABLE = gql`
 export const INVOICE_PDF = gql`
   query InvoicePdf($id: ID!) {
     paymentInvoicePdfBase64(payment_doc_id: $id)
+  }
+`;
+
+/** The table as a PDF: the rows its current search, filters and sort select, capped by the server. */
+export const PAYMENT_LOGS_PDF = gql`
+  query PaymentLogsPdf($query: TableQueryInput, $shop: PaymentShop) {
+    paymentLogsPdfBase64(query: $query, shop: $shop)
   }
 `;
 

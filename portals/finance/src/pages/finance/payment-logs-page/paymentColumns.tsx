@@ -5,6 +5,7 @@ import type { Translator } from '@duncit/app-settings';
 import { StatusChip } from '@duncit/ui';
 import { STATUS_COLORS, fmt } from './helpers';
 import { renderPaymentCustomer, paymentIdsText, renderPaymentIds } from './cells';
+import { refundColumn } from './refundState';
 import type { PaymentRow, PaymentShop } from './queries';
 
 type T = Translator['t'];
@@ -12,18 +13,25 @@ type T = Translator['t'];
 /** The gateway name a pet-store Cash-on-Delivery payment is recorded under (server: COD_GATEWAY). */
 const COD_GATEWAY = 'COD';
 
-/** The filter's options carry translated labels but untranslated values — the
- * value is the PaymentStatus the server filters on, not copy. */
-const statusOptions = (t: T) => [
-  { value: 'PENDING', label: t('finance.payment.statusPending') },
-  { value: 'SUCCESS', label: t('finance.payment.statusSuccess') },
-  { value: 'FAILED', label: t('finance.payment.statusFailed') },
-  { value: 'REFUNDED', label: t('finance.payment.statusRefunded') },
-];
-
 const whenValue = (p: PaymentRow) => new Date(p.created_at).toLocaleString('en-IN');
 
-const renderStatus = (p: PaymentRow) => <StatusChip status={p.status} colorMap={STATUS_COLORS} />;
+/** The status in plain words (SUCCESS reads "Paid"), as the Payment Logs PDF prints it. */
+const statusLabels = (t: T): Record<string, string> => ({
+  PENDING: t('finance.payment.statusPending'),
+  SUCCESS: t('finance.payment.statusPaid'),
+  FAILED: t('finance.payment.statusFailed'),
+  REFUNDED: t('finance.payment.statusRefunded'),
+});
+
+/** The filter's options carry translated labels but untranslated values — the
+ * value is the PaymentStatus the server filters on, not copy. */
+const statusOptions = (labels: Record<string, string>) => Object.entries(labels).map(([value, label]) => ({ value, label }));
+
+const statusWord = (labels: Record<string, string>, p: PaymentRow) => labels[p.status] ?? p.status;
+
+const renderStatus = (labels: Record<string, string>) => (p: PaymentRow) => (
+  <StatusChip status={p.status} colorMap={STATUS_COLORS} label={statusWord(labels, p)} />
+);
 
 const wholeCoins = (value: number | null | undefined) => Math.max(0, Math.floor(Number(value) || 0));
 
@@ -81,6 +89,7 @@ interface Options {
  * for each shop's, so the three can never label the same figure differently.
  */
 export function buildPaymentColumns({ t, renderActions, shop }: Readonly<Options>): DuncitColumn<PaymentRow>[] {
+  const statuses = statusLabels(t);
   return [
     { field: 'created_at', headerName: t('finance.payment.colWhen'), width: 160, type: 'date', valueGetter: whenValue },
     {
@@ -106,9 +115,9 @@ export function buildPaymentColumns({ t, renderActions, shop }: Readonly<Options
       type: 'number',
       valueGetter: (p) => fmt(p.smart_incentive_amount, p.currency_symbol),
     },
-    { field: 'subtotal', headerName: t('finance.payment.colSubtotal'), width: 100, type: 'number', valueGetter: (p) => fmt(p.subtotal, p.currency_symbol) },
-    { field: 'platform_fee_amount', headerName: t('finance.payment.colFee'), width: 90, type: 'number', valueGetter: (p) => fmt(p.platform_fee_amount, p.currency_symbol) },
-    { field: 'gst_amount', headerName: t('finance.payment.colGst'), width: 90, type: 'number', valueGetter: (p) => fmt(p.gst_amount, p.currency_symbol) },
+    { field: 'subtotal', headerName: t('finance.payment.colSubtotal'), width: 100, hide: true, type: 'number', valueGetter: (p) => fmt(p.subtotal, p.currency_symbol) },
+    { field: 'platform_fee_amount', headerName: t('finance.payment.colFee'), width: 90, hide: true, type: 'number', valueGetter: (p) => fmt(p.platform_fee_amount, p.currency_symbol) },
+    { field: 'gst_amount', headerName: t('finance.payment.colGst'), width: 90, hide: true, type: 'number', valueGetter: (p) => fmt(p.gst_amount, p.currency_symbol) },
     {
       // After the tax lines, before the total: subtotal + GST + round off = total.
       field: 'round_off',
@@ -148,10 +157,11 @@ export function buildPaymentColumns({ t, renderActions, shop }: Readonly<Options
       headerName: t('finance.payment.colStatus'),
       width: 120,
       type: 'enum',
-      options: statusOptions(t),
-      cellRenderer: renderStatus,
-      valueGetter: (p) => p.status,
+      options: statusOptions(statuses),
+      cellRenderer: renderStatus(statuses),
+      valueGetter: (p) => statusWord(statuses, p),
     },
+    refundColumn(t),
     {
       field: 'payment_id',
       headerName: t('finance.payment.colIds'),

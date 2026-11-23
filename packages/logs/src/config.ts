@@ -47,6 +47,8 @@ export const PORTALS = [
   'loyalty',
   // Testing, code quality and platform monitoring.
   'tests',
+  // Duncit Intel: internal business-intelligence chat, connectors and media.
+  'intel',
 ] as const;
 export type PortalKey = (typeof PORTALS)[number];
 

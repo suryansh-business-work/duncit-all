@@ -1,4 +1,6 @@
 export { default as RhfTextField, type RhfTextFieldProps } from './RhfTextField';
+export { default as RhfSwitch, type RhfSwitchProps } from './RhfSwitch';
+export { default as RhfSelect, type RhfSelectOption, type RhfSelectProps } from './RhfSelect';
 export {
   default as PackagingFields,
   type PackagingFieldsProps,

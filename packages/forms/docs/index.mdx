@@ -21,6 +21,8 @@ consumers:
   - 'portals/partners-app'
 exports:
   - 'RhfTextField'
+  - 'RhfSwitch'
+  - 'RhfSelect'
   - 'VenueUsageFields'
   - 'VenueOfferAskFields'
   - 'VenueOfferAskFieldsProps'
@@ -308,6 +310,36 @@ POSTAL_CODE_PATTERN.test('400 001');        // true
 | `name` | `Path<T>` | yes | — | Typed field name. |
 | `hint` | `string` | no | `' '` | Helper text shown while the field has no error (the blank keeps the height stable). |
 | …rest | `TextFieldProps` minus `name`/`value`/`onChange`/`onBlur`/`error`/`helperText` | no | `fullWidth: true` | Everything else goes to MUI `TextField`. |
+
+### `RhfSwitch<T>`
+
+A boolean field as an MUI `Switch` with a real label (the whole row toggles) and an optional hint linked by `aria-describedby`.
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `control` | `Control<T>` | yes | — | The `useForm` control. |
+| `name` | `Path<T>` | yes | — | A boolean field. |
+| `label` | `string` | yes | — | The visible, accessible name. |
+| `hint` | `string` | no | — | One line under the switch. |
+| `disabled` | `boolean` | no | `false` | Read-only state. |
+
+### `RhfSelect<T>`
+
+A single or multiple select wired into react-hook-form; same error/hint contract as `RhfTextField`.
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `control` | `Control<T>` | yes | — | The `useForm` control. |
+| `name` | `Path<T>` | yes | — | A `string` field, or `string[]` with `multiple`. |
+| `options` | `RhfSelectOption[]` | yes | — | `{ value, label, disabled? }` — labels already translated. |
+| `multiple` | `boolean` | no | `false` | Several values, each with a checkbox; the closed field lists the labels. |
+| `hint` | `string` | no | `' '` | Helper text while there is no error. |
+| …rest | `TextFieldProps` minus the controlled props | no | `fullWidth: true` | Passed to MUI `TextField`. |
+
+```tsx
+<RhfSwitch control={control} name="auto_sync" label="Auto sync" hint="Keep every source fresh" />
+<RhfSelect control={control} name="sources" multiple options={[{ value: "GITHUB", label: "GitHub" }]} label="Sources" />
+```
 
 ### `FormField<T>` (legacy)
 

@@ -83,6 +83,7 @@ export const SESSION_BUNDLE: NestedCatalogue = {
         mcp: 'Connect Claude, ChatGPT or Gemini to Duncit and see every tool call.',
         loyalty: 'Duncit Coin, virtual gift cards and printed gift cards, in one place.',
         tests: 'Unit, E2E, stress, regression and manual testing, with one confidence score.',
+        intel: 'Internal business intelligence: chat with company knowledge and live data, with cited sources.',
         support: 'Tickets, live chat and customer support.',
         tech: 'Environment, feature flags and platform config.',
         websiteApp: 'Site content, careers, newsroom and blog.',

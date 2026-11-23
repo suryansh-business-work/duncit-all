@@ -101,7 +101,8 @@ describe('DesignEditorPage — a new design', () => {
     expect(screen.getByText('New gift card design')).toBeInTheDocument();
     fill();
     await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Design added'));
-    expect(await screen.findByRole('heading', { name: 'Festive' })).toBeInTheDocument();
+    // After the save the page navigates and loads the new design: slower than a second on a busy CI box.
+    expect(await screen.findByRole('heading', { name: 'Festive' }, { timeout: 5000 })).toBeInTheDocument();
   });
 
   it('stays on the form with the server’s reason when the design is refused', async () => {

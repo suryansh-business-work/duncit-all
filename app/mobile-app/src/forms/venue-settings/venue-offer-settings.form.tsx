@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { Text } from 'tamagui';
 import {
   makeBookingOffersSchema,
@@ -12,6 +12,7 @@ import { FormTextField } from '@/components/FormTextField';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { SectionHeader } from '@/components/SectionHeader';
 import { SurfaceCard } from '@/components/SurfaceCard';
+import { ToggleRow } from '@/components/ToggleRow';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formResolver } from '@/utils/form-resolver';
 import { MinBusinessRows } from './MinBusinessRows';
@@ -31,7 +32,9 @@ export interface BookingOffersFormProps {
  * The venue's Booking offers: the fewest guests a host's offer may be for, the
  * hours either side has to answer an offer or a counter before it expires, and
  * the least it takes on each basis (at least one amount) and the minimum spend
- * one booking's offer must reach — Create Pod refuses an offer below either.
+ * one booking's offer must reach — Create Pod refuses an offer below either —
+ * and whether the venue is open to free bookings for initiatives (only then may
+ * a host offer it Free: ₹0, no commission or earnings, and a free pod).
  * 0 leaves a number to Duncit's default; each hint says what is in effect now. The
  * Tamagui twin of mWeb's and the Partners console's Booking offers card — the
  * same rules and the same `venueSettings.offers.*` copy (rule 27).
@@ -85,6 +88,20 @@ export function BookingOffersForm({
         label={t('venueSettings.offers.minSpend')}
         hint={t('venueSettings.offers.minSpendHint')}
         keyboardType="decimal-pad"
+      />
+      <Controller
+        control={control}
+        name="free_booking"
+        render={({ field }) => (
+          <ToggleRow
+            testID="venue-offer-settings-free-booking"
+            label={t('venueSettings.offers.freeBooking')}
+            hint={t('venueSettings.offers.freeBookingHint')}
+            value={field.value}
+            onChange={field.onChange}
+            disabled={saving}
+          />
+        )}
       />
       {error ? (
         <Text testID="venue-offer-settings-error" role="alert" fontSize={13} color="$danger">

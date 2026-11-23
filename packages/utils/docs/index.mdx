@@ -602,6 +602,7 @@ exports:
   - 'bookingTileCaption'
   - 'venueOfferInput'
   - 'HOST_OFFER_MODELS'
+  - 'hostOfferModelsFor'
   - 'freeJustificationInput'
   - 'freeJustificationProblem'
   - 'isFreeArrangement'
@@ -1654,6 +1655,7 @@ copies are numbered the five-step way by the server, and resume the same way.
 | `CREATE_POD_WHERE_STEP` / `CREATE_POD_MONEY_STEP` | `number` | 1 / 2 — the steps the virtual title and the free justification key off. |
 | `CREATE_POD_STEPPER_VERSION` | `number` | 2 — written into every draft payload as `stepper`. |
 | `createPodSendsOffer` | `(scope) => boolean` | Physical, no Pod Request and no held slot: Money shows the venue offer. |
+| `createPodOffersFreeVenue` | `(scope) => boolean` | The pod sends an offer asking the venue for the window free (`venue_offer_model` FREE): Money then offers the Free ticket alone, already picked — a free venue is for a free pod (server: FREE_VENUE_NEEDS_FREE_POD). |
 | `clampCreatePodStep` | `(step) => number` | `step` held to 0..3; a non-number reads as 0. |
 | `resumeCreatePodStep` | `(step, payload) => number` | The step a stored draft reopens on, mapping a five-step draft's step. |
 | `createPodSuperOptions` | `(categories) => { id, name }[]` | The host's super-categories ("For You", "For Your Pet"), once each, in order. What's first picker row, always shown. |
@@ -3892,6 +3894,7 @@ offer's pricing (the legacy venue pricing calendar's `VenueBookingModel` still h
 | --- | --- |
 | `VENUE_OFFER_MODELS` / `VENUE_OFFER_MODEL_KEY` | The pricing options (`PER_GUEST`, `PER_HOUR`, `FLAT`) in picker order, and each one's name, amount-field label and one-line `help` keys. Counters and the venue's business guide use only these. |
 | `HOST_OFFER_MODELS` / `FREE_VENUE_OFFER_MODEL` / `FREE_VENUE_OFFER_KEY` | The host's opening-offer options: the priced three, then `FREE` — the venue gives the window for nothing (no amount; a free justification is required; the venue accepts or declines and nobody counters). The free option's name and help keys. |
+| `hostOfferModelsFor(freeBooking)` | The opening offer's options for one venue: `HOST_OFFER_MODELS` while the venue is open to free bookings for initiatives (`Venue.offer_free_booking`, Fees & Minimum Spend), else the priced three — an older server that does not say reads as closed. Server twin: FREE_BOOKING_OFF. |
 | `isVenueOfferModel(model)` / `isHostOfferModel(model)` / `isFreeVenueOfferModel(model)` | Whether a plain string is a priced option; an opening-offer option (priced or free); the free venue. |
 | `venueOfferModelKey(model)` / `venueOfferHelpKey(model)` | An option's name and one-line help keys (free included), or `''` for one this client does not know. |
 | `offerRateOf(rate)` | A typed amount as rupees (2 decimals), or 0 when it is not a positive number. |

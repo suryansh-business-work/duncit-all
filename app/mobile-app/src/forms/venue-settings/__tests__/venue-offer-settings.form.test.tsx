@@ -57,8 +57,31 @@ describe('BookingOffersForm', () => {
         response_hours: '48',
         min_business: [{ model: 'FLAT', amount: '5000' }],
         min_spend: '3000',
+        free_booking: false,
       }),
     );
+  });
+
+  it('opens the venue to free bookings for initiatives with the switch, saying what a free booking is', async () => {
+    const onSubmit = mount();
+    const toggle = screen.getByTestId('venue-offer-settings-free-booking-switch');
+    expect(toggle.props.value).toBe(false);
+    expect(
+      screen.getByText(
+        /A free booking is ₹0: no venue charges, no Duncit commission and no earnings/,
+      ),
+    ).toBeOnTheScreen();
+    fireEvent(toggle, 'valueChange', true);
+    fireEvent.press(screen.getByTestId('venue-offer-settings-save'));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0].free_booking).toBe(true);
+  });
+
+  it('starts a venue already open to free bookings with the switch on, and locks it while saving', () => {
+    mount({ stored: { min_guests: 0, response_hours: 0, free_booking: true }, saving: true });
+    const toggle = screen.getByTestId('venue-offer-settings-free-booking-switch');
+    expect(toggle.props.value).toBe(true);
+    expect(toggle.props.disabled).toBe(true);
   });
 
   // The boxes keep digits only, so what can still be wrong is a number past the server's bound.

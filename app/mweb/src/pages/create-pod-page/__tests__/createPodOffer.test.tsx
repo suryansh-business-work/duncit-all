@@ -135,11 +135,20 @@ describe('VenueOfferPicker', () => {
 
 
 describe('VenueOfferStep', () => {
-  const VENUES = [{ id: 'v1', venue_name: 'Court House', offer_min_business: [{ model: 'PER_GUEST', amount: 200 }] }];
+  const VENUES = [
+    { id: 'v1', venue_name: 'Court House', offer_min_business: [{ model: 'PER_GUEST', amount: 200 }] },
+    // Open to free bookings for initiatives (Fees & Minimum Spend).
+    { id: 'v2', venue_name: 'Open Hall', offer_free_booking: true },
+  ];
   const offerStep = (values: Partial<CreatePodFormValues> = {}) =>
     render(
       <Harness values={{ pod_mode: 'PHYSICAL', venue_id: 'v1', ...values }}>
-        {(form) => <VenueOfferStep form={form} venues={VENUES} />}
+        {(form) => (
+          <>
+            <VenueOfferStep form={form} venues={VENUES} />
+            <output data-testid="offer-model">{form.watch('venue_offer_model')}</output>
+          </>
+        )}
       </Harness>
     );
 
@@ -155,10 +164,25 @@ describe('VenueOfferStep', () => {
     expect(screen.queryByTestId('create-pod-venue-free-arrangement')).not.toBeInTheDocument();
   });
 
-  it('asks why the venue is free, beside the offer, when the host asks for it free', () => {
-    offerStep({ venue_offer_model: 'FREE' });
+  it('asks why the venue is free, beside the offer, when the host asks a venue open to free bookings for it free', () => {
+    offerStep({ venue_id: 'v2', venue_offer_model: 'FREE' });
     expect(screen.getByTestId('create-pod-venue-free-arrangement')).toBeInTheDocument();
     expect(screen.getByTestId('create-pod-venue-free-accept')).toBeInTheDocument();
+    expect(screen.getByTestId('offer-model')).toHaveTextContent('FREE');
+  });
+
+  it('drops a Free kept for a venue that is not open to free bookings, so a price must be picked', async () => {
+    offerStep({ venue_id: 'v1', venue_offer_model: 'FREE' });
+    await waitFor(() => expect(screen.getByTestId('offer-model').textContent).toBe(''));
+    expect(screen.queryByTestId('create-pod-venue-free-arrangement')).not.toBeInTheDocument();
+  });
+
+  it('keeps a priced offer at a venue closed to free bookings, and a Free while the venue is still unknown', () => {
+    const { unmount } = offerStep({ venue_id: 'v1', venue_offer_model: 'FLAT' });
+    expect(screen.getByTestId('offer-model')).toHaveTextContent('FLAT');
+    unmount();
+    offerStep({ venue_id: 'gone', venue_offer_model: 'FREE' });
+    expect(screen.getByTestId('offer-model')).toHaveTextContent('FREE');
   });
 
   it('shows no minimum for a venue that is not in the list', () => {

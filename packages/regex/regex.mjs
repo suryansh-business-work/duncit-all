@@ -360,6 +360,54 @@ export const APPLE_TEAM_ID = /^[A-Z0-9]{10}$/;
 export const isAppleTeamId = (v) => APPLE_TEAM_ID.test(v);
 
 /**
+ * A Media Manager folder path: `/` or `/Reports/2026`, up to 8 segments of 1–60 letters, digits, spaces, `.`, `_` or `-`. Segments cannot contain `/`, so the bounded repeats cannot overlap and the match is linear.
+ */
+export const FOLDER_PATH = /^\/(?:[\w .-]{1,60}(?:\/[\w .-]{1,60}){0,7})?$/;
+
+/** FOLDER_PATH shape check. Trim before calling it. */
+export const isFolderPath = (v) => FOLDER_PATH.test(v);
+
+/**
+ * An AI provider model id such as `gpt-4o-mini` or `text-embedding-3-small`: 1–80 letters, digits, `.`, `_`, `:` or `-`. One class, bounded count — linear.
+ */
+export const AI_MODEL_ID = /^[A-Za-z0-9._:-]{1,80}$/;
+
+/** AI_MODEL_ID shape check. Trim before calling it. */
+export const isAiModelId = (v) => AI_MODEL_ID.test(v);
+
+/**
+ * A GitHub owner or repository name, e.g. `duncit-all`: 1–100 letters, digits, `.`, `_` or `-`. One class, bounded count — linear.
+ */
+export const GITHUB_NAME = /^[A-Za-z0-9_.-]{1,100}$/;
+
+/** GITHUB_NAME shape check. Trim before calling it. */
+export const isGithubName = (v) => GITHUB_NAME.test(v);
+
+/**
+ * A git branch name such as `staging` or `feature/intel`: 1–200 letters, digits, `.`, `_`, `/` or `-`. One class, bounded count — linear.
+ */
+export const GIT_BRANCH = /^[A-Za-z0-9._/-]{1,200}$/;
+
+/** GIT_BRANCH shape check. Trim before calling it. */
+export const isGitBranch = (v) => GIT_BRANCH.test(v);
+
+/**
+ * A MongoDB collection name Duncit Intel may read, e.g. `pods`: 1–120 letters, digits, `.`, `_` or `-`, never a `system.` collection. One class, bounded count — linear.
+ */
+export const MONGO_COLLECTION = /^(?!system\.)[A-Za-z0-9_.-]{1,120}$/;
+
+/** MONGO_COLLECTION shape check. Trim before calling it. */
+export const isMongoCollection = (v) => MONGO_COLLECTION.test(v);
+
+/**
+ * A MongoDB database name, e.g. `duncit`: 1–64 letters, digits, `_` or `-`. One class, bounded count — linear.
+ */
+export const MONGO_DATABASE = /^[A-Za-z0-9_-]{1,64}$/;
+
+/** MONGO_DATABASE shape check. Trim before calling it. */
+export const isMongoDatabase = (v) => MONGO_DATABASE.test(v);
+
+/**
  * A fully-qualified hostname such as `ns1.example.com`: at least two labels,
  * each a {@link HOSTNAME_LABEL}, 253 characters at most. A trailing dot (the
  * root) is accepted. Case-insensitive, as DNS is.

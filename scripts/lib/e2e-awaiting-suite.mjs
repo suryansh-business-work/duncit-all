@@ -43,6 +43,7 @@ export const AWAITING_SUITE = new Set([
   'mcp-portal',
   'loyalty',
   'tests-portal',
+  'intel-portal',
   'tech',
   'venues',
   'website-app',

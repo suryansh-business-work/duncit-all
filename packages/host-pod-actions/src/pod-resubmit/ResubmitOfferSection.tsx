@@ -1,7 +1,8 @@
+import { useEffect } from 'react';
 import { Controller, type UseFormReturn } from 'react-hook-form';
 import { FormControlLabel, Switch } from '@mui/material';
 import { FreeArrangementFields, VenueOfferAskFields } from '@duncit/forms';
-import { VENUE_OFFER_ASK_LIMITS } from '@duncit/utils';
+import { VENUE_OFFER_ASK_LIMITS, isFreePod, isFreeVenueOfferModel } from '@duncit/utils';
 import { useAskTranslation } from './ask-translation';
 import OfferTermsFields from './OfferTermsFields';
 import ResubmitSpotsField from './ResubmitSpotsField';
@@ -24,7 +25,9 @@ const FREE_NAMES = { reason: 'free_reason', details: 'free_details', accepted: '
  * host pays it and how much, and what they need from it with an optional note
  * — the same ask Create Pod makes, with the same shared fields. A free pod, or
  * a venue asked for free, adds Duncit's free policy, why it is free and the
- * host's acceptance.
+ * host's acceptance. Free venue is listed only for a free pod at a venue open
+ * to free bookings for initiatives; a Free carried over from a declined offer
+ * is dropped once either reads as closed.
  */
 export default function ResubmitOfferSection({ form }: Readonly<Props>) {
   const { t } = useAskTranslation();
@@ -32,6 +35,13 @@ export default function ResubmitOfferSection({ form }: Readonly<Props>) {
   const venueId = watch('venue_id');
   const terms = useResubmitVenueTerms(venueId, watch('space_label'));
   const free = needsResubmitFreeJustification({ pod_type: watch('pod_type'), venue_offer_model: watch('venue_offer_model') });
+  const podFree = isFreePod(watch('pod_type'));
+  // The venue's switch counts only once it has been read; a paid pod never takes a free venue.
+  const closedToFree = !podFree || terms.freeBooking === false;
+  const pickedFree = isFreeVenueOfferModel(watch('venue_offer_model'));
+  useEffect(() => {
+    if (closedToFree && pickedFree) setValue('venue_offer_model', '', PICKED);
+  }, [closedToFree, pickedFree, setValue]);
   const setWindow = (start: string, end: string) => {
     setValue('offer_start', start, PICKED);
     setValue('offer_end', end, PICKED);
@@ -66,7 +76,7 @@ export default function ResubmitOfferSection({ form }: Readonly<Props>) {
               />
             )}
           />
-          <OfferTermsFields control={control} />
+          <OfferTermsFields control={control} allowFree={podFree && terms.freeBooking === true} />
           <VenueOfferAskFields
             control={control}
             offeringsName="offerings"

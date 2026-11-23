@@ -10,6 +10,7 @@ import {
   CREATE_POD_STEPPER_VERSION,
   CREATE_POD_WHERE_STEP,
   DEFAULT_SMART_INCENTIVE_MAX_PCT,
+  createPodOffersFreeVenue,
   isFreePod,
   isFreeVenueOfferModel,
   isHostOfferModel,
@@ -268,13 +269,20 @@ function refineSchedule(
 }
 
 /** Creation only accepts the new FREE/PAID pair — either one for a physical or
- * a virtual pod. */
+ * a virtual pod — and a pod asking its venue for the window free is free too
+ * (server: FREE_VENUE_NEEDS_FREE_POD). mWeb twin. */
 function refinePodType(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
   if (values.pod_type !== 'FREE' && values.pod_type !== 'PAID') {
     ctx.addIssue({
       code: 'custom',
       path: ['pod_type'],
       message: t('mweb.createPod.validation.podTypeInvalid'),
+    });
+  } else if (values.pod_type !== 'FREE' && createPodOffersFreeVenue(values)) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['pod_type'],
+      message: t('mweb.createPod.validation.freeVenueNeedsFreePod'),
     });
   }
 }

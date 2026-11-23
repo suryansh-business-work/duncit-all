@@ -111,6 +111,24 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
   { surface: 'tech', path: '/profile', label: 'Profile',
     description: 'View and edit your own account — name and profile photo, display language, assigned roles and linked Google account — and sign out.' },
 
+  // ---- Duncit Intel (intel) ------------------------------------------
+  { surface: 'intel', path: '/', label: 'New Chat',
+    description: 'Ask Duncit Intel anything about the business: it searches uploaded files, GitHub, Slack, Gmail and permitted databases and MCP tools, cites every source, and lets you pick the model, environment (staging, production or both) and sources, or speak your question.' },
+  { surface: 'intel', path: '/chats', label: 'Chats',
+    description: 'Your own chat history: recent, pinned, archived and all conversations — search, sort, rename, pin, archive, restore or delete them.' },
+  { surface: 'intel', path: '/media', label: 'Media Manager',
+    description: 'Upload PDFs, images and text files by drag and drop, organise them in folders, preview, rename, archive, restore or delete them, set who can see each file and watch it being indexed for search.' },
+  { surface: 'intel', path: '/knowledge', label: 'Knowledge & Indexes',
+    description: 'See everything indexed for search — per source and environment, document and chunk counts, versions and failures — and open any indexed document.' },
+  { surface: 'intel', path: '/sync', label: 'Sync Dashboard',
+    description: 'Watch connector syncs: freshness and health per connector, every run with what it read, indexed, skipped and deleted, its log, and sync now, pause or resume.' },
+  { surface: 'intel', path: '/approvals', label: 'Approvals',
+    description: 'Review changes the assistant proposed — the environment, database or tool, a before/after preview and the impact — and approve or reject them. Production changes need a second person.' },
+  { surface: 'intel', path: '/setting', label: 'Settings',
+    description: 'Configure Duncit Intel: general options, AI models, the OpenAI entry, MongoDB, MCP, Slack, Gmail and GitHub connectors (credentials picked from the Tech portal), Qdrant, embeddings, media, sync, access, security, usage and cost, audit logs and system health.' },
+  { surface: 'intel', path: '/profile', label: 'Profile',
+    description: 'View and edit your own account — name and profile photo, display language and assigned roles — and sign out.' },
+
   // ---- Tests (tests) --------------------------------------------------
   { surface: 'tests', path: '/', label: 'Dashboard',
     description: 'Read the confidence score and the seven signals behind it (unit and E2E pass rates, code coverage, scenario coverage, stress health, regressions, manual pass rate), code coverage with its trend, the latest unit, E2E and stress run, regressions and the manual board at a glance.' },

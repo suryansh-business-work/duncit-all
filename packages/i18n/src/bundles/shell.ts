@@ -567,6 +567,11 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         promoTitle: 'Ship with confidence',
         promoText: 'Unit, E2E, stress, regression and manual testing, with one confidence score.',
       },
+      intel: {
+        tagline: 'Internal Business Intelligence — your company’s knowledge, connected in one place.',
+        promoTitle: 'Ask anything about Duncit',
+        promoText: 'Search files, code, Slack, Gmail and live data with cited answers — and every production change approved first.',
+      },
       ecommPortal: {
         tagline: 'Run the Duncit Pet Store — shelves, orders and customers in one place.',
         promoTitle: 'Everything your pet store needs',
@@ -810,6 +815,11 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       appPopups: 'App Popups',
       appReleases: 'App Releases',
       approvals: 'Approvals',
+      newChat: 'New Chat',
+      chats: 'Chats',
+      mediaManager: 'Media Manager',
+      knowledgeIndexes: 'Knowledge & Indexes',
+      syncDashboard: 'Sync Dashboard',
       activity: 'Activity',
       myTasks: 'My Tasks',
       authentication: 'Authentication',
@@ -2451,6 +2461,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         mcp: 'MCP',
         loyalty: 'Loyalty',
         tests: 'Tests',
+        intel: 'Duncit Intel',
       },
       header: {
         back: 'Back to coworkers',

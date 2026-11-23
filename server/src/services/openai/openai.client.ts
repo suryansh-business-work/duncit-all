@@ -49,6 +49,8 @@ export interface OpenAiChatRequest {
   /** Context for this one call — entity, template key, lead id … */
   detail?: string;
   user_id?: string;
+  /** A specific Tech portal OpenAI entry (Duncit Intel's setting); unset = the active default. */
+  credentials?: { apiKey: string; base: string } | null;
 }
 
 /** `DISABLED` — the feature (task) is switched off in AI portal > AI Features. */
@@ -219,7 +221,10 @@ async function claudeChat(req: OpenAiChatRequest, apiKey: string, model: string,
 /** POST the chat completion, or describe why it never happened. */
 export async function openaiChat(req: OpenAiChatRequest): Promise<OpenAiChatResult> {
   const startedAt = Date.now();
-  const { provider, apiKey, base, model } = await resolveConfig(req.model);
+  const config = await resolveConfig(req.model);
+  const { provider, model } = config;
+  const apiKey = (provider === 'OpenAI' && req.credentials?.apiKey) || config.apiKey;
+  const base = (provider === 'OpenAI' && req.credentials?.base) || config.base;
 
   // The AI Features switch. Off takes the same refused-call path as a missing
   // key, so every call site falls back exactly as it already does for that.

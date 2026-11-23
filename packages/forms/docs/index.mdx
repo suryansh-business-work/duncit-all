@@ -21,6 +21,8 @@ consumers:
   - 'portals/partners-app'
 exports:
   - 'RhfTextField'
+  - 'RhfSwitch'
+  - 'RhfSelect'
   - 'VenueUsageFields'
   - 'VenueOfferAskFields'
   - 'VenueOfferAskFieldsProps'
@@ -308,6 +310,36 @@ POSTAL_CODE_PATTERN.test('400 001');        // true
 | `name` | `Path<T>` | yes | — | Typed field name. |
 | `hint` | `string` | no | `' '` | Helper text shown while the field has no error (the blank keeps the height stable). |
 | …rest | `TextFieldProps` minus `name`/`value`/`onChange`/`onBlur`/`error`/`helperText` | no | `fullWidth: true` | Everything else goes to MUI `TextField`. |
+
+### `RhfSwitch<T>`
+
+A boolean field as an MUI `Switch` with a real label (the whole row toggles) and an optional hint linked by `aria-describedby`.
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `control` | `Control<T>` | yes | — | The `useForm` control. |
+| `name` | `Path<T>` | yes | — | A boolean field. |
+| `label` | `string` | yes | — | The visible, accessible name. |
+| `hint` | `string` | no | — | One line under the switch. |
+| `disabled` | `boolean` | no | `false` | Read-only state. |
+
+### `RhfSelect<T>`
+
+A single or multiple select wired into react-hook-form; same error/hint contract as `RhfTextField`.
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `control` | `Control<T>` | yes | — | The `useForm` control. |
+| `name` | `Path<T>` | yes | — | A `string` field, or `string[]` with `multiple`. |
+| `options` | `RhfSelectOption[]` | yes | — | `{ value, label, disabled? }` — labels already translated. |
+| `multiple` | `boolean` | no | `false` | Several values, each with a checkbox; the closed field lists the labels. |
+| `hint` | `string` | no | `' '` | Helper text while there is no error. |
+| …rest | `TextFieldProps` minus the controlled props | no | `fullWidth: true` | Passed to MUI `TextField`. |
+
+```tsx
+<RhfSwitch control={control} name="auto_sync" label="Auto sync" hint="Keep every source fresh" />
+<RhfSelect control={control} name="sources" multiple options={[{ value: "GITHUB", label: "GitHub" }]} label="Sources" />
+```
 
 ### `FormField<T>` (legacy)
 
@@ -709,7 +741,7 @@ directly.
 | `makeCancellationPolicySchema` | a venue's cancellation policy | any number of bands, each a window + a charge — see below |
 | `makeVenueCancelPodSchema` | a venue owner cancelling a pod | the reason that goes into the cancellation email, at least 5 characters — see below |
 | `makeVenueOfferCounterSchema` | a venue owner countering a host's booking offer (Partners, mWeb, native) | either side countering the terms on the table: a pricing option (`VENUE_OFFER_COUNTER_MODELS`: per guest / per hour / flat — the per-slot option is retired), an amount above 0 and at most the server ceiling, the fewest guests paid for (1 up to the booking's guests; empty keeps the one on the table), the points (one per line, at most 20 of 120 characters), an optional note of at most 1000 characters and up to `VENUE_OFFER_IMAGES_MAX` (4) uploaded photos (`images`); `venueOfferCounterDefaults(currentOfferTerms(offer))` starts from the terms on the table with no photos, `venueOfferEditDefaults(terms)` starts an edit of one's own counter with its note and photos kept, and `venueOfferTermsOf(values)` is what the counter sends (null until usable; `images` only when there are some); `makeVenueOfferAskSchema` / `offeringsTextField` / `offerNoteField` are Create Pod's ask (at least one point); `makeVenueOfferRejectSchema` is the optional reason (≤ 280) a rejection sends |
-| `makeBookingOffersSchema` | a venue's own Booking offers settings (Partners, mWeb, native) | the fewest guests (0 to 1000) and the hours to answer (0 to 720), 0 = Duncit's default, and the business the venue hopes each booking brings (`min_business`): at least one row, each a basis from `MIN_BUSINESS_MODELS` (per guest / per hour / per booking) named once — a repeat is flagged on the later row — and an amount above 0, at most `BOOKING_OFFER_LIMITS.amountMax`. The least a host may offer on that basis: Create Pod holds a lower offer on its offer step and the server refuses it (`BELOW_MIN_BUSINESS`). `nextMinBusinessRow(rows)` is "Add amount" (the first basis not listed yet); `toBookingOffersValues` / `toBookingOffersInput` map them to and from `VenueSettings.offers` (no stored amounts start one empty row; amounts are sent as numbers) |
+| `makeBookingOffersSchema` | a venue's own Booking offers settings (Partners, mWeb, native) | the fewest guests (0 to 1000) and the hours to answer (0 to 720), 0 = Duncit's default, and the business the venue hopes each booking brings (`min_business`): at least one row, each a basis from `MIN_BUSINESS_MODELS` (per guest / per hour / per booking) named once — a repeat is flagged on the later row — and an amount above 0, at most `BOOKING_OFFER_LIMITS.amountMax`. The least a host may offer on that basis: Create Pod holds a lower offer on its offer step and the server refuses it (`BELOW_MIN_BUSINESS`). `nextMinBusinessRow(rows)` is "Add amount" (the first basis not listed yet); the minimum spend (`min_spend`, empty or 0 = none), and `free_booking` — the venue is open to free bookings for initiatives (a boolean; only then does Create Pod offer it the Free option, which makes the pod free; the server refuses a free ask otherwise, `FREE_BOOKING_OFF`). `toBookingOffersValues` / `toBookingOffersInput` map them to and from `VenueSettings.offers` (no stored amounts start one empty row; amounts are sent as numbers; a switch an older server does not send reads as off) |
 | `makeBannerKitSchema` | a venue's or a host's banner kit (Partners, Venues, Hosts, Onboarding — `@duncit/shell` BannerKitPanel) | a logo, an Instagram handle (`normalizeInstagramHandle` accepts a pasted profile link and an @, then `INSTAGRAM_HANDLE` from `@duncit/regex`), the collab switch, photos and past-event photos (at most 12 each, captions ≤ 120), a tagline ≤ 80, a bio ≤ 400 and a brand colour that is empty or six-digit `HEX_COLOR`. `BANNER_KIT_LIMITS` are the server's numbers; the server checks every rule again, and that each photo is on the media library |
 | `makeVenueChatEditSchema` | the author rewriting their own venue chat line (mWeb, Partners, native) | something to say, trimmed, at most `VENUE_CHAT_TEXT_MAX` (2000, the server's bound); the server checks the words themselves |
 | `makePodRequestNoteSchema` | a venue or host sending a Pod Request | an optional note of at most 500 characters — see below |

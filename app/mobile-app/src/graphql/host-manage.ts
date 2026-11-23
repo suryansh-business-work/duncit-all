@@ -86,6 +86,7 @@ export const ResubmitVenueTermsDocument = gql(`
         capacity
       }
       offer_min_guests
+      offer_free_booking
     }
   }
 `);

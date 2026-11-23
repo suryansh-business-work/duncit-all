@@ -50,10 +50,10 @@ export function offerStepTerms(
 
 /**
  * What a free arrangement reads in place of the money, for the side reading
- * it: a free pod's host settles the venue directly (both sides are told so); a
- * free venue is paid nothing — its host is told it still answers, the venue
- * reads the host's reason instead (`freeReasonNote`), so '' for it. null when
- * the terms are priced and the money shows.
+ * it: a free venue is a ₹0 booking with no charges, commission or earnings —
+ * checked first, since its pod is free too and settles nothing with the venue;
+ * a free pod on priced terms has its host settle the venue directly (both
+ * sides are told so). null when the terms are priced and the money shows.
  */
 export function freeMoneyLine(
   t: Translate,
@@ -61,13 +61,15 @@ export function freeMoneyLine(
   podIsFree: boolean,
   model: string | null | undefined,
 ): string | null {
-  if (podIsFree) {
+  if (isFreeVenueOfferModel(model)) {
     return side === 'HOST'
-      ? t('availability.offers.hostAnswer.freePod')
-      : t('availability.offers.freePod');
+      ? t('availability.offers.hostAnswer.freeVenue')
+      : t('availability.offers.freeVenue');
   }
-  if (!isFreeVenueOfferModel(model)) return null;
-  return side === 'HOST' ? t('mweb.createPod.offer.freeQuote') : '';
+  if (!podIsFree) return null;
+  return side === 'HOST'
+    ? t('availability.offers.hostAnswer.freePod')
+    : t('availability.offers.freePod');
 }
 
 /**

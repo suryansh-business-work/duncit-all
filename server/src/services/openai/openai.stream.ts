@@ -38,6 +38,8 @@ export interface StreamChatRequest {
   detail?: string;
   user_id?: string;
   signal?: AbortSignal;
+  /** A specific Tech portal OpenAI entry (Duncit Intel's setting); unset = the active default. */
+  credentials?: { apiKey: string; base: string } | null;
   /** Called with every piece of text as it arrives. */
   onDelta?: (text: string) => void;
 }
@@ -100,7 +102,10 @@ async function readStream(res: Response, req: StreamChatRequest) {
 
 export async function openaiChatStream(req: StreamChatRequest): Promise<StreamChatResult> {
   const startedAt = Date.now();
-  const { provider, apiKey, base, model } = await resolveConfig(req.model);
+  const config = await resolveConfig(req.model);
+  const { provider, model } = config;
+  const apiKey = (provider === 'OpenAI' && req.credentials?.apiKey) || config.apiKey;
+  const base = (provider === 'OpenAI' && req.credentials?.base) || config.base;
   const recordReq = { task: req.task, messages: previewMessages(req.messages), detail: req.detail, user_id: req.user_id };
   const fail = (code: OpenAiFailureCode | 'ABORTED', status: number, message: string): StreamChatResult => {
     record({ req: recordReq, model, status: code === 'DISABLED' || code === 'NOT_CONFIGURED' ? 'SKIPPED' : 'FAILED', httpStatus: status, error: message, startedAt });

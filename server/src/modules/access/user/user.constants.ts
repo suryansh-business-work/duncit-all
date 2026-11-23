@@ -53,6 +53,8 @@ export const ROLES = [
   'MCP_MANAGER',
   'LOYALTY_MANAGER',
   'TESTS_MANAGER',
+  'INTEL_USER',
+  'INTEL_MANAGER',
 ] as const;
 
 export type UserRole = (typeof ROLES)[number];
@@ -127,6 +129,8 @@ export const ROLE_CATALOG: RoleDefinition[] = [
   { key: 'MCP_MANAGER', name: 'MCP Manager', description: 'MCP console — mcp.duncit.com: every connection and tool call, usage and cost, and the MCP safety settings.' },
   { key: 'LOYALTY_MANAGER', name: 'Loyalty Manager', description: 'Loyalty console — loyalty.duncit.com: Duncit Coin, virtual gift cards and physical gift cards.' },
   { key: 'TESTS_MANAGER', name: 'Tests Manager', description: 'Tests console — tests.duncit.com: unit, E2E, stress, regression and manual testing, code quality and platform monitoring.' },
+  { key: 'INTEL_USER', name: 'Intel User', description: 'Duncit Intel — intel.duncit.com: chat with company knowledge (files, code, Slack, Gmail, databases), private chat history and own uploads. Staging only by default.' },
+  { key: 'INTEL_MANAGER', name: 'Intel Manager', description: 'Duncit Intel admin — intel.duncit.com: everything an Intel User can do, plus settings, connectors, sync, indexes and approving changes.' },
 ];
 
 // The portal login gate (PORTAL_ROLE_REQUIREMENTS / PORTAL_GATE_EXEMPT_KEYS /

@@ -209,12 +209,12 @@ describe('VenueSlotStep', () => {
 });
 
 describe('OfferTermsFields', () => {
-  const terms = (values: Partial<CreatePodFormValues> = {}, errors: Record<string, string> = {}) =>
+  const terms = (values: Partial<CreatePodFormValues> = {}, errors: Record<string, string> = {}, allowFree = false) =>
     render(
       <Harness values={values} errors={errors}>
         {(form) => (
           <>
-            <OfferTermsFields form={form} />
+            <OfferTermsFields form={form} allowFree={allowFree} />
             <output data-testid="state">{JSON.stringify([form.watch('venue_offer_model'), form.watch('venue_offer_rate')])}</output>
           </>
         )}
@@ -231,6 +231,34 @@ describe('OfferTermsFields', () => {
     fireEvent.change(screen.getByTestId('create-pod-offer-rate').querySelector('input') as HTMLElement, { target: { value: '12a5' } });
     await waitFor(() => expect(JSON.parse(screen.getByTestId('state').textContent ?? '[]')[1]).toBe('125'));
     expect(screen.queryByText(fallbackT('mweb.createPod.offer.modelHint'))).not.toBeInTheDocument();
+  });
+
+  it('lists Free only at a venue open to free bookings for initiatives, after the priced options', async () => {
+    const { unmount } = terms();
+    fireEvent.mouseDown(within(screen.getByTestId('create-pod-offer-model')).getByRole('combobox'));
+    expect(await screen.findByTestId('create-pod-offer-model-FLAT')).toBeInTheDocument();
+    expect(screen.queryByTestId('create-pod-offer-model-FREE')).not.toBeInTheDocument();
+    unmount();
+
+    terms({}, {}, true);
+    fireEvent.mouseDown(within(screen.getByTestId('create-pod-offer-model')).getByRole('combobox'));
+    const options = (await screen.findAllByRole('option')).map((option) => option.getAttribute('data-testid'));
+    expect(options).toEqual([
+      'create-pod-offer-model-PER_GUEST',
+      'create-pod-offer-model-PER_HOUR',
+      'create-pod-offer-model-FLAT',
+      'create-pod-offer-model-FREE',
+    ]);
+  });
+
+  it('asks no amount once Free is picked, and explains it', async () => {
+    terms({ venue_offer_model: 'PER_GUEST', venue_offer_rate: '200' }, {}, true);
+    expect(screen.getByTestId('create-pod-offer-rate')).toBeInTheDocument();
+    fireEvent.mouseDown(within(screen.getByTestId('create-pod-offer-model')).getByRole('combobox'));
+    fireEvent.click(await screen.findByTestId('create-pod-offer-model-FREE'));
+    await waitFor(() => expect(JSON.parse(screen.getByTestId('state').textContent ?? '[]')[0]).toBe('FREE'));
+    expect(screen.queryByTestId('create-pod-offer-rate')).not.toBeInTheDocument();
+    expect(screen.getByText(fallbackT('mweb.createPod.offer.help.free'))).toBeInTheDocument();
   });
 
   it('shows the validation messages over the hints', async () => {

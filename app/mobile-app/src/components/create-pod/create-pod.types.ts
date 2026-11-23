@@ -177,6 +177,8 @@ export interface CreatePodVenue {
   offer_min_business?: readonly { model: string; amount: number }[] | null;
   /** The least one booking's offer must come to (0 = none) — shown on Money's offer step, enforced there. */
   offer_min_spend?: number | null;
+  /** Open to free bookings for initiatives: only then does the offer step list Free. Absent from older servers (closed). */
+  offer_free_booking?: boolean | null;
   location_id?: string | null;
   city?: string | null;
   locality?: string | null;

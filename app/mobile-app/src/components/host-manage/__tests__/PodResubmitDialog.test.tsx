@@ -287,13 +287,105 @@ describe('PodResubmitDialog', () => {
     );
   });
 
+  /** The venue's terms as read for the offer, open (or not) to free bookings for initiatives. */
+  const termsWith = (offerFreeBooking: boolean) => () =>
+    Promise.resolve({
+      publicVenue: {
+        id: 'v1',
+        capacity: 10,
+        capacity_items: [],
+        offer_min_guests: 0,
+        offer_free_booking: offerFreeBooking,
+      },
+    });
+
+  it('lists Free venue only for a free pod at a venue open to free bookings for initiatives', async () => {
+    const pickVenue = async (target: Parameters<typeof PodResubmitDialog>[0]['pod']) => {
+      const view = renderWithProviders(
+        <PodResubmitDialog pod={target} onClose={jest.fn()} onSaved={jest.fn()} />,
+      );
+      await waitFor(() => expect(screen.getByTestId('resubmit-venue-v1')).toBeOnTheScreen());
+      fireEvent.press(screen.getByTestId('resubmit-venue-v1'));
+      await screen.findByTestId('create-pod-offer-model-FLAT');
+      return view;
+    };
+    routeRequests({ terms: termsWith(true) });
+    let view = await pickVenue({ ...pod, pod_type: 'FREE' });
+    expect(await screen.findByTestId('create-pod-offer-model-FREE')).toBeOnTheScreen();
+    view.unmount();
+    // A paid pod never takes a free venue, open or not.
+    view = await pickVenue({ ...pod, pod_type: 'PAID' });
+    expect(screen.queryByTestId('create-pod-offer-model-FREE')).toBeNull();
+    view.unmount();
+    routeRequests({ terms: termsWith(false) });
+    view = await pickVenue({ ...pod, pod_type: 'FREE' });
+    await waitFor(() =>
+      expect(mockRequest).toHaveBeenCalledWith(
+        ResubmitVenueTermsDocument,
+        expect.anything(),
+        expect.anything(),
+      ),
+    );
+    expect(screen.queryByTestId('create-pod-offer-model-FREE')).toBeNull();
+    view.unmount();
+  });
+
+  it('drops a Free carried over from a declined offer when the pod is paid, or the venue is closed to it', async () => {
+    const declinedFree = {
+      model: 'FREE',
+      rate: 0,
+      offerings: ['A projector'],
+      note: '',
+      start_at: START,
+      end_at: END,
+      space_label: '',
+      pets: false,
+    };
+    const mount = (
+      target: Parameters<typeof PodResubmitDialog>[0]['pod'],
+      freeBooking: boolean,
+    ) => {
+      routeRequests({ terms: termsWith(freeBooking) });
+      return renderWithProviders(
+        <PodResubmitDialog
+          pod={target}
+          offerPrefill={{ ...declinedFree }}
+          onClose={jest.fn()}
+          onSaved={jest.fn()}
+        />,
+      );
+    };
+    // A paid pod never takes a free venue: the amount is asked again.
+    let view = mount({ ...pod, pod_type: 'PAID' }, true);
+    expect(await screen.findByTestId('field-venue_offer_rate')).toBeOnTheScreen();
+    view.unmount();
+    // A free pod at a venue closed to free bookings, once the venue is read.
+    view = mount({ ...pod, pod_type: 'FREE' }, false);
+    expect(await screen.findByTestId('field-venue_offer_rate')).toBeOnTheScreen();
+    view.unmount();
+    // A free pod at an open venue keeps it, and asks no amount.
+    mount({ ...pod, pod_type: 'FREE' }, true);
+    expect(await screen.findByTestId('create-pod-offer-model-FREE')).toHaveProp(
+      'aria-checked',
+      true,
+    );
+    expect(screen.queryByTestId('field-venue_offer_rate')).toBeNull();
+  });
+
   it('asks a new venue for the window free, with the reason and the policy accepted', async () => {
+    routeRequests({ terms: termsWith(true) });
     const onSaved = jest.fn();
-    renderWithProviders(<PodResubmitDialog pod={pod} onClose={jest.fn()} onSaved={onSaved} />);
+    renderWithProviders(
+      <PodResubmitDialog
+        pod={{ ...pod, pod_type: 'FREE' }}
+        onClose={jest.fn()}
+        onSaved={onSaved}
+      />,
+    );
     await waitFor(() => expect(screen.getByTestId('resubmit-venue-v1')).toBeOnTheScreen());
     fireEvent.press(screen.getByTestId('resubmit-venue-v1'));
     fireEvent.press(screen.getByTestId(TILE));
-    fireEvent.press(screen.getByTestId('create-pod-offer-model-FREE'));
+    fireEvent.press(await screen.findByTestId('create-pod-offer-model-FREE'));
     expect(screen.queryByTestId('field-venue_offer_rate')).toBeNull();
     expect(screen.getByTestId('pod-resubmit-free-policy')).toBeOnTheScreen();
     fireEvent.changeText(screen.getByTestId('field-offerings'), 'A projector');

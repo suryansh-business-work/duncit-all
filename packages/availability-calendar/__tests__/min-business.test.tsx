@@ -20,7 +20,7 @@ function BookingOffersForm({ rows, disabled, onSubmit }: Readonly<FormProps>) {
   const schema = useMemo(() => makeBookingOffersSchema(t), [t]);
   const { control, handleSubmit } = useForm<BookingOffersValues>({
     resolver: zodResolver(schema),
-    defaultValues: { min_guests: '', response_hours: '', min_business: rows, min_spend: '' },
+    defaultValues: { min_guests: '', response_hours: '', min_business: rows, min_spend: '', free_booking: false },
   });
   return (
     <form noValidate onSubmit={handleSubmit((values) => onSubmit(values))}>

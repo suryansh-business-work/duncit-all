@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Stack, Typography } from '@mui/material';
 import { FreeArrangementFields, VenueOfferAskFields } from '@duncit/forms';
 import { VenueMinBusinessNote } from '@duncit/availability-calendar';
@@ -23,7 +24,9 @@ interface Props {
  * by the server. Then how the host pays and how much, why a free venue is free,
  * what they need from the venue, and the server's quote at both ends of the
  * guests. The venue accepts, rejects or counters it once the pod is sent.
- * Native twin: VenueOfferStep.
+ * Free is offered only at a venue open to free bookings for initiatives; a Free
+ * picked for another venue (or kept in a draft) is dropped once the venue reads
+ * as closed to it. Native twin: VenueOfferStep.
  */
 export default function VenueOfferStep({ form, venues }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -31,7 +34,13 @@ export default function VenueOfferStep({ form, venues }: Readonly<Props>) {
   const quote = useOfferQuote(form);
   const venueId = form.watch('venue_id');
   const venue = venues.find((entry) => entry.id === venueId) ?? null;
+  const allowFree = venue?.offer_free_booking === true;
   const freeVenue = isFreeVenueOfferModel(form.watch('venue_offer_model'));
+  // Only once the venue is known: a venue list still loading must not drop a draft's Free.
+  const closedToFree = venue !== null && !allowFree;
+  useEffect(() => {
+    if (closedToFree && freeVenue) form.setValue('venue_offer_model', '', { shouldDirty: true, shouldValidate: true });
+  }, [closedToFree, freeVenue, form]);
 
   return (
     <Stack spacing={2} data-testid="create-pod-offer-step">
@@ -42,7 +51,7 @@ export default function VenueOfferStep({ form, venues }: Readonly<Props>) {
         testId="create-pod-venue-min-business"
       />
       <Typography variant="subtitle2" component="h3">{t('mweb.createPod.offer.title')}</Typography>
-      <OfferTermsFields form={form} />
+      <OfferTermsFields form={form} allowFree={allowFree} />
       {freeVenue && (
         <FreeArrangementFields control={form.control} names={FREE_JUSTIFICATION_NAMES} t={t} idPrefix="create-pod-venue" />
       )}

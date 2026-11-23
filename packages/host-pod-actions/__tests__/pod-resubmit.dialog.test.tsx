@@ -102,10 +102,13 @@ const calendarMock = (venueId: string): MockedResponse => ({
 const startTile = () => document.body.querySelector(`[data-testid="slot-tile-${START}"]`) as HTMLElement;
 
 /** The picked venue's bounds on an offer: what it holds and the fewest guests it takes. */
-const termsMock = (venueId: string, terms: { capacity: number; offer_min_guests: number }): MockedResponse => ({
+const termsMock = (
+  venueId: string,
+  terms: { capacity: number; offer_min_guests: number; offer_free_booking?: boolean },
+): MockedResponse => ({
   request: { query: RESUBMIT_VENUE_TERMS, variables: { venue_id: venueId } },
   result: {
-    data: { publicVenue: { __typename: 'Venue', id: venueId, capacity_items: [], ...terms } },
+    data: { publicVenue: { __typename: 'Venue', id: venueId, capacity_items: [], offer_free_booking: false, ...terms } },
   },
   maxUsageCount: Number.POSITIVE_INFINITY,
 });
@@ -235,7 +238,7 @@ describe('PodResubmitDialog', () => {
   });
 
   // Paying "for the slot" is gone: a venue is paid per guest, per hour or a flat
-  // price — or asked for the window free.
+  // price — or, for a free pod at a venue open to free bookings, asked for the window free.
   it('offers only the ways a venue can still be paid, each on the surface’s own copy', async () => {
     dialog([venuesMock, calendarMock('v-1')]);
     await settle();
@@ -249,14 +252,68 @@ describe('PodResubmitDialog', () => {
       labels.offerModelPerGuest,
       labels.offerModelPerHour,
       labels.offerModelFlat,
-      labels.offerModelFree,
     ]);
+  });
+
+  it('lists Free venue only for a free pod at a venue open to free bookings for initiatives', async () => {
+    const options = async (mocks: readonly MockedResponse[], target: HostPodTarget) => {
+      const view = dialog(mocks, target);
+      await settle();
+      await pickVenue('Indiranagar Court');
+      await settle();
+      fireEvent.mouseDown(screen.getByLabelText(new RegExp(labels.offerModelLabel)));
+      await settle();
+      const listed = within(screen.getByRole('listbox', { name: new RegExp(labels.offerModelLabel) }))
+        .getAllByRole('option')
+        .map((option) => option.textContent);
+      view.unmount();
+      return listed;
+    };
+    const open = termsMock('v-1', { capacity: 40, offer_min_guests: 0, offer_free_booking: true });
+    const closed = termsMock('v-1', { capacity: 40, offer_min_guests: 0, offer_free_booking: false });
+
+    expect(await options([venuesMock, calendarMock('v-1'), open], pod({ pod_type: 'FREE' }))).toContain(labels.offerModelFree);
+    expect(await options([venuesMock, calendarMock('v-1'), closed], pod({ pod_type: 'FREE' }))).not.toContain(labels.offerModelFree);
+    // A paid pod never takes a free venue, open or not.
+    expect(await options([venuesMock, calendarMock('v-1'), open], pod({ pod_type: 'PAID' }))).not.toContain(labels.offerModelFree);
+  });
+
+  it('drops a Free carried over from a declined offer when the pod is paid, or the venue is closed to it', async () => {
+    const declinedFree: VenueOfferPrefill = {
+      model: 'FREE',
+      rate: 0,
+      offerings: ['Two courts'],
+      note: '',
+      start_at: START,
+      end_at: END,
+      space_label: '',
+      pets: false,
+    };
+    const open = termsMock('v-1', { capacity: 40, offer_min_guests: 0, offer_free_booking: true });
+    const closed = termsMock('v-1', { capacity: 40, offer_min_guests: 0, offer_free_booking: false });
+    const rate = () => screen.queryByTestId('pod-resubmit-offer-rate');
+
+    // A paid pod never takes a free venue: the amount is asked again.
+    let view = dialog([venuesMock, calendarMock('v-1'), open], pod({ venue_id: 'v-1', pod_type: 'PAID' }), declinedFree);
+    await settle();
+    expect(rate()).toBeInTheDocument();
+    view.unmount();
+    // A free pod at a venue closed to free bookings, once the venue is read.
+    view = dialog([venuesMock, calendarMock('v-1'), closed], pod({ venue_id: 'v-1', pod_type: 'FREE', pod_amount: 0 }), declinedFree);
+    await settle();
+    expect(rate()).toBeInTheDocument();
+    view.unmount();
+    // A free pod at an open venue keeps it, and asks no amount.
+    dialog([venuesMock, calendarMock('v-1'), open], pod({ venue_id: 'v-1', pod_type: 'FREE', pod_amount: 0 }), declinedFree);
+    await settle();
+    expect(rate()).not.toBeInTheDocument();
   });
 
   // A free venue is paid nothing: no amount, but why it is free and the policy accepted.
   it('asks a free venue for no amount, and sends why it is free once the host says so', async () => {
     const sent: Record<string, any>[] = [];
-    const { props } = dialog([venuesMock, calendarMock('v-1'), cleanCheck, recording(sent)]);
+    const open = termsMock('v-1', { capacity: 40, offer_min_guests: 0, offer_free_booking: true });
+    const { props } = dialog([venuesMock, calendarMock('v-1'), open, cleanCheck, recording(sent)], pod({ pod_type: 'FREE', pod_amount: 0 }));
     await settle();
     await pickVenue('Indiranagar Court');
     fireEvent.click(startTile());
@@ -283,7 +340,8 @@ describe('PodResubmitDialog', () => {
       rate: 0,
       free_justification: { reason: 'CAMPAIGN', details: '', accepted: true },
     });
-    expect(sent.at(-1)?.input).not.toHaveProperty('free_justification');
+    // The pod is free too, and says why on the same answer.
+    expect(sent.at(-1)?.input.free_justification).toMatchObject({ reason: 'CAMPAIGN', accepted: true });
   });
 
   // The window belonged to the venue the host just moved away from.

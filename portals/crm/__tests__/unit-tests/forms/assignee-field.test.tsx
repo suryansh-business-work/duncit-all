@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ReactNode } from 'react';
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import type { MockedResponse } from '@apollo/client/testing';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import AssigneeField from '@/forms/fields/AssigneeField';
@@ -59,8 +59,9 @@ describe('AssigneeField', () => {
     fireEvent.change(input, { target: { value: 'pri' } });
     // The list re-renders once the narrowed search answers; pick from that list, not the first one.
     await waitFor(() => expect(screen.queryByRole('option', { name: /Amit Rao/ })).toBeNull());
-    const option = await screen.findByRole('option', { name: /Priya Sharma/ });
-    expect(within(option).getByText('priya@duncit.test')).toBeInTheDocument();
+    // Name and email in one retried query: a separate within() check could read an
+    // option the next re-render had already replaced (seen under CI load).
+    const option = await screen.findByRole('option', { name: /Priya Sharma\s*priya@duncit\.test/ });
     fireEvent.click(option);
 
     expect(screen.getByTestId('values')).toHaveTextContent('u-priya|Priya Sharma');

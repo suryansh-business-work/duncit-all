@@ -33,10 +33,21 @@ interface Props {
   freeJustification?: OfferFreeJustification | null;
 }
 
-/** The money the move came to — none for a free venue (its terms say "Free venue"), the free-pod notice for a free pod. */
+/**
+ * The money the move came to: for a free venue, one line that it is ₹0 with no
+ * charges, commission or earnings (checked first — its pod is free too, and
+ * settles nothing with the venue); the free-pod notice for a free pod on
+ * priced terms; else the range.
+ */
 function MoveMoney({ move, money, podIsFree }: Readonly<Pick<Props, 'move' | 'money'> & { podIsFree: boolean }>) {
   const { t } = useTranslation();
-  if (isFreeVenueOfferModel(move.model)) return null;
+  if (isFreeVenueOfferModel(move.model)) {
+    return (
+      <Typography variant="body2" sx={{ color: 'text.secondary' }} data-testid="offer-move-free">
+        {money === 'VENUE' ? t('availability.offers.freeVenue') : t('availability.offers.hostAnswer.freeVenue')}
+      </Typography>
+    );
+  }
   if (!podIsFree) {
     const range = { venueMin: move.venue_receives_min, venueMax: move.venue_receives_max, totalMin: move.total_min, totalMax: move.total_max };
     return <OfferMoney side={money} range={range} />;

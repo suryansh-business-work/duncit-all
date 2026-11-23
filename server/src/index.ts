@@ -111,6 +111,8 @@ import { buildTableApiRouter } from '@modules/platform/tableApi/tableApi.router'
 import { buildMcpRouter } from '@microservices/mcp/http/mcp.router';
 import { registerAskDuncitApollo } from '@modules/ai/askDuncit/mcp/askDuncit.session';
 import { buildAskDuncitVoiceRouter } from '@modules/ai/askDuncit/voice/askDuncit.voice.router';
+import { buildIntelRouter } from '@modules/ai/intel/intel.router';
+import { startIntelSync } from '@modules/ai/intel/sync/intelSync.queue';
 import { categoryService } from '@modules/pods/category/category.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { notificationStreamHandler } from '@modules/engagement/notification/notification.stream';
@@ -747,6 +749,10 @@ async function bootstrap() {
   // The same, for recorded rate-limit breaches.
   startRateLimitCleanupScheduler();
 
+  // Duncit Intel: the connector sync worker (BullMQ intel-sync) and the
+  // reconciliation job that keeps every connector fresh. See modules/ai/intel.
+  startIntelSync();
+
   // GraphQL Monitor (Tech portal): fold the minute of per-operation timings the
   // plugin counted in memory into the rollups, and re-read its settings.
   startGraphqlMonitorFlusher();
@@ -1116,6 +1122,9 @@ async function bootstrap() {
   // See modules/ai/askDuncit.
   registerAskDuncitApollo(apollo);
   app.use('/ask-duncit', buildAskDuncitVoiceRouter());
+
+  // Duncit Intel's binary routes: file upload/download, voice, GitHub webhook.
+  app.use('/intel', buildIntelRouter());
 
   // Branded notice at the API root instead of Express's default "Cannot GET /".
   app.get('/', (_req, res) => res.type('html').send(LANDING_HTML));

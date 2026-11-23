@@ -48,6 +48,8 @@ export const PORTAL_ROLE_REQUIREMENTS: Record<string, readonly string[]> = {
   // with the person's own console roles.
   mcp: ['MCP_MANAGER', 'MCP_USER'],
   tests: ['TESTS_MANAGER'],
+  // Duncit Intel: INTEL_USER chats; INTEL_MANAGER also runs settings, connectors and approvals.
+  intel: ['INTEL_MANAGER', 'INTEL_USER'],
 };
 
 // Consumer + partner surfaces are never portal-gated at login.

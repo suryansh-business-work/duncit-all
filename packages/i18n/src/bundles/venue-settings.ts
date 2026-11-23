@@ -62,6 +62,12 @@ export const VENUE_SETTINGS_BUNDLE: NestedCatalogue = {
       minSpendHint:
         'The least one booking’s offer must come to: the rate times your minimum guests, times the hours, or the flat price. A host cannot send an offer below it. 0 means no minimum.',
       minSpendInvalid: 'Enter an amount from 0 to {max}',
+      // The switch that lets hosts ask for the venue free (offer model FREE) on Create Pod.
+      freeBooking: 'Your venue is open for free venue booking for initiatives',
+      freeBookingHint:
+        'Hosts can then pick Free as their offer to you on Create Pod. A free booking is ₹0: no venue charges, no Duncit commission and no earnings, and the pod is free for its guests. You still accept or decline each request.',
+      freeBookingOn: 'On',
+      freeBookingOff: 'Off',
       minGuests: 'Minimum guests',
       minGuestsHint: '0 uses Duncit’s default. In effect now: {count} guests.',
       minGuestsInvalid: 'Enter a whole number of guests from 0 to {max}',

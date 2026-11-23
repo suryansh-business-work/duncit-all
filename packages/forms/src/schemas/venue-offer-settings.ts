@@ -7,8 +7,11 @@ import type { Translate } from './translate';
  * fewest guests a host may offer to book for, the hours either side has to
  * answer a move, and the business the venue hopes each booking brings — at
  * least one amount, one per basis (per guest, per hour, per booking) — and the
- * least one booking's offer must come to (the minimum spend, 0 = none). The
- * amounts are the least a host may offer on each basis (Create Pod enforces it). One rule for the
+ * least one booking's offer must come to (the minimum spend, 0 = none), and
+ * whether the venue is open to free bookings for initiatives (`free_booking`:
+ * only then does Create Pod offer it the Free option, and a free venue makes the
+ * pod free). The amounts are the least a host may offer on each basis (Create
+ * Pod enforces it). One rule for the
  * Partners console, mWeb and the native app (rules 27 + 56), with the same
  * `venueSettings.offers.*` copy.
  */
@@ -29,6 +32,8 @@ export interface BookingOffersValues {
   min_business: MinBusinessRowValues[];
   /** Rupees as typed; empty or 0 = no minimum spend. */
   min_spend: string;
+  /** Open to free bookings for initiatives. */
+  free_booking: boolean;
 }
 
 /** The settings as stored (`VenueSettings.offers`, `VenueOfferSettingsInput`): 0 = Duncit's platform default. */
@@ -39,6 +44,8 @@ export interface VenueOfferSettings {
   min_business?: readonly { model: string; amount: number }[] | null;
   /** The least one booking's offer must come to, in rupees (0 = none). Absent from older servers. */
   min_spend?: number | null;
+  /** Open to free bookings for initiatives. Absent from older servers (closed). */
+  free_booking?: boolean | null;
 }
 
 /** The server's bounds (venue.offerSettings `VENUE_OFFER_SETTINGS_MAX`; an amount within an offer's `MAX_OFFER_RATE`). */
@@ -108,6 +115,7 @@ export function makeBookingOffersSchema(t: Translate) {
       .string()
       .trim()
       .refine(isAmountOrNone, t('venueSettings.offers.minSpendInvalid', { vars: { max: BOOKING_OFFER_LIMITS.amountMax } })),
+    free_booking: z.boolean(),
   });
 }
 
@@ -128,13 +136,15 @@ export const toBookingOffersValues = (offers?: VenueOfferSettings | null): Booki
     response_hours: String(offers?.response_hours ?? 0),
     min_business: rows.length > 0 ? rows : [nextMinBusinessRow([])],
     min_spend: String(offers?.min_spend ?? 0),
+    free_booking: offers?.free_booking === true,
   };
 };
 
 /** The validated values as `VenueSettingsInput.offers` — an empty box is 0, Duncit's default. */
-export const toBookingOffersInput = ({ min_guests, response_hours, min_business, min_spend }: BookingOffersValues) => ({
+export const toBookingOffersInput = ({ min_guests, response_hours, min_business, min_spend, free_booking }: BookingOffersValues) => ({
   min_guests: Number(min_guests) || 0,
   response_hours: Number(response_hours) || 0,
   min_business: min_business.map((row) => ({ model: row.model, amount: Number(row.amount) })),
   min_spend: Number(min_spend) || 0,
+  free_booking,
 });

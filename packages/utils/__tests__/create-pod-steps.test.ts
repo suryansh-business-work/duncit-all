@@ -8,6 +8,7 @@ import {
   CREATE_POD_STEPPER_VERSION,
   CREATE_POD_STEP_COUNT,
   clampCreatePodStep,
+  createPodOffersFreeVenue,
   createPodSendsOffer,
   resumeCreatePodStep,
 } from '../src/create-pod-steps';
@@ -23,6 +24,21 @@ describe('createPodSendsOffer', () => {
     expect(createPodSendsOffer(virtual)).toBe(false);
     expect(createPodSendsOffer({ ...physical, partner_request_id: 'req-1' })).toBe(false);
     expect(createPodSendsOffer({ ...physical, venue_slot_id: 'slot-1' })).toBe(false);
+  });
+});
+
+describe('createPodOffersFreeVenue', () => {
+  it('is true when a pod that sends its venue an offer asks for it free', () => {
+    expect(createPodOffersFreeVenue({ ...physical, venue_offer_model: 'FREE' })).toBe(true);
+  });
+
+  it('is false for a priced offer, no offer picked yet, or a pod that sends no offer', () => {
+    for (const model of ['PER_GUEST', 'PER_HOUR', 'FLAT', '', null, undefined]) {
+      expect(createPodOffersFreeVenue({ ...physical, venue_offer_model: model })).toBe(false);
+    }
+    expect(createPodOffersFreeVenue({ ...virtual, venue_offer_model: 'FREE' })).toBe(false);
+    expect(createPodOffersFreeVenue({ ...physical, partner_request_id: 'req-1', venue_offer_model: 'FREE' })).toBe(false);
+    expect(createPodOffersFreeVenue({ ...physical, venue_slot_id: 'slot-1', venue_offer_model: 'FREE' })).toBe(false);
   });
 });
 

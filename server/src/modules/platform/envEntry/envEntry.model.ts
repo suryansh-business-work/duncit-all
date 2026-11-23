@@ -45,6 +45,10 @@ export const ENV_CATEGORIES = [
   'ANTHROPIC',
   // Reel Studio's Remotion company licence (was the REMOTION_LICENSE_KEY build arg).
   'REMOTION',
+  // Duncit Intel connectors: databases, MCP servers and mailboxes it reads.
+  'MONGODB',
+  'MCP_SERVER',
+  'GMAIL',
 ] as const;
 export type EnvCategory = (typeof ENV_CATEGORIES)[number];
 

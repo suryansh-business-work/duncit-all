@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Text, YStack } from 'tamagui';
 import { isFreeVenueOfferModel } from '@duncit/utils';
 
@@ -24,14 +25,24 @@ interface Props {
  * by the server. Then how the host pays and how much, why a free venue is free,
  * what they need from the venue, and the server's quote at both ends of the
  * guests. The venue accepts, rejects or counters it once the pod is sent.
- * mWeb twin: VenueOfferStep.
+ * Free is offered only at a venue open to free bookings for initiatives; a Free
+ * picked for another venue (or kept in a draft) is dropped once the venue reads
+ * as closed to it. mWeb twin: VenueOfferStep.
  */
 export function VenueOfferStep({ form, venues, quote, currencySymbol }: Readonly<Props>) {
   const { t } = useTranslation();
   const venueId = form.watch('venue_id');
   const venue = venues.find((entry) => entry.id === venueId) ?? null;
+  const allowFree = venue?.offer_free_booking === true;
   // A free venue asks no amount: the host says why it is free instead.
   const freeVenue = isFreeVenueOfferModel(form.watch('venue_offer_model'));
+  // Only once the venue is known: a venue list still loading must not drop a draft's Free.
+  const closedToFree = venue !== null && !allowFree;
+  useEffect(() => {
+    if (closedToFree && freeVenue) {
+      form.setValue('venue_offer_model', '', { shouldDirty: true, shouldValidate: true });
+    }
+  }, [closedToFree, freeVenue, form]);
 
   return (
     <YStack gap={16} testID="create-pod-offer-step">
@@ -39,7 +50,7 @@ export function VenueOfferStep({ form, venues, quote, currencySymbol }: Readonly
       <Text fontSize={14} fontWeight="700" color="$color">
         {t('mweb.createPod.offer.title')}
       </Text>
-      <OfferTermsFields form={form} />
+      <OfferTermsFields form={form} allowFree={allowFree} />
       {freeVenue ? (
         <FreeArrangementFields
           control={form.control}

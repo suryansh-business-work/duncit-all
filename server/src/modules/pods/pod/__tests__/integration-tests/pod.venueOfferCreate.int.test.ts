@@ -6,7 +6,8 @@
  * points lists none and still creates its pod.
  */
 import { Types } from 'mongoose';
-import { resolveVenueOfferForCreate } from '../../pod.venue';
+import { assertFreeVenueKeepsPodFree, resolveVenueOfferForCreate } from '../../pod.venue';
+import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { venueLocalYmd } from '@modules/venues/autoExtend/slotGenerator';
 import type { VenueOfferRequest } from '@modules/venues/venueOffer/venueOffer.types';
@@ -99,11 +100,19 @@ describe('a Create Pod offer', () => {
 describe('a free venue on Create Pod', () => {
   const freeOffer = (justification?: VenueOfferRequest['free_justification']) =>
     offer({ model: 'FREE', rate: 1200, free_justification: justification });
+  /** A free venue is asked for a free pod only. */
+  const freeInput = (venueId: string, spots: number, venueOffer: VenueOfferRequest, podType: string | null = 'FREE') => ({
+    ...input(venueId, spots, venueOffer),
+    pod_type: podType,
+  });
+  /** A venue open to free bookings for initiatives (Fees & Minimum Spend). */
+  const openVenue = () => seedVenue({ settings: { offers: { free_booking: true } } });
+  const accepted = { reason: 'INITIATIVE', accepted: true } as const;
 
   it("is asked at no money, with the host's justification checked and stamped", async () => {
-    const venueId = await seedVenue();
+    const venueId = await openVenue();
     const resolved = await resolveVenueOfferForCreate(
-      input(venueId, 12, freeOffer({ reason: 'CAMPAIGN', details: ' Diwali  drive ', accepted: true })),
+      freeInput(venueId, 12, freeOffer({ reason: 'CAMPAIGN', details: ' Diwali  drive ', accepted: true })),
       'PHYSICAL',
       hostId
     );
@@ -114,20 +123,42 @@ describe('a free venue on Create Pod', () => {
   });
 
   it('is refused without a justification, or without the policy accepted', async () => {
-    const venueId = await seedVenue();
-    await expect(resolveVenueOfferForCreate(input(venueId, 12, freeOffer()), 'PHYSICAL', hostId)).rejects.toMatchObject({
+    const venueId = await openVenue();
+    await expect(resolveVenueOfferForCreate(freeInput(venueId, 12, freeOffer()), 'PHYSICAL', hostId)).rejects.toMatchObject({
       extensions: { reason: 'FREE_REASON_REQUIRED' },
     });
     await expect(
-      resolveVenueOfferForCreate(input(venueId, 12, freeOffer({ reason: 'INITIATIVE', accepted: false })), 'PHYSICAL', hostId)
+      resolveVenueOfferForCreate(freeInput(venueId, 12, freeOffer({ reason: 'INITIATIVE', accepted: false })), 'PHYSICAL', hostId)
     ).rejects.toMatchObject({ extensions: { reason: 'FREE_POLICY_NOT_ACCEPTED' } });
   });
 
   it('is refused when nobody is there to accept the policy (a re-route, not the host)', async () => {
-    const venueId = await seedVenue();
+    const venueId = await openVenue();
     await expect(
-      resolveVenueOfferForCreate(input(venueId, 12, freeOffer({ reason: 'INITIATIVE', accepted: true })), 'PHYSICAL')
+      resolveVenueOfferForCreate(freeInput(venueId, 12, freeOffer(accepted)), 'PHYSICAL')
     ).rejects.toMatchObject({ extensions: { reason: 'FREE_HOST_ONLY' } });
+  });
+
+  it('is refused for a pod that is not free: a free venue earns nobody anything, so the pod sells no tickets', async () => {
+    const venueId = await openVenue();
+    for (const podType of ['PAID', null]) {
+      await expect(resolveVenueOfferForCreate(freeInput(venueId, 12, freeOffer(accepted), podType), 'PHYSICAL', hostId)).rejects.toMatchObject({
+        extensions: { code: 'BAD_USER_INPUT', reason: 'FREE_VENUE_NEEDS_FREE_POD', field: 'pod_type' },
+      });
+    }
+  });
+
+  it('is refused by a venue that is not open to free bookings, while its priced offers still go through', async () => {
+    const venueId = await seedVenue();
+    await expect(resolveVenueOfferForCreate(freeInput(venueId, 12, freeOffer(accepted)), 'PHYSICAL', hostId)).rejects.toMatchObject({
+      extensions: { code: 'BAD_USER_INPUT', reason: 'FREE_BOOKING_OFF' },
+    });
+    const closed = await seedVenue({ settings: { offers: { free_booking: false } } });
+    await expect(resolveVenueOfferForCreate(freeInput(closed, 12, freeOffer(accepted)), 'PHYSICAL', hostId)).rejects.toMatchObject({
+      extensions: { reason: 'FREE_BOOKING_OFF' },
+    });
+    const priced = await resolveVenueOfferForCreate(input(closed, 12, offer()), 'PHYSICAL', hostId);
+    expect(priced?.quote.total).toBeGreaterThan(0);
   });
 
   it('keeps a priced offer free of any justification', async () => {
@@ -139,5 +170,37 @@ describe('a free venue on Create Pod', () => {
     );
     expect(resolved?.freeJustification).toBeNull();
     expect(resolved?.quote.total).toBeGreaterThan(0);
+  });
+});
+
+describe('a pod booked on a free venue', () => {
+  async function slotWith(model: string) {
+    // Only the offer's model is read, so the booking is written as stored rows are, without a full quote.
+    const { insertedId } = await VenueSlotModel.collection.insertOne({
+      venue_id: new Types.ObjectId(await seedVenue()),
+      owner_user_id: new Types.ObjectId(ownerId),
+      start_at: new Date(at('18:00')),
+      end_at: new Date(at('20:00')),
+      status: 'BOOKED',
+      offer: { model, rate: 0, pax: 10, status: 'ACCEPTED' },
+    });
+    return insertedId;
+  }
+
+  it('cannot be turned paid while it keeps that booking', async () => {
+    const venue_slot_id = await slotWith('FREE');
+    await expect(assertFreeVenueKeepsPodFree({ venue_slot_id }, 'PAID')).rejects.toMatchObject({
+      extensions: { code: 'BAD_USER_INPUT', reason: 'FREE_VENUE_NEEDS_FREE_POD', field: 'pod_type' },
+    });
+  });
+
+  it('may stay free, leave its type alone, or turn paid on a priced booking or none', async () => {
+    const freeSlot = await slotWith('FREE');
+    await expect(assertFreeVenueKeepsPodFree({ venue_slot_id: freeSlot }, 'FREE')).resolves.toBeUndefined();
+    await expect(assertFreeVenueKeepsPodFree({ venue_slot_id: freeSlot }, undefined)).resolves.toBeUndefined();
+    const pricedSlot = await slotWith('FLAT');
+    await expect(assertFreeVenueKeepsPodFree({ venue_slot_id: pricedSlot }, 'PAID')).resolves.toBeUndefined();
+    await expect(assertFreeVenueKeepsPodFree({ venue_slot_id: null }, 'PAID')).resolves.toBeUndefined();
+    await expect(assertFreeVenueKeepsPodFree({ venue_slot_id: new Types.ObjectId() }, 'PAID')).resolves.toBeUndefined();
   });
 });

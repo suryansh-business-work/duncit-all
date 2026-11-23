@@ -133,6 +133,8 @@ describe('VenueFeesScreen — booking offers & minimum spend', () => {
               response_hours: 24,
               min_business: [{ model: VenueOfferModel.PerGuest, amount: 250 }],
               min_spend: 5000,
+              // The venue has not opted in to free bookings for initiatives, so it saves as off.
+              free_booking: false,
             },
           },
         },

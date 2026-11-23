@@ -111,10 +111,24 @@ describe('BookingOffersCard', () => {
     expect(sent).toEqual([
       {
         venue_doc_id: 'v1',
-        input: { offers: { min_guests: 12, response_hours: 48, min_business: [{ model: 'PER_GUEST', amount: 250 }], min_spend: 4000 } },
+        input: { offers: { min_guests: 12, response_hours: 48, min_business: [{ model: 'PER_GUEST', amount: 250 }], min_spend: 4000, free_booking: false } },
       },
     ]);
     expect(toast.success).toHaveBeenCalledWith('Booking offers saved.');
+  });
+
+  it('opens on the stored free-bookings switch and saves it with the offers', async () => {
+    const { mock, sent } = saveMock();
+    const { onSaved } = mount([mock], {
+      settings: { offers: { min_guests: 0, response_hours: 0, min_business: [{ model: 'PER_GUEST', amount: 200 }], min_spend: 0, free_booking: true } },
+    });
+    const toggle = screen.getByRole('switch', { name: 'Your venue is open for free venue booking for initiatives' });
+    expect(toggle).toBeChecked();
+    fireEvent.click(toggle);
+    fireEvent.click(screen.getByTestId('booking-offers-save'));
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+    expect(sent[0]).toMatchObject({ input: { offers: { free_booking: false } } });
   });
 
   it('holds the save until the venue names an amount', async () => {

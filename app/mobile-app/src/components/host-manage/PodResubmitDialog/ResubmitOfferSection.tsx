@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { Controller, useController } from 'react-hook-form';
+import { isFreeVenueOfferModel } from '@duncit/utils';
 
 import { ToggleRow } from '@/components/ToggleRow';
 import {
@@ -21,7 +23,10 @@ const PICKED = { shouldDirty: true, shouldValidate: true } as const;
  * pets come, how the host pays it and how much — or a free venue — and what
  * they need from it with an optional note — the same ask Create Pod makes, with
  * the same shared fields. A free venue or a free pod adds the free policy, its
- * reason and the host's acceptance. mWeb twin: ResubmitOfferSection.
+ * reason and the host's acceptance. Free venue is listed only for a free pod
+ * at a venue open to free bookings for initiatives, and a Free carried over
+ * from a declined offer is dropped once either reads as closed. mWeb twin:
+ * ResubmitOfferSection.
  */
 export function ResubmitOfferSection({ form }: Readonly<{ form: ResubmitForm }>) {
   const { t } = useTranslation();
@@ -33,10 +38,18 @@ export function ResubmitOfferSection({ form }: Readonly<{ form: ResubmitForm }>)
   const end = useController({ control, name: 'offer_end' });
   const model = useController({ control, name: 'venue_offer_model' });
   const rate = useController({ control, name: 'venue_offer_rate' });
+  const podFree = watch('pod_free');
   const needsFree = resubmitNeedsFreeJustification({
     venue_offer_model: model.field.value,
-    pod_free: watch('pod_free'),
+    pod_free: podFree,
   });
+  const allowFree = podFree && terms.freeBooking === true;
+  // The venue's switch counts only once it has been read; a paid pod never takes a free venue.
+  const closedToFree = !podFree || terms.freeBooking === false;
+  const pickedFree = isFreeVenueOfferModel(model.field.value);
+  useEffect(() => {
+    if (closedToFree && pickedFree) setValue('venue_offer_model', '', PICKED);
+  }, [closedToFree, pickedFree, setValue]);
 
   return (
     <>
@@ -73,7 +86,7 @@ export function ResubmitOfferSection({ form }: Readonly<{ form: ResubmitForm }>)
             onRate={rate.field.onChange}
             modelError={model.fieldState.error?.message}
             rateError={rate.fieldState.error?.message}
-            allowFree
+            allowFree={allowFree}
           />
           {needsFree ? (
             <FreeArrangementFields

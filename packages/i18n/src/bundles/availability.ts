@@ -532,6 +532,8 @@ export const AVAILABILITY_BUNDLE: NestedCatalogue = {
       hostPays: 'The host pays {amount}, with Duncit’s fee',
       venueReceives: 'The venue receives {amount}',
       freePod: 'Free pod: the host settles your charges with you directly, so no amount is quoted here.',
+      // A free venue booking for an initiative, as the venue reads it in place of the money.
+      freeVenue: 'Free booking for an initiative: ₹0. No venue charges, no Duncit commission and no earnings on this booking.',
       noOffer: 'This request came in before booking offers. Accept or reject it.',
       model: {
         perGuest: 'Per guest',
@@ -709,6 +711,8 @@ export const AVAILABILITY_BUNDLE: NestedCatalogue = {
         venueTerms: "The venue's counter",
         yourMove: 'The venue countered — your answer',
         freePod: "Free pod: you settle the venue's charges with it directly, so no amount is quoted here.",
+        // A free venue booking, as its host reads it in place of the money.
+        freeVenue: 'Free venue: ₹0. The venue is paid nothing and Duncit takes no commission, so your pod is free.',
       },
       // A move of the offer as a line in the pod's venue chat.
       chat: {

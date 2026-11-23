@@ -10,7 +10,7 @@ import {
 } from '@duncit/utils';
 import type { Translate } from '../../../i18n/fallback';
 import { hasImageLine } from './create-pod.payload';
-import { POD_TYPE_VALUES, needsFreeJustification, type CreatePodFormValues } from './create-pod.types';
+import { POD_TYPE_VALUES, needsFreeJustification, offersFreeVenue, type CreatePodFormValues } from './create-pod.types';
 
 /** The picked venue's floor on the offer's basis, or null when there is none. */
 export type OfferFloorOf = (values: CreatePodFormValues) => VenueOfferFloor | null;
@@ -143,6 +143,9 @@ function refineTicketPrice(values: CreatePodFormValues, ctx: z.RefinementCtx, t:
 export function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
   if (!POD_TYPE_VALUES.has(values.pod_type)) {
     ctx.addIssue({ code: 'custom', path: ['pod_type'], message: t('mweb.createPod.validation.podTypeInvalid') });
+  } else if (offersFreeVenue(values) && values.pod_type !== 'FREE') {
+    // A free venue earns nobody anything, so its pod sells no tickets (server: FREE_VENUE_NEEDS_FREE_POD).
+    ctx.addIssue({ code: 'custom', path: ['pod_type'], message: t('mweb.createPod.validation.freeVenueNeedsFreePod') });
   }
   // FREE is open to physical and virtual pods alike — the mode no longer
   // narrows the type.

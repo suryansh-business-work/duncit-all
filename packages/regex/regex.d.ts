@@ -177,6 +177,30 @@ export function isPaymentTransactionId(value: string): boolean;
 export const APPLE_TEAM_ID: RegExp;
 /** Apple Team ID shape check. Trim before calling it. */
 export function isAppleTeamId(value: string): boolean;
+/** A Media Manager folder path: `/` or `/Reports/2026`, up to 8 segments of 1–60 letters, digits, spaces, `.`, `_` or `-`. Segments cannot contain `/`, so the bounded repeats cannot overlap and the match is linear. */
+export const FOLDER_PATH: RegExp;
+/** FOLDER_PATH shape check. Trim before calling it. */
+export function isFolderPath(value: string): boolean;
+/** An AI provider model id such as `gpt-4o-mini` or `text-embedding-3-small`: 1–80 letters, digits, `.`, `_`, `:` or `-`. One class, bounded count — linear. */
+export const AI_MODEL_ID: RegExp;
+/** AI_MODEL_ID shape check. Trim before calling it. */
+export function isAiModelId(value: string): boolean;
+/** A GitHub owner or repository name, e.g. `duncit-all`: 1–100 letters, digits, `.`, `_` or `-`. One class, bounded count — linear. */
+export const GITHUB_NAME: RegExp;
+/** GITHUB_NAME shape check. Trim before calling it. */
+export function isGithubName(value: string): boolean;
+/** A git branch name such as `staging` or `feature/intel`: 1–200 letters, digits, `.`, `_`, `/` or `-`. One class, bounded count — linear. */
+export const GIT_BRANCH: RegExp;
+/** GIT_BRANCH shape check. Trim before calling it. */
+export function isGitBranch(value: string): boolean;
+/** A MongoDB collection name Duncit Intel may read, e.g. `pods`: 1–120 letters, digits, `.`, `_` or `-`, never a `system.` collection. One class, bounded count — linear. */
+export const MONGO_COLLECTION: RegExp;
+/** MONGO_COLLECTION shape check. Trim before calling it. */
+export function isMongoCollection(value: string): boolean;
+/** A MongoDB database name, e.g. `duncit`: 1–64 letters, digits, `_` or `-`. One class, bounded count — linear. */
+export const MONGO_DATABASE: RegExp;
+/** MONGO_DATABASE shape check. Trim before calling it. */
+export function isMongoDatabase(value: string): boolean;
 /**
  * A fully-qualified hostname such as `ns1.example.com`: at least two labels,
  * each a {@link HOSTNAME_LABEL}, 253 characters at most. A trailing dot (the

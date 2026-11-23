@@ -182,6 +182,7 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
       endAfterStart: 'End must be after start',
       endRequiredVirtual: 'End date/time is required for a virtual pod',
       freeAmountZero: 'Free pods must have amount 0',
+      freeVenueNeedsFreePod: 'A free venue booking is for a free pod. Pick Free.',
       hostRequired: 'Add at least one host',
       imageRequired: 'At least one image is required',
       labelRequired: 'Label required',
@@ -214,6 +215,8 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
       occurrence: 'Occurrence',
       optionalVenueSideChargesEntryTable: 'Optional venue-side charges (entry, table, etc.) shown separately to users.',
       podType: 'Pod type',
+      // Under the pod type when the venue is asked for free: Free is the only type.
+      freeVenueTicket: 'The venue booking is free, so this pod is free too.',
       refundPolicyCancellationTaxInfo: 'Refund policy, cancellation, tax info.',
     },
     perksSection: {

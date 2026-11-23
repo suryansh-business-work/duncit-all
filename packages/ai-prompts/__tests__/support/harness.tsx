@@ -53,16 +53,23 @@ export const renderInPortal = (ui: ReactElement, mocks: readonly MockedResponse[
     </MockedProvider>,
   );
 
+/**
+ * The row's menu button. A dialog or menu that just closed keeps the page
+ * aria-hidden until its exit transition ends; on a loaded CI runner that took
+ * longer than findByRole's default 1 s, so wait up to 5 s (tests allow 30 s).
+ */
+const rowMenuButton = (rowName: string) =>
+  screen.findByRole('button', { name: `Actions for ${rowName}` }, { timeout: 5_000 });
+
 /** Opens a row's menu ("Actions for <name>") and picks one item from it, as an operator would. */
 export const rowAction = async (rowName: string, item: string) => {
-  // findByRole: a dialog that just closed keeps the page aria-hidden until its exit transition ends.
-  fireEvent.click(await screen.findByRole('button', { name: `Actions for ${rowName}` }));
+  fireEvent.click(await rowMenuButton(rowName));
   fireEvent.click(await screen.findByRole('menuitem', { name: item }));
 };
 
 /** The items a row's menu offers, by label. Closes the menu again. */
 export const rowMenuItems = async (rowName: string): Promise<string[]> => {
-  fireEvent.click(await screen.findByRole('button', { name: `Actions for ${rowName}` }));
+  fireEvent.click(await rowMenuButton(rowName));
   const items = await screen.findAllByRole('menuitem');
   const labels = items.map((item) => item.textContent ?? '');
   fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' });

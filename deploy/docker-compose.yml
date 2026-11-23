@@ -17,6 +17,8 @@ services:
       OPENWA_INTERNAL_URL: http://open-wa:2024
       # The CRM email verifier (the `reacher` service below), internal network only.
       REACHER_INTERNAL_URL: http://reacher:8080
+      # Duncit Intel's vector index (the `qdrant` service below), internal network only.
+      QDRANT_URL: http://qdrant:6333
       # Set explicitly, not left to the cwd-relative default: the image's final
       # WORKDIR is /app/server, so the default would resolve inside the app
       # rather than onto the bind mount below.
@@ -349,6 +351,14 @@ services:
     ports:
       - "127.0.0.1:2048:8080"
 
+  # Duncit Intel (intel.duncit.com).
+  intel:
+    image: ${DOCKERHUB_USERNAME}/duncit-intel:${IMAGE_TAG:-latest}
+    container_name: duncit-intel
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2049:8080"
+
   # The Targets console (targets.duncit.com).
   targets:
     image: ${DOCKERHUB_USERNAME}/duncit-targets:${IMAGE_TAG:-latest}
@@ -449,6 +459,25 @@ services:
       - /opt/duncit/redis-queue-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  # Duncit Intel's vector index — Qdrant (github.com/qdrant/qdrant, Apache-2.0).
+  # The server reaches it as http://qdrant:6333 (QDRANT_URL above) over this
+  # network only: NO host port and no vhost, so nothing outside the stack can
+  # read or write the index. Data persists on the host across redeploys.
+  # Infra service, not a build target — redeploy.sh `up -d`s it like redis.
+  qdrant:
+    image: qdrant/qdrant:v1.14.1
+    container_name: duncit-qdrant
+    restart: unless-stopped
+    environment:
+      QDRANT__TELEMETRY_DISABLED: "true"
+    volumes:
+      - /opt/duncit/qdrant-data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5

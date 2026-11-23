@@ -120,6 +120,15 @@ export const PORTAL_ACCESS: PortalAccess[] = [
   // Finance), but they are granted under Finance: a role is listed once.
   { key: 'loyalty', name: 'Loyalty', url: url('loyalty'), roles: [{ key: 'LOYALTY_MANAGER', name: 'Loyalty Manager' }] },
   { key: 'tests', name: 'Tests', url: url('tests'), roles: [{ key: 'TESTS_MANAGER', name: 'Tests Manager' }] },
+  {
+    key: 'intel',
+    name: 'Duncit Intel',
+    url: url('intel'),
+    roles: [
+      { key: 'INTEL_USER', name: 'Intel User' },
+      { key: 'INTEL_MANAGER', name: 'Intel Manager' },
+    ],
+  },
 ];
 
 export interface RolePortalInfo {

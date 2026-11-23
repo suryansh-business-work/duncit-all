@@ -23,6 +23,7 @@ const {
   offer_response_hours: responseHours,
   offer_min_business: minBusiness,
   offer_min_spend: minSpend,
+  offer_free_booking: freeBooking,
 } = venueResolvers.Venue;
 
 describe('saving the minimum spend (Fees & Minimum Spend)', () => {
@@ -51,24 +52,63 @@ describe('saving the minimum spend (Fees & Minimum Spend)', () => {
   });
 });
 
+describe('free bookings for initiatives (Fees & Minimum Spend)', () => {
+  it('starts off, turns on and off, and survives an edit that leaves it out', async () => {
+    const id = await seedVenue();
+    expect((await venueService.updateSettings(ownerId, false, id, {})).settings.offers.free_booking).toBe(false);
+    const on = await venueService.updateSettings(ownerId, false, id, { offers: { free_booking: true } });
+    expect(on.settings.offers.free_booking).toBe(true);
+    // An app from before the switch saves the rest and leaves it alone.
+    const other = await venueService.updateSettings(ownerId, false, id, { offers: { min_guests: 6 } });
+    expect(other.settings.offers).toMatchObject({ min_guests: 6, free_booking: true });
+    expect((await VenueModel.findById(id).lean())?.settings?.offers?.free_booking).toBe(true);
+    const off = await venueService.updateSettings(ownerId, false, id, { offers: { free_booking: false } });
+    expect(off.settings.offers.free_booking).toBe(false);
+  });
+
+  it('refuses a switch that is not a true or false, and keeps the stored one', async () => {
+    const id = await seedVenue({ offers: { free_booking: true } });
+    await expect(venueService.updateSettings(ownerId, false, id, { offers: { free_booking: 'yes' } })).rejects.toMatchObject({
+      extensions: { code: 'BAD_USER_INPUT', field: 'free_booking' },
+    });
+    expect((await VenueModel.findById(id).lean())?.settings?.offers?.free_booking).toBe(true);
+  });
+
+  it('can be changed by the owner or staff, never by anyone else', async () => {
+    const id = await seedVenue();
+    const staff = await venueService.updateSettings(String(new Types.ObjectId()), true, id, { offers: { free_booking: true } });
+    expect(staff.settings.offers.free_booking).toBe(true);
+    await expect(
+      venueService.updateSettings(String(new Types.ObjectId()), false, id, { offers: { free_booking: false } })
+    ).rejects.toThrow();
+    expect((await VenueModel.findById(id).lean())?.settings?.offers?.free_booking).toBe(true);
+  });
+
+  it('resolves on a Venue for Create Pod, and as closed for a venue that never turned it on', () => {
+    expect(freeBooking({ settings: { offers: { free_booking: true } } })).toBe(true);
+    expect(freeBooking({ settings: { offers: { free_booking: false } } })).toBe(false);
+    expect(freeBooking({})).toBe(false);
+  });
+});
+
 describe('saving booking-offer settings', () => {
   it('starts every venue on the platform defaults (0), with no business amounts', async () => {
     const id = await seedVenue();
     const venue = await venueService.updateSettings(ownerId, false, id, {});
-    expect(venue.settings.offers).toEqual({ min_guests: 0, response_hours: 0, min_business: [], min_spend: 0 });
+    expect(venue.settings.offers).toEqual({ min_guests: 0, response_hours: 0, min_business: [], min_spend: 0, free_booking: false });
   });
 
   it("saves the owner's minimum and response time, clamped, leaving the rest of the settings as they were", async () => {
     const id = await seedVenue({ weekly_off_days: [1] });
     const venue = await venueService.updateSettings(ownerId, false, id, { offers: { min_guests: 10, response_hours: 6 } });
-    expect(venue.settings.offers).toEqual({ min_guests: 10, response_hours: 6, min_business: [], min_spend: 0 });
+    expect(venue.settings.offers).toEqual({ min_guests: 10, response_hours: 6, min_business: [], min_spend: 0, free_booking: false });
     expect(venue.settings.weekly_off_days).toEqual([1]);
 
     const clamped = await venueService.updateSettings(ownerId, false, id, { offers: { min_guests: 99_999, response_hours: -5 } });
-    expect(clamped.settings.offers).toEqual({ min_guests: 1000, response_hours: 0, min_business: [], min_spend: 0 });
+    expect(clamped.settings.offers).toEqual({ min_guests: 1000, response_hours: 0, min_business: [], min_spend: 0, free_booking: false });
 
     const partial = await venueService.updateSettings(ownerId, false, id, { offers: { response_hours: 48 } });
-    expect(partial.settings.offers).toEqual({ min_guests: 1000, response_hours: 48, min_business: [], min_spend: 0 });
+    expect(partial.settings.offers).toEqual({ min_guests: 1000, response_hours: 48, min_business: [], min_spend: 0, free_booking: false });
   });
 
   it('saves the business the venue hopes for, keeps it through an edit that leaves it out, and reads it back', async () => {
@@ -83,7 +123,7 @@ describe('saving booking-offer settings', () => {
     expect(saved.settings.offers.min_business).toEqual(amounts);
 
     const edited = await venueService.updateSettings(ownerId, false, id, { offers: { min_guests: 5 } });
-    expect(edited.settings.offers).toEqual({ min_guests: 5, response_hours: 0, min_business: amounts, min_spend: 0 });
+    expect(edited.settings.offers).toEqual({ min_guests: 5, response_hours: 0, min_business: amounts, min_spend: 0, free_booking: false });
     const stored = await VenueModel.findById(id).lean();
     expect(stored?.settings?.offers?.min_business).toEqual(amounts);
   });

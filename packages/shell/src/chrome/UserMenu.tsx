@@ -1,6 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Avatar, Box, ButtonBase, ListItemIcon, Menu, MenuItem, Tooltip, Typography } from '@mui/material';
+import {
+  Avatar,
+  Box,
+  ButtonBase,
+  Divider,
+  ListItemIcon,
+  ListSubheader,
+  Menu,
+  MenuItem,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import { useTranslation } from '../i18n/useTranslation';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
@@ -19,7 +30,7 @@ export interface UserMenuProps {
   onLogout: () => void;
 }
 
-/** Header account block: 28px avatar + name/email (hidden on xs) opening Profile/Logout. */
+/** Header account block: 28px avatar + name/email (hidden on xs) opening the role line, Profile and Logout. */
 export function UserMenu({ user, fallbackName, profileTo, onLogout }: Readonly<UserMenuProps>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -72,15 +83,6 @@ export function UserMenu({ user, fallbackName, profileTo, onLogout }: Readonly<U
                 {email}
               </Typography>
             )}
-            {roles.length > 0 && (
-              <Typography
-                variant="caption"
-                noWrap
-                data-testid="shell-user-menu-role"
-                sx={{ color: 'primary.main', fontWeight: 600, display: 'block', lineHeight: 1.2 }}>
-                {roleSummary(roles)}
-              </Typography>
-            )}
           </Box>
           <Avatar
             src={user?.profile_photo || undefined}
@@ -105,6 +107,18 @@ export function UserMenu({ user, fallbackName, profileTo, onLogout }: Readonly<U
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
+        {roles.length > 0 && (
+          <ListSubheader
+            role="none"
+            color="primary"
+            disableSticky
+            data-testid="shell-user-menu-role"
+            sx={{ typography: 'caption', fontWeight: 'fontWeightBold', py: 1 }}
+          >
+            {roleSummary(roles)}
+          </ListSubheader>
+        )}
+        {roles.length > 0 && <Divider component="li" />}
         {profileTo && (
           <MenuItem onClick={handleProfile} data-testid="shell-user-menu-profile">
             <ListItemIcon>

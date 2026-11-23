@@ -426,6 +426,8 @@ const venueOfferSettingsSchema = new Schema<IVenueOfferSettings>(
     // The least one booking's offer must come to, in rupees (0 or absent = none). No default on
     // purpose: the boot copy from the retired pricing.min_spend fills only venues without one.
     min_spend: { type: Number, min: 0 },
+    // Open to free bookings for initiatives: only then may a host ask for the venue free. Off until the venue turns it on.
+    free_booking: { type: Boolean, default: false },
   },
   { _id: false }
 );

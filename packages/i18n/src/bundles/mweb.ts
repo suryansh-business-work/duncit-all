@@ -2783,6 +2783,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       freePodTitle: 'This pod is free',
       freePodBody:
         'People join without paying, and Duncit collects and pays nothing for this pod.',
+      // Money, when the host asked the venue for the window free: Free is the only ticket.
+      freeVenueTicket: 'Your venue booking is free, so this pod is free too. Free is the only ticket.',
       // Only for a free pod on a slot the venue charges for (never the host's
       // own venue): the venue's money is settled off the platform.
       freeVenueSettle:
@@ -2961,6 +2963,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         // mWeb only — its pod type can be cleared, native's is always one of two.
         podTypeRequired: 'Select a pod type',
         podTypeInvalid: 'Select Free or Paid',
+        freeVenueNeedsFreePod: 'A free venue booking is for a free pod. Pick Free.',
         freeAmountZero: 'Free pods must have amount 0',
         ticketPriceRequired: 'Enter a ticket price to continue',
         ticketPriceMin: 'Ticket price must be more than ₹0',

@@ -24,6 +24,7 @@ const values = (over: Partial<BookingOffersValues> = {}): BookingOffersValues =>
   response_hours: '24',
   min_business: PER_GUEST_200,
   min_spend: '0',
+  free_booking: false,
   ...over,
 });
 
@@ -102,7 +103,7 @@ describe('booking offers mappers', () => {
   it('reads the stored settings as the form values, amounts as text', () => {
     expect(
       toBookingOffersValues({ min_guests: 12, response_hours: 48, min_business: [{ model: 'FLAT', amount: 5000 }] }),
-    ).toEqual({ min_guests: '12', response_hours: '48', min_business: [{ model: 'FLAT', amount: '5000' }], min_spend: '0' });
+    ).toEqual({ min_guests: '12', response_hours: '48', min_business: [{ model: 'FLAT', amount: '5000' }], min_spend: '0', free_booking: false });
   });
 
   // Nothing stored reads as 0 (the default), and no amounts as one empty row to fill.
@@ -127,6 +128,7 @@ describe('booking offers mappers', () => {
           { model: 'PER_HOUR', amount: '99.5' },
         ],
         min_spend: '',
+        free_booking: true,
       }),
     ).toEqual({
       min_guests: 12,
@@ -136,6 +138,7 @@ describe('booking offers mappers', () => {
         { model: 'PER_HOUR', amount: 99.5 },
       ],
       min_spend: 0,
+      free_booking: true,
     });
   });
 });
@@ -145,7 +148,7 @@ describe('BookingOffersForm', () => {
 
   const mountForm = (over: Partial<Parameters<typeof BookingOffersForm>[0]> = {}) => {
     const props = {
-      initialValues: { min_guests: '0', response_hours: '0', min_business: PER_GUEST_200, min_spend: '0' },
+      initialValues: { min_guests: '0', response_hours: '0', min_business: PER_GUEST_200, min_spend: '0', free_booking: false },
       effective: { min_guests: 8, response_hours: 24 },
       saving: false,
       error: null,
@@ -168,8 +171,19 @@ describe('BookingOffersForm', () => {
         response_hours: '0',
         min_business: [{ model: 'PER_GUEST', amount: '250' }],
         min_spend: '2500',
+        free_booking: false,
       }),
     );
+  });
+
+  it('opens a venue to free bookings for initiatives with the switch, and saves it', async () => {
+    const props = mountForm();
+    const toggle = screen.getByRole('switch', { name: 'Your venue is open for free venue booking for initiatives' }) as HTMLInputElement;
+    expect(toggle.checked).toBe(false);
+    expect(screen.getByText(/A free booking is ₹0: no venue charges, no Duncit commission and no earnings/)).toBeTruthy();
+    fireEvent.click(toggle);
+    fireEvent.click(screen.getByRole('button', { name: 'Save booking offers' }));
+    await waitFor(() => expect(props.onSubmit).toHaveBeenCalledWith(expect.objectContaining({ free_booking: true })));
   });
 
   it('names the business it asks for, and adds the next basis not listed yet', async () => {
@@ -182,7 +196,7 @@ describe('BookingOffersForm', () => {
   });
 
   it('does not submit without an amount, and says why', async () => {
-    const props = mountForm({ initialValues: { min_guests: '0', response_hours: '0', min_business: [{ model: 'PER_GUEST', amount: '' }], min_spend: '0' } });
+    const props = mountForm({ initialValues: { min_guests: '0', response_hours: '0', min_business: [{ model: 'PER_GUEST', amount: '' }], min_spend: '0', free_booking: false } });
     fireEvent.click(screen.getByRole('button', { name: 'Save booking offers' }));
     expect(await screen.findByText(/^Enter an amount above 0, up to /)).toBeTruthy();
     expect(props.onSubmit).not.toHaveBeenCalled();
@@ -195,5 +209,6 @@ describe('BookingOffersForm', () => {
     expect((screen.getByLabelText('Amount (₹)') as HTMLInputElement).disabled).toBe(true);
     expect((screen.getByLabelText('Minimum spend per booking (₹)') as HTMLInputElement).disabled).toBe(true);
     expect((screen.getByRole('button', { name: 'Add amount' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('switch', { name: 'Your venue is open for free venue booking for initiatives' }) as HTMLInputElement).disabled).toBe(true);
   });
 });

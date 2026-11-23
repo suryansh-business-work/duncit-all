@@ -150,6 +150,7 @@ export const VENUE_DETAIL = gql`
             amount
           }
           min_spend
+          free_booking
         }
       }
       documents {
@@ -267,6 +268,8 @@ export interface VenueOfferSettings {
   min_business?: { model: string; amount: number }[] | null;
   /** The least one booking's offer must come to (0 = none); absent on an older record. */
   min_spend?: number | null;
+  /** Open to free bookings for initiatives; absent on an older record (off). */
+  free_booking?: boolean | null;
 }
 
 export interface VenueDocument {

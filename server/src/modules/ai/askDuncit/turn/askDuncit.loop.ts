@@ -1,3 +1,4 @@
+import { foldRound, roundWriter } from '@services/openai/openai.loop';
 import { openaiChatStream, type StreamMessage } from '@services/openai/openai.stream';
 import type { MessageToolCall } from '../conversation/askDuncitMessage.model';
 import type { IAskDuncitConversation } from '../conversation/askDuncitConversation.model';
@@ -74,8 +75,7 @@ export async function runLoop(input: LoopInput): Promise<LoopOutcome> {
   const rounds = ctx.settings.max_tool_rounds;
 
   for (let round = 0; round <= rounds; round += 1) {
-    const separator = out.content ? '\n\n' : '';
-    let wroteSeparator = false;
+    const write = roundWriter(out, (text) => batch.push(text));
     const res = await openaiChatStream({
       task: 'ask_duncit.chat',
       model: input.model,
@@ -88,31 +88,12 @@ export async function runLoop(input: LoopInput): Promise<LoopOutcome> {
       signal: input.signal,
       onDelta: (text) => {
         if (!out.firstTokenMs) out.firstTokenMs = Date.now() - started;
-        if (!wroteSeparator && separator) {
-          batch.push(separator);
-          out.content += separator;
-          wroteSeparator = true;
-        }
-        out.content += text;
-        batch.push(text);
+        write(text);
       },
     });
-    if (!res.ok) {
-      out.aborted = res.code === 'ABORTED';
-      out.errorCode = res.code;
-      out.errorMessage = res.message;
-      break;
-    }
-    out.model = res.model;
-    out.promptTokens += res.usage.prompt_tokens;
-    out.completionTokens += res.usage.completion_tokens;
-    if (!res.toolCalls.length) break;
-
-    messages.push({
-      role: 'assistant',
-      content: res.content || null,
-      tool_calls: res.toolCalls.map((c) => ({ id: c.id, type: 'function', function: { name: c.name, arguments: c.arguments } })),
-    });
+    const assistantTurn = foldRound(out, res);
+    if (!assistantTurn || !res.ok) break;
+    messages.push(assistantTurn);
     for (const call of res.toolCalls) {
       emitToUser(ctx.user.id, 'tool', { message_id: messageId, name: call.name, status: 'RUNNING' });
       const result = await dispatchTool(ctx, ids, call.name, call.arguments);

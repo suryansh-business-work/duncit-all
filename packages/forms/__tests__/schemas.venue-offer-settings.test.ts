@@ -35,13 +35,14 @@ describe('makeBookingOffersSchema', () => {
 
   it("takes whole numbers up to the bounds, and an empty box as Duncit's default", () => {
     for (const [min, hours] of [['0', '0'], ['8', '24'], ['1000', '720'], ['', ''], [' 12 ', ' 48 ']]) {
-      expect(messagesFor({ min_guests: min, response_hours: hours, min_business: guided, min_spend: '' })).toEqual([]);
+      expect(messagesFor({ min_guests: min, response_hours: hours, min_business: guided, min_spend: '', free_booking: false })).toEqual([]);
     }
-    expect(schema.parse({ min_guests: ' 12 ', response_hours: ' 48 ', min_business: guided, min_spend: ' 4500 ' })).toEqual({
+    expect(schema.parse({ min_guests: ' 12 ', response_hours: ' 48 ', min_business: guided, min_spend: ' 4500 ', free_booking: false })).toEqual({
       min_guests: '12',
       response_hours: '48',
       min_business: guided,
       min_spend: '4500',
+      free_booking: false,
     });
   });
 
@@ -49,13 +50,13 @@ describe('makeBookingOffersSchema', () => {
     const minInvalid = `min_guests=venueSettings.offers.minGuestsInvalid:${JSON.stringify({ max: 1000 })}`;
     const hoursInvalid = `response_hours=venueSettings.offers.responseHoursInvalid:${JSON.stringify({ max: 720 })}`;
     for (const [min, hours] of [['2.5', '1.5'], ['-1', '-3'], ['eight', 'day'], ['1001', '721']]) {
-      expect(messagesFor({ min_guests: min, response_hours: hours, min_business: guided, min_spend: '0' })).toEqual([minInvalid, hoursInvalid]);
+      expect(messagesFor({ min_guests: min, response_hours: hours, min_business: guided, min_spend: '0', free_booking: false })).toEqual([minInvalid, hoursInvalid]);
     }
   });
 });
 
 describe('the business a venue hopes each booking brings', () => {
-  const settings = (min_business: unknown) => ({ min_guests: '0', response_hours: '0', min_business, min_spend: '0' });
+  const settings = (min_business: unknown) => ({ min_guests: '0', response_hours: '0', min_business, min_spend: '0', free_booking: false });
 
   it('names the three bases an amount may be on', () => {
     expect(MIN_BUSINESS_MODELS).toEqual(['PER_GUEST', 'PER_HOUR', 'FLAT']);
@@ -103,7 +104,7 @@ describe('the business a venue hopes each booking brings', () => {
 });
 
 describe('the minimum spend per booking', () => {
-  const settings = (min_spend: string) => ({ min_guests: '0', response_hours: '0', min_business: guided, min_spend });
+  const settings = (min_spend: string) => ({ min_guests: '0', response_hours: '0', min_business: guided, min_spend, free_booking: false });
   const spendInvalid = `min_spend=venueSettings.offers.minSpendInvalid:${JSON.stringify({ max: 10_000_000 })}`;
 
   it('takes none (empty or 0), a whole or decimal amount, up to the bound', () => {
@@ -146,6 +147,7 @@ describe('toBookingOffersValues / toBookingOffersInput', () => {
       { model: 'FLAT', amount: 5000.5 },
     ],
     min_spend: 4500,
+    free_booking: true,
   };
 
   it('reads a venue with no minimum spend stored (older servers) as none', () => {
@@ -159,11 +161,12 @@ describe('toBookingOffersValues / toBookingOffersInput', () => {
       response_hours: '48',
       min_business: [amountRow('PER_GUEST', '200'), amountRow('FLAT', '5000.5')],
       min_spend: '4500',
+      free_booking: true,
     });
   });
 
   it('reads nothing stored as the default, with one empty amount row to fill', () => {
-    const fresh = { min_guests: '0', response_hours: '0', min_business: [amountRow('PER_GUEST', '')], min_spend: '0' };
+    const fresh = { min_guests: '0', response_hours: '0', min_business: [amountRow('PER_GUEST', '')], min_spend: '0', free_booking: false };
     expect(toBookingOffersValues(null)).toEqual(fresh);
     expect(toBookingOffersValues(undefined)).toEqual(fresh);
     // Settings saved before amounts existed (older servers), or saved with none.
@@ -178,17 +181,47 @@ describe('toBookingOffersValues / toBookingOffersInput', () => {
 
   it('sends numbers, an empty box as 0, and each amount in rupees', () => {
     expect(
-      toBookingOffersInput({ min_guests: '12', response_hours: '48', min_business: [amountRow('PER_GUEST', '200'), amountRow('FLAT', '5000.5')], min_spend: '4500' })
+      toBookingOffersInput({ min_guests: '12', response_hours: '48', min_business: [amountRow('PER_GUEST', '200'), amountRow('FLAT', '5000.5')], min_spend: '4500', free_booking: true })
     ).toEqual(stored);
-    expect(toBookingOffersInput({ min_guests: '', response_hours: '', min_business: [amountRow('PER_HOUR', '400')], min_spend: '' })).toEqual({
+    expect(toBookingOffersInput({ min_guests: '', response_hours: '', min_business: [amountRow('PER_HOUR', '400')], min_spend: '', free_booking: false })).toEqual({
       min_guests: 0,
       response_hours: 0,
       min_business: [{ model: 'PER_HOUR', amount: 400 }],
       min_spend: 0,
+      free_booking: false,
     });
   });
 
   it('round-trips stored settings through the form unchanged', () => {
     expect(toBookingOffersInput(schema.parse(toBookingOffersValues(stored)))).toEqual(stored);
+  });
+});
+
+describe('free bookings for initiatives', () => {
+  const settings = (free_booking: unknown) => ({ min_guests: '0', response_hours: '0', min_business: guided, min_spend: '0', free_booking });
+
+  it('takes the switch on or off', () => {
+    expect(schema.parse(settings(true)).free_booking).toBe(true);
+    expect(schema.parse(settings(false)).free_booking).toBe(false);
+  });
+
+  it('refuses anything that is not a true or false', () => {
+    for (const value of ['true', 1, null, undefined]) {
+      expect(schema.safeParse(settings(value)).success).toBe(false);
+    }
+  });
+
+  it('reads only a stored yes as open — off, absent or an older server read as closed', () => {
+    expect(toBookingOffersValues({ min_guests: 0, response_hours: 0, free_booking: true }).free_booking).toBe(true);
+    for (const stored of [false, null, undefined]) {
+      expect(toBookingOffersValues({ min_guests: 0, response_hours: 0, free_booking: stored }).free_booking).toBe(false);
+    }
+    expect(toBookingOffersValues(null).free_booking).toBe(false);
+  });
+
+  it('sends the switch as it stands', () => {
+    const base = { min_guests: '0', response_hours: '0', min_business: guided, min_spend: '0' };
+    expect(toBookingOffersInput({ ...base, free_booking: true }).free_booking).toBe(true);
+    expect(toBookingOffersInput({ ...base, free_booking: false }).free_booking).toBe(false);
   });
 });

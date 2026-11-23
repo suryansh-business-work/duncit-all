@@ -58,6 +58,25 @@ describe('a free venue, as the venue answers it', () => {
     expect(dialog).not.toHaveTextContent('you receive');
   });
 
+  it('tells the venue it is a ₹0 booking with no charges, commission or earnings — never the free-pod settle notice', () => {
+    // A free venue makes its pod free too, yet the venue settles nothing with the host.
+    withApollo([], <OfferRequestCard request={makeRequest({ offer: freeVenueOffer(), pod_is_free: true })} onDone={vi.fn()} />);
+    const terms = within(screen.getByTestId('offer-terms-slot-1'));
+    expect(terms.getByTestId('offer-free-venue')).toHaveTextContent(
+      'Free booking for an initiative: ₹0. No venue charges, no Duncit commission and no earnings on this booking.'
+    );
+    expect(terms.queryByText(/settles your charges/)).not.toBeInTheDocument();
+    expect(terms.queryByTestId('offer-money')).not.toBeInTheDocument();
+  });
+
+  it('tells the host the venue is paid nothing, so the pod is free', () => {
+    withApollo([], <OfferTermsPanel offer={freeVenueOffer()} podIsFree side="HOST" />);
+    expect(screen.getByTestId('offer-free-venue')).toHaveTextContent(
+      'Free venue: ₹0. The venue is paid nothing and Duncit takes no commission, so your pod is free.'
+    );
+    expect(screen.queryByTestId('offer-money')).not.toBeInTheDocument();
+  });
+
   it('names the reason alone when the host gave no details', () => {
     withApollo([], <OfferTermsPanel offer={freeVenueOffer({ free_justification: justification({ reason: 'INITIATIVE', details: '' }) })} podIsFree={false} />);
     expect(screen.getByTestId('offer-free-reason').textContent).toBe('Requested free — Special initiative');
@@ -110,10 +129,21 @@ describe('a free venue in the venue chat', () => {
     const card = within(screen.getByRole('article'));
     expect(card.getByTestId('offer-move-terms')).toHaveTextContent('Free venue');
     expect(card.queryByTestId('offer-money')).not.toBeInTheDocument();
+    expect(card.getByTestId('offer-move-free')).toHaveTextContent(
+      'Free booking for an initiative: ₹0. No venue charges, no Duncit commission and no earnings on this booking.'
+    );
     expect(card.getByTestId('offer-free-reason')).toHaveTextContent('Requested free — Promotional offer: Launch week');
     expect(card.getByTestId('offer-accept-slot-1')).toBeInTheDocument();
     expect(card.queryByTestId('offer-counter-slot-1')).not.toBeInTheDocument();
     expect(card.getByTestId('counter-allowance-venue')).toHaveTextContent(NO_COUNTERS);
+  });
+
+  it('tells the host on their own free offer line that the venue is paid nothing, so the pod is free', () => {
+    withApollo([], <OfferChatCard move={freeMove({ by: 'HOST' })} viewer="HOST" newest answering={{ live: liveFree(), subject, onAnswered: vi.fn() }} />);
+    expect(screen.getByTestId('offer-move-free')).toHaveTextContent(
+      'Free venue: ₹0. The venue is paid nothing and Duncit takes no commission, so your pod is free.'
+    );
+    expect(screen.queryByTestId('offer-money')).not.toBeInTheDocument();
   });
 
   it('keeps the reason to the offer line itself, and to the live offer it belongs to', () => {

@@ -57,6 +57,7 @@ const PORTAL_ROLES: Record<string, string[]> = {
   mcp: ['MCP_MANAGER', 'MCP_USER'],
   loyalty: ['LOYALTY_MANAGER', 'FINANCE_MANAGER', 'FINANCE_USER'],
   tests: ['TESTS_MANAGER'],
+  intel: ['INTEL_MANAGER', 'INTEL_USER'],
   partners: [],
   mweb: [],
 };

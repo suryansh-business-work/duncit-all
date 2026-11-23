@@ -220,6 +220,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   agentTypeDefs: 'ai',
   askDuncitTypeDefs: 'ai',
   askDuncitAdminTypeDefs: 'ai',
+  intelTypeDefs: 'ai',
   aiPromptTypeDefs: 'ai',
   aiPromptLibraryTypeDefs: 'ai',
   openAiUsageTypeDefs: 'ai',

@@ -12,6 +12,8 @@ import {
   VENUE_OFFER_SETTINGS_MAX,
   assertOfferMeetsMinBusiness,
   assertOfferMeetsMinSpend,
+  assertVenueTakesFreeBookings,
+  cleanFreeBooking,
   cleanMinBusiness,
   cleanMinSpend,
   effectiveOfferSettings,
@@ -29,19 +31,20 @@ beforeEach(() => {
 
 describe('toOfferSettingsPub', () => {
   it('reads a venue that never set them as the defaults (0)', () => {
-    const none = { min_guests: 0, response_hours: 0, min_business: [], min_spend: 0 };
+    const none = { min_guests: 0, response_hours: 0, min_business: [], min_spend: 0, free_booking: false };
     expect(toOfferSettingsPub(undefined)).toEqual(none);
     expect(toOfferSettingsPub(null)).toEqual(none);
     expect(toOfferSettingsPub({})).toEqual(none);
   });
 
   it('keeps whole values and clamps the out-of-range ones', () => {
-    expect(toOfferSettingsPub({ min_guests: 12.6, response_hours: 48 })).toEqual({ min_guests: 12, response_hours: 48, min_business: [], min_spend: 0 });
+    expect(toOfferSettingsPub({ min_guests: 12.6, response_hours: 48 })).toEqual({ min_guests: 12, response_hours: 48, min_business: [], min_spend: 0, free_booking: false });
     expect(toOfferSettingsPub({ min_guests: -5, response_hours: 99_999 })).toEqual({
       min_guests: 0,
       response_hours: VENUE_OFFER_SETTINGS_MAX.responseHours,
       min_business: [],
       min_spend: 0,
+      free_booking: false,
     });
   });
 
@@ -67,7 +70,7 @@ describe('toOfferSettingsPub', () => {
 });
 
 describe('normalizeOfferSettingsInput', () => {
-  const base = { min_guests: 10, response_hours: 6, min_business: [{ model: 'PER_GUEST' as const, amount: 200 }], min_spend: 3000 };
+  const base = { min_guests: 10, response_hours: 6, min_business: [{ model: 'PER_GUEST' as const, amount: 200 }], min_spend: 3000, free_booking: false };
 
   it('changes only what the edit names', () => {
     expect(normalizeOfferSettingsInput(base, { min_guests: 4 })).toEqual({ ...base, min_guests: 4 });
@@ -273,7 +276,7 @@ describe('cleanMinSpend', () => {
 });
 
 describe('normalizeOfferSettingsInput — minimum spend', () => {
-  const base = { min_guests: 10, response_hours: 6, min_business: [{ model: 'FLAT' as const, amount: 900 }], min_spend: 3000 };
+  const base = { min_guests: 10, response_hours: 6, min_business: [{ model: 'FLAT' as const, amount: 900 }], min_spend: 3000, free_booking: false };
 
   it('sets, clears and keeps the minimum spend', () => {
     expect(normalizeOfferSettingsInput(base, { min_spend: 4500 }).min_spend).toBe(4500);
@@ -284,5 +287,45 @@ describe('normalizeOfferSettingsInput — minimum spend', () => {
 
   it('refuses an unsound minimum spend rather than saving it', () => {
     expect(() => normalizeOfferSettingsInput(base, { min_spend: -5 })).toThrow('Enter a minimum spend of 0 or more');
+  });
+});
+
+describe('free bookings for initiatives', () => {
+  const base = { min_guests: 10, response_hours: 6, min_business: [{ model: 'FLAT' as const, amount: 900 }], min_spend: 3000, free_booking: false };
+
+  it('reads only a stored true as open; anything else, or a venue that never saved it, is closed', () => {
+    expect(toOfferSettingsPub({ free_booking: true }).free_booking).toBe(true);
+    for (const stored of [false, undefined, null, 'true' as never, 1 as never]) {
+      expect(toOfferSettingsPub({ free_booking: stored as never }).free_booking).toBe(false);
+    }
+  });
+
+  it('turns the switch on and off, and keeps it when an edit (or an older app) leaves it out', () => {
+    expect(normalizeOfferSettingsInput(base, { free_booking: true })).toEqual({ ...base, free_booking: true });
+    const open = { ...base, free_booking: true };
+    expect(normalizeOfferSettingsInput(open, { free_booking: false }).free_booking).toBe(false);
+    expect(normalizeOfferSettingsInput(open, { min_guests: 4 }).free_booking).toBe(true);
+    expect(normalizeOfferSettingsInput(open, { free_booking: null }).free_booking).toBe(true);
+  });
+
+  it('refuses a switch that is not a true or false, naming the field', () => {
+    for (const raw of ['yes', 1, {}, []]) {
+      expect(() => cleanFreeBooking(raw)).toThrow('Turn free bookings on or off');
+      expect(() => normalizeOfferSettingsInput(base, { free_booking: raw })).toThrow(
+        expect.objectContaining({ extensions: expect.objectContaining({ code: 'BAD_USER_INPUT', field: 'free_booking' }) })
+      );
+    }
+    expect(cleanFreeBooking(true)).toBe(true);
+    expect(cleanFreeBooking(false)).toBe(false);
+  });
+
+  it('lets a free ask through only to a venue that is open to free bookings', () => {
+    expect(() => assertVenueTakesFreeBookings({ free_booking: true })).not.toThrow();
+    for (const offers of [{ free_booking: false }, {}, null, undefined]) {
+      expect(() => assertVenueTakesFreeBookings(offers)).toThrow('This venue does not take free bookings — offer it a price instead');
+      expect(() => assertVenueTakesFreeBookings(offers)).toThrow(
+        expect.objectContaining({ extensions: expect.objectContaining({ reason: 'FREE_BOOKING_OFF', field: 'venue_offer_model' }) })
+      );
+    }
   });
 });

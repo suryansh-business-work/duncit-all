@@ -38,6 +38,7 @@ packages:
   - portals/mcp
   - portals/loyalty
   - portals/tests
+  - portals/intel
   # The pet store: its console and its storefront.
   - portals/ecomm-portal
   - website/ecomm-store

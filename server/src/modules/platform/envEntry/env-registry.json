@@ -96,6 +96,16 @@
         "GODADDY",
         "CLOUDFLARE"
       ]
+    },
+    {
+      "key": "INTEL",
+      "label": "Duncit Intel connectors",
+      "description": "Databases, MCP servers and mailboxes Duncit Intel reads (picked by name in Intel › Settings)",
+      "categories": [
+        "MONGODB",
+        "MCP_SERVER",
+        "GMAIL"
+      ]
     }
   ],
   "categories": {
@@ -1268,6 +1278,17 @@
           "usedIn": [
             "server/src/utils/github-actions.ts"
           ]
+        },
+        {
+          "name": "webhook_secret",
+          "label": "Webhook Secret (optional)",
+          "hint": "The secret set on the repository webhook",
+          "secret": true,
+          "description": "Verifies GitHub push webhooks that tell Duncit Intel to re-sync a repository.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
         }
       ]
     },
@@ -2163,6 +2184,142 @@
             "server/src/modules/platform/settings/settings.service.ts"
           ]
         }
+      ]
+    },
+    "MONGODB": {
+      "label": "MongoDB (Duncit Intel)",
+      "description": "Database connections Duncit Intel may read — and, with approval, write",
+      "docUrl": "https://www.mongodb.com/docs/manual/reference/connection-string/",
+      "usedIn": [
+        "server/src/modules/ai/intel/connectors/mongo/mongo.connector.ts"
+      ],
+      "fields": [
+        {
+          "name": "uri",
+          "label": "Connection URI",
+          "hint": "mongodb://user:password@host:27017/?authSource=admin",
+          "secret": true,
+          "description": "Connects Duncit Intel to this database. Use a dedicated user: read-only for read connections, least privilege for write ones.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": []
+        },
+        {
+          "name": "database",
+          "label": "Default Database (optional)",
+          "hint": "e.g. duncit — Intel can override it per connection",
+          "description": "The database a connection reads when Intel names none.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        }
+      ],
+      "alsoReadBy": [
+        "server/src/modules/ai/intel/connectors/mongo/mongo.connector.ts"
+      ]
+    },
+    "MCP_SERVER": {
+      "label": "MCP server (Duncit Intel)",
+      "description": "Model Context Protocol servers Duncit Intel can call tools on",
+      "docUrl": "https://modelcontextprotocol.io/specification",
+      "usedIn": [
+        "server/src/modules/ai/intel/connectors/mcp/mcp.connector.ts"
+      ],
+      "fields": [
+        {
+          "name": "url",
+          "label": "Server URL",
+          "hint": "https://mcp.duncit.com/mcp",
+          "description": "The Streamable HTTP endpoint Intel calls. HTTPS only; its host must also be on Intel › Settings › Security › MCP hosts.",
+          "validation": {
+            "type": "url"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "auth_token",
+          "label": "Access Token",
+          "hint": "A bearer token issued by the MCP server",
+          "secret": true,
+          "description": "Authenticates Intel to the MCP server; tools run with this token holder's permissions.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": []
+        },
+        {
+          "name": "header_name",
+          "label": "Auth Header (optional)",
+          "hint": "Default Authorization (sent as Bearer)",
+          "description": "For servers that expect the token in another header, e.g. X-API-Key.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        }
+      ],
+      "alsoReadBy": [
+        "server/src/modules/ai/intel/connectors/mcp/mcp.connector.ts"
+      ]
+    },
+    "GMAIL": {
+      "label": "Gmail (Duncit Intel)",
+      "description": "Mailboxes Duncit Intel indexes (read-only)",
+      "docUrl": "https://developers.google.com/gmail/api/auth/scopes",
+      "usedIn": [
+        "server/src/modules/ai/intel/connectors/gmail/gmail.connector.ts"
+      ],
+      "fields": [
+        {
+          "name": "client_id",
+          "label": "OAuth Client ID",
+          "hint": "xxxx.apps.googleusercontent.com",
+          "description": "The Google OAuth client the refresh token was issued to.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "client_secret",
+          "label": "OAuth Client Secret",
+          "hint": "GOCSPX-…",
+          "secret": true,
+          "description": "Exchanges the refresh token for short-lived access tokens.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": []
+        },
+        {
+          "name": "refresh_token",
+          "label": "Refresh Token",
+          "hint": "1//0… issued with the gmail.readonly scope",
+          "secret": true,
+          "description": "Lets Intel read this mailbox without a password; revoke it in the Google account to cut access.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "mailbox",
+          "label": "Mailbox (optional)",
+          "hint": "team@duncit.com",
+          "description": "The address shown in Intel for this mailbox.",
+          "validation": {
+            "type": "email"
+          },
+          "usedIn": []
+        }
+      ],
+      "alsoReadBy": [
+        "server/src/modules/ai/intel/connectors/gmail/gmail.connector.ts"
       ]
     }
   },

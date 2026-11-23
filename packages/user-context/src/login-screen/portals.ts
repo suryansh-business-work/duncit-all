@@ -76,6 +76,7 @@ export const PORTALS: PortalEntry[] = [
   { key: 'mcp', name: 'MCP', descriptionKey: 'session.portals.descriptions.mcp', port: 2046, subdomain: 'mcp', category: 'operations', image: PEXELS('8386440') },
   { key: 'loyalty', name: 'Loyalty', descriptionKey: 'session.portals.descriptions.loyalty', port: 2047, subdomain: 'loyalty', category: 'operations', image: PEXELS('5632399') },
   { key: 'tests', name: 'Tests', descriptionKey: 'session.portals.descriptions.tests', port: 2048, subdomain: 'tests', category: 'operations', image: PEXELS('577585') },
+  { key: 'intel', name: 'Duncit Intel', descriptionKey: 'session.portals.descriptions.intel', port: 2049, subdomain: 'intel', category: 'operations', image: PEXELS('8386434') },
 ];
 
 /** Resolves a portal URL: localhost:<port> in dev, https://<sub>.duncit.com in prod. */

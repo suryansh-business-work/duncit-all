@@ -1,5 +1,10 @@
 import { Text, XStack, YStack } from 'tamagui';
-import { currentOfferTerms, venueOfferInboxStatus, type OfferStatusTone } from '@duncit/utils';
+import {
+  currentOfferTerms,
+  isFreeVenueOfferModel,
+  venueOfferInboxStatus,
+  type OfferStatusTone,
+} from '@duncit/utils';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { OfferAnswerBy, OfferAsk } from './OfferAsk';
@@ -94,7 +99,7 @@ export function OfferTermsPanel({ offer, podIsFree, side }: Readonly<Props>) {
       ) : null}
       {freeLine ? (
         <Text
-          testID={podIsFree ? 'offer-free-pod' : 'offer-free-venue'}
+          testID={isFreeVenueOfferModel(terms.model) ? 'offer-free-venue' : 'offer-free-pod'}
           fontSize={13}
           color="$muted"
         >

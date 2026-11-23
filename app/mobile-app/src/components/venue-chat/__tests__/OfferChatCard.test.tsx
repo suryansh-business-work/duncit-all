@@ -110,6 +110,9 @@ describe('OfferChatCard — the venue reading a host offer', () => {
     });
     mount(move, answeringAs('VENUE', freeVenueOffer()));
     expect(screen.getByTestId('offer-move-terms')).toHaveTextContent('Free venue');
+    expect(screen.getByTestId('offer-move-free')).toHaveTextContent(
+      'Free booking for an initiative: ₹0. No venue charges, no Duncit commission and no earnings on this booking.',
+    );
     expect(screen.getByTestId('offer-move-free-reason')).toHaveTextContent(
       'Requested free — Promotional offer: Launch week',
     );

@@ -23,6 +23,8 @@ services:
       OPENWA_INTERNAL_URL: http://open-wa:2024
       # The staging CRM email verifier, over the staging compose network.
       REACHER_INTERNAL_URL: http://reacher:8080
+      # Staging's own Intel vector index (the `qdrant` service below), internal only.
+      QDRANT_URL: http://qdrant:6333
       # Explicit for the same reason as prod: the image's final WORKDIR is
       # /app/server, so the cwd-relative default would miss the bind mount.
       APP_BUILDS_DIR: /app/app-builds
@@ -350,6 +352,13 @@ services:
     ports:
       - "127.0.0.1:2148:8080"
 
+  intel:
+    image: ${DOCKERHUB_USERNAME}/duncit-intel:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-intel
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2149:8080"
+
   targets:
     image: ${DOCKERHUB_USERNAME}/duncit-targets:${IMAGE_TAG:-staging}
     container_name: duncit-staging-targets
@@ -436,6 +445,25 @@ services:
       - /opt/duncit-staging/redis-queue-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  # Duncit Intel's vector index — Qdrant (github.com/qdrant/qdrant, Apache-2.0).
+  # The server reaches it as http://qdrant:6333 (QDRANT_URL above) over this
+  # network only: NO host port and no vhost, so nothing outside the stack can
+  # read or write the index. Data persists on the host across redeploys.
+  # Infra service, not a build target — redeploy.sh `up -d`s it like redis.
+  qdrant:
+    image: qdrant/qdrant:v1.14.1
+    container_name: duncit-staging-qdrant
+    restart: unless-stopped
+    environment:
+      QDRANT__TELEMETRY_DISABLED: "true"
+    volumes:
+      - /opt/duncit-staging/qdrant-data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5

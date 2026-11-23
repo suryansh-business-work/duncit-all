@@ -135,4 +135,5 @@ export { default as OfferImages } from './offers/OfferImages';
 // A venue's Booking offers: the business it hopes each booking brings, and how Create Pod shows it.
 export { default as MinBusinessFields } from './offers/settings/MinBusinessFields';
 export { default as MinSpendField } from './offers/settings/MinSpendField';
+export { default as FreeBookingField } from './offers/settings/FreeBookingField';
 export { default as VenueMinBusinessNote } from './offers/settings/VenueMinBusinessNote';

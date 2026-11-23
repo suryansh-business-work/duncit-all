@@ -313,16 +313,27 @@ describe('makePodSchema - free justification', () => {
     return res.success ? [] : res.error.issues.map((i) => [i.path.join('.'), i.message]);
   };
   const offerConfig = makeConfig({ showVenueSlot: true });
-  // A paid pod offering its venue nothing.
+  // A pod offering its venue nothing — free itself, as a free venue makes it.
   const freeVenue = (over: Partial<PodFormValues> = {}) =>
     validValues({
-      pod_type: 'PAID',
-      pod_amount: 300,
+      pod_type: 'FREE',
+      pod_amount: 0,
       venue_offer_model: 'FREE',
       venue_offer_rate: '',
       venue_offer_offerings: 'A projector',
       ...over,
     });
+
+  it('holds a free venue to a free pod: a paid type is refused', () => {
+    const justified = { free_reason: 'PROMOTIONAL', free_accepted: true };
+    expect(issuesOf(offerConfig, freeVenue({ ...justified, pod_type: 'PAID', pod_amount: 300 }))).toEqual([
+      ['pod_type', 'A free venue booking is for a free pod. Pick Free.'],
+    ]);
+    // A priced offer leaves the type to the admin.
+    expect(
+      issuesOf(offerConfig, freeVenue({ venue_offer_model: 'FLAT', venue_offer_rate: '900', pod_type: 'PAID', pod_amount: 300 })),
+    ).toEqual([]);
+  });
 
   it('asks a free venue no amount, only why it is free', () => {
     expect(issuesOf(offerConfig, freeVenue())).toEqual([['free_reason', 'Pick why this is free']]);

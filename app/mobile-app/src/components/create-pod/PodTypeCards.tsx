@@ -1,10 +1,20 @@
+import { useEffect } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
+import { createPodOffersFreeVenue } from '@duncit/utils';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodForm } from './create-pod.types';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+
+/** The pod turned free: ₹0, and never a Smart Incentive. */
+function makeFree(form: CreatePodForm) {
+  form.setValue('pod_type', 'FREE', { shouldDirty: true });
+  form.setValue('pod_amount_text', '0', { shouldDirty: true, shouldValidate: true });
+  form.setValue('smart_incentive_enabled', false, { shouldDirty: true });
+  form.setValue('smart_incentive_pct', '', { shouldDirty: true });
+}
 
 type IconName = keyof typeof MaterialIcons.glyphMap;
 
@@ -48,20 +58,28 @@ function TypeCard({ testID, label, caption, icon, selected, onPress }: Readonly<
 }
 
 /** Free / Paid selector cards for Step 4 — the pod-type selector, both cards
- * offered to a physical and a virtual pod. mWeb twin. */
+ * offered to a physical and a virtual pod. A pod asking its venue for the
+ * window free is free too: Paid goes, and Free is picked for the host (the
+ * server refuses a free venue for a paid pod). mWeb twin. */
 export function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>) {
   const { t } = useTranslation();
   const isFree = form.watch('pod_type') === 'FREE';
   const typeError = form.formState.errors.pod_type?.message;
+  const freeVenue = createPodOffersFreeVenue({
+    pod_mode: form.watch('pod_mode'),
+    partner_request_id: form.watch('partner_request_id'),
+    venue_slot_id: form.watch('venue_slot_id'),
+    venue_offer_model: form.watch('venue_offer_model'),
+  });
+
+  useEffect(() => {
+    if (freeVenue && !isFree) makeFree(form);
+  }, [freeVenue, isFree, form]);
 
   const choose = (free: boolean) => {
     if (free === isFree) return;
     if (free) {
-      form.setValue('pod_type', 'FREE', { shouldDirty: true });
-      form.setValue('pod_amount_text', '0', { shouldDirty: true, shouldValidate: true });
-      // A free pod never carries a Smart Incentive.
-      form.setValue('smart_incentive_enabled', false, { shouldDirty: true });
-      form.setValue('smart_incentive_pct', '', { shouldDirty: true });
+      makeFree(form);
     } else {
       form.setValue('pod_type', 'PAID', { shouldDirty: true, shouldValidate: true });
       // The ₹0 a Free pod forces was never typed by the host — a paid pod goes
@@ -81,15 +99,22 @@ export function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>) {
           selected={isFree}
           onPress={() => choose(true)}
         />
-        <TypeCard
-          testID="create-pod-paid"
-          label={t('mweb.createPod.podTypePaid')}
-          caption={t('mweb.createPod.paidCaption')}
-          icon="payments"
-          selected={!isFree}
-          onPress={() => choose(false)}
-        />
+        {freeVenue ? null : (
+          <TypeCard
+            testID="create-pod-paid"
+            label={t('mweb.createPod.podTypePaid')}
+            caption={t('mweb.createPod.paidCaption')}
+            icon="payments"
+            selected={!isFree}
+            onPress={() => choose(false)}
+          />
+        )}
       </XStack>
+      {freeVenue ? (
+        <Text role="status" testID="create-pod-free-venue-ticket" fontSize={13} color="$muted">
+          {t('mweb.createPod.freeVenueTicket')}
+        </Text>
+      ) : null}
       {typeError ? (
         <Text role="alert" testID="pod_type-error" fontSize={12} color="$danger">
           {typeError}

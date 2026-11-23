@@ -11,6 +11,7 @@ import {
   FREE_VENUE_OFFER_KEY,
   FREE_VENUE_OFFER_MODEL,
   HOST_OFFER_MODELS,
+  hostOfferModelsFor,
   isFreeVenueOfferModel,
   isHostOfferModel,
   venueOfferHelpKey,
@@ -178,6 +179,19 @@ describe('pricing options', () => {
     expect(venueOfferModelKey('PER_SLOT')).toBe('');
     expect(venueOfferModelKey('PER_PAX')).toBe('');
     expect(venueOfferModelKey(null)).toBe('');
+  });
+});
+
+describe('hostOfferModelsFor', () => {
+  it('offers Free only to a venue open to free bookings for initiatives, after the priced options', () => {
+    expect(hostOfferModelsFor(true)).toEqual(['PER_GUEST', 'PER_HOUR', 'FLAT', 'FREE']);
+  });
+
+  it('keeps every other venue — switch off, or an older server that does not say — on the priced options', () => {
+    for (const closed of [false, null, undefined]) {
+      expect(hostOfferModelsFor(closed)).toEqual(['PER_GUEST', 'PER_HOUR', 'FLAT']);
+      expect(hostOfferModelsFor(closed)).not.toContain('FREE');
+    }
   });
 });
 

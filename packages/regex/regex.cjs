@@ -186,6 +186,24 @@ const PAYMENT_TRANSACTION_ID = /^[A-Za-z0-9_-]{6,40}$/;
 /** An Apple Developer Team ID: exactly 10 upper-case letters or digits. See regex.mjs. */
 const APPLE_TEAM_ID = /^[A-Z0-9]{10}$/;
 
+/** A Media Manager folder path: `/` or `/Reports/2026`, up to 8 segments of 1–60 letters, digits, spaces, `.`, `_` or `-`. Segments cannot contain `/`, so the bounded repeats cannot overlap and the match is linear. */
+const FOLDER_PATH = /^\/(?:[\w .-]{1,60}(?:\/[\w .-]{1,60}){0,7})?$/;
+
+/** An AI provider model id such as `gpt-4o-mini` or `text-embedding-3-small`: 1–80 letters, digits, `.`, `_`, `:` or `-`. One class, bounded count — linear. */
+const AI_MODEL_ID = /^[A-Za-z0-9._:-]{1,80}$/;
+
+/** A GitHub owner or repository name, e.g. `duncit-all`: 1–100 letters, digits, `.`, `_` or `-`. One class, bounded count — linear. */
+const GITHUB_NAME = /^[A-Za-z0-9_.-]{1,100}$/;
+
+/** A git branch name such as `staging` or `feature/intel`: 1–200 letters, digits, `.`, `_`, `/` or `-`. One class, bounded count — linear. */
+const GIT_BRANCH = /^[A-Za-z0-9._/-]{1,200}$/;
+
+/** A MongoDB collection name Duncit Intel may read, e.g. `pods`: 1–120 letters, digits, `.`, `_` or `-`, never a `system.` collection. One class, bounded count — linear. */
+const MONGO_COLLECTION = /^(?!system\.)[A-Za-z0-9_.-]{1,120}$/;
+
+/** A MongoDB database name, e.g. `duncit`: 1–64 letters, digits, `_` or `-`. One class, bounded count — linear. */
+const MONGO_DATABASE = /^[A-Za-z0-9_-]{1,64}$/;
+
 /** Keep only the digits in a string. See regex.mjs for the full note. */
 const toDigits = (v) => String(v ?? '').replaceAll(NON_DIGITS, '');
 
@@ -226,6 +244,12 @@ module.exports = {
   META_NAME,
   PAYMENT_TRANSACTION_ID,
   APPLE_TEAM_ID,
+  FOLDER_PATH,
+  AI_MODEL_ID,
+  GITHUB_NAME,
+  GIT_BRANCH,
+  MONGO_COLLECTION,
+  MONGO_DATABASE,
   toDigits,
   isPhoneNumber: (v) => PHONE_NUMBER.test(v),
   isPincode: (v) => PINCODE.test(v),
@@ -257,6 +281,12 @@ module.exports = {
   isMetaName: (v) => META_NAME.test(v),
   isPaymentTransactionId: (v) => PAYMENT_TRANSACTION_ID.test(v),
   isAppleTeamId: (v) => APPLE_TEAM_ID.test(v),
+  isFolderPath: (v) => FOLDER_PATH.test(v),
+  isAiModelId: (v) => AI_MODEL_ID.test(v),
+  isGithubName: (v) => GITHUB_NAME.test(v),
+  isGitBranch: (v) => GIT_BRANCH.test(v),
+  isMongoCollection: (v) => MONGO_COLLECTION.test(v),
+  isMongoDatabase: (v) => MONGO_DATABASE.test(v),
   isHostname: (v) => {
     const name = String(v ?? '').replace(/\.$/, '');
     const labels = name.split('.');

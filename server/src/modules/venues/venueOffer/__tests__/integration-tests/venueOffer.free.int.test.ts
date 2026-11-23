@@ -8,6 +8,7 @@ import { Types } from 'mongoose';
 import { venueOfferService } from '../../venueOffer.service';
 import { venueSlotService } from '../../../venueSlot/venueSlot.service';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { VenueModel } from '../../../venue/venue.model';
 import type { FreeJustification, VenueOfferRequest } from '../../venueOffer.types';
 import { announced, lineFor, loadSlot, request, seedWorld, stubOfferMessages, type OfferMessages, type World } from './offerWorld.fixture';
 
@@ -93,6 +94,7 @@ describe('a free venue', () => {
 
   it('is priced live at nothing for Create Pod, and refused where a price is needed', async () => {
     const w = await seedWorld();
+    await VenueModel.updateOne({ _id: w.venueId }, { $set: { 'settings.offers.free_booking': true } });
     const free = request({ model: 'FREE', rate: 0 });
     await expect(venueOfferService.preview(w.venueId, free, undefined, { atVenueMinimum: true, allowFree: true, hostTerms: true })).resolves.toMatchObject({
       ok: true,

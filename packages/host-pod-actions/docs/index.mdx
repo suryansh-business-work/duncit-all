@@ -294,8 +294,11 @@ on mWeb and every portal — so `buildPodResubmitSchema(labels, t?)` takes the s
 
 ### A free venue, or a free pod
 
-The pricing options are `@duncit/utils`' `HOST_OFFER_MODELS` — per guest, per hour, a flat price,
-or **Free venue** (`FREE`, `labels.offerModelFree`). A free venue takes no amount (the rate field
+The pricing options are `@duncit/utils`' `hostOfferModelsFor(allowFree)` — per guest, per hour, a flat price,
+and **Free venue** (`FREE`, `labels.offerModelFree`) only for a free pod at a venue open to free bookings
+for initiatives (`useResubmitVenueTerms().freeBooking`, read from `publicVenue.offer_free_booking`); a Free
+carried over from a declined offer is dropped once either reads as closed, and the server refuses it too
+(`FREE_BOOKING_OFF`, `FREE_VENUE_NEEDS_FREE_POD`). A free venue takes no amount (the rate field
 is hidden and the offer goes at rate 0); the venue may only accept or decline it, never counter.
 Whenever the venue is asked for free OR the pod itself is free (`pod.pod_type === 'FREE'`, carried
 in the values as `pod_type`), the dialog renders `@duncit/forms`' `FreeArrangementFields` — Duncit's

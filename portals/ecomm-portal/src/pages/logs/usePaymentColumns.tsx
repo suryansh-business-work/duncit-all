@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
-import { dateColumn, EM_DASH, type DuncitColumn } from '@duncit/table';
+import { dateColumn, EM_DASH, LabeledIds, labeledIdsText, type DuncitColumn, type LabeledId } from '@duncit/table';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import { money } from '../../lib/format';
 import { codeLabel, codeOptions } from '../../lib/status';
@@ -47,18 +47,23 @@ const renderBuyer = (row: StorePaymentRow) => (
   </Stack>
 );
 
-/** The payment's id over its invoice number, both in monospace so they can be read back. */
-const renderIds = (row: StorePaymentRow) => (
-  <Stack component="span" sx={{ lineHeight: 1.2 }} data-testid="payment-logs-ids">
-    <Typography variant="caption" component="span" sx={{ fontFamily: 'monospace' }}>
-      {row.payment_id}
-    </Typography>
-    {row.invoice_no && (
-      <Typography variant="caption" component="span" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>
-        {row.invoice_no}
-      </Typography>
-    )}
-  </Stack>
+/**
+ * Every id of a payment under its own name. Razorpay's ids come first because
+ * they are what the store compares against the Razorpay dashboard; the Duncit
+ * ref is labelled as ours, since it never matches anything there.
+ */
+export const storePaymentIds = (t: (key: string) => string, row: StorePaymentRow): LabeledId[] => [
+  { label: t('ecommPortal.paymentLogs.idRazorpayPayment'), value: row.razorpay_payment_id },
+  { label: t('ecommPortal.paymentLogs.idRazorpayOrder'), value: row.razorpay_order_id },
+  { label: t('ecommPortal.paymentLogs.idRazorpayRefund'), value: (row.razorpay_refund_ids ?? []).join(', ') },
+  { label: t('ecommPortal.paymentLogs.idDuncitRef'), value: row.payment_id },
+  { label: t('ecommPortal.paymentLogs.idInvoice'), value: row.invoice_no },
+];
+
+const renderIds = (t: (key: string) => string) => (row: StorePaymentRow) => (
+  <span data-testid="payment-logs-ids">
+    <LabeledIds ids={storePaymentIds(t, row)} />
+  </span>
 );
 
 const renderStatus = (row: StorePaymentRow) => <PaymentStatusChip status={row.status} />;
@@ -100,8 +105,8 @@ export function usePaymentColumns(): DuncitColumn<StorePaymentRow>[] {
         headerName: t('ecommPortal.paymentLogs.ids'),
         type: 'text',
         minWidth: 200,
-        cellRenderer: renderIds,
-        valueGetter: (row) => row.payment_id,
+        cellRenderer: renderIds(t),
+        valueGetter: (row) => labeledIdsText(storePaymentIds(t, row)),
       },
       dateColumn<StorePaymentRow>({ field: 'paid_at', headerName: t('ecommPortal.paymentLogs.paidAt'), width: 150 }),
       {

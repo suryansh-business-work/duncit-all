@@ -4,6 +4,7 @@ import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { managedVenue } from '@modules/venues/venueFood/venueFoodOrder.shared';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { razorpaySearchAlso } from '@modules/finance/payment/payment.razorpaySearch';
 import { RentalBookingModel, type IRentalBooking } from './rentalBooking.model';
 import { rentalRefundMoney } from './rentalRefundState';
 
@@ -108,7 +109,8 @@ async function page(filter: Record<string, unknown>, input?: TableQueryInput | n
     RentalBookingModel,
     filter,
     input,
-    TABLE_CONFIG
+    TABLE_CONFIG,
+    { searchAlso: await razorpaySearchAlso(input?.search, 'payment_doc_id', 'docId') }
   );
   return { rows: await hydrateRentalBookings(docs), total, page: at, page_size };
 }

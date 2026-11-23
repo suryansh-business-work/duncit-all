@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 import { CoinBalanceModel, CoinTransactionModel, type ICoinTransaction } from './coin.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
+import { razorpaySearchAlso } from '@modules/finance/payment/payment.razorpaySearch';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
@@ -338,7 +339,8 @@ export const coinAdminService = {
       CoinTransactionModel,
       baseFilter,
       input,
-      COIN_TXN_TABLE_CONFIG
+      COIN_TXN_TABLE_CONFIG,
+      { searchAlso: await razorpaySearchAlso(input?.search, 'payment_id', 'ref') }
     );
     return {
       rows: await toAdminRows(docs),

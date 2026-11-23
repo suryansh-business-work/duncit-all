@@ -14,6 +14,7 @@ import {
 import { addressProblems } from '@modules/commerce/shiprocket/shiprocket.address';
 import { loadUserMap, userNameOrDeleted, type UserInfo } from '@utils/admin-ledger';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { razorpaySearchAlso } from '@modules/finance/payment/payment.razorpaySearch';
 
 /** Loyalty > Gift Card Orders: the order book, one order's full story, and the
  * fulfilment actions that come before the courier. */
@@ -88,7 +89,8 @@ export const giftCardOrderAdminService = {
       GiftCardOrderModel,
       {},
       input,
-      ORDER_TABLE_CONFIG
+      ORDER_TABLE_CONFIG,
+      { searchAlso: await razorpaySearchAlso(input?.search, 'payment_id', 'ref') }
     );
     await syncPaymentStatuses(docs);
     const users = await usersOf(docs);

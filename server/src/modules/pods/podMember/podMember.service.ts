@@ -45,6 +45,7 @@ import {
   releaseSeats,
 } from '@modules/pods/pod/pod.seats.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { razorpaySearchAlso } from '@modules/finance/payment/payment.razorpaySearch';
 import { userContactNumber } from '@utils/contact';
 import { logs } from '@observability/log';
 import { appDate, appTime } from '@utils/app-time';
@@ -1779,7 +1780,8 @@ export const podMemberService = {
       BackoutRequestModel,
       {},
       input,
-      BACKOUT_REFUND_TABLE_CONFIG
+      BACKOUT_REFUND_TABLE_CONFIG,
+      { searchAlso: await razorpaySearchAlso(input?.search, 'payment_id', 'docId') }
     );
     return { rows: await hydrateBackoutRequests(docs), total, page, page_size };
   },

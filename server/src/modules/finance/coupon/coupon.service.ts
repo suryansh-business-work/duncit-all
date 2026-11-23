@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Types, type ClientSession } from 'mongoose';
 import { CouponModel, type CouponScope, type ICoupon } from './coupon.model';
 import { PaymentModel, type IPayment } from '@modules/finance/payment/payment.model';
+import { RAZORPAY_ID_SEARCH_FIELDS } from '@modules/finance/payment/payment.gatewayIds';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
@@ -73,7 +74,7 @@ const REDEEMED_STATUSES = ['SUCCESS', 'REFUNDED'];
 
 /** Allowlists for the redemption table (DUNCIT TABLE CONTRACT v1). */
 const REDEMPTION_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['user_name', 'user_email', 'payment_id', 'invoice_no', 'description'],
+  searchFields: ['user_name', 'user_email', 'payment_id', 'invoice_no', 'description', ...RAZORPAY_ID_SEARCH_FIELDS],
   sortFields: {
     user_name: 'user_name',
     description: 'description',

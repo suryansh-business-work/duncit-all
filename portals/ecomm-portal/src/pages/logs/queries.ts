@@ -5,6 +5,9 @@ export interface StorePaymentRow {
   id: string;
   payment_id: string;
   invoice_no: string | null;
+  razorpay_payment_id: string | null;
+  razorpay_order_id: string | null;
+  razorpay_refund_ids: string[] | null;
   user_name: string;
   user_email: string;
   description: string;
@@ -27,6 +30,9 @@ export const STORE_PAYMENTS_TABLE = gql`
         id
         payment_id
         invoice_no
+        razorpay_payment_id
+        razorpay_order_id
+        razorpay_refund_ids
         user_name
         user_email
         description

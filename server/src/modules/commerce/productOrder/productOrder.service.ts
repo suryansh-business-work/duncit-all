@@ -22,6 +22,7 @@ import type { IPayment } from '@modules/finance/payment/payment.model';
 import { roundOffOf } from '@modules/finance/payment/payment.roundoff';
 import { getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { razorpaySearchAlso } from '@modules/finance/payment/payment.razorpaySearch';
 import { logs } from '@observability/log';
 import { notifyEach } from '@services/notify/notify.service';
 import { notifyOrderStatus } from './productOrder.notify';
@@ -800,7 +801,8 @@ export const productOrderService = {
       ProductOrderModel,
       {},
       input,
-      PRODUCT_ORDER_TABLE_CONFIG
+      PRODUCT_ORDER_TABLE_CONFIG,
+      { searchAlso: await razorpaySearchAlso(input?.search, 'payment_id', 'docId') }
     );
     return { rows: docs.map(toPub), total, page, page_size };
   },
@@ -812,7 +814,8 @@ export const productOrderService = {
       ProductOrderModel,
       { buyer_id: new Types.ObjectId(userId), channel: 'POD_SHOP' },
       input,
-      PRODUCT_ORDER_TABLE_CONFIG
+      PRODUCT_ORDER_TABLE_CONFIG,
+      { searchAlso: await razorpaySearchAlso(input?.search, 'payment_id', 'docId') }
     );
     return { rows: docs.map(toPub), total, page, page_size };
   },
@@ -823,7 +826,8 @@ export const productOrderService = {
       ProductOrderModel,
       { 'line_items.brand_id': { $in: brandIds }, channel: 'POD_SHOP' },
       input,
-      PRODUCT_ORDER_TABLE_CONFIG
+      PRODUCT_ORDER_TABLE_CONFIG,
+      { searchAlso: await razorpaySearchAlso(input?.search, 'payment_id', 'docId') }
     );
     return { rows: docs.map(toPub), total, page, page_size };
   },
@@ -853,7 +857,8 @@ export const productOrderService = {
       ProductOrderModel,
       base,
       input,
-      PRODUCT_ORDER_TABLE_CONFIG
+      PRODUCT_ORDER_TABLE_CONFIG,
+      { searchAlso: await razorpaySearchAlso(input?.search, 'payment_id', 'docId') }
     );
     // One read names every brand on the page — never one per row.
     const brandIds = [...new Set(docs.flatMap((d) => d.line_items.map((l) => String(l.brand_id ?? ''))).filter(Boolean))];

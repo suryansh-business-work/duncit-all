@@ -474,4 +474,8 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "venueRentals.guest.depositBack": ["Deposit back at the venue {amount}"],
   // A running pod can be joined now (until its end time).
   "mweb.home.ongoingPodsSubtitle": ["Happening right now — joining is closed"],
+  // Pet store Payment logs now show and search Razorpay's own ids beside the
+  // Duncit ref, so the placeholder and the IDs column header say so.
+  "ecommPortal.paymentLogs.search": ["Search payment ID, invoice, buyer or email"],
+  "ecommPortal.paymentLogs.ids": ["Payment / invoice"],
 };

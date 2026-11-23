@@ -36,6 +36,7 @@ import { PodShopReturnModel } from '@modules/commerce/podShopReturn/podShopRetur
 import { StoreReturnModel } from '@modules/commerce/store/storeReturn.model';
 import { PaymentModel } from './payment.model';
 import type { PaymentShop } from './payment.source';
+import { razorpaySearchAlso } from './payment.razorpaySearch';
 import {
   buildTableFilter,
   clampPage,
@@ -288,7 +289,7 @@ export const orderRefundService = {
     const pipeline: PipelineStage[] = [
       ...(shop === 'ECOMM' ? storeBranches() : podShopBranches()),
       ...unifiedFields(shop),
-      { $match: buildTableFilter(q, ORDER_REFUND_TABLE_CONFIG) },
+      { $match: buildTableFilter(q, ORDER_REFUND_TABLE_CONFIG, await razorpaySearchAlso(q.search, 'payment_id', 'docId')) },
       {
         $facet: {
           rows: [

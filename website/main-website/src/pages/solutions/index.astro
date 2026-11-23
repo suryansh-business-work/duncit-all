@@ -1,0 +1,75 @@
+---
+// duncit.com/solutions — every offering from the Website portal (content type
+// SOLUTIONS), listed by who it is for: venues, hosts, club admins, creators
+// and communities. An audience with nothing yet still shows, marked coming
+// soon, so the page reads as a roadmap rather than a gap.
+import { groupSolutions } from '@duncit/utils';
+import PageLayout from '../../layouts/PageLayout.astro';
+import Block from '../../components/page/Block.astro';
+import CtaBand from '../../components/page/CtaBand.astro';
+import PillLink from '../../components/page/PillLink.astro';
+import SolutionCard from '../../components/solutions/SolutionCard.astro';
+import { fetchSolutions } from '../../lib/site-data';
+import { getTranslator } from '../../lib/i18n';
+
+const { t } = await getTranslator();
+const s = (key: string) => t(`website.main.solutions.${key}`);
+const groups = groupSolutions(await fetchSolutions());
+---
+
+<PageLayout
+  heading={s('heading')}
+  description={s('metaDescription')}
+  eyebrow={s('eyebrow')}
+  intro={s('intro')}
+  heroImage="https://images.unsplash.com/photo-1780404376916-6acccc7381ef?w=1600&q=80&auto=format&fit=crop"
+  wide
+>
+  <nav aria-label={s('jump')} class="not-prose mb-16 flex flex-wrap items-center gap-2">
+    <span class="mr-1 font-head text-sm font-extrabold text-ink-soft">{s('jump')}</span>
+    {
+      groups.map((group) => (
+        <a
+          href={`#${group.key}`}
+          class="rounded-full border border-line bg-surface px-4 py-2 font-head text-sm font-bold text-ink transition hover:border-primary focus-visible:outline-3 focus-visible:outline-primary"
+        >
+          {s(`audiences.${group.key}.title`)}
+        </a>
+      ))
+    }
+  </nav>
+
+  {
+    groups.map((group) => (
+      <Block id={group.key} title={s(`audiences.${group.key}.title`)} text={s(`audiences.${group.key}.text`)}>
+        {group.categories.length === 0 ? (
+          <div data-reveal class="flex flex-col gap-3 rounded-panel border border-dashed border-line bg-surface/60 p-7 sm:flex-row sm:items-center sm:gap-6">
+            <span class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-tertiary text-lg text-on-accent" aria-hidden="true">
+              <i class="fa-solid fa-hourglass-half" />
+            </span>
+            <div>
+              <h3 class="font-head text-lg font-extrabold text-ink">{s('emptyTitle')}</h3>
+              <p class="text-ink-soft">{s('emptyText')}</p>
+            </div>
+          </div>
+        ) : (
+          group.categories.map((category) => (
+            <div class="mt-10 first:mt-0">
+              <h3 data-reveal class="mb-5 font-head text-2xl font-extrabold tracking-tight text-ink">{category.name}</h3>
+              <ul data-reveal-group class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {category.items.map((item) => <SolutionCard item={item} />)}
+              </ul>
+            </div>
+          ))
+        )}
+      </Block>
+    ))
+  }
+
+  <CtaBand kicker={s('ctaKicker')} title={s('ctaHeading')} icon="fa-compass">
+    {s('ctaText')}
+    <Fragment slot="actions">
+      <PillLink href="/contact" label={s('ctaButton')} />
+    </Fragment>
+  </CtaBand>
+</PageLayout>

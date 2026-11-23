@@ -309,22 +309,12 @@ describe('createPodSchema', () => {
     ).toEqual([]);
   });
 
-  it('submits a free physical pod as FREE at ₹0 with its slot and no discount', () => {
-    const input = buildCreatePodInput(
-      valid({
-        pod_type: 'FREE',
-        pod_amount_text: '0',
-        // A stale draft's offer must not travel with a free pod.
-        ticket_discount_enabled: true,
-        ticket_discount_tiers: [{ min_tickets: 2, discount_pct: 10 }],
-      }),
-    );
+  it('submits a free physical pod as FREE at ₹0 with its slot', () => {
+    const input = buildCreatePodInput(valid({ pod_type: 'FREE', pod_amount_text: '0' }));
     expect(input).toMatchObject({
       pod_mode: 'PHYSICAL',
       pod_type: 'FREE',
       pod_amount: 0,
-      ticket_discount_enabled: false,
-      ticket_discount_tiers: [],
     });
     expect(input.venue_slot_id).toBeTruthy();
   });

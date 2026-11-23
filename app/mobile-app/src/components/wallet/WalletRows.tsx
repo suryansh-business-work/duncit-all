@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { SectionHeader } from '@/components/SectionHeader';
 import { SurfaceCard } from '@/components/SurfaceCard';
+import { WithdrawalPayoutRefs } from '@/components/wallet/WithdrawalPayoutRefs';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { WalletTxn, Withdrawal } from '@/hooks/useWallet';
 import { formatDate } from '@/utils/date-format';
@@ -103,7 +104,7 @@ export function TxnRow({
 }
 
 /** One withdrawal: amount · method, when it was requested (and why it was
- * rejected), and its status pill. */
+ * rejected), its payout references once Razorpay has them, and its status pill. */
 export function WithdrawalRow({
   w,
   symbol,
@@ -129,6 +130,7 @@ export function WithdrawalRow({
           {fmtDate(w.created_at)}
           {w.reject_reason ? ` · ${w.reject_reason}` : ''}
         </Text>
+        <WithdrawalPayoutRefs paymentId={w.razorpay_payout_id} utr={w.payout_utr} testID={testID} />
       </YStack>
       <XStack
         testID={`${testID}-status`}

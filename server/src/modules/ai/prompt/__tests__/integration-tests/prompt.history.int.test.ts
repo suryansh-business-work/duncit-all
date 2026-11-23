@@ -153,11 +153,15 @@ describe('prompt archive and detail', () => {
     const p = await aiPromptService.create({ name: 'Fed', content: 'Fetch me.' });
     const feed = express().use('/ai-prompts', buildAiPromptFeedRouter());
     await request(feed).get(`/ai-prompts/prompt.json?key=${p.key}&utm_source=docs`).set('Referer', 'https://example.org/a');
-    // Recorded after the answer is sent, so give it a moment to land.
-    for (let i = 0; i < 50 && (await AiPromptEventModel.countDocuments({})) === 0; i += 1) {
+    // Recorded after the answer is sent, so give it a moment to land. Read this
+    // prompt's events only: an earlier test's feed hit can land late, after its cleanup.
+    const mine = { prompt_id: new Types.ObjectId(p.id) };
+    for (let i = 0; i < 50 && (await AiPromptEventModel.countDocuments(mine)) === 0; i += 1) {
       await new Promise((resolve) => setTimeout(resolve, 20));
     }
-    const [event] = await AiPromptEventModel.find({}).lean();
+    const events = await AiPromptEventModel.find(mine).lean();
+    expect(events).toHaveLength(1);
+    const [event] = events;
     expect(event).toMatchObject({ type: 'FEED_HIT', surface: 'FEED', source: 'docs', referrer_host: 'example.org' });
     expect((await aiPromptService.get(p.id))?.total_hits).toBe(1);
   });

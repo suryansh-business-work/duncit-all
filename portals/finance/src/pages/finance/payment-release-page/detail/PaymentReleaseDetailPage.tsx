@@ -9,9 +9,11 @@ import { EarningsSplitView, QueryGuard, StatusChip, VenueBillSummary } from '@du
 import { buildVenueBillLines, shellVenueBillLabels } from '@duncit/utils';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
 import PaymentReleaseReviewForm from '../payment-release-review';
+import ShortfallFundingForm from '../shortfall-funding';
 import ReleasePayoutList from './ReleasePayoutList';
 import ReleaseMediaGallery from './ReleaseMediaGallery';
 import AgreedTermsLine from './AgreedTermsLine';
+import FundingShortfallAlert from './FundingShortfallAlert';
 import { buildReleaseRequestView } from './release-terms';
 import { usePodPaymentRelease } from './usePodPaymentRelease';
 import { POD_FINANCE_BREAKDOWN, money, type PodFinanceBreakdown } from '../../pod-finance-page/queries';
@@ -46,9 +48,14 @@ function RequestBody({ detail, ctl }: Readonly<{ detail: PodPaymentReleaseDetail
   });
   const waterfall = breakdown.data?.podFinanceBreakdown?.waterfall;
   const billLines = view.terms
-    ? buildVenueBillLines(view.terms, billLabels, ctl.symbol).filter(
-        (line) => view.hasVenue || view.terms?.bill || line.key === 'attendees',
-      )
+    ? buildVenueBillLines(view.terms, billLabels, ctl.symbol)
+        .filter((line) => view.hasVenue || view.terms?.bill || line.key === 'attendees')
+        // A bill kept only as evidence did not set what the venue is paid — say so on its line.
+        .map((line) =>
+          view.billEvidenceOnly && line.key === 'final-bill'
+            ? { ...line, label: t('finance.paymentRelease.billEvidenceOnly') }
+            : line,
+        )
     : [];
 
   return (
@@ -78,7 +85,7 @@ function RequestBody({ detail, ctl }: Readonly<{ detail: PodPaymentReleaseDetail
             variant="contained"
             startIcon={<DoneAllIcon />}
             loading={ctl.approving}
-            onClick={() => ctl.approveAll(view.pendingTotal)}
+            onClick={() => ctl.approveAll(view.pendingTotal, view.pendingShortfall)}
             data-testid="release-approve-all"
           >
             {t('finance.paymentRelease.approveAll')}
@@ -87,6 +94,9 @@ function RequestBody({ detail, ctl }: Readonly<{ detail: PodPaymentReleaseDetail
       </Stack>
 
       <Stack spacing={2} sx={{ maxWidth: 880 }}>
+        {view.shortfall > 0 && (
+          <FundingShortfallAlert shortfall={view.shortfall} pending={view.pendingShortfall > 0} symbol={ctl.symbol} />
+        )}
         {billLines.length > 0 && (
           <Section title={billLabels.title}>
             {view.agreed && <AgreedTermsLine agreed={view.agreed} symbol={ctl.symbol} />}
@@ -119,11 +129,23 @@ function RequestBody({ detail, ctl }: Readonly<{ detail: PodPaymentReleaseDetail
 
       <PaymentReleaseReviewForm
         request={ctl.reviewFor}
+        symbol={ctl.symbol}
         busy={ctl.reviewing}
         errorMessage={ctl.reviewError}
         onClose={ctl.closeReview}
         onSubmit={ctl.submitReview}
       />
+      {ctl.fundingFor && (
+        <ShortfallFundingForm
+          total={ctl.fundingFor.total}
+          shortfall={ctl.fundingFor.shortfall}
+          symbol={ctl.symbol}
+          busy={ctl.approving}
+          errorMessage={ctl.fundingError}
+          onClose={ctl.closeFunding}
+          onSubmit={ctl.submitFunding}
+        />
+      )}
     </Box>
   );
 }

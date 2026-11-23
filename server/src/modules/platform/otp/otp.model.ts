@@ -43,6 +43,11 @@ export const OTP_PURPOSES = [
   // Opening Tech → Environment Variables. Mailed to the root admin, not to the
   // operator asking, so a signed-in session alone never reads a secret.
   'ENV_ACCESS',
+  // A venue registering interest in the Venue Kit proves its mailbox, then
+  // (optionally) its +91 mobile. Two purposes, so a code minted for the phone
+  // can never stand in for the email proof, and neither can open an account.
+  'VENUE_KIT_EMAIL',
+  'VENUE_KIT_PHONE',
 ] as const;
 export type OtpPurpose = (typeof OTP_PURPOSES)[number];
 

@@ -2,6 +2,7 @@ import { Box, Chip, Stack, Typography } from '@mui/material';
 import { alpha, useTheme, type Theme } from '@mui/material/styles';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
 import PlaceIcon from '@mui/icons-material/Place';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import CategoryIcon from '@mui/icons-material/CategoryOutlined';
@@ -13,7 +14,7 @@ import PodQuickStats from './PodQuickStats';
 import CategoryBreadcrumb from '../../components/CategoryBreadcrumb';
 import PodMetaRow from '../../components/pod-details/PodMetaRow';
 import { useTranslation } from '../../i18n/useTranslation';
-import { hasVenueChat, podSeatsTaken, venueChatPath } from '@duncit/utils';
+import { hasVenueChat, podPhase, podSeatsTaken, venueChatPath } from '@duncit/utils';
 
 interface Props {
   pod: any;
@@ -25,7 +26,7 @@ interface Props {
   categoryCrumbs?: readonly string[];
 }
 
-type Tone = 'error' | 'warning' | 'info';
+type Tone = 'error' | 'warning' | 'info' | 'success';
 
 /** A calm tonal pill: the tone tints the fill and the icon, the text stays ink. */
 const toneChipSx = (theme: Theme, tone: Tone) => ({
@@ -34,19 +35,21 @@ const toneChipSx = (theme: Theme, tone: Tone) => ({
   '& .MuiChip-icon': { color: `${tone}.main` },
 });
 
-function TimeChip({ iso }: Readonly<{ iso?: string | null }>) {
+/** Expired only once the pod's END has passed; a started pod reads as ongoing. */
+function TimeChip({ iso, endIso }: Readonly<{ iso?: string | null; endIso?: string | null }>) {
   const { t } = useTranslation();
   const theme = useTheme();
   if (!iso) return null;
   const ms = new Date(iso).getTime() - Date.now();
   if (Number.isNaN(ms)) return null;
   if (ms < 0) {
+    const ongoing = podPhase(iso, endIso) === 'ONGOING';
     return (
       <Chip
-        icon={<EventBusyIcon />}
-        label={t('mweb.podDetails.podExpired')}
+        icon={ongoing ? <PlayCircleOutlineIcon /> : <EventBusyIcon />}
+        label={ongoing ? t('mweb.podDetails.podOngoing') : t('mweb.podDetails.podExpired')}
         data-testid="pod-info-time-chip"
-        sx={toneChipSx(theme, 'error')}
+        sx={toneChipSx(theme, ongoing ? 'success' : 'error')}
       />
     );
   }
@@ -135,7 +138,7 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
           data-testid="pod-info-mode-chip"
           sx={{ bgcolor: 'background.paper', color: 'text.primary', '& .MuiChip-icon': { color: 'text.primary' } }}
         />
-        <TimeChip iso={pod.pod_date_time} />
+        <TimeChip iso={pod.pod_date_time} endIso={pod.pod_end_date_time} />
       </Stack>
       <PodQuickStats spotsTaken={spotsTaken} spotsTotal={spotsTotal} />
     </Stack>

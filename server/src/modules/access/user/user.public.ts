@@ -17,6 +17,7 @@ import {
 import { emitUserChanged } from '../../../realtime/user.events';
 import { syncUserMirrors } from './user.mirrors';
 import type { AuthUser } from '@context';
+import type { PortalSessionClaim } from '@modules/portals/portalSecurity/portalSecurity.claims';
 import { USER_SCHEMA_FLAGS } from './user.featureFlags';
 import { toPostalAddress } from '@utils/address';
 
@@ -95,12 +96,22 @@ export async function loadRelationIds(userId: string): Promise<RelationIds> {
  * a token for the signed-in admin — a second signer would be a second chance to
  * disagree with the fallback secret below, and a token that verifies nowhere.
  */
-export async function signToken(payload: AuthUser): Promise<string> {
+export function signToken(payload: AuthUser, psv?: PortalSessionClaim): Promise<string> {
+  // Built inside the promise so a throw from `jwt.sign` still rejects, as it did when this was `async`.
+  return new Promise((resolve) => {
+    resolve(signedToken(payload, psv));
+  });
+}
+
+function signedToken(payload: AuthUser, psv?: PortalSessionClaim): string {
   const secret = process.env.JWT_SECRET || 'dev-secret';
   // Intentionally NO `expiresIn`: Duncit sessions do not expire on their own.
   // The same fallback secret is used by every `jwt.verify` site (context.ts,
   // realtime/io.ts, index.ts) so a token signed here always verifies there.
-  return jwt.sign(payload, secret);
+  // `psv` is the console sign-in claim: a token minted with `verified: false`
+  // is not a session until the Security Verification screen is completed
+  // (modules/portals/portalSecurity). Absent for every non-console sign-in.
+  return jwt.sign(psv ? { ...payload, psv } : payload, secret);
 }
 
 // Build the public GraphQL User shape. Storage is nested; consumers and the
@@ -270,14 +281,17 @@ export function publishSession<T extends Record<string, any> | null>(pub: T): T 
   return pub;
 }
 
-export async function authPayload(u: any) {
+export async function authPayload(u: any, psv?: PortalSessionClaim) {
   const pub = (await toPublic(u))!;
-  const token = await signToken({
-    id: pub.user_id,
-    email: pub.email ?? null,
-    roles: pub.roles,
-    assigned_city: pub.assigned_city,
-    assigned_zones: pub.assigned_zones,
-  });
+  const token = await signToken(
+    {
+      id: pub.user_id,
+      email: pub.email ?? null,
+      roles: pub.roles,
+      assigned_city: pub.assigned_city,
+      assigned_zones: pub.assigned_zones,
+    },
+    psv
+  );
   return { token, user: pub };
 }

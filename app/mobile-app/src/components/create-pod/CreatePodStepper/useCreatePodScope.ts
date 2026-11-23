@@ -100,8 +100,8 @@ export function useCreatePodScope({
   }, [form, physical, spots.min, spots.max]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Step 4's money state lives HERE because it gates the Create Pod button: a
-  // ₹0 projected payout, or a pod worth less than the venue slot, blocks
-  // publishing. The panel renders from the same object, so both always agree.
+  // paid pod publishes only on a fresh projection whose server verdict says
+  // viable. The panel renders from the same object, so both always agree.
   const podType = form.watch('pod_type');
   const pricing = usePodPricing({
     podAmount: Number(form.watch('pod_amount_text')) || 0,

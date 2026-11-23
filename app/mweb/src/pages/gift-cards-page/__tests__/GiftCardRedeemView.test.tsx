@@ -36,6 +36,7 @@ const card = (over: Partial<GiftCard> = {}): GiftCard => ({
   scope_image_url: 'https://ik.imagekit.io/duncit/gift.png',
   scope_image_front_url: '',
   scope_image_back_url: '',
+  design_name: '',
   initial_amount: 1000,
   balance: 1000,
   status: 'ACTIVE' as GiftCard['status'],

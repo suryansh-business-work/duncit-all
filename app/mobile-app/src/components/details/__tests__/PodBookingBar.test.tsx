@@ -129,21 +129,51 @@ describe('PodBookingBar', () => {
     expect(screen.queryByTestId('pod-book')).toBeNull();
   });
 
-  // Joining is closed the moment a pod STARTS, not once it is over — so the
-  // notice must not tell somebody the pod "has already taken place" while it
-  // is still running. Same bar, different sentence.
-  it('says the pod is happening right now while it is still running', () => {
+  // Booking closes once the pod is OVER, not when it starts: a running pod keeps
+  // its Book CTA (the "already ongoing" ask lives in PodDetailsOverlays).
+  it('keeps the Book CTA while the pod is still running', () => {
     const runningPod = {
       id: 'p1',
       pod_amount: 200,
       pod_date_time: new Date(Date.now() - 3_600_000).toISOString(),
       pod_end_date_time: new Date(Date.now() + 3_600_000).toISOString(),
     } as unknown as PodDetail;
-    renderBar({ pod: runningPod });
+    const onCheckout = jest.fn();
+    renderBar({ pod: runningPod, onCheckout });
+    expect(screen.queryByTestId('pod-booking-closed')).toBeNull();
+    fireEvent.press(screen.getByTestId('pod-book'));
+    expect(onCheckout).toHaveBeenCalledTimes(1);
+  });
+
+  it('still shows a disabled "Pod is full" on a running pod with no seats left', () => {
+    const runningPod = {
+      id: 'p1',
+      pod_amount: 200,
+      pod_date_time: new Date(Date.now() - 3_600_000).toISOString(),
+      pod_end_date_time: new Date(Date.now() + 3_600_000).toISOString(),
+    } as unknown as PodDetail;
+    const onCheckout = jest.fn();
+    renderBar({ pod: runningPod, onCheckout, membershipState: ms({ can_join: false }) });
+    expect(screen.getByText('Pod is full')).toBeOnTheScreen();
+    const cta = screen.getByTestId('pod-book');
+    expect(cta).toBeDisabled();
+    expect(cta.props.onResponderRelease).toBeUndefined();
+    expect(onCheckout).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('pod-booking-closed')).toBeNull();
+  });
+
+  it('closes booking once the pod end time has passed, even if it started recently', () => {
+    const endedPod = {
+      id: 'p1',
+      pod_amount: 200,
+      pod_date_time: new Date(Date.now() - 2 * 3_600_000).toISOString(),
+      pod_end_date_time: new Date(Date.now() - 60_000).toISOString(),
+    } as unknown as PodDetail;
+    renderBar({ pod: endedPod });
     expect(screen.getByTestId('pod-booking-closed')).toBeOnTheScreen();
     expect(screen.queryByTestId('pod-book')).toBeNull();
     expect(
-      screen.getByText('This pod is happening right now — joining is closed.'),
+      screen.getByText('This pod has already taken place — booking is closed.'),
     ).toBeOnTheScreen();
   });
 

@@ -3,7 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Spinner, Text, YStack } from 'tamagui';
 
-import { GiftCardBuySection, MyGiftCardsList } from '@/components/gift-cards';
+import { GiftCardBuySection, GiftCardOrdersList, MyGiftCardsList } from '@/components/gift-cards';
 import { GiftCardSegmented, type SegmentOption } from '@/components/gift-cards/GiftCardSegmented';
 import { StackScreen } from '@/components/StackScreen';
 import { useLoadingRegion } from '@/components/Skeleton';
@@ -14,26 +14,19 @@ import type { RootStackParamList } from '@/navigation/types';
 import type { GiftCardSelection } from '@/utils/gift-cards';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 
-type TabKey = 'buy' | 'cards';
+type TabKey = 'buy' | 'cards' | 'orders';
 
 /**
- * Gift Cards — the Buy tab (theme, amount, recipient, how-it-works) and the
- * My cards tab (held + gifted cards with copy/share). RN twin of mWeb's
- * /gift-cards page (rule 27); reached through the flag-gated sidebar section.
+ * Gift Cards — the Buy tab (the one card: amount, quantity, email or printed,
+ * recipient, how-it-works), the My cards tab (held + gifted cards with
+ * copy/share) and the Orders tab (every order with its tracking). RN twin of
+ * mWeb's /gift-cards page (rule 27); reached through the flag-gated sidebar.
  */
 export function GiftCardsScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const {
-    settings,
-    categories,
-    isLoading,
-    hasError,
-    cards,
-    cardsLoading,
-    cardsError,
-    refreshCards,
-  } = useGiftCards();
+  const { storefront, isLoading, hasError, cards, cardsLoading, cardsError, refreshCards } =
+    useGiftCards();
   const currency = useFinanceCurrency();
   const { data: meData } = useMe();
   const senderName = meData?.me?.full_name ?? '';
@@ -50,6 +43,7 @@ export function GiftCardsScreen() {
   const tabs: readonly SegmentOption<TabKey>[] = [
     { value: 'buy', label: t('mweb.giftCards.buyTab'), testID: 'gift-cards-tab-buy' },
     { value: 'cards', label: t('mweb.giftCards.myCardsTab'), testID: 'gift-cards-tab-cards' },
+    { value: 'orders', label: t('mweb.giftCards.ordersTab'), testID: 'gift-cards-tab-orders' },
   ];
 
   const onContinue = (selection: GiftCardSelection) => {
@@ -57,7 +51,11 @@ export function GiftCardsScreen() {
   };
 
   let body;
-  if (tab === 'cards') {
+  if (tab === 'orders') {
+    body = (
+      <GiftCardOrdersList onOpen={(orderNo) => navigation.navigate('GiftCardOrder', { orderNo })} />
+    );
+  } else if (tab === 'cards') {
     body = (
       <MyGiftCardsList
         cards={cards}
@@ -73,20 +71,23 @@ export function GiftCardsScreen() {
         {t('mweb.giftCards.loadError')}
       </Text>
     );
-  } else if (isLoading || !settings) {
+  } else if (isLoading || !storefront) {
     body = (
       <YStack alignItems="center" paddingVertical={32}>
         <Spinner testID="gift-cards-buy-loading" size="large" color="$primary" {...loadingRegion} />
       </YStack>
     );
   } else {
-    body = (
+    body = storefront.design ? (
       <GiftCardBuySection
-        settings={settings}
-        categories={categories}
-        currency={currency}
+        storefront={storefront}
+        design={storefront.design}
         onContinue={onContinue}
       />
+    ) : (
+      <Text testID="gift-cards-unavailable" fontSize={14} color="$muted">
+        {t('mweb.giftCards.unavailable')}
+      </Text>
     );
   }
 

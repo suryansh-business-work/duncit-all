@@ -1,8 +1,9 @@
+import { Platform } from 'react-native';
 import { ClientError, GraphQLClient, type Variables } from 'graphql-request';
 import type { DocumentNode } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
-import { APP_HEADER, SURFACE_HEADER } from '@duncit/user-core';
+import { APP_HEADER, SURFACE_HEADER, nativePlatformHeaders } from '@duncit/user-core';
 import { CONSENT_HEADER, consentHeaderValue } from '@duncit/utils';
 
 import { config } from '@/constants/config';
@@ -118,6 +119,9 @@ export async function graphqlRequest<TResult, TVars extends object = Record<stri
   headers[SURFACE_HEADER] = 'NATIVE';
   // Which app inside that surface, for the platform rate limiter.
   headers[APP_HEADER] = 'native';
+  // Android or iOS, for Admin > Users "Platforms Used". Store builds only: the
+  // web build sends nothing, so no browser preflight ever meets the header.
+  Object.assign(headers, nativePlatformHeaders(Platform.OS));
   // The device's tracking choice, on every request — the server refuses to
   // store analytics or attribution unless the category is named here, so a
   // call that forgot to check consent still cannot write it (twin of mWeb's

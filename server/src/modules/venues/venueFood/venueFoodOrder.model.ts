@@ -203,5 +203,9 @@ venueFoodOrderSchema.index(
   { coupon_id: 1, customer_phone: 1, payment_status: 1 },
   { partialFilterExpression: { coupon_id: { $exists: true } } }
 );
+// Finance › Payment Trace finds a food order by any of its Razorpay ids, across venues.
+venueFoodOrderSchema.index({ razorpay_payment_id: 1 }, { name: 'razorpay_payment_id_trace' });
+venueFoodOrderSchema.index({ razorpay_order_id: 1 }, { name: 'razorpay_order_id_trace' });
+venueFoodOrderSchema.index({ razorpay_refund_id: 1 }, { name: 'razorpay_refund_id_trace' });
 
 export const VenueFoodOrderModel = model<IVenueFoodOrder>('VenueFoodOrder', venueFoodOrderSchema);

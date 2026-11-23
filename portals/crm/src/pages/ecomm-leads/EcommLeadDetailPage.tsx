@@ -25,6 +25,7 @@ import { useLeadEditorOrigin } from '../../hooks/useLeadEditorFlow';
 import AskAiDrawer from '../../components/ask-ai/AskAiDrawer';
 import AskAiButton from '../../components/ask-ai/AskAiButton';
 import { askAiLead, askAiShift } from '../../components/ask-ai/askAiLead';
+import { LeadQualityHeaderRing } from '../../components/lead-quality-tab';
 
 const leadDate = (iso?: string | null) => adminDate(iso) || null;
 
@@ -130,6 +131,7 @@ export default function EcommLeadDetailPage() {
             <DuncitButton startIcon={<EditIcon />} variant="contained" onClick={() => navigate(`/ecomm-leads/${lead.id}`, { state: editorOrigin })}>
               {t('shell.common.edit')}
             </DuncitButton>
+            <LeadQualityHeaderRing entity="ECOMM_LEAD" leadId={lead.id} />
           </Stack>
         </CardContent>
       </Card>

@@ -11,11 +11,13 @@ import {
 import { StackScreen } from '@/components/StackScreen';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 import { SelectedVenueBar } from '@/components/studio-options/SelectedVenueBar';
+import { StudioEmailGateNotice } from '@/components/studio-options/StudioEmailGateNotice';
 import { StudioOptionsList } from '@/components/studio-options/StudioOptionsList';
 import { StudioRoleSwitcher } from '@/components/studio-options/StudioRoleSwitcher';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useMe } from '@/hooks/useMe';
 import { useMyVenues } from '@/hooks/useMyVenues';
+import { useStudioEmailGate } from '@/hooks/useStudioEmailGate';
 import { PRODUCT_VISIBILITY_FLAG } from '@/hooks/useProductVisibility';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
@@ -65,10 +67,18 @@ function StudioOptionsScreen({
   // and the route changes with it so a deep link and a restored stack keep it.
   // It REPLACES this screen — Back leaves the Studio instead of stepping back
   // through every role that was looked at.
-  const switchRole = (next: PartnerStudioMode) => {
-    setStudioMode(next);
-    replace(STUDIO_ROUTE[next]);
-  };
+  // A Host, Venue or Club Admin tab on an unverified email explains the gate
+  // instead, so a role that cannot be opened is never remembered.
+  const emailGate = useStudioEmailGate();
+  const switchRole = (next: PartnerStudioMode) =>
+    emailGate.guard(next, () => {
+      setStudioMode(next);
+      replace(STUDIO_ROUTE[next]);
+    });
+  // Reached by a link or a remembered role: the options stay hidden behind the
+  // same "verify your email first" message the entries show. An account still
+  // loading is not yet "unverified".
+  const locked = !!data?.me && emailGate.blocks(mode);
 
   return (
     <StackScreen title={t(STUDIO_OPTIONS_ENTRY[mode].labelKey)} testID={testID}>
@@ -78,13 +88,18 @@ function StudioOptionsScreen({
       >
         <YStack gap={16}>
           <StudioRoleSwitcher modes={held} value={mode} onChange={switchRole} />
-          {mode === 'VENUE' ? <VenueOptionsPicker /> : null}
+          {mode === 'VENUE' && !locked ? <VenueOptionsPicker /> : null}
           {isLoading && items.length === 0 ? (
             <Spinner role="progressbar" aria-label={t('mweb.a11y.loading')} color="$primary" />
           ) : null}
-          <StudioOptionsList items={items} />
+          {locked ? (
+            <StudioEmailGateNotice onVerify={emailGate.verifyEmail} />
+          ) : (
+            <StudioOptionsList items={items} />
+          )}
         </YStack>
       </RefreshScrollView>
+      {emailGate.dialog}
     </StackScreen>
   );
 }

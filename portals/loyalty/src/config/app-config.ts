@@ -74,6 +74,9 @@ export const appConfig = {
       label: 'Cards', labelKey: 'shell.nav.cards',
       icon: 'ticket',
       children: [
+        { label: 'Gift Card Orders', labelKey: 'shell.nav.giftCardOrders', to: '/gift-cards/orders', icon: 'orders' },
+        { label: 'Gift Card Designs', labelKey: 'shell.nav.giftCardDesigns', to: '/gift-cards/designs', icon: 'image' },
+        { label: 'Gift Card Settings', labelKey: 'shell.nav.giftCardSettings', to: '/gift-cards/settings', icon: 'tune' },
         {
           label: 'Virtual Gift Cards', labelKey: 'shell.nav.virtualGiftCards',
           icon: 'wallet',

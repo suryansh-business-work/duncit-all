@@ -17,7 +17,7 @@ import { formatMoney } from '@/utils/checkout-math';
 import { formatDateTime } from '@/utils/date-format';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
-/** One line of money taken off the bill — the multi-ticket tier, a coupon, redeemed coins. */
+/** One line of money taken off the bill — the Smart Incentive, a coupon, redeemed coins. */
 export interface CheckoutDiscount {
   key: string;
   label: string;

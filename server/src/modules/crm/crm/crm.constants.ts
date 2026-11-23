@@ -42,10 +42,14 @@ export const AMENITIES = [
   'Projector', 'Wi-Fi', 'Seating', 'Food Available', 'Kitchen Access', 'Security Guard', 'Wheelchair Access',
 ];
 
-export const LEAD_SOURCES = ['Referral', 'Website', 'WhatsApp', 'Instagram', 'Walk-in', 'Partner', 'Cold Outreach', 'Other'];
+/** The lead_source of a lead added from a CRM › Lead Research candidate. */
+export const RESEARCH_LEAD_SOURCE = 'Lead Research';
+export const LEAD_SOURCES = ['Referral', 'Website', 'WhatsApp', 'Instagram', 'Walk-in', 'Partner', 'Cold Outreach', RESEARCH_LEAD_SOURCE, 'Other'];
 export const VENUE_LEAD_STATUSES = ['New', 'Contacted', 'Follow-up', 'Negotiation', 'Won', 'Lost'];
 export const HOST_LEAD_STATUSES = ['New', 'Contacted', 'Qualified', 'Follow-up', 'Negotiation', 'Won', 'Lost'];
 export const PRIORITIES = ['Low', 'Medium', 'High'];
+/** The pipeline status every lead kind ends on when it converts (lead quality conversion analytics). */
+export const WON_LEAD_STATUS = 'Won';
 
 export const HOST_TYPES = [
   'Individual', 'Community Admin', 'Event Organizer', 'Coach / Trainer',
@@ -104,5 +108,7 @@ export const DYNAMIC_FIELD_FLAG: Record<CrmLeadEntityType, string> = {
   COMMUNITY_LEAD: 'applies_to_community',
 };
 
-export const ACTIVITY_TYPES = ['EMAIL', 'CALL', 'NOTE'] as const;
+// NOTE is a manual log; NOTE_CREATED / NOTE_UPDATED / NOTE_DELETED are the audit entries
+// its changes leave behind (target = the log's id), so the history survives an edit or delete.
+export const ACTIVITY_TYPES = ['EMAIL', 'CALL', 'NOTE', 'NOTE_CREATED', 'NOTE_UPDATED', 'NOTE_DELETED'] as const;
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];

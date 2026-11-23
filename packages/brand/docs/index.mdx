@@ -39,6 +39,7 @@ exports:
   - 'widgets/faq'
   - 'widgets/help-center'
   - 'widgets/grievance-form'
+  - 'widgets/venue-kit-interest'
   - 'widgets/policy-list'
   - 'widgets/policy-reader'
   - 'widgets/site-nav'
@@ -504,6 +505,7 @@ Every string a widget shows comes from them — the modules carry no copy.
 | `faq` | the FAQ list element **or** the ask `<form>` (two roots) | both: `data-graphql-url`. List: `data-copy` `{ empty, error }`. Form: `data-copy` `{ ask, sending, gotIt, tooShort, needEmail, failed, failedRetry }` | form: fields `question`, `email`, the captcha widget, `[data-form-error]` |
 | `help-center` | the topic grid | `data-graphql-url`; `data-copy` `{ empty, error, general, one, many }` | page-level `input[data-help-search]` |
 | `grievance-form` | the `<form>` | `data-graphql-url`; `data-source` (e.g. `WEBSITE`); `data-failed`; `data-sending` | fields `support_ticket_ref`, `name`, `email`, `phone`, `address`, `subject`, `description`; captcha; `[data-form-error]`. Page-level: `[data-grievance-done]`, `[data-grievance-ref]`, `[data-grievance-ladder]` |
+| `venue-kit-interest` | the `<form>` | `data-graphql-url`; `data-copy` `{ emailCodeSent, phoneCodeSent, testCode, working, doneTitle, doneText, doneUpdated, failed, nameRequired, emailInvalid, phoneInvalid, codeInvalid }` (the `venueKit.form.*` sentences, placeholders unresolved) | inputs `name`, `email`, `phone_number`, `email_code`, `phone_code`, checkbox `verify_phone`; the captcha inside `[data-vk-captcha]`; buttons `[data-vk-action="send-email / verify-email / change-email / send-phone / verify-phone"]` + one submit; panels `[data-vk-panel="fields / email-code / email-done / phone / phone-send / phone-code / phone-done / done"]`; notes `[data-vk-note="email / phone / done-title / done-text"]`; `[data-form-error]`. Email code first (captcha-gated), the +91 SMS code optional and only after the email is proved; submits `submitVenueKitInterest`. Incomplete markup is left unmounted and logged. |
 | `policy-list` | the card grid | `data-graphql-url`; `data-copy` `{ readCurrent, showAll, empty, error, matchOne, matchMany, nothingMatches }` | page-level `[data-policy-search-wrap]` (starts `hidden`), `input[data-policy-search]`, `[data-policy-count]` |
 | `policy-reader` | the body container | `data-graphql-url`; `data-copy` `{ notFound, empty, error }`; optional `data-policy-slug` — else the address's last segment | sets `document.title` and `[data-page-heading]` (else the first `h1`); no valid slug → `/policies` |
 | `site-nav` | the drawer (starts `-translate-x-full`, `aria-hidden="true"`) | — | inside: `[data-nav-close]`, `[data-theme-toggle]` + `[data-theme-icon]`. Page-level: any `[data-nav-toggle]`, `[data-nav-backdrop]` |

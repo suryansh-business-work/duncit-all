@@ -70,15 +70,17 @@ inert, and Android caches that failure.
 `scripts/generate-app-links.mjs` writes both files into
 `app/mweb/public/.well-known/` during `pnpm --filter mweb-app build`. The
 package name and bundle id come from `app.json` so they cannot drift from the
-app; the signing identity comes from the environment:
+app; the signing identity comes from the Tech portal:
 
-| Variable | Where to find it |
+| Value | Where to set it |
 |---|---|
-| `MWEB_ANDROID_CERT_SHA256` | Play Console → your app → **Test and release ▸ Setup ▸ App signing** → *App signing key certificate* → SHA-256. Include the **upload** key's SHA-256 too, comma separated, or internal-testing builds will not verify. |
-| `MWEB_IOS_TEAM_ID` | Apple Developer → **Membership** → Team ID (10 characters). |
+| Android fingerprints | **Tech → Environment → Google Play → App Links SHA-256 fingerprints** — Play Console → your app → **Test and release ▸ Setup ▸ App signing** → *App signing key certificate* → SHA-256. Include the **upload** key's SHA-256 too, comma separated, or internal-testing builds will not verify. The build reads it from `publicClientConfig.android_app_links_sha256`. A `MWEB_ANDROID_CERT_SHA256` env var / repository secret, if set, overrides it (kept only while the Tech portal entry is being filled — then delete the secret). |
+| Apple Team ID | **Tech → Environment → Sign in with Apple → Team ID** (Apple Developer → Membership → Team ID, 10 characters). The build reads it from `publicClientConfig.apple_team_id`. A `MWEB_IOS_TEAM_ID` env var overrides it for a local build. |
 
-Both are passed to the image as build args by `.github/workflows/deploy.yml`,
-from repository secrets of the same names. **They are not committed**, and the
+Both are read from the server at `VITE_GRAPHQL_URL`, one query each, so changing
+either in the Tech portal needs only an mWeb redeploy.
+A Team ID that is not 10 upper-case letters or digits (`@duncit/regex`
+`isAppleTeamId`) is treated as missing. **They are not committed**, and the
 generated directory is gitignored — a fingerprint belongs to a signing key, and
 a stale one is worse than none because Android remembers the failure.
 
@@ -92,7 +94,7 @@ nginx would otherwise send `application/octet-stream` and iOS would ignore it.
 
 ### Turning it on
 
-1. Add the two repository secrets above.
+1. Fill the App Links fingerprints (Google Play) and the Team ID (Sign in with Apple) in the Tech portal.
 2. Deploy mWeb.
 3. Check what the phone will see:
 

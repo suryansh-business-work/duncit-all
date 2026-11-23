@@ -59,8 +59,17 @@ export interface IGiftCard extends Document {
   /** Who converted it to coins. Null until redeemed. */
   redeemed_by_user_id: Types.ObjectId | null;
   redeemed_at: Date | null;
-  /** Business key of the purchase payment — the issue idempotency key. */
+  /** Business key of the purchase payment. One payment may buy several cards
+   * (an order's quantity); (payment_id, line_index) is the issue idempotency key. */
   payment_id: string;
+  /** This card's position in its order, 0-based. Legacy single cards have none (read as 0). */
+  line_index: number;
+  /** The catalogue design this card was bought in, with its name frozen at purchase.
+   * Null/empty on cards bought with a category theme. */
+  design_id: Types.ObjectId | null;
+  design_name: string;
+  /** The gift card order this card belongs to (null on cards older than orders). */
+  order_id: Types.ObjectId | null;
   expires_at: Date;
   created_at: Date;
   updated_at: Date;
@@ -93,6 +102,19 @@ export interface IGiftCardSettings extends Document {
   max_amount: number;
   /** Months from purchase until the card expires. */
   validity_months: number;
+  /** Most cards one order may buy. */
+  max_quantity: number;
+  /** Whether members may order printed cards delivered by courier. */
+  physical_enabled: boolean;
+  /** Flat delivery fee, charged ONCE on every physical order whatever its quantity. */
+  shipping_fee: number;
+  /** ShipRocket pickup nickname the cards ship from; empty = the account's default. */
+  pickup_location: string;
+  /** The packed envelope ShipRocket rates and books. */
+  parcel_weight_kg: number;
+  parcel_length_cm: number;
+  parcel_breadth_cm: number;
+  parcel_height_cm: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -120,12 +142,24 @@ const giftCardSchema = new Schema<IGiftCard>(
     status: { type: String, enum: ['ACTIVE', 'REDEEMED'], default: 'ACTIVE' },
     redeemed_by_user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     redeemed_at: { type: Date, default: null },
-    payment_id: { type: String, required: true, unique: true },
+    payment_id: { type: String, required: true },
+    line_index: { type: Number, default: 0, min: 0 },
+    design_id: { type: Schema.Types.ObjectId, ref: 'GiftCardDesign', default: null },
+    design_name: { type: String, default: '', trim: true },
+    order_id: { type: Schema.Types.ObjectId, ref: 'GiftCardOrder', default: null, index: true },
     expires_at: { type: Date, required: true },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
 giftCardSchema.index({ created_at: -1 });
+// One card per (payment, position): every replay of the success path lands on
+// the same N cards. Legacy cards carry no line_index and index as null — each
+// legacy payment holds exactly one card, so they stay unique. Named so it never
+// collides with the old single-field unique payment_id_1, which syncIndexes drops.
+giftCardSchema.index(
+  { payment_id: 1, line_index: 1 },
+  { unique: true, name: 'one_card_per_payment_line' }
+);
 
 const giftCardTxnSchema = new Schema<IGiftCardTransaction>(
   {
@@ -142,20 +176,17 @@ const giftCardTxnSchema = new Schema<IGiftCardTransaction>(
 );
 giftCardTxnSchema.index({ created_at: -1 });
 
-// A replayed payment-success must not issue a second card's worth of ledger:
-// one payment writes at most one PURCHASE row. Enforced by the database, like
-// the coin ledger — keyed on the business payment_id string ('pay_...').
-giftCardTxnSchema.index(
-  { payment_id: 1, source: 1 },
-  { unique: true, partialFilterExpression: { payment_id: { $type: 'string' } } }
-);
+giftCardTxnSchema.index({ payment_id: 1 });
 
-// One card converts to coins exactly once, however many times the redeem
-// mutation is retried or raced — the database decides, not a read-then-write
-// check. Partial: ISSUE rows are exempt.
+// Each card is issued once (one PURCHASE row) and converts to coins once (one
+// REDEEM_TO_COINS row), however often either path is retried or raced — the
+// database decides, not a read-then-write check. A payment that bought several
+// cards writes one PURCHASE row per card. Named apart from the old partial
+// gift_card_id_1_source_1 index so syncIndexes replaces it instead of an
+// options conflict silently keeping the old one.
 giftCardTxnSchema.index(
   { gift_card_id: 1, source: 1 },
-  { unique: true, partialFilterExpression: { source: 'REDEEM_TO_COINS' } }
+  { unique: true, name: 'one_txn_per_card_and_source' }
 );
 
 const giftCardSettingsSchema = new Schema<IGiftCardSettings>(
@@ -165,6 +196,14 @@ const giftCardSettingsSchema = new Schema<IGiftCardSettings>(
     min_amount: { type: Number, default: 100, min: 1 },
     max_amount: { type: Number, default: 10000, min: 1 },
     validity_months: { type: Number, default: 12, min: 1, max: 60 },
+    max_quantity: { type: Number, default: 10, min: 1, max: 50 },
+    physical_enabled: { type: Boolean, default: false },
+    shipping_fee: { type: Number, default: 0, min: 0 },
+    pickup_location: { type: String, default: '', trim: true, maxlength: 120 },
+    parcel_weight_kg: { type: Number, default: 0.1, min: 0.05, max: 50 },
+    parcel_length_cm: { type: Number, default: 22, min: 0.5, max: 300 },
+    parcel_breadth_cm: { type: Number, default: 16, min: 0.5, max: 300 },
+    parcel_height_cm: { type: Number, default: 2, min: 0.5, max: 120 },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

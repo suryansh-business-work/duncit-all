@@ -2421,8 +2421,6 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
         kickerSoon: 'Save the date',
         cta: 'Book now',
         free: 'Free',
-        priceSolo: '{price} solo',
-        priceTier: '{price} each for {count}',
         timeRange: '{start} – {end}',
         aboutHeading: 'About the pod',
         includedHeading: 'What’s included',

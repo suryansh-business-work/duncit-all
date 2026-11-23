@@ -1,5 +1,7 @@
-import { DialogActions } from '@mui/material';
+import { useId } from 'react';
+import { Box, DialogActions, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
+import { useEconomicsGate } from './finance/useEconomicsGate';
 import { useTranslation } from './i18n/useTranslation';
 
 interface Props {
@@ -13,7 +15,9 @@ interface Props {
   onPublish: () => void;
 }
 
-/** The form's footer: Cancel, the optional Save as Draft, and Save. */
+/** The form's footer: Cancel, the optional Save as Draft, and Save. Both saves
+ * write the pod, so both wait while the server's earnings verdict has not
+ * cleared a paid pod (`useEconomicsGate`), with a line saying so. */
 export default function PodFormActions({
   showDraft,
   busy,
@@ -23,17 +27,37 @@ export default function PodFormActions({
   onPublish,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const blocked = useEconomicsGate();
+  const hintId = useId();
+  const saveDisabled = disabled || blocked;
+  const describedBy = blocked ? hintId : undefined;
   return (
-    <DialogActions sx={{ p: 0 }}>
-      <DuncitButton onClick={onCancel}>{t('podForm.common.cancel')}</DuncitButton>
-      {showDraft && (
-        <DuncitButton variant="outlined" type="button" disabled={disabled} onClick={onDraft}>
-          {t('podForm.common.saveAsDraft')}
+    <Box>
+      <DialogActions sx={{ p: 0 }}>
+        <DuncitButton onClick={onCancel}>{t('podForm.common.cancel')}</DuncitButton>
+        {showDraft && (
+          <DuncitButton variant="outlined" type="button" disabled={saveDisabled} onClick={onDraft} aria-describedby={describedBy}>
+            {t('podForm.common.saveAsDraft')}
+          </DuncitButton>
+        )}
+        <DuncitButton
+          variant="contained"
+          type="submit"
+          disabled={saveDisabled}
+          onClick={onPublish}
+          aria-describedby={describedBy}
+          data-testid="pod-form-save"
+        >
+          {busy ? 'Saving…' : 'Save'}
         </DuncitButton>
-      )}
-      <DuncitButton variant="contained" type="submit" disabled={disabled} onClick={onPublish} data-testid="pod-form-save">
-        {busy ? 'Saving…' : 'Save'}
-      </DuncitButton>
-    </DialogActions>
+      </DialogActions>
+      <Box aria-live="polite">
+        {blocked && (
+          <Typography id={hintId} variant="caption" component="p" data-testid="pod-form-save-blocked" sx={{ color: 'text.secondary', textAlign: 'right', mt: 1 }}>
+            {t('podForm.priceBreakdown.viability.saveBlocked')}
+          </Typography>
+        )}
+      </Box>
+    </Box>
   );
 }

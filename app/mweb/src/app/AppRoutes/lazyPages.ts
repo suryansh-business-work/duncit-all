@@ -65,6 +65,7 @@ export const GiftCardsPage = lazy(() => import('../../pages/gift-cards-page'));
 export const GiftCardCheckoutPage = lazy(() => import('../../pages/gift-card-checkout-page'));
 export const GiftCardRedeemPage = lazy(() => import('../../pages/gift-card-redeem-page'));
 export const GiftCardClaimPage = lazy(() => import('../../pages/gift-card-claim-page'));
+export const GiftCardOrderPage = lazy(() => import('../../pages/gift-card-order-page'));
 export const PodPlansPage = lazy(() => import('../../pages/PodPlansPage'));
 export const PodHistoryPage = lazy(() => import('../../pages/PodHistoryPage'));
 export const PodHistoryDetailsPage = lazy(() => import('../../pages/PodHistoryDetailsPage'));

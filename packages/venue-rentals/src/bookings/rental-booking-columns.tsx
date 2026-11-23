@@ -10,30 +10,11 @@ import {
   rentalStatusKey,
   rentalUnitKey,
   type RentalBookingRow,
-  type RentalBookingStatus,
-  type RentalRefundStatus,
 } from '@duncit/utils';
 import type { Translate } from '../types';
+import { RentalRefundStateChip, RentalStatusChip } from './rental-chips';
 
 export const getRentalBookingRowId = (row: RentalBookingRow) => row.id;
-
-type ChipColor = 'default' | 'info' | 'success' | 'warning' | 'error';
-
-const STATUS_COLOR: Record<RentalBookingStatus, ChipColor> = {
-  BOOKED: 'info',
-  UNAVAILABLE: 'warning',
-  CANCELLED: 'default',
-  RELEASED: 'default',
-  RETURNED: 'success',
-  DAMAGED: 'error',
-};
-
-const REFUND_COLOR: Record<RentalRefundStatus, ChipColor> = {
-  NONE: 'default',
-  DUE: 'warning',
-  PAID: 'success',
-  IN_PAYMENT: 'success',
-};
 
 export interface RentalColumnOptions {
   /** Finance sees who rented it; the venue sees the same. A guest's own list does not need it. */
@@ -43,9 +24,14 @@ export interface RentalColumnOptions {
 }
 
 const money = (row: RentalBookingRow, amount: number) => rentalMoney(row.currency_symbol, amount);
+/** An amount that is 0 reads as a dash, so the owed money stands out. */
+const moneyOrDash = (row: RentalBookingRow, amount: number | null | undefined) =>
+  amount != null && amount > 0 ? money(row, amount) : EM_DASH;
 
-/** Every rented item: what was rented for which pod, what it cost, how it closed and who is owed what. */
-export function buildRentalBookingColumns(t: Translate, options: RentalColumnOptions): DuncitColumn<RentalBookingRow>[] {
+/** What the booking is owed back: the server's figure, or the frozen refund on an older server. */
+export const rentalRefundEligible = (row: RentalBookingRow) => row.refund_eligible ?? row.refund_due;
+
+function leadColumns(t: Translate, options: RentalColumnOptions): DuncitColumn<RentalBookingRow>[] {
   const columns: DuncitColumn<RentalBookingRow>[] = [
     {
       field: 'created_at',
@@ -85,7 +71,80 @@ export function buildRentalBookingColumns(t: Translate, options: RentalColumnOpt
       filterable: false,
     });
   }
-  columns.push(
+  return columns;
+}
+
+/** The refund as Razorpay carries it: what is owed, what is still out, what Razorpay confirmed and where it stands. */
+function refundColumns(t: Translate): DuncitColumn<RentalBookingRow>[] {
+  return [
+    {
+      // Sorted by the frozen refund_due, the server's sortable twin of the eligible amount.
+      field: 'refund_due',
+      headerName: t('venueRentals.table.refundEligible'),
+      type: 'number',
+      width: 140,
+      valueGetter: (row) => money(row, rentalRefundEligible(row)),
+    },
+    {
+      field: 'refund_outstanding',
+      headerName: t('venueRentals.table.refundOutstanding'),
+      type: 'number',
+      width: 160,
+      sortable: false,
+      filterable: false,
+      valueGetter: (row) => moneyOrDash(row, row.refund_outstanding),
+    },
+    {
+      field: 'refunded_amount',
+      headerName: t('venueRentals.table.refunded'),
+      type: 'number',
+      width: 130,
+      sortable: false,
+      filterable: false,
+      valueGetter: (row) => moneyOrDash(row, row.refunded_amount),
+    },
+    {
+      field: 'refund_state',
+      headerName: t('venueRentals.table.refundState'),
+      type: 'text',
+      width: 230,
+      sortable: false,
+      filterable: false,
+      cellRenderer: (row) => <RentalRefundStateChip row={row} />,
+    },
+  ];
+}
+
+/** Columns Finance may still want for older bookings, hidden until someone turns them on. */
+function legacyColumns(t: Translate): DuncitColumn<RentalBookingRow>[] {
+  return [
+    {
+      // Cash a venue handed back before Duncit refunded deposits through Razorpay.
+      field: 'deposit_at_venue',
+      headerName: t('venueRentals.table.depositAtVenue'),
+      type: 'number',
+      width: 160,
+      sortable: false,
+      filterable: false,
+      hide: true,
+      valueGetter: (row) => moneyOrDash(row, row.deposit_at_venue),
+    },
+    {
+      field: 'refund_status',
+      headerName: t('venueRentals.table.refundStatus'),
+      type: 'enum',
+      width: 200,
+      hide: true,
+      options: RENTAL_REFUND_STATUSES.map((value) => ({ value, label: t(rentalRefundKey(value)) })),
+      cellRenderer: (row) => <Chip size="small" variant="outlined" label={t(rentalRefundKey(row.refund_status))} />,
+    },
+  ];
+}
+
+/** Every rented item: what was rented for which pod, what it cost, how it closed and who is owed what. */
+export function buildRentalBookingColumns(t: Translate, options: RentalColumnOptions): DuncitColumn<RentalBookingRow>[] {
+  const columns: DuncitColumn<RentalBookingRow>[] = [
+    ...leadColumns(t, options),
     { field: 'rent_amount', headerName: t('venueRentals.table.rent'), type: 'number', width: 120, valueGetter: (row) => money(row, row.rent_amount) },
     { field: 'deposit_amount', headerName: t('venueRentals.table.deposit'), type: 'number', width: 120, valueGetter: (row) => money(row, row.deposit_amount) },
     {
@@ -94,7 +153,7 @@ export function buildRentalBookingColumns(t: Translate, options: RentalColumnOpt
       type: 'enum',
       width: 190,
       options: RENTAL_BOOKING_STATUSES.map((value) => ({ value, label: t(rentalStatusKey(value)) })),
-      cellRenderer: (row) => <Chip size="small" color={STATUS_COLOR[row.status]} label={t(rentalStatusKey(row.status))} />,
+      cellRenderer: (row) => <RentalStatusChip status={row.status} />,
     },
     {
       field: 'damage_claim',
@@ -103,29 +162,9 @@ export function buildRentalBookingColumns(t: Translate, options: RentalColumnOpt
       width: 130,
       sortable: false,
       filterable: false,
-      valueGetter: (row) => (row.damage_claim > 0 ? money(row, row.damage_claim) : EM_DASH),
+      valueGetter: (row) => moneyOrDash(row, row.damage_claim),
     },
-    {
-      // Cash the venue handed the guest when the item came back — never a gateway refund.
-      field: 'deposit_at_venue',
-      headerName: t('venueRentals.table.depositAtVenue'),
-      type: 'number',
-      width: 160,
-      sortable: false,
-      filterable: false,
-      valueGetter: (row) => (row.deposit_at_venue > 0 ? money(row, row.deposit_at_venue) : EM_DASH),
-    },
-    { field: 'refund_due', headerName: t('venueRentals.table.refundDue'), type: 'number', width: 130, valueGetter: (row) => money(row, row.refund_due) },
-    {
-      field: 'refund_status',
-      headerName: t('venueRentals.table.refundStatus'),
-      type: 'enum',
-      width: 200,
-      options: RENTAL_REFUND_STATUSES.map((value) => ({ value, label: t(rentalRefundKey(value)) })),
-      cellRenderer: (row) => (
-        <Chip size="small" variant="outlined" color={REFUND_COLOR[row.refund_status]} label={t(rentalRefundKey(row.refund_status))} />
-      ),
-    },
+    ...refundColumns(t),
     { field: 'venue_amount', headerName: t('venueRentals.table.venueAmount'), type: 'number', width: 130, valueGetter: (row) => money(row, row.venue_amount) },
     {
       field: 'commission_amount',
@@ -136,8 +175,9 @@ export function buildRentalBookingColumns(t: Translate, options: RentalColumnOpt
       filterable: false,
       valueGetter: (row) => money(row, row.commission_amount),
     },
-    { field: 'payment_ref', headerName: t('venueRentals.table.payment'), type: 'text', width: 170, sortable: false, filterable: false, hide: true }
-  );
+    { field: 'payment_ref', headerName: t('venueRentals.table.payment'), type: 'text', width: 170, sortable: false, filterable: false, hide: true },
+    ...legacyColumns(t),
+  ];
   if (options.renderActions) {
     columns.push({
       field: 'actions',

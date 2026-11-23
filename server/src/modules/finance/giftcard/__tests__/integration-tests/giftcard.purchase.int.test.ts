@@ -320,20 +320,18 @@ describe('giftcardService.issueForPayment', () => {
     expect(await GiftCardTransactionModel.countDocuments({ payment_id: 'pay_gc_004' })).toBe(1);
   });
 
-  it('still returns the card when its ISSUE row already exists from an earlier, interrupted run', async () => {
-    await GiftCardTransactionModel.create({
-      gift_card_id: new Types.ObjectId(),
-      code: 'AAAA-BBBB-CCCC-DDDD',
-      user_id: new Types.ObjectId(purchaserId),
-      type: 'ISSUE',
-      amount: 1500,
-      balance_after: 1500,
-      source: 'PURCHASE',
-      payment_id: 'pay_gc_005',
-    });
-    const card = await giftcardService.issueForPayment({ paymentId: 'pay_gc_005', purchaserId, facts: shopFacts() });
-    expect(card.payment_id).toBe('pay_gc_005');
-    expect(await GiftCardTransactionModel.countDocuments({ payment_id: 'pay_gc_005' })).toBe(1);
+  it('settles the ISSUE row a run that died after creating the card left owed, exactly once', async () => {
+    const first = await giftcardService.issueForPayment({ paymentId: 'pay_gc_005', purchaserId, facts: shopFacts() });
+    // The crash: the card exists, its ledger row never landed.
+    await GiftCardTransactionModel.deleteMany({ payment_id: 'pay_gc_005' });
+
+    const replay = await giftcardService.issueForPayment({ paymentId: 'pay_gc_005', purchaserId, facts: shopFacts() });
+    await giftcardService.issueForPayment({ paymentId: 'pay_gc_005', purchaserId, facts: shopFacts() });
+
+    expect(String(replay._id)).toBe(String(first._id));
+    const rows = await GiftCardTransactionModel.find({ payment_id: 'pay_gc_005' }).lean();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ gift_card_id: first._id, type: 'ISSUE', source: 'PURCHASE', amount: 1500 });
   });
 
   it('stores empty artwork for facts frozen before artwork existed', async () => {
@@ -386,7 +384,7 @@ describe('giftcardService.emailForPayment', () => {
 
     const out = await giftcardService.emailForPayment({ payment_id: 'pay_gc_mail_1', ...buyer });
 
-    expect(out).toEqual({ to: 'priya@example.com', cardId: String(card._id) });
+    expect(out).toEqual({ to: 'priya@example.com', cardId: String(card._id), cardIds: [String(card._id)] });
     expect(mockSend).toHaveBeenCalledWith({
       to: 'priya@example.com',
       recipient_name: 'Priya Menon',
@@ -431,12 +429,16 @@ describe('giftcardService.syncIndexes', () => {
     await giftcardService.syncIndexes();
     const txnIndexes = await GiftCardTransactionModel.collection.indexes();
     const cardIndexes = await GiftCardModel.collection.indexes();
+    // One payment may buy several cards: each card holds one PURCHASE row, and
+    // each (payment, line) holds one card. Nothing unique stays on payment alone.
     expect(txnIndexes).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ key: { payment_id: 1, source: 1 }, unique: true }),
-        expect.objectContaining({ key: { gift_card_id: 1, source: 1 }, unique: true }),
-      ])
+      expect.arrayContaining([expect.objectContaining({ key: { gift_card_id: 1, source: 1 }, unique: true })])
     );
-    expect(cardIndexes).toEqual(expect.arrayContaining([expect.objectContaining({ key: { payment_id: 1 }, unique: true })]));
+    expect(cardIndexes).toEqual(
+      expect.arrayContaining([expect.objectContaining({ key: { payment_id: 1, line_index: 1 }, unique: true })])
+    );
+    const uniqueKeys = [...txnIndexes, ...cardIndexes].filter((i) => i.unique).map((i) => JSON.stringify(i.key));
+    expect(uniqueKeys).not.toContain(JSON.stringify({ payment_id: 1 }));
+    expect(uniqueKeys).not.toContain(JSON.stringify({ payment_id: 1, source: 1 }));
   });
 });

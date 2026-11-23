@@ -1,0 +1,34 @@
+{
+  "asOf": "2026-11-03",
+  "source": "Anthropic list API prices, USD per 1M tokens (claude-api model table, cached 2026-11-03)",
+  "cacheReadMultiplier": 0.1,
+  "cacheWriteMultiplier": { "5m": 1.25, "1h": 2 },
+  "fastMultiplier": 2,
+  "editors": {
+    "claude-vscode": "VS Code extension",
+    "cli": "Terminal CLI"
+  },
+  "models": [
+    { "match": "claude-fable-5-2", "label": "Claude Fable 5.2", "input": 8, "output": 40, "cacheRead": 0.2 },
+    { "match": "claude-mythos-5-2", "label": "Claude Mythos 5.2", "input": 8, "output": 40, "cacheRead": 0.2 },
+    { "match": "claude-fable-5-1", "label": "Claude Fable 5.1", "input": 10, "output": 50 },
+    { "match": "claude-mythos-5-1", "label": "Claude Mythos 5.1", "input": 10, "output": 50 },
+    { "match": "claude-fable-5", "label": "Claude Fable 5", "input": 10, "output": 50 },
+    { "match": "claude-opus-5-5", "label": "Claude Opus 5.5", "input": 4, "output": 20, "cacheRead": 0.2 },
+    { "match": "claude-opus-5", "label": "Claude Opus 5", "input": 5, "output": 25 },
+    { "match": "claude-opus-4-8", "label": "Claude Opus 4.8", "input": 5, "output": 25 },
+    { "match": "claude-opus-4-7", "label": "Claude Opus 4.7", "input": 5, "output": 25 },
+    { "match": "claude-opus-4-6", "label": "Claude Opus 4.6", "input": 5, "output": 25 },
+    { "match": "claude-sonnet-5-5", "label": "Claude Sonnet 5.5", "input": 2, "output": 10, "cacheRead": 0.1 },
+    { "match": "claude-sonnet-5", "label": "Claude Sonnet 5", "input": 2, "output": 10 },
+    { "match": "claude-sonnet-4-6", "label": "Claude Sonnet 4.6", "input": 3, "output": 15 },
+    {
+      "match": "claude-haiku-5-5",
+      "label": "Claude Haiku 5.5",
+      "input": 0.1,
+      "output": 0.5,
+      "longPrompt": { "aboveTokens": 100000, "multiplier": 5 }
+    },
+    { "match": "claude-haiku-4-5", "label": "Claude Haiku 4.5", "input": 1, "output": 5 }
+  ]
+}

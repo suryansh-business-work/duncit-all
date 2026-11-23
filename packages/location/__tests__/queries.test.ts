@@ -10,7 +10,7 @@ vi.mock('@apollo/client/react', () => ({
   useQuery: useQueryMock,
 }));
 
-const { useAdminLocations } = await import('../src/queries');
+const { useAdminLocations, useGoogleMapsApiKey, PUBLIC_MAPS_KEY } = await import('../src/queries');
 
 describe('useAdminLocations', () => {
   beforeEach(() => {
@@ -36,5 +36,37 @@ describe('useAdminLocations', () => {
     useQueryMock.mockReturnValue({ data: { locations }, loading: false, error });
     const { result } = renderHook(() => useAdminLocations());
     expect(result.current).toEqual({ locations, loading: false, error });
+  });
+});
+
+describe('useGoogleMapsApiKey', () => {
+  beforeEach(() => {
+    (useQueryMock as Mock).mockReset();
+  });
+
+  it('asks the public client config for the Maps key, cache-first', () => {
+    useQueryMock.mockReturnValue({ data: undefined });
+    renderHook(() => useGoogleMapsApiKey());
+    expect(useQueryMock).toHaveBeenCalledWith(PUBLIC_MAPS_KEY, { fetchPolicy: 'cache-first' });
+    expect(String(PUBLIC_MAPS_KEY)).toContain('google_maps_api_key');
+  });
+
+  it('is empty until the config arrives', () => {
+    useQueryMock.mockReturnValue({ data: undefined });
+    const { result } = renderHook(() => useGoogleMapsApiKey());
+    expect(result.current).toBe('');
+  });
+
+  it('is empty when the Tech portal has no key (null or missing field)', () => {
+    useQueryMock.mockReturnValue({ data: { publicClientConfig: { google_maps_api_key: null } } });
+    expect(renderHook(() => useGoogleMapsApiKey()).result.current).toBe('');
+    useQueryMock.mockReturnValue({ data: { publicClientConfig: {} } });
+    expect(renderHook(() => useGoogleMapsApiKey()).result.current).toBe('');
+  });
+
+  it('returns the configured key, trimmed', () => {
+    useQueryMock.mockReturnValue({ data: { publicClientConfig: { google_maps_api_key: '  AIza-runtime  ' } } });
+    const { result } = renderHook(() => useGoogleMapsApiKey());
+    expect(result.current).toBe('AIza-runtime');
   });
 });

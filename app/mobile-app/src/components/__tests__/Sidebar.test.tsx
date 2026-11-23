@@ -10,6 +10,8 @@ const mockNavigate = jest.fn();
 const mockPush = jest.fn();
 const mockLogout = jest.fn().mockResolvedValue(undefined);
 const mockFlags: Record<string, boolean> = {};
+// `me.is_email_verified` — false keeps the Host studio shut (useStudioEmailGate).
+let mockEmailVerified: boolean | null = true;
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
@@ -32,7 +34,13 @@ jest.mock('@/hooks/useActiveAds', () => ({
 jest.mock('@/hooks/useMe', () => ({
   useMe: () => ({
     data: {
-      me: { first_name: 'Asha', full_name: 'Asha Roy', email: 'a@duncit.com', roles: ['HOST'] },
+      me: {
+        first_name: 'Asha',
+        full_name: 'Asha Roy',
+        email: 'a@duncit.com',
+        roles: ['HOST'],
+        is_email_verified: mockEmailVerified,
+      },
     },
   }),
   useRoleLabels: () => ({ labelFor: (k: string) => k }),
@@ -57,6 +65,7 @@ beforeEach(() => {
   useStudioModeStore.setState({ mode: 'USER' });
   useQuickAccessStore.setState({ raw: null });
   mockUnreadChats = 0;
+  mockEmailVerified = true;
 });
 
 /** Opens one of the collapsed section cards. */
@@ -152,6 +161,42 @@ describe('Sidebar', () => {
     expect(screen.getByTestId('sidebar-grid-pod-history')).toBeOnTheScreen();
     // The switch lands on the role's Studio screen, not its dashboard.
     expect(mockNavigate).toHaveBeenCalledWith(STUDIO_ROUTE.HOST);
+  });
+
+  it('will not switch into Host Studio on an unverified email, and offers to verify it instead', () => {
+    mockEmailVerified = false;
+    renderWithProviders(<Sidebar onClose={jest.fn()} />);
+    expand('account');
+    fireEvent.press(screen.getByTestId('sidebar-switch-role'));
+    fireEvent.press(screen.getByTestId('studio-switch-HOST'));
+    expect(screen.getByTestId('studio-switch-email-gate')).toHaveTextContent(
+      /Verify your email first/,
+    );
+    const confirm = screen.getByTestId('studio-switch-confirm');
+    expect(confirm).toHaveTextContent('Verify email');
+    fireEvent.press(confirm);
+    expect(useStudioModeStore.getState().mode).toBe('USER');
+    expect(mockNavigate).toHaveBeenCalledWith('Profile', { verifyEmail: true });
+    expect(mockNavigate).not.toHaveBeenCalledWith(STUDIO_ROUTE.HOST);
+  });
+
+  it('explains instead of opening the Studio entry on an unverified email', () => {
+    mockEmailVerified = false;
+    renderWithProviders(<Sidebar onClose={jest.fn()} />);
+    fireEvent.press(screen.getByTestId('sidebar-studio-options'));
+    expect(screen.getByTestId('studio-email-gate-dialog')).toBeOnTheScreen();
+    expect(screen.getByText('Verify your email first')).toBeOnTheScreen();
+    expect(mockPush).not.toHaveBeenCalledWith(STUDIO_ROUTE.HOST);
+    fireEvent.press(screen.getByTestId('studio-email-gate-dialog-confirm'));
+    expect(mockNavigate).toHaveBeenCalledWith('Profile', { verifyEmail: true });
+    expect(mockPush).not.toHaveBeenCalledWith(STUDIO_ROUTE.HOST);
+  });
+
+  it('opens the Studio entry once the email is verified', () => {
+    renderWithProviders(<Sidebar onClose={jest.fn()} />);
+    fireEvent.press(screen.getByTestId('sidebar-studio-options'));
+    expect(screen.queryByTestId('studio-email-gate-dialog')).toBeNull();
+    expect(mockPush).toHaveBeenCalledWith(STUDIO_ROUTE.HOST);
   });
 
   it('logs out from the footer', () => {

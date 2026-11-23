@@ -49,3 +49,11 @@ describe('finance unit', () => {
     await expect(resolver({}, args, makeContext(null))).rejects.toThrow();
   });
 });
+
+describe('retired multi-ticket discount total', () => {
+  it('answers 0 on the pod finance breakdown for clients that still select it', () => {
+    const resolve = (financeResolvers.PodFinanceBreakdown as unknown as Record<string, (p: unknown) => number>)
+      .ticket_discount_total;
+    expect(resolve({ ticket_discount_total: 250 })).toBe(0);
+  });
+});

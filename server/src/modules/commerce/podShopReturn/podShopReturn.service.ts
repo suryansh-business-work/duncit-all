@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { razorpaySearchAlso } from '@modules/finance/payment/payment.razorpaySearch';
 import { ProductOrderModel, type IProductOrder } from '@modules/commerce/productOrder/productOrder.model';
 import { issueRefund, retryRefund } from '@modules/commerce/productOrder/productOrder.refund';
 import { notifyReturnUpdate } from '@modules/commerce/productOrder/productOrder.notify';
@@ -95,7 +96,7 @@ export const toReturnPub = (r: IPodShopReturn) => ({
 });
 
 const RETURN_TABLE: TableEntityConfig = {
-  searchFields: ['return_no', 'order_no', 'buyer_name', 'buyer_email', 'items.name'],
+  searchFields: ['return_no', 'order_no', 'buyer_name', 'buyer_email', 'items.name', 'refund.razorpay_refund_id'],
   sortFields: { return_no: 'return_no', order_no: 'order_no', status: 'status', gross: 'gross', created_at: 'created_at' },
   filterFields: {
     status: { type: 'enum' },
@@ -269,7 +270,9 @@ export const podShopReturnService = {
     } else if (brandId && Types.ObjectId.isValid(brandId)) {
       base.brand_ids = new Types.ObjectId(brandId);
     }
-    const { docs, total, page, page_size } = await runTableQuery<IPodShopReturn>(PodShopReturnModel, base, query, RETURN_TABLE);
+    const { docs, total, page, page_size } = await runTableQuery<IPodShopReturn>(PodShopReturnModel, base, query, RETURN_TABLE, {
+      searchAlso: await razorpaySearchAlso(query?.search, 'payment_id', 'docId'),
+    });
     return { rows: docs.map(toReturnPub), total, page, page_size };
   },
 

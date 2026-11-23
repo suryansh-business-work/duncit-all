@@ -142,6 +142,12 @@ export const OPENAI_TASKS = {
     description: 'Reads the payment id, bank reference and amount off a buyer’s payment screenshot so Finance › Failed Payments can match it to Razorpay.',
     when_off: 'Screenshot claims are left unmatched (yellow) for a person to review; transaction-id claims are still checked against Razorpay.',
   },
+  'finance.failed_payment_summary': {
+    label: 'Failed payment refund note',
+    module: 'Finance',
+    description: 'Writes a short refund / do-not-refund / needs-review note on a case in Finance › Failed Payments from its recorded facts and Razorpay’s live refund check.',
+    when_off: 'The case page says the AI note is switched off; Finance decides from the case details and the Refund dialog’s live Razorpay check as before.',
+  },
   'crm.lead_parse': {
     label: 'Lead text parsing',
     module: 'CRM',
@@ -166,6 +172,18 @@ export const OPENAI_TASKS = {
     description: 'The AI voice agent that talks to a lead on an outbound CRM call.',
     when_off:
       'The call ends politely: the person is told the assistant is unavailable and will be called back.',
+  },
+  'crm.lead_research_plan': {
+    label: 'Lead research search plan',
+    module: 'CRM',
+    description: 'Turns a lead-discovery request (lead type, city, locality, category) into Google and Google Maps searches for CRM › Lead Research and MCP discovery.',
+    when_off: 'Discovery still runs, with searches built from the category, keywords, locality and city as typed.',
+  },
+  'crm.lead_research_verify': {
+    label: 'Lead research evidence reader',
+    module: 'CRM',
+    description: 'Reads the public text of leads a discovery job found and marks the Lead Quality Score items it proves, quoting the source.',
+    when_off: 'Candidates are still saved and scored from the automatic checks; their other items stay pending for a person or MCP to verify.',
   },
   'crm.email_mjml': {
     label: 'CRM email template MJML',

@@ -1069,6 +1069,9 @@ importers:
       '@duncit/i18n':
         specifier: workspace:*
         version: link:../i18n
+      '@duncit/regex':
+        specifier: workspace:*
+        version: link:../regex
       '@duncit/utils':
         specifier: workspace:*
         version: link:../utils
@@ -2722,6 +2725,9 @@ importers:
       '@duncit/app-settings':
         specifier: workspace:*
         version: link:../app-settings
+      '@duncit/location':
+        specifier: workspace:*
+        version: link:../location
       '@duncit/media-picker':
         specifier: workspace:*
         version: link:../media-picker
@@ -4378,6 +4384,9 @@ importers:
       '@duncit/table':
         specifier: workspace:*
         version: link:../../packages/table
+      '@duncit/tabs':
+        specifier: workspace:*
+        version: link:../../packages/tabs
       '@duncit/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -5484,6 +5493,9 @@ importers:
       '@duncit/gql-types':
         specifier: workspace:*
         version: link:../../packages/gql-types
+      '@testing-library/react':
+        specifier: ^16.3.3
+        version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@types/node':
         specifier: ^26.6.3
         version: 26.6.3
@@ -5496,15 +5508,24 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^6.1.1
         version: 6.1.1(vite@8.3.2(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.49.0)(yaml@2.9.1))
+      '@vitest/coverage-v8':
+        specifier: 3.2.4
+        version: 3.2.4(supports-color@8.1.1)(vitest@3.2.4(@types/debug@4.1.13)(@types/node@26.6.3)(jiti@2.7.0)(jsdom@30.1.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(sass@1.105.1)(supports-color@8.1.1)(terser@5.49.0)(yaml@2.9.1))
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
+      jsdom:
+        specifier: ^30.1.1
+        version: 30.1.1(@noble/hashes@1.8.0)
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
       vite:
         specifier: ^8.3.2
         version: 8.3.2(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.49.0)(yaml@2.9.1)
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4(@types/debug@4.1.13)(@types/node@26.6.3)(jiti@2.7.0)(jsdom@30.1.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(sass@1.105.1)(supports-color@8.1.1)(terser@5.49.0)(yaml@2.9.1)
 
   portals/employee:
     dependencies:
@@ -6527,6 +6548,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/media-picker':
+        specifier: workspace:*
+        version: link:../../packages/media-picker
       '@duncit/regex':
         specifier: workspace:*
         version: link:../../packages/regex
@@ -17535,6 +17559,7 @@ packages:
 
   node-abort-controller@3.1.1:
     resolution: {integrity: sha512-AGK2yQKIjRuqnc6VkX2Xj5d+QW8xZ87pa1UK6yA6ouUyuxfHuMP6umE5QK7UmTeOAymo+Zx1Fxiuw9rVx8taHQ==}
+    deprecated: This package is no longer needed on supported Node.js versions. Node.js 16+ includes AbortController and AbortSignal as built-in globals. All Node.js versions requiring this polyfill are end-of-life. Use the built-in globals instead.
 
   node-addon-api@7.1.1:
     resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}

@@ -407,6 +407,44 @@ describe('settingsService integration', () => {
     expect(cfg.google_maps_api_key).toBe('maps-key-123');
   });
 
+  it('exposes the Sign in with Apple Team ID, trimmed, for mWeb’s apple-app-site-association', async () => {
+    await EnvEntryModel.create({
+      name: 'apple',
+      category: 'APPLE_SIGNIN',
+      is_active: true,
+      is_default: true,
+      config: { team_id: ' A1B2C3D4E5 ', bundle_id: 'com.duncit.mobile' },
+    });
+    const cfg = await settingsService.getPublicClientConfig();
+    expect(cfg.apple_team_id).toBe('A1B2C3D4E5');
+    expect(cfg.apple_bundle_id).toBe('com.duncit.mobile');
+  });
+
+  it('exposes the App Links fingerprints and the Remotion licence, trimmed, and blanks when unset', async () => {
+    const empty = await settingsService.getPublicClientConfig();
+    expect(empty.android_app_links_sha256).toBe('');
+    expect(empty.remotion_license_key).toBe('');
+
+    const fingerprint = Array.from({ length: 32 }, () => 'AB').join(':');
+    await EnvEntryModel.create({
+      name: 'play',
+      category: 'GOOGLE_PLAY',
+      is_active: true,
+      is_default: true,
+      config: { package_name: 'com.duncit.mobile', app_links_sha256: ` ${fingerprint} ` },
+    });
+    await EnvEntryModel.create({
+      name: 'remotion',
+      category: 'REMOTION',
+      is_active: true,
+      is_default: true,
+      config: { license_key: ' rem-licence-1 ' },
+    });
+    const cfg = await settingsService.getPublicClientConfig();
+    expect(cfg.android_app_links_sha256).toBe(fingerprint);
+    expect(cfg.remotion_license_key).toBe('rem-licence-1');
+  });
+
   it('seeds default flags idempotently and exposes public flags', async () => {
     await settingsService.seedDefaults();
     await settingsService.seedDefaults();

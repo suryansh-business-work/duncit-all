@@ -12,6 +12,47 @@ export const LOGIN_MUTATION = `mutation E2ePortalLogin($input: LoginInput!) {
   login(input: $input) { token }
 }`;
 
+/**
+ * The Security Verification screen, done through the API for the suites that sign in without
+ * the screen: a console sign-in token is not a session until this is completed, so the suite
+ * reads the wording's version (the challenge) and sends the consent and a fixed location.
+ */
+export const PORTAL_SECURITY_CHALLENGE_QUERY = `query E2ePortalSecurityChallenge {
+  portalSecurityChallenge { policy_version }
+}`;
+
+export const PORTAL_SECURITY_VERIFY_MUTATION = `mutation E2ePortalSecurityVerify($input: PortalSecurityVerificationInput!) {
+  submitPortalSecurityVerification(input: $input) { token }
+}`;
+
+/** The position the suite reports to the API (the browser stub in commands.ts reports the same one). */
+export const E2E_LOCATION = { latitude: 12.9716, longitude: 77.5946, accuracy_meters: 25 };
+
+/** What the screen sends once the person has read the wording of `policyVersion` and ticked everything. */
+export function securityVerificationInput(policyVersion: string) {
+  return {
+    policy_version: policyVersion,
+    consent: { authorized_person: true, credentials_not_shared: true, policies_acknowledged: true, location_consent: true },
+    location: E2E_LOCATION,
+    exception_id: null,
+    client: { timezone: 'Asia/Kolkata', language: 'en-IN', platform: 'e2e' },
+  };
+}
+
+/** Whether a session token is a console sign-in that has not completed Security Verification (its `psv` claim). */
+export function isPendingConsoleToken(token: unknown): token is string {
+  if (typeof token !== 'string') return false;
+  try {
+    const segment = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const claims = JSON.parse(atob(segment.padEnd(segment.length + ((4 - (segment.length % 4)) % 4), '='))) as {
+      psv?: { verified?: boolean };
+    };
+    return claims.psv?.verified === false;
+  } catch {
+    return false;
+  }
+}
+
 /** Support › Reported Problems, searched by what happened. */
 export const REPORTED_PROBLEMS_LOOKUP = `query E2eReportedProblems($query: TableQueryInput) {
   reportedProblemsTable(query: $query) { rows { id report_no message status } }

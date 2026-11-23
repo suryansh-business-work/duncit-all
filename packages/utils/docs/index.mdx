@@ -15,6 +15,12 @@ consumers:
   - 'packages/media-picker'
   - 'packages/ad-request-form'
 exports:
+  - 'giftCardOrderHeadline'
+  - 'giftCardOrderSteps'
+  - 'isGiftCardOrderLive'
+  - 'GIFT_CARD_ORDER_STATUS_KEYS'
+  - 'GIFT_CARD_ORDER_PAYMENT_KEYS'
+  - 'GIFT_CARD_ORDER_POLL_MS'
   - 'E2E_GOOGLE_CREDENTIAL_QUERY'
   - 'E2E_GRANT_ROLES_MUTATION'
   - 'E2E_REVOKE_ROLES_MUTATION'
@@ -238,25 +244,6 @@ exports:
   - 'FreeSpotCancelHint'
   - 'FreePodVenueInput'
   - 'FreePodVenueNotice'
-  - 'resolveTicketDiscountTier'
-  - 'ticketDiscountFor'
-  - 'ticketDiscountMaxTickets'
-  - 'ticketDiscountTierIssues'
-  - 'nextTicketDiscountTier'
-  - 'ticketDiscountRows'
-  - 'ticketDiscountInput'
-  - 'TICKET_DISCOUNT_MAX_TIERS'
-  - 'TICKET_DISCOUNT_MIN_TICKETS'
-  - 'DEFAULT_TICKET_DISCOUNT_MAX_PCT'
-  - 'TicketDiscountTier'
-  - 'TicketDiscountSource'
-  - 'TicketDiscountQuote'
-  - 'TicketDiscountIssue'
-  - 'TicketDiscountIssueCode'
-  - 'TicketDiscountRow'
-  - 'mwebTicketDiscountLabels'
-  - 'shellTicketDiscountLabels'
-  - 'podFormTicketDiscountLabels'
   - 'buildVenueBillLines'
   - 'firstMediaUrl'
   - 'mwebVenueBillLabels'
@@ -276,9 +263,6 @@ exports:
   - 'withDateOverride'
   - 'withoutDateOverride'
   - 'PriceRuleLike'
-  - 'TicketDiscountLabels'
-  - 'TicketDiscountLimits'
-  - 'TicketDiscountTranslate'
   - 'smartIncentiveFor'
   - 'smartIncentivePctIssue'
   - 'smartIncentiveInput'
@@ -316,6 +300,10 @@ exports:
   - 'heldStudioModes'
   - 'studioModeFor'
   - 'studioEntryFor'
+  - 'EMAIL_GATED_STUDIO_MODES'
+  - 'studioNeedsVerifiedEmail'
+  - 'STUDIO_EMAIL_GATE_KEYS'
+  - 'studioSwitchConfirm'
   - 'VENUE_POD_PHASES'
   - 'venuePodPhase'
   - 'podsByPhase'
@@ -622,6 +610,11 @@ exports:
   - 'offeringsFromText'
   - 'offerQuoteRange'
   - 'offerEarningsArgs'
+  - 'offerBookingArgs'
+  - 'paidPodSubmitBlocked'
+  - 'podViabilityNotice'
+  - 'podViabilityReasonOf'
+  - 'MWEB_POD_VIABILITY_KEYS'
   - 'hostOfferActions'
   - 'offerCountersLeft'
   - 'mayCounter'
@@ -818,6 +811,23 @@ studioModeFor('USER', roles);                 // 'VENUE' — first held role
 studioModeFor('ECOMM', roles);                // 'ECOMM' — the remembered role
 studioEntryFor('ECOMM', roles)?.path;         // '/products/options'
 studioEntryFor('USER', []);                   // null — a consumer has no Studio entry
+```
+
+The Host, Venue and Club Admin studios stay shut until the account's email is verified. Both apps check this when someone opens the Studio, switches role, or lands on an Options page, and show the "verify your email first" message instead.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `EMAIL_GATED_STUDIO_MODES` | `readonly PartnerStudioMode[]` | `['HOST', 'VENUE', 'CLUB']`. The Brand studio and User mode are not gated. |
+| `studioNeedsVerifiedEmail` | `(mode, isEmailVerified) => boolean` | `true` when `mode` is gated and the email is not verified. Only an explicit `true` counts as verified, so `null` / `undefined` keep the studio shut. |
+| `studioSwitchConfirm` | `(pending, current, isEmailVerified) => { verifyEmail, disabled }` | The role switcher's confirm button. `verifyEmail`: the pick is gated, so the button verifies the email instead of switching. `disabled`: the pick is the open role already active. |
+| `STUDIO_EMAIL_GATE_KEYS` | `{ title, body, action, dismiss }` | The translation keys of the message (`mweb.studioOptions.emailGate*`). |
+
+```ts
+import { studioNeedsVerifiedEmail } from '@duncit/utils';
+
+studioNeedsVerifiedEmail('HOST', false);  // true  — show the message, do not open
+studioNeedsVerifiedEmail('HOST', true);   // false
+studioNeedsVerifiedEmail('ECOMM', false); // false — the Brand studio is not gated
 ```
 
 ## Sample data
@@ -1191,8 +1201,8 @@ discounts (excl. GST) → taxable value → GST → total. `exclusiveOfGstBill` 
 from the charged quote, so the GST row is always the tax actually charged:
 
 ```ts
-exclusiveOfGstBill(750, [{ key: 'ticketDiscount', amount: 37.5 }], 603.81, 18)
-// { subtotal: 635.59, discounts: [{ key: 'ticketDiscount', amount: 31.78 }] }
+exclusiveOfGstBill(750, [{ key: 'coupon', amount: 37.5 }], 603.81, 18)
+// { subtotal: 635.59, discounts: [{ key: 'coupon', amount: 31.78 }] }
 // 635.59 − 31.78 = 603.81 taxable, + 108.69 GST = 712.50
 ```
 
@@ -1262,60 +1272,11 @@ deliveryQuoteView({ hasItems: true, pincodeValid: true, requestKey: key, settled
 // { quote: null, status: 'FAILED' }
 ```
 
-### Multi-ticket discount — `pod-ticket-discount` + `pod-ticket-discount-copy`
-
-| Export | Signature | Meaning |
-| --- | --- | --- |
-| `resolveTicketDiscountTier` | `(source: TicketDiscountSource, seats: number) => TicketDiscountTier \| null` | The tier with the largest `min_tickets` the booking reaches; `null` when the offer is off, under 2 seats or no tier matches. |
-| `ticketDiscountFor` | `(unitPrice: number, seats: number, source: TicketDiscountSource) => TicketDiscountQuote` | `{ gross, pct, min_tickets, amount, net }` — the discount rounded ONCE on the whole ticket gross. |
-| `ticketDiscountMaxTickets` | `(noOfSpots: number) => number` | The most tickets a tier may ask for: `payableSpots(spots)`, or `10` on an unlimited pod. |
-| `ticketDiscountTierIssues` | `(input: { enabled, tiers, maxPct, maxTickets }) => TicketDiscountIssue[]` | Zod-free issue codes (`TIERS_REQUIRED`, `TICKETS_NOT_INCREASING`, `PCT_MAX`…) each surface maps to its own copy; `[]` when off. |
-| `nextTicketDiscountTier` | `(tiers, maxPct: number) => TicketDiscountTier` | The row "Add tier" appends: one more ticket and 5% more than the last row, capped at `maxPct`. |
-| `ticketDiscountRows` | `(unitPrice: number, source: TicketDiscountSource) => TicketDiscountRow[]` | Display rows including the base `1 ticket · 0%` row, each with its per-ticket price. |
-| `ticketDiscountInput` | `(values, free: boolean) => { ticket_discount_enabled; ticket_discount_tiers }` | The mutation input: cleared on a free pod or a switched-off offer, numbers coerced otherwise. |
-| `TICKET_DISCOUNT_MAX_TIERS` / `TICKET_DISCOUNT_MIN_TICKETS` / `DEFAULT_TICKET_DISCOUNT_MAX_PCT` | `10` / `2` / `50` | Server-twin limits; the max pct default is used only while app settings load. |
-| `mwebTicketDiscountLabels` / `shellTicketDiscountLabels` / `podFormTicketDiscountLabels` | `(t: TicketDiscountTranslate) => TicketDiscountLabels` | Every word the editor renders — `mweb.ticketDiscount.*`, `shell.ticketDiscount.*`, `podForm.ticketDiscount.*`, word-for-word identical; `errors[code](limits)` words each issue. |
-
-One checkout booking N seats gets the best tier's percentage off its TICKET money only — never
-add-on products — before the coupon and Duncit Coins. The server keeps its own twin in
-`server/src/modules/pods/pod/pod.ticketDiscount.ts`, prices the charge with it and freezes the
-applied discount on the Payment; this copy only previews it, so both must change together:
-
-```ts
-const pod = {
-  pod_id: 'DUN-POD-4821',
-  pod_amount: 499,
-  no_of_spots: 12,
-  ticket_discount_enabled: true,
-  ticket_discount_tiers: [
-    { min_tickets: 2, discount_pct: 10 },
-    { min_tickets: 4, discount_pct: 20 },
-  ],
-};
-
-ticketDiscountFor(pod.pod_amount, 4, pod)
-// { gross: 1996, pct: 20, min_tickets: 4, amount: 399.2, net: 1596.8 }
-
-ticketDiscountRows(pod.pod_amount, pod).map((row) => row.per_ticket)   // [499, 449.1, 399.2]
-
-ticketDiscountTierIssues({
-  enabled: true,
-  tiers: [{ min_tickets: 4, discount_pct: 10 }, { min_tickets: 3, discount_pct: 60 }],
-  maxPct: 50,
-  maxTickets: ticketDiscountMaxTickets(pod.no_of_spots),   // 11
-})
-// [{ index: 1, field: 'min_tickets', code: 'TICKETS_NOT_INCREASING' },
-//  { index: 1, field: 'discount_pct', code: 'PCT_MAX' }]
-
-const labels = mwebTicketDiscountLabels(t);
-labels.errors.PCT_MAX({ maxPct: 50, maxTickets: 11, maxTiers: 10 })   // 'Discount can’t be more than 50%'
-```
-
 ### Smart Incentive — `smart-incentive` + `smart-incentive-copy` + `smart-incentive-field`
 
 | Export | Signature | Meaning |
 | --- | --- | --- |
-| `smartIncentiveFor` | `(ticketNet: number, pct: number \| null \| undefined) => SmartIncentiveQuote` | `{ pct, amount, net }` — the member's unlocked offer taken off the ticket money AFTER the multi-ticket discount (the two compound). All 0 off when there is no whole, positive offer. |
+| `smartIncentiveFor` | `(ticketGross: number, pct: number \| null \| undefined) => SmartIncentiveQuote` | `{ pct, amount, net }` — the member's unlocked offer taken off the full ticket gross (`pod_amount × seats`). All 0 off when there is no whole, positive offer. |
 | `smartIncentivePctIssue` | `(value: unknown, maxPct: number) => SmartIncentivePctIssue \| null` | `REQUIRED`, `PCT_MIN` (not a whole 1% or more) or `PCT_MAX` for the % a host typed; `null` when it can be saved. |
 | `smartIncentiveInput` | `(values: SmartIncentiveValues, free: boolean) => { smart_incentive_enabled; smart_incentive_pct }` | The mutation input: off at 0% on a free pod or a switched-off incentive, the typed % as a number otherwise. |
 | `smartIncentiveFormValues` | `(pod) => SmartIncentiveValues` | A stored pod as the forms hold it — the % as text, empty when off. |
@@ -1325,14 +1286,12 @@ labels.errors.PCT_MAX({ maxPct: 50, maxTickets: 11, maxTiers: 10 })   // 'Discou
 
 A host switches Smart Incentive on for a pod and picks a percentage up to Loyalty's maximum. A member
 who stays on that pod page without booking for Loyalty's delay unlocks the offer, and checkout takes it
-off the ticket money on its own — after the multi-ticket discount, before the coupon, Duncit Coins and
-GST. The server keeps its own twin in `server/src/modules/engagement/smartIncentive/smartIncentive.rules.ts`,
+off the full ticket gross (`pod_amount × seats`) on its own, before the coupon, Duncit Coins and GST. The server keeps its own twin in `server/src/modules/engagement/smartIncentive/smartIncentive.rules.ts`,
 prices the charge with it and freezes it on the Payment; this copy only previews it:
 
 ```ts
-const tier = ticketDiscountFor(499, 4, pod);              // net 1596.8 after the 20% tier
-smartIncentiveFor(tier.net, 10)
-// { pct: 10, amount: 159.68, net: 1437.12 }
+smartIncentiveFor(499 * 4, 10)                             // 4 tickets of ₹499
+// { pct: 10, amount: 199.6, net: 1796.4 }
 
 smartIncentivePctIssue('25', 20)                           // 'PCT_MAX'
 smartIncentiveInput({ smart_incentive_enabled: true, smart_incentive_pct: '12' }, false)
@@ -1426,6 +1385,34 @@ because native's codegen refuses an interpolated one.
 | `EarningsStatementOptions.has_venue` | `boolean` (required) | Renders the Venue Charges section. |
 | `EarningsStatementOptions.symbol` | `string` (required) | Symbol used inside the formula strings. |
 | `StatementSection.description` | `string` | Why the charge exists; rendered behind the section's info button. Resolved from `earnings.statement.<key>Description`. |
+
+#### Paid-pod viability — `pod-viability`
+
+The server judges whether a PAID pod's money works with every spot filled (the host's own seat
+is free, so N spots are N − 1 paying seats) and says so on every earnings projection
+(`potentialPodEarnings`, `adminPotentialPodEarnings`): `viable`, `viability_reason`
+(`BELOW_MIN_BUSINESS` → `VENUE_NOT_COVERED` → `NO_EARNINGS`, the order a host fixes them),
+`minimum_viable_ticket_price` and `venue_min_business`. It is the same rule the create and edit
+guard throws on. This module computes none of it: it gates the submit button and picks the copy,
+so mWeb Create Pod, the app's Create Pod and the admin pod form behave identically.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `paidPodSubmitBlocked` | `(isFree, fresh, verdict) => boolean` | `false` for a free pod; otherwise `true` until a projection answered for exactly the inputs on screen (`fresh`) says `viable`. Loading, a running debounce, a failed request or no projection all block. |
+| `podViabilityNotice` | `(verdict, keys, t, money) => PodViabilityNotice \| null` | The reason's `title` and a `body` naming `{minimum}` (the venue's minimum business) and `{price}` (the lowest ticket price that works); the price-less body when none up to ₹99,999 works. `null` when viable or absent. |
+| `podViabilityReasonOf` | `(reason) => PodViabilityReason` | A reason this build does not know reads as `NO_EARNINGS`. |
+| `MWEB_POD_VIABILITY_KEYS` | `PodViabilityCopyKeys` | The `mweb.createPod.*` keys mWeb and the app share; the pod form passes its own `podForm.priceBreakdown.viability.*` map. |
+| `offerBookingArgs` | `(booking: OfferBooking \| null) => { venue_offer_model?, venue_hours? }` | What `potentialPodEarnings` needs to hold a venue OFFER to the venue's minimum business: the offer's model and its window in hours, rounded to two places like the server's guard. `{}` for an unknown model. `offerEarningsArgs(quote, quoteMin, minGuests, spots, booking)` spreads it in. |
+
+```ts
+paidPodSubmitBlocked(false, true, { viable: true });   // false — Create Pod enabled
+paidPodSubmitBlocked(false, false, { viable: true });  // true — the answer is for older inputs
+podViabilityNotice(
+  { viable: false, viability_reason: 'BELOW_MIN_BUSINESS', minimum_viable_ticket_price: 93, venue_min_business: 1000 },
+  MWEB_POD_VIABILITY_KEYS, t, money,
+); // { reason: 'BELOW_MIN_BUSINESS', title: "Below the venue's minimum business", body: "This venue's minimum business is ₹1,000.00. … at least ₹93.00, or add spots." }
+offerBookingArgs({ model: 'PER_HOUR', start_at: '…T18:00Z', end_at: '…T19:20Z' }); // { venue_offer_model: 'PER_HOUR', venue_hours: 1.33 }
+```
 
 ### Errors
 
@@ -1524,11 +1511,15 @@ if (hasWatchedEnough(video.currentTime, video.duration)) markWatched();
 ### Pod phase — the Home rails
 
 A pod is not simply "upcoming or past". It leaves the upcoming feed the moment
-it STARTS — nobody can join a pod that is running, and the server refuses the
-booking — but it is not *previous* until it is actually over. Between those two
+it STARTS, but it is not *previous* until it is actually over. Between those two
 instants it is **ONGOING**, and Home gives it its own rail on both mWeb and
 native. Before this split a pod that was happening right now dropped straight
 into Previous Pods.
+
+An ONGOING pod can still be joined while seats are left: Pod details shows it as
+"Pod ongoing" and asks "This pod is already ongoing" before Join / Book goes
+ahead. Booking closes once the pod is PREVIOUS, which is the same line the
+server's `podBookingClosed` (`pod.lifecycle.ts`) draws on `joinFree` and checkout.
 
 A pod's end is `pod_end_date_time` when the host set one, and
 `pod_date_time + POD_LIVE_TAIL_MS` (4h) when they did not — the same fallback
@@ -3348,6 +3339,18 @@ The "Return items" form pairs `returnFormDefaults(order)` (one empty row per lin
 go back) with `toReturnInput(orderId, values, reasonText)` (only picked lines, trimmed comments)
 and the Zod schema `makePodShopReturnSchema` in [@duncit/forms](/packages/forms).
 
+## A member's gift card order — `gift-card-orders`
+
+mWeb and the native app show a gift card order the same way. `giftCardOrderHeadline(order)` is the line under the order number — the payment while it is not paid (`mweb.giftCards.payment*`), then where the cards are (`GIFT_CARD_ORDER_STATUS_KEYS`), with a tone (`success`, `info`, `warning`, `error`, `neutral`) each app maps to its own colours. `giftCardOrderSteps(order)` is the progress strip: placed → paid → emailed for a digital order, or placed → paid → printed → shipped → out for delivery → delivered for a printed one (a failed attempt or a return keeps "shipped" done and nothing after). `isGiftCardOrderLive(order)` says whether the order can still change — an open order page re-reads it every `GIFT_CARD_ORDER_POLL_MS` (30 s) while it is live, so the courier's moves show without a refresh.
+
+```ts
+const { key, tone } = giftCardOrderHeadline(order);
+const steps = giftCardOrderSteps(order); // [{ id, labelKey, done }]
+useQuery(MY_GIFT_CARD_ORDER, { pollInterval: isGiftCardOrderLive(order) ? GIFT_CARD_ORDER_POLL_MS : 0 });
+```
+
+The shapes an order page reads are shared too, so mWeb and the Loyalty portal describe them once: `GiftCardOrderAddress` (where printed cards go), `GiftCardOrderShipment` (courier, AWB, ETA) and `GiftCardOrderTrackingEvent` (one courier scan).
+
 ## The buyer's order detail page — `order-tracking`
 
 mWeb's `/orders/:orderId` and the app's `OrderDetail` screen render one order in full (rule 27).
@@ -4942,3 +4945,57 @@ pageContextFromPath('/pod/6650abc'); // { route: '/pod/6650abc', entity_type: 'P
 
 Renderers: mWeb `pages/ask-duncit-page/*`, native `screens/AskDuncitScreen` + `components/ask-duncit/*`.
 Server: `server/src/modules/ai/askDuncit`.
+
+## The Venue Kit plan
+
+`venue-kit.ts` words the Duncit Venue Kit (coming soon, annual plan only) the same way on
+duncit.com/venue-kit and in the Venues console's Venue Kit section. The plan itself is data —
+`venueKitOffer` on the server, editable by a Super Admin — so nothing here is a price.
+
+```ts
+import { resolveVenueKitOffer, venueKitCopyVars, VENUE_KIT_FEATURES } from '@duncit/utils';
+
+const offer = resolveVenueKitOffer(data?.venueKitOffer); // a missing field → the shipped plan
+venueKitCopyVars(offer);
+// { price: '₹9,999', labels: 25, extraLabelPrice: '₹100', posMonths: 12, giftCards: 10,
+//   giftCardValue: '₹100', giftCardTotal: '₹1,000', collabDiscount: '10%', orderBenefit: '1%' }
+t('venueKit.features.tableLabels.text', { vars: venueKitCopyVars(offer) });
+```
+
+| Export | What it is |
+| --- | --- |
+| `VenueKitOffer` | The plan as `venueKitOffer` returns it; money in paise. |
+| `VENUE_KIT_FALLBACK_OFFER` | What a static build renders when the API is down — the server seed's numbers. |
+| `resolveVenueKitOffer(raw)` | Fills every missing, negative or non-number field from the fallback. |
+| `venueKitCopyVars(offer)` | The `{price}`, `{labels}`… values every `venueKit.*` sentence reads. |
+| `VENUE_KIT_FEATURES` | The seven feature keys in display order; each names `venueKit.features.<key>.*`. |
+| `venueKitRupees` / `venueKitPercent` | `999900 → '₹9,999'`, `1.5 → '1.5%'`. |
+
+Renderers: website `components/venue-kit/VenueKitPage.astro` (at /solutions/cafe-restaurant-automation/venue-kit; /venue-kit redirects), Venues console `pages/venue-kit/*`.
+Server: `server/src/modules/venues/venueKit` (offer, interest records, email + optional SMS codes).
+
+## duncit.com/solutions
+
+`solutions.ts` holds the rules for the Solutions catalogue — Website portal content of type
+`SOLUTIONS`, each entry filed under an audience and a category. The website renders it and the
+Website portal edits it; both read these helpers so the order and the URLs cannot drift.
+
+```ts
+import { groupSolutions, solutionPath, venueKitFallbackSolution } from '@duncit/utils';
+
+solutionPath({ category_slug: 'cafe-restaurant-automation', slug: 'venue-kit' });
+// '/solutions/cafe-restaurant-automation/venue-kit'
+groupSolutions(items); // every audience in order: VENUE, HOST, CLUB_ADMIN, CREATOR, COMMUNITY
+```
+
+| Export | What it is |
+| --- | --- |
+| `SOLUTION_AUDIENCES` / `SOLUTION_AUDIENCE_KEYS` | The five audiences in display order, and each one's `website.main.solutions.audiences.<key>` segment. |
+| `SolutionItem` | An entry as `publicWebsiteContent(type: SOLUTIONS)` returns it (`category_slug` comes from the server). |
+| `solutionPath(item)` | `/solutions/<category_slug>/<slug>`. |
+| `isListableSolution(item)` | A known audience and both URL segments present. |
+| `groupSolutions(items)` | Audiences in order, offerings grouped by category (first-seen order); an audience with none has no categories. |
+| `venueKitFallbackSolution(copy)` / `VENUE_KIT_FALLBACK_PATH` | What a static build lists when the API is down: the Venue Kit as the server seeds it, worded by the caller's translator (no copy lives here); its seeded address. |
+| `VENUE_KIT_SOLUTION_SLUG` / `VENUE_KIT_CATEGORY_SLUG` | The slug that renders the Venue Kit's own page, and the category it is seeded under. |
+
+Renderers: website `pages/solutions/*`; Website portal → Solutions (content manager).

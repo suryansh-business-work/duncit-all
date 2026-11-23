@@ -12,6 +12,7 @@ export const EXPLORE_PODS = gql`
       pod_title
       pod_description
       pod_date_time
+      pod_end_date_time
       pod_type
       pod_amount
       pod_attendees

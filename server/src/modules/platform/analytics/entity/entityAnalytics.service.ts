@@ -31,6 +31,9 @@ import { openaiCostAnalytics } from './openaiCosts.analytics';
 import { contactsAnalytics } from './contacts.analytics';
 import { productAnalytics } from './product.analytics';
 import { emailValidationsAnalytics } from './emailValidations.analytics';
+import { appInsightsOverviewAnalytics } from './appInsightsOverview.analytics';
+import { appInsightsAndroidAnalytics } from './appInsightsAndroid.analytics';
+import { appInsightsIosAnalytics } from './appInsightsIos.analytics';
 import type { Environment } from '@modules/ai/askBot/askBot.links';
 import { analyticsTargetService } from '../goals/analyticsTarget.service';
 import { consoleLink, resolveLinks, serverEnvironment, type ConsoleLink } from './links';
@@ -72,6 +75,9 @@ const LOADERS: Record<
   CONTACTS: contactsAnalytics,
   PRODUCT: productAnalytics,
   EMAIL_VALIDATIONS: emailValidationsAnalytics,
+  APP_INSIGHTS: appInsightsOverviewAnalytics,
+  APP_INSIGHTS_ANDROID: appInsightsAndroidAnalytics,
+  APP_INSIGHTS_IOS: appInsightsIosAnalytics,
 };
 
 /**

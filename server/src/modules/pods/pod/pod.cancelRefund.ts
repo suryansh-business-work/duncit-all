@@ -15,6 +15,9 @@ import { sendHostPodAutoCancelledEmail, sendPodRefundEmail } from '@services/ema
 import { BackoutRequestModel } from '@modules/pods/podMember/backoutRequest.model';
 import { getUrlConfigs } from '@config/url-configs';
 import { holdRefundForPayment, refundHoldReleaseAt } from './pod.refundHold';
+import { returnCancellationMoney } from './pod.refundMoney';
+import { sendSoon } from '@modules/finance/payment/payment.gatewayRefund';
+import type { IPaymentGatewayRefund } from '@modules/finance/payment/payment.gatewayRefund.model';
 import { podAuditService } from '@modules/pods/podAudit/podAudit.service';
 import type { PodAuditSource } from '@modules/pods/podAudit/podAudit.model';
 import { logs } from '@observability/log';
@@ -124,6 +127,7 @@ async function claimCancellationRefund(input: {
   initiatedBy: PodCancelInitiator;
   actorUserId: string;
   holdUntil: Date | null;
+  pct: number;
 }): Promise<boolean> {
   const { payment, refund, alreadyRefunded, reason, initiatedBy, actorUserId } = input;
   if (input.holdUntil) {
@@ -134,6 +138,7 @@ async function claimCancellationRefund(input: {
       releaseAt: input.holdUntil,
       initiatedBy,
       initiatorId: actorUserId,
+      pct: input.pct,
     });
   }
   const flipped = await PaymentModel.findOneAndUpdate(
@@ -212,6 +217,7 @@ export async function refundAndNotifyCancellation(
   // only the last document quoted them a fraction of their refund.
   const refundedByUser = new Map<string, { total: number; currency_symbol: string }>();
   const paymentRefunds = new Map<string, number>();
+  const gatewayRefunds: Array<IPaymentGatewayRefund | null> = [];
   for (const payment of payments) {
     const meta = (payment as any).metadata ?? {};
     // A partial Backout refund may already sit in refunded_amount — ticket
@@ -237,8 +243,16 @@ export async function refundAndNotifyCancellation(
       initiatedBy,
       actorUserId,
       holdUntil,
+      pct,
     });
     if (!claimed) continue;
+    // Refunded now: queue the Razorpay refund and settle the coins. A held
+    // refund moves its money when the release sweep pays it.
+    if (!holdUntil) {
+      gatewayRefunds.push(
+        await returnCancellationMoney({ payment, refund, pct, reason, initiatedBy, initiatorId: actorUserId })
+      );
+    }
     if (rentals > 0) await rentalLifecycleService.cancelForPayment(payment._id);
     paymentRefunds.set(String(payment._id), refund);
     const payerId = String(payment.user_id);
@@ -248,6 +262,10 @@ export async function refundAndNotifyCancellation(
       currency_symbol: payment.currency_symbol,
     });
   }
+
+  // The refunds are recorded (the outbox); send them without making the person
+  // who cancelled wait on Razorpay. Whatever does not go now, the sweep sends.
+  sendSoon(gatewayRefunds);
 
   // A cancelled pod can never fill a released seat, and the payments behind any
   // open Backout were just flipped to REFUNDED above — left IN_PROCESS, the

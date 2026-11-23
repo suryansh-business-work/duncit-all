@@ -106,11 +106,6 @@ export function buildHostAgainPayload(pod: IPod, source: HostAgainSource) {
       amount: charge.amount,
       note: charge.note ?? '',
     })),
-    ticket_discount_enabled: !free && !!pod.ticket_discount_enabled,
-    ticket_discount_tiers: (pod.ticket_discount_tiers ?? []).map((tier) => ({
-      min_tickets: tier.min_tickets,
-      discount_pct: tier.discount_pct,
-    })),
     // Text, like the amounts above: the forms hold the percentage as typed. It
     // is re-checked against Loyalty's current maximum when the copy is published.
     smart_incentive_enabled: !free && !!pod.smart_incentive_enabled,

@@ -7,7 +7,7 @@ import { alertStaff } from '@services/notify/staffAlert';
 import { FailedPaymentCaseModel, type IFailedPaymentCase } from './failedPaymentCase.model';
 import { recordPaymentEvent } from './paymentEvent.service';
 import { resolveCaseTicket, ticketText } from './failedPayment.ticket';
-import type { PaymentEventSource } from './failedPayment.types';
+import { SYSTEM_ACTOR, type PaymentEventSource } from './failedPayment.types';
 
 /**
  * How a refund ENDS — whichever of the three ways we learn it: Razorpay's
@@ -30,7 +30,13 @@ async function recordLedgerOnce(kase: IFailedPaymentCase): Promise<void> {
   try {
     const payment = await PaymentModel.findById(kase.payment_doc_id);
     if (!payment) throw new Error('payment not found');
-    await recordPaymentRefund(payment, kase.refund.amount_paise / 100, REFUND_REASON, kase.refund.initiated_by || 'FINANCE');
+    await recordPaymentRefund(
+      payment,
+      kase.refund.amount_paise / 100,
+      REFUND_REASON,
+      kase.refund.initiated_by || 'FINANCE',
+      kase.refund.razorpay_refund_id
+    );
   } catch (error) {
     await FailedPaymentCaseModel.updateOne({ _id: kase._id }, { $set: { 'refund.finance_recorded': false } });
     logs.server.error('failedPayment', 'recordLedgerOnce', { error, case_id: String(kase._id) });
@@ -84,7 +90,10 @@ export async function completeRefund(
   });
   const settings = await getFinanceSettings();
   const text = ticketText.refunded(kase, kase.refund.razorpay_refund_id, String(settings.refund_processing_days));
-  await resolveCaseTicket(kase, kase.refund.initiated_by, text, null);
+  // An automatic refund has no staff member behind it: the ticket is filed under
+  // the buyer, the way a case the system resolves itself already is.
+  const ticketActor = kase.refund.initiated_by === SYSTEM_ACTOR.id ? String(kase.user_id ?? '') : kase.refund.initiated_by;
+  await resolveCaseTicket(kase, ticketActor, text, null);
   await notifyBuyer(kase);
   logs.server.info('failedPayment', 'refundProcessed', {
     case_id: caseId,

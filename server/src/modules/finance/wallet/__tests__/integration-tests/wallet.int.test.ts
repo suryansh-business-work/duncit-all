@@ -2,7 +2,7 @@ jest.mock('@services/email/email.service', () => ({ sendEmail: jest.fn().mockRes
 
 import { Types } from 'mongoose';
 import { walletService, nextPayoutDate } from '../../wallet.service';
-import { WalletModel } from '../../wallet.model';
+import { WalletModel, WalletWithdrawalModel } from '../../wallet.model';
 import { paymentReleaseService } from '@modules/finance/finance/paymentRelease.service';
 import { FinanceSettingsModel } from '@modules/finance/finance/finance.model';
 import { PaymentReleaseModel } from '@modules/finance/finance/paymentRelease.model';
@@ -163,6 +163,16 @@ describe('withdrawals', () => {
     const byUpi = await walletService.withdrawalsTable({ search: 'alpha' });
     expect(byUpi.rows.map((w) => w.upi_id)).toEqual(['alpha@upi']);
     expect(byUpi.total).toBe(1);
+
+    // ...and the payment ids: the RazorpayX payout id and the bank's UTR.
+    await WalletWithdrawalModel.updateOne(
+      { _id: paid.id },
+      { $set: { payout: { status: 'PAID', razorpay_payout_id: 'pout_Gamma123', utr: 'UTR998877', attempt: 1 } } }
+    );
+    const byPayout = await walletService.withdrawalsTable({ search: 'pout_gamma' });
+    expect(byPayout.rows.map((w) => w.upi_id)).toEqual(['gamma@upi']);
+    expect(byPayout.rows[0]).toMatchObject({ razorpay_payout_id: 'pout_Gamma123', payout_utr: 'UTR998877' });
+    expect((await walletService.withdrawalsTable({ search: 'UTR998877' })).rows.map((w) => w.upi_id)).toEqual(['gamma@upi']);
 
     // Status enum filter narrows (the old UI's ToggleButtonGroup).
     const pending = await walletService.withdrawalsTable({

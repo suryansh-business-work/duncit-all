@@ -24,7 +24,6 @@ const publicSettingsMock = (): MockedResponse => ({
         server_time: '2024-05-17T04:00:37.000Z',
         min_signup_age: 13,
         draft_retention_days: 30,
-        ticket_discount_max_pct: 50,
         happening_nearby_days: 7,
       },
     },

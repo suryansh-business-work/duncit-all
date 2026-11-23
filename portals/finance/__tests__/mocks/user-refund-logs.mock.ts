@@ -32,9 +32,15 @@ export const makeUserRefund = (over: Partial<UserRefundRowMock> = {}): UserRefun
   refund_reason: 'Duplicate charge',
   refund_initiated_by: null,
   refunded_at: '2026-09-03T08:15:00.000Z',
+  // Razorpay's own ids, as its dashboard shows them.
+  razorpay_payment_id: 'pay_U39hOwzQiUFqHT',
+  razorpay_order_id: 'order_U39IVJblWttbgN',
+  razorpay_refund_ids: ['rfnd_Q8a1LmZx'],
   paid_at: '2026-09-01T10:00:00.000Z',
   created_at: '2026-09-01T09:59:00.000Z',
   partial: false,
+  // Recorded before refunds went through Razorpay: no gateway state.
+  refund_status: null,
   ...over,
 });
 
@@ -50,6 +56,10 @@ export const makePartialRefund = (): UserRefundRowMock =>
     refund_amount: 500,
     refund_reason: null,
     refund_initiated_by: 'SYSTEM',
+    // A refund of a test-gateway payment: no Razorpay ids to show.
+    razorpay_payment_id: null,
+    razorpay_order_id: null,
+    razorpay_refund_ids: [],
     paid_at: null,
     partial: true,
   });

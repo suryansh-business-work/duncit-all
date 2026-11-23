@@ -1,7 +1,9 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import type { ComponentProps } from 'react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ConfirmProvider } from '@duncit/dialogs';
 import { STUDIO_OPTION_LIST, type PartnerStudioMode } from '@duncit/utils';
 import StudioOptionsPage from '..';
 import { MY_VENUES_SWITCHER } from '../../venue-manage-page/queries';
@@ -36,15 +38,22 @@ function Where() {
   return <span data-testid="where">{useLocation().pathname}</span>;
 }
 
-function renderPage(mode: PartnerStudioMode, roles: string[]) {
-  userInfo.mockReturnValue({ me: { roles }, loading: false });
+function renderPage(
+  mode: PartnerStudioMode,
+  roles: string[],
+  verified = true,
+  mocks: ComponentProps<typeof MockedProvider>['mocks'] = [venuesMock],
+) {
+  userInfo.mockReturnValue({ me: { roles, is_email_verified: verified }, loading: false });
   return render(
-    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[venuesMock]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <MemoryRouter initialEntries={['/options']}>
-        <Routes>
-          <Route path="/options" element={<StudioOptionsPage mode={mode} />} />
-          <Route path="*" element={<Where />} />
-        </Routes>
+        <ConfirmProvider>
+          <Routes>
+            <Route path="/options" element={<StudioOptionsPage mode={mode} />} />
+            <Route path="*" element={<Where />} />
+          </Routes>
+        </ConfirmProvider>
       </MemoryRouter>
     </MockedProvider>,
   );
@@ -65,19 +74,21 @@ function Back() {
 }
 
 /** The Studio mounted on its real role paths, so a switch can be followed. */
-function renderStudio(start: string, roles: string[]) {
-  userInfo.mockReturnValue({ me: { roles }, loading: false });
+function renderStudio(start: string, roles: string[], verified = true) {
+  userInfo.mockReturnValue({ me: { roles, is_email_verified: verified }, loading: false });
   return render(
     <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[venuesMock]}>
       <MemoryRouter initialEntries={['/before', start]} initialIndex={1}>
-        <Back />
-        <Routes>
-          <Route path="/host/options" element={<StudioOptionsPage mode="HOST" />} />
-          <Route path="/venues/options" element={<StudioOptionsPage mode="VENUE" />} />
-          <Route path="/clubs/options" element={<StudioOptionsPage mode="CLUB" />} />
-          <Route path="/products/options" element={<StudioOptionsPage mode="ECOMM" />} />
-          <Route path="*" element={<Where />} />
-        </Routes>
+        <ConfirmProvider>
+          <Back />
+          <Routes>
+            <Route path="/host/options" element={<StudioOptionsPage mode="HOST" />} />
+            <Route path="/venues/options" element={<StudioOptionsPage mode="VENUE" />} />
+            <Route path="/clubs/options" element={<StudioOptionsPage mode="CLUB" />} />
+            <Route path="/products/options" element={<StudioOptionsPage mode="ECOMM" />} />
+            <Route path="*" element={<Where />} />
+          </Routes>
+        </ConfirmProvider>
       </MemoryRouter>
     </MockedProvider>,
   );
@@ -211,11 +222,64 @@ describe('StudioOptionsPage', () => {
     render(
       <MockedProvider mocks={[]}>
         <MemoryRouter>
-          <StudioOptionsPage mode="HOST" />
+          <ConfirmProvider>
+            <StudioOptionsPage mode="HOST" />
+          </ConfirmProvider>
         </MemoryRouter>
       </MockedProvider>,
     );
     expect(screen.getByTestId('studio-options-loading')).toBeInTheDocument();
+    // An unanswered account is not yet "unverified" — no gate flashes.
+    expect(screen.queryByTestId('studio-email-gate')).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['HOST', ['HOST']],
+    ['VENUE', ['VENUE_OWNER']],
+    ['CLUB', ['CLUB_ADMIN']],
+  ] as const)('keeps the %s options behind "verify your email first" while the email is unverified', (mode, roles) => {
+    renderPage(mode, [...roles], false);
+    expect(screen.getByTestId('studio-email-gate')).toHaveTextContent('Verify your email first');
+    expect(screen.queryByTestId('studio-options-list')).not.toBeInTheDocument();
+  });
+
+  it('does not mount the venue picker behind the gate — its venues are never asked for', async () => {
+    const venuesAsked = vi.fn(() => venuesMock.result);
+    renderPage('VENUE', ['VENUE_OWNER'], false, [{ ...venuesMock, result: venuesAsked }]);
+    expect(screen.getByTestId('studio-email-gate')).toBeInTheDocument();
+    // A mounted picker would have sent its query by the next task.
+    await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+    expect(venuesAsked).not.toHaveBeenCalled();
+  });
+
+  it('asks for the venues once the email is verified (the control for the test above)', async () => {
+    const venuesAsked = vi.fn(() => venuesMock.result);
+    renderPage('VENUE', ['VENUE_OWNER'], true, [{ ...venuesMock, result: venuesAsked }]);
+    expect(await screen.findByTestId('venue-switcher')).toBeInTheDocument();
+    expect(venuesAsked).toHaveBeenCalled();
+  });
+
+  it('sends the unverified partner to verify their email from the gate', () => {
+    renderPage('HOST', ['HOST'], false);
+    fireEvent.click(screen.getByRole('button', { name: 'Verify email' }));
+    expect(screen.getByTestId('where')).toHaveTextContent('/profile');
+  });
+
+  it('still lists the Brand options on an unverified email', () => {
+    renderPage('ECOMM', ['ECOMM_MANAGER'], false);
+    expect(screen.getByTestId('studio-options-list')).toBeInTheDocument();
+    expect(screen.queryByTestId('studio-email-gate')).not.toBeInTheDocument();
+  });
+
+  it('explains instead of switching to a gated role from the switcher, and remembers nothing', async () => {
+    renderStudio('/products/options', ['HOST', 'ECOMM_MANAGER'], false);
+    fireEvent.click(screen.getByRole('tab', { name: 'Host' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Verify your email first' });
+    expect(setMode).not.toHaveBeenCalled();
+    expect(screen.getByTestId('studio-options-ecomm')).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Verify email' }));
+    expect(await screen.findByTestId('where')).toHaveTextContent('/profile');
+    expect(setMode).not.toHaveBeenCalled();
   });
 
   it('lets a venue owner pick THE venue every venue option opens for', async () => {

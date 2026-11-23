@@ -53,15 +53,9 @@ export interface InvoiceData {
   // callers that predate coins keep working; zero prints nothing.
   coins_redeemed?: number;
   coins_earned?: number;
-  // The pod's multi-ticket discount, frozen on the payment. The line items are
+  // The member's Smart Incentive, frozen on the payment. The line items are
   // already priced net of it, so the row states why they sit below list price.
   // Optional like the coins; a zero amount prints nothing.
-  ticket_discount_pct?: number;
-  ticket_discount_amount?: number;
-  /** Tickets the discount covered — the booking's seats. */
-  ticket_discount_tickets?: number;
-  // The member's Smart Incentive, frozen on the payment like the discount
-  // above and printed beside it. Optional the same way; zero prints nothing.
   smart_incentive_pct?: number;
   smart_incentive_amount?: number;
   // Dynamic branding pulled from Finance → Invoice Management. All optional so
@@ -147,18 +141,6 @@ function drawBillToCard(doc: PDFKit.PDFDocument, data: InvoiceData, L: number, R
     by += 13;
   }
   return cardH;
-}
-
-/** The multi-ticket discount's totals row, or null when the payment had none. */
-function ticketDiscountRow(
-  data: InvoiceData,
-  fmt: (n: number) => string
-): { label: string; value: string } | null {
-  const amount = Math.max(0, Number(data.ticket_discount_amount) || 0);
-  if (amount <= 0) return null;
-  const pct = Number(data.ticket_discount_pct) || 0;
-  const tickets = Number(data.ticket_discount_tickets) || 0;
-  return { label: `Multi-ticket discount (${pct}% on ${tickets} tickets)`, value: `- ${fmt(amount)}` };
 }
 
 /** The Smart Incentive's totals row, or null when the payment had none. */
@@ -274,8 +256,8 @@ export function drawInvoice(
   y += 10;
   const totalsRow = (label: string, value: string, bold = false) => {
     // The label box starts at the left margin but still ends at 450, right
-    // aligned, so short labels sit where they always did and a long one (the
-    // multi-ticket discount) fits on one line instead of wrapping into the next.
+    // aligned, so short labels sit where they always did and a long one fits on
+    // one line instead of wrapping into the next.
     doc
       .font(bold ? 'Helvetica-Bold' : 'Helvetica')
       .fontSize(bold ? 12 : 10)
@@ -286,12 +268,10 @@ export function drawInvoice(
       .text(value, VALUE_X, y, { width: R - CELL_PAD - VALUE_X, align: 'right' });
     y += bold ? 22 : 17;
   };
-  // Above the tax lines on purpose: the discount came off the ticket price
+  // Above the tax lines on purpose: the Smart Incentive came off the ticket price
   // before GST was worked out, so the block reads discount → taxable → GST → paid.
-  // Same for the Smart Incentive, in the order checkout took them off.
-  for (const row of [ticketDiscountRow(data, fmt), smartIncentiveRow(data, fmt)]) {
-    if (row) totalsRow(row.label, row.value);
-  }
+  const incentiveRow = smartIncentiveRow(data, fmt);
+  if (incentiveRow) totalsRow(incentiveRow.label, incentiveRow.value);
   totalsRow('Taxable value', fmt(data.subtotal));
   totalsRow(`GST (${data.gst_pct}%)`, fmt(data.gst_amount));
   // After the taxes, before the total: taxable + GST + round off = total paid.

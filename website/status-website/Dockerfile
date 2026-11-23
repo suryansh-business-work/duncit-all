@@ -63,6 +63,7 @@ COPY packages/ui/package.json ./packages/ui/
 COPY packages/table/package.json ./packages/table/
 COPY packages/captcha/package.json ./packages/captcha/
 COPY packages/brand/package.json ./packages/brand/
+COPY packages/regex/package.json ./packages/regex/
 COPY packages/communication/package.json ./packages/communication/
 COPY packages/forms/package.json ./packages/forms/
 COPY packages/buttons-native/package.json ./packages/buttons-native/
@@ -88,6 +89,8 @@ COPY packages/buttons-native ./packages/buttons-native
 COPY packages/captcha ./packages/captcha
 # @duncit/brand — main.tsx loads the Google Analytics tag set in Tech.
 COPY packages/brand ./packages/brand
+# @duncit/regex — the shared form patterns @duncit/brand's widgets validate with.
+COPY packages/regex ./packages/regex
 ARG VITE_SERVER_URL
 ENV VITE_SERVER_URL=$VITE_SERVER_URL
 RUN pnpm --filter status build

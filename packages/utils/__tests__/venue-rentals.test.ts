@@ -14,12 +14,12 @@ import {
   isRentalListEditable,
   paymentRentalSummary,
   rentalCategoryLabels,
+  rentalDepositRefund,
   rentalHandBack,
   rentalItemsToValues,
   toVenueRentalsInput,
   POD_RENTALS_QUERY,
   canMarkRental,
-  canRecordRentalRefund,
   checkoutRentalLines,
   rentalClosedKey,
   rentalMaxQuantity,
@@ -33,6 +33,7 @@ import {
   rentalUnitKey,
   type PodRentalItem,
 } from '../src/venue-rentals';
+import { canSendRentalRefund, rentalRefundStateKey, rentalRefundStateOf, rentalRefundTone } from '../src/venue-rentals-refunds';
 
 const racket: PodRentalItem = {
   id: 'racket',
@@ -165,11 +166,9 @@ describe('rentalClosedKey', () => {
 });
 
 describe('row rules and labels', () => {
-  it('lets only an item still out be marked, and only an owed refund be recorded', () => {
+  it('lets only an item still out be marked', () => {
     expect(canMarkRental({ status: 'BOOKED' })).toBe(true);
     expect(canMarkRental({ status: 'RETURNED' })).toBe(false);
-    expect(canRecordRentalRefund({ refund_status: 'DUE' })).toBe(true);
-    expect(canRecordRentalRefund({ refund_status: 'IN_PAYMENT' })).toBe(false);
   });
 
   it('reads every label from the venueRentals namespace', () => {
@@ -347,21 +346,83 @@ describe('checkoutRentalLines', () => {
   });
 });
 
-describe('rentalHandBack', () => {
-  it('has the venue hand back the deposit less the damage it claims', () => {
-    expect(rentalHandBack(500, 0, true)).toBe(500);
-    expect(rentalHandBack(500, 200, true)).toBe(300);
-    expect(rentalHandBack(25.5, 0.25, true)).toBe(25.25);
+describe('rentalDepositRefund', () => {
+  it('refunds the deposit less the damage the venue claims, to the paisa', () => {
+    expect(rentalDepositRefund(500, 0, true)).toBe(500);
+    expect(rentalDepositRefund(500, 200, true)).toBe(300);
+    expect(rentalDepositRefund(25.5, 0.25, true)).toBe(25.25);
+    // The whole deposit kept for damage: nothing goes back.
+    expect(rentalDepositRefund(500, 500, true)).toBe(0);
   });
 
-  it('never hands back less than nothing, nor more than the deposit, whatever is typed', () => {
-    expect(rentalHandBack(500, 900, true)).toBe(0);
-    expect(rentalHandBack(500, -50, true)).toBe(500);
-    expect(rentalHandBack(500, Number.NaN, true)).toBe(500);
+  it('never refunds less than nothing, nor more than the deposit, whatever is typed', () => {
+    expect(rentalDepositRefund(500, 900, true)).toBe(0);
+    expect(rentalDepositRefund(500, -50, true)).toBe(500);
+    expect(rentalDepositRefund(500, Number.NaN, true)).toBe(500);
+    expect(rentalDepositRefund(500, Number.POSITIVE_INFINITY, true)).toBe(500);
+    expect(rentalDepositRefund(-20, 0, true)).toBe(0);
   });
 
-  it('hands back nothing when Finance made deposits non-refundable', () => {
-    expect(rentalHandBack(500, 0, false)).toBe(0);
+  it('refunds nothing when Finance made deposits non-refundable', () => {
+    expect(rentalDepositRefund(500, 0, false)).toBe(0);
+    expect(rentalDepositRefund(500, 100, false)).toBe(0);
+  });
+
+  it('keeps the deprecated rentalHandBack name working for older callers, with the same math', () => {
+    expect(rentalHandBack).toBe(rentalDepositRefund);
+  });
+});
+
+describe('rentalRefundStateOf', () => {
+  const row = (over: Record<string, unknown> = {}) => ({
+    status: 'RETURNED',
+    deposit_amount: 500,
+    refund_due: 0,
+    refund_status: 'NONE',
+    ...over,
+  });
+
+  it('trusts the state a current server sends over the old fields', () => {
+    expect(rentalRefundStateOf(row({ refund_state: 'REFUNDED', refund_status: 'DUE', refund_due: 300 }))).toBe('REFUNDED');
+    expect(rentalRefundStateOf(row({ refund_state: 'PROCESSING', refund_status: 'DUE', refund_due: 300 }))).toBe('PROCESSING');
+  });
+
+  it('reads an older row with no state the way the server would, never as refunded', () => {
+    // An item still out: its deposit comes back after return; with no deposit, nothing does.
+    expect(rentalRefundStateOf(row({ status: 'BOOKED' }))).toBe('AWAITING_RETURN');
+    expect(rentalRefundStateOf(row({ status: 'BOOKED', deposit_amount: 0 }))).toBe('NOT_ELIGIBLE');
+    // Owed and not sent yet.
+    expect(rentalRefundStateOf(row({ refund_status: 'DUE', refund_due: 300 }))).toBe('ELIGIBLE');
+    // Hand-marked paid before Razorpay refunds: no gateway record vouches for it.
+    expect(rentalRefundStateOf(row({ refund_status: 'PAID', refund_due: 300 }))).toBe('REQUIRES_REVIEW');
+    // Carried by the pod cancellation's own refund.
+    expect(rentalRefundStateOf(row({ status: 'CANCELLED', refund_status: 'IN_PAYMENT', refund_due: 800 }))).toBe('IN_PAYMENT');
+    expect(rentalRefundStateOf(row())).toBe('NOT_ELIGIBLE');
+  });
+
+  it('falls back to the old fields when a server sends a state this build does not know', () => {
+    expect(rentalRefundStateOf(row({ refund_state: 'SOMETHING_NEW', refund_status: 'DUE', refund_due: 50 }))).toBe('ELIGIBLE');
+    expect(rentalRefundStateOf(row({ refund_state: null, status: 'BOOKED' }))).toBe('AWAITING_RETURN');
+  });
+
+  it('labels and colours a state from the venueRentals namespace, an unknown one as no refund', () => {
+    expect(rentalRefundStateKey('REQUIRES_REVIEW')).toBe('venueRentals.refundState.REQUIRES_REVIEW');
+    expect(rentalRefundTone('REFUNDED')).toBe('success');
+    expect(rentalRefundTone('REQUIRES_REVIEW')).toBe('error');
+    expect(rentalRefundStateKey('LOST')).toBe('venueRentals.refundState.NOT_ELIGIBLE');
+    expect(rentalRefundTone(undefined)).toBe('neutral');
+  });
+});
+
+describe('canSendRentalRefund', () => {
+  it('lets Finance send only a refund waiting for review', () => {
+    const base = { status: 'RETURNED', deposit_amount: 500, refund_due: 300, refund_status: 'DUE' };
+    expect(canSendRentalRefund({ ...base, refund_state: 'REQUIRES_REVIEW' })).toBe(true);
+    // A legacy hand-marked refund reads REQUIRES_REVIEW, so Finance can send it properly.
+    expect(canSendRentalRefund({ ...base, refund_status: 'PAID' })).toBe(true);
+    for (const state of ['ELIGIBLE', 'PROCESSING', 'REFUNDED', 'FAILED', 'IN_PAYMENT', 'NOT_ELIGIBLE']) {
+      expect(canSendRentalRefund({ ...base, refund_state: state })).toBe(false);
+    }
   });
 });
 

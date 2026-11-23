@@ -11,14 +11,19 @@ import { FailedPaymentCaseModel, type IFailedPaymentCase } from './failedPayment
 import { bookingFor, type BookingInfo } from './failedPayment.booking';
 import { completeRefund, failRefund } from './failedPayment.refundOutcome';
 import { recordPaymentEvent } from './paymentEvent.service';
-import type { ActorSnapshot } from './failedPayment.types';
+import { SYSTEM_ACTOR, type ActorSnapshot, type PaymentEventSource } from './failedPayment.types';
+
+/** Who the trail files a refund step under: Finance's button, or the automatic refund. */
+const eventSourceOf = (actor: ActorSnapshot): PaymentEventSource => (actor.id === SYSTEM_ACTOR.id ? 'SYSTEM' : 'FINANCE');
 
 /**
  * Sending a failed payment's money back through Razorpay — at most once.
  *
  * Built on the pod-shop refund (productOrder.refund.ts) and hardened for a
  * button a person presses:
- *  1. Eligibility: the case is open and either MATCHED (green) or APPROVED.
+ *  1. Eligibility: the case is open and its evidence was verified (MATCHED, or
+ *     APPROVED in Review), or the buyer sent none, so there is nothing to
+ *     review and step 3's live check alone decides.
  *  2. One conditional write claims the refund ('' / FAILED → PENDING). Of two
  *     clicks or two tabs only one wins; the other is told it is under way.
  *  3. Live re-check with Razorpay: the payment belongs to this case's order, is
@@ -38,18 +43,30 @@ const IN_FLIGHT_MS = 15 * 60_000;
 export const receiptPrefix = (caseId: string) => `fpc_${caseId}`;
 
 /** A refusal the person pressing Refund must read — never a gateway fault. */
-class RefundRefusal extends Error {}
+export class RefundRefusal extends Error {}
 function refuse(message: string): never {
   throw new RefundRefusal(message);
 }
 
+/**
+ * Why a case may be refunded. VERIFIED: its evidence matched Razorpay or was
+ * approved in Review. LIVE_CHECK: the buyer sent no evidence at all (a capture
+ * the checkout could not book, a cancelled sheet), so there is nothing for a
+ * person to review and Razorpay's live answer alone decides. Null while
+ * evidence still waits for Review. Pure, for tests.
+ */
+export function refundBasis(kase: Pick<IFailedPaymentCase, 'verification' | 'review' | 'claims'>): 'VERIFIED' | 'LIVE_CHECK' | null {
+  if (kase.verification.status === 'MATCHED' || kase.review?.decision === 'APPROVED') return 'VERIFIED';
+  return (kase.claims?.length ?? 0) === 0 ? 'LIVE_CHECK' : null;
+}
+
 /** Whether the case may be refunded at all, before any gateway call. Pure, for tests. */
-export function refundEligibility(kase: Pick<IFailedPaymentCase, 'resolution' | 'verification' | 'review' | 'refund'>): string | null {
+export function refundEligibility(
+  kase: Pick<IFailedPaymentCase, 'resolution' | 'verification' | 'review' | 'refund' | 'claims'>
+): string | null {
   if (kase.refund.status === 'PROCESSED') return 'This payment has already been refunded.';
   if (kase.resolution.state !== 'OPEN') return 'This case is closed.';
-  if (kase.verification.status !== 'MATCHED' && kase.review?.decision !== 'APPROVED') {
-    return 'Approve the evidence in Review before refunding.';
-  }
+  if (refundBasis(kase) === null) return 'Approve the evidence in Review before refunding.';
   return null;
 }
 
@@ -74,11 +91,12 @@ export function refundGuard(input: GuardInput): { ok: true; amountPaise: number 
   return { ok: true, amountPaise };
 }
 
-const accountOf = (payment: IPayment) => (payment.metadata?.razorpay_account as string | undefined) || null;
+export const accountOf = (payment: IPayment) => (payment.metadata?.razorpay_account as string | undefined) || null;
 
 /** The Razorpay payment to refund: the one the check matched, else the order's single unbooked capture. */
 async function targetPaymentId(kase: IFailedPaymentCase, payment: IPayment, booking: BookingInfo): Promise<string> {
   if (kase.verification.matched_payment_id) return kase.verification.matched_payment_id;
+  if (!kase.razorpay_order_id) refuse('This payment never had a Razorpay order, so there is nothing to refund through Razorpay.');
   const payments = await fetchRazorpayOrderPayments(kase.razorpay_order_id, accountOf(payment));
   const captured = payments.filter((p) => p.status === 'captured' && p.id !== booking.bookedRazorpayPaymentId);
   if (captured.length === 0) refuse('Razorpay shows no captured payment on this order.');
@@ -118,7 +136,7 @@ async function releaseClaim(kase: IFailedPaymentCase, reason: string, actor: Act
     paymentDocId: kase.payment_doc_id,
     caseId: kase._id,
     type: 'REFUND_FAILED',
-    source: 'FINANCE',
+    source: eventSourceOf(actor),
     actor,
     data: { refused: true, reason },
   });
@@ -137,7 +155,7 @@ async function afterSend(kase: IFailedPaymentCase, refund: SentRefund, razorpayP
     paymentDocId: kase.payment_doc_id,
     caseId: kase._id,
     type: 'REFUND_INITIATED',
-    source: 'FINANCE',
+    source: eventSourceOf(actor),
     actor,
     data: { razorpay_refund_id: refund.id, razorpay_payment_id: razorpayPaymentId, amount_paise: amountPaise, status: refund.status },
   });
@@ -147,8 +165,13 @@ async function afterSend(kase: IFailedPaymentCase, refund: SentRefund, razorpayP
   return FailedPaymentCaseModel.findById(kase._id);
 }
 
-/** Steps 3–5 for a claimed case. */
-async function checkAndSend(kase: IFailedPaymentCase, actor: ActorSnapshot) {
+/**
+ * Step 3 on its own: what Razorpay says about the case's money right now, as
+ * the payment to refund and the paise left. Throws RefundRefusal for any fact
+ * that blocks a refund. Shared by the send and the read-only preview, so the
+ * amount Finance is shown is worked out exactly like the amount that is sent.
+ */
+export async function liveRefundCheck(kase: IFailedPaymentCase) {
   const payment = await PaymentModel.findById(kase.payment_doc_id);
   if (!payment) refuse('The payment behind this case was not found.');
   const booking = await bookingFor(payment);
@@ -156,8 +179,14 @@ async function checkAndSend(kase: IFailedPaymentCase, actor: ActorSnapshot) {
   const live = await fetchRazorpayPayment(razorpayPaymentId, accountOf(payment));
   const guard = refundGuard({ live, orderId: kase.razorpay_order_id, booking });
   if (!guard.ok) refuse(guard.reason);
-  const refund = await sendOnce(kase, payment, razorpayPaymentId, guard.amountPaise);
-  return afterSend(kase, refund, razorpayPaymentId, guard.amountPaise, actor);
+  return { payment, razorpayPaymentId, amountPaise: guard.amountPaise };
+}
+
+/** Steps 3–5 for a claimed case. */
+async function checkAndSend(kase: IFailedPaymentCase, actor: ActorSnapshot) {
+  const { payment, razorpayPaymentId, amountPaise } = await liveRefundCheck(kase);
+  const refund = await sendOnce(kase, payment, razorpayPaymentId, amountPaise);
+  return afterSend(kase, refund, razorpayPaymentId, amountPaise, actor);
 }
 
 async function send(kase: IFailedPaymentCase, actor: ActorSnapshot): Promise<IFailedPaymentCase | null> {
@@ -185,7 +214,20 @@ export async function initiateFailedPaymentRefund(
   if (current.refund.status === 'PENDING' && current.refund.client_request_id === clientRequestId) return current;
   const ineligible = refundEligibility(current);
   if (ineligible) throw new GraphQLError(ineligible, { extensions: { code: 'BAD_USER_INPUT' } });
+  return claimAndSend(current, clientRequestId, actor);
+}
 
+/**
+ * Steps 2–5 for a case its caller has already found eligible: one conditional
+ * claim, then the live re-check and the at-most-once send. Shared by Finance's
+ * button and the automatic refund, so both get the same guarantees.
+ */
+export async function claimAndSend(
+  current: IFailedPaymentCase,
+  clientRequestId: string,
+  actor: ActorSnapshot
+): Promise<IFailedPaymentCase | null> {
+  const caseId = current._id;
   const now = new Date();
   const claimed = await FailedPaymentCaseModel.findOneAndUpdate(
     {
@@ -218,7 +260,7 @@ export async function initiateFailedPaymentRefund(
     paymentDocId: claimed.payment_doc_id,
     caseId: claimed._id,
     type: 'REFUND_REQUESTED',
-    source: 'FINANCE',
+    source: eventSourceOf(actor),
     actor,
     data: { attempt: claimed.refund.attempts },
   });

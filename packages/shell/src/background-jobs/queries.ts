@@ -3,7 +3,13 @@ import { gql } from '@apollo/client';
 export type BackgroundJobStatus = 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
 /** What a job does: a bulk delete from a table, or an AI translation of one language. */
-export type BackgroundJobKind = 'BULK_DELETE' | 'AI_TRANSLATE' | 'MEDIA_ORGANIZE' | 'EMAIL_VERIFY';
+export type BackgroundJobKind =
+  | 'BULK_DELETE'
+  | 'AI_TRANSLATE'
+  | 'MEDIA_ORGANIZE'
+  | 'EMAIL_VERIFY'
+  | 'LEAD_QUALITY_RECALC'
+  | 'LEAD_DISCOVERY';
 
 /** One row a bulk delete could not remove (or a batch a translation lost), with the reason. */
 export interface BackgroundJobFailure {

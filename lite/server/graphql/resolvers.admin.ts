@@ -46,6 +46,7 @@ export const adminResolvers = {
         // of those features, so each answers 0. A field missing here fails the whole query on every page.
         min_signup_age: 0,
         draft_retention_days: 0,
+        // Deprecated: no current client asks for it, but a Lite tab still running an older bundle does.
         ticket_discount_max_pct: 0,
         happening_nearby_days: 0,
       };

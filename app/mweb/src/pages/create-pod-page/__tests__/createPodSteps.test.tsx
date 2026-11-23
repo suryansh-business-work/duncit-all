@@ -6,7 +6,6 @@ import { useEffect, useState, type ReactNode } from 'react';
 import HostCategoryField from '../create-pod/steps/HostCategoryField';
 import EditPodLocation from '../create-pod/steps/EditPodLocation';
 import RequestSlotPicker from '../create-pod/steps/RequestSlotPicker';
-import TicketDiscountStepField from '../create-pod/fields/TicketDiscountStepField';
 import PlaceChargesField from '../create-pod/fields/PlaceChargesField';
 import { blankCreatePodForm, type CreatePodFormValues } from '../create-pod/create-pod.types';
 import { hostCategoryKeyOf } from '../create-pod/create-pod.clubs';
@@ -19,7 +18,6 @@ const h = vi.hoisted(() => ({
   slots: { data: undefined as unknown, loading: false },
   slotsOpts: undefined as unknown,
   locationProps: undefined as undefined | Record<string, any>,
-  tierProps: undefined as undefined | Record<string, any>,
 }));
 
 vi.mock('@apollo/client/react', async (orig) => ({
@@ -50,15 +48,6 @@ vi.mock('../../../components/app-header/LocationDialog', () => ({
     ) : null;
   },
 }));
-vi.mock('@duncit/ui', async (orig) => ({
-  ...(await orig<object>()),
-  TicketDiscountField: (p: Record<string, any>) => {
-    h.tierProps = p;
-    return <div data-testid="tier-field" data-enabled={String(p.enabled)} data-max-tickets={p.maxTickets} data-price={String(p.unitPrice)} />;
-  },
-}));
-vi.mock('../../../hooks/usePricing', () => ({ usePricing: () => ({ format: (v: number) => `Rs${v}` }) }));
-vi.mock('../../../utils/dateFormat', async (orig) => ({ ...(await orig<object>()), useTicketDiscountMaxPct: () => 40 }));
 
 type Form = ReturnType<typeof useForm<CreatePodFormValues>>;
 function Harness({
@@ -290,49 +279,6 @@ describe('RequestSlotPicker', () => {
     h.slots = { data: {}, loading: false };
     mount();
     expect(screen.queryByTestId(/^slot-s/)).not.toBeInTheDocument();
-  });
-});
-
-describe('TicketDiscountStepField', () => {
-  const mount = (values: Partial<CreatePodFormValues> = {}, errors: Record<string, unknown> = {}) =>
-    render(
-      <Harness values={values} errors={errors}>
-        {(form) => (
-          <>
-            <TicketDiscountStepField form={form} />
-            <output data-testid="state">{JSON.stringify([form.watch('ticket_discount_enabled'), form.watch('ticket_discount_tiers')])}</output>
-          </>
-        )}
-      </Harness>
-    );
-
-  it('binds the editor to the form with the price and the most tickets the pod allows', async () => {
-    mount({ pod_amount: 200, no_of_spots: 10, ticket_discount_enabled: true, ticket_discount_tiers: [{ min_tickets: 2, discount_pct: 10 }] });
-    expect(screen.getByTestId('tier-field')).toHaveAttribute('data-enabled', 'true');
-    expect(screen.getByTestId('tier-field')).toHaveAttribute('data-price', '200');
-    expect(h.tierProps?.maxPct).toBe(40);
-    expect(h.tierProps?.formatPrice(5)).toBe('Rs5');
-    await act(async () => {
-      h.tierProps?.onEnabledChange(false);
-    });
-    await act(async () => {
-      h.tierProps?.onTiersChange([{ min_tickets: 3, discount_pct: 15 }]);
-    });
-    await waitFor(() => expect(JSON.parse(screen.getByTestId('state').textContent ?? '[]')).toEqual([false, [{ min_tickets: 3, discount_pct: 15 }]]));
-  });
-
-  it('passes no price when the ticket is free or not priced yet', () => {
-    mount({ pod_amount: null });
-    expect(screen.getByTestId('tier-field')).toHaveAttribute('data-price', 'undefined');
-  });
-
-  it('keeps a shown error in step with the host edits by re-validating on change', async () => {
-    mount({ ticket_discount_enabled: true, ticket_discount_tiers: [] }, { ticket_discount_tiers: { type: 'manual', message: 'Add a tier' } });
-    await waitFor(() => expect(h.tierProps?.errors?.list).toBe('Add a tier'));
-    await act(async () => {
-      h.tierProps?.onTiersChange([{ min_tickets: 2, discount_pct: 10 }]);
-    });
-    await waitFor(() => expect(JSON.parse(screen.getByTestId('state').textContent ?? '[]')[1]).toEqual([{ min_tickets: 2, discount_pct: 10 }]));
   });
 });
 

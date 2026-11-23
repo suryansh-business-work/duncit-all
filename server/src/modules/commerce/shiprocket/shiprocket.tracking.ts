@@ -123,6 +123,10 @@ export async function applyWebhookEvent(payload: Record<string, any>): Promise<s
     if (moved) await afterStatusChange(order, previous);
     return `order ${order.order_no}`;
   }
+  // A printed gift card order (Loyalty) — its own collection, 'GC-' order numbers.
+  const { giftCardOrderTracking } = await import('@modules/finance/giftcardOrder/giftCardOrder.shipment');
+  const giftCard = await giftCardOrderTracking.webhook(awb, orderNo, t);
+  if (giftCard) return giftCard;
   const ret = awb ? await StoreReturnModel.findOne({ 'pickup.awb': awb }) : null;
   if (ret) {
     await applyReturnTracking(ret, t, mailStoreReturnArrived);
@@ -183,5 +187,7 @@ export async function sweepStaleTracking(): Promise<number> {
     }
   }
   const { podShopReturnTracking } = await import('@modules/commerce/podShopReturn/podShopReturn.tracking');
-  return pulled + (await podShopReturnTracking.sweep(cutoff, SWEEP_BATCH));
+  pulled += await podShopReturnTracking.sweep(cutoff, SWEEP_BATCH);
+  const { giftCardOrderTracking } = await import('@modules/finance/giftcardOrder/giftCardOrder.shipment');
+  return pulled + (await giftCardOrderTracking.sweep(cutoff, SWEEP_BATCH));
 }

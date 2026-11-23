@@ -73,12 +73,12 @@ describe('ReleaseBreakdownLines', () => {
     expect(screen.getByText('Venue bill')).toBeInTheDocument();
   });
 
-  it('shows the attendance a host payout settled on, and the pod’s coin and tier notes', async () => {
+  it('shows the attendance a host payout settled on, and the pod’s coin and Smart Incentive notes', async () => {
     const breakdown = makeBreakdownV2({ booked_seats: 10, attended_seats: 8, attended_total: 800 });
     renderWithProviders(<ReleaseBreakdownLines request={{ kind: 'HOST_PAYMENT', pod_id: 'pod1', breakdown }} />, {
       mocks: [
         publicFinanceSettingsMock(),
-        podCoinTotalsMock({ coins_redeemed_total: 50, coins_earned_total: 12, ticket_discount_total: 120 }),
+        podCoinTotalsMock({ coins_redeemed_total: 50, coins_earned_total: 12, smart_incentive_total: 120 }),
       ],
     });
     expect(screen.getByText('Attendance at completion')).toBeInTheDocument();
@@ -86,7 +86,7 @@ describe('ReleaseBreakdownLines', () => {
     expect(screen.getByText('Settled on (attended seats)')).toBeInTheDocument();
     expect(await screen.findByText(/^Duncit Coins on this pod: 50 spent by buyers .* 12 earned back\.$/)).toBeInTheDocument();
     expect(
-      await screen.findByText('₹120.00 in multi-ticket discounts is already off the collected total.'),
+      await screen.findByText('₹120.00 in Smart Incentive discounts is already off the collected total.'),
     ).toBeInTheDocument();
   });
 

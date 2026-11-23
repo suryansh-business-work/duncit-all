@@ -19,6 +19,7 @@ import CommunityDetailsSection from './sections/CommunityDetailsSection';
 import ProspectPresenceSection from './sections/ProspectPresenceSection';
 import ProspectBrandingSection from './sections/ProspectBrandingSection';
 import LeadServicesSection from '../fields/LeadServicesSection';
+import LeadSocialSection from '../fields/LeadSocialSection';
 
 interface Props<T extends FieldValues> {
   entity: ProspectLeadEntity;
@@ -70,7 +71,8 @@ function sectionsFor(entity: ProspectLeadEntity, config: CrmOptionGroup): Sectio
           paths: ['member_count', 'meetup_frequency', 'interests', 'partnership_interests'],
           render: () => <CommunityDetailsSection config={config} />,
         },
-    { titleKey: 'crm.prospectLeads.sectionPresence', paths: ['website', 'instagram_link', 'social_links'], render: () => <ProspectPresenceSection /> },
+    { titleKey: 'crm.common.website', paths: ['website'], render: () => <ProspectPresenceSection /> },
+    { titleKey: 'crm.common.social', paths: ['instagram_link', 'social_links'], render: () => <LeadSocialSection /> },
     {
       titleKey: 'crm.common.servicesOffered',
       paths: ['services_offered'],

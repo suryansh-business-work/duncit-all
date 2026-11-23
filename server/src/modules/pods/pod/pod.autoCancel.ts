@@ -29,7 +29,7 @@
 import { isFreePod, PodModel } from './pod.model';
 import { podService } from './pod.service';
 import { podLifecycleFilter } from './pod.lifecycle';
-import { podFinanceNow, runPodCancellationRiskSweep } from './pod.cancellationRisk';
+import { fallsShort, podFinanceNow, runPodCancellationRiskSweep } from './pod.cancellationRisk';
 import {
   DEFAULT_CANCELLATION_TRIGGER_HOURS,
   VenueModel,
@@ -46,6 +46,9 @@ const HOUR_MS = 60 * 60 * 1000;
 /** The audit note + refund reason + email line for a system cancel. */
 const AUTO_CANCEL_REASON =
   'Cancelled automatically — the pod could not cover its venue cost';
+/** MINIMUM_SPOTS_NOT_MET: the bookings never brought the venue its minimum business. */
+const MINIMUM_NOT_MET_REASON =
+  'Cancelled automatically — minimum bookings not met';
 
 const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
 
@@ -107,8 +110,7 @@ async function cancelIfNegative(pod: any, now: number, platformLeadHours: number
   const triggerHours = venue ? venueTriggerHours(venue.settings?.cancellation) : platformLeadHours;
   if (hoursUntilStart > triggerHours) return false;
 
-  const { negative } = await podFinanceNow(pod);
-  if (!negative) return false;
+  if (!fallsShort(await podFinanceNow(pod))) return false;
 
   const refundPct = autoCancelRefundPct(venue?.settings?.cancellation, hoursUntilStart);
   if (refundPct === null) {
@@ -119,11 +121,22 @@ async function cancelIfNegative(pod: any, now: number, platformLeadHours: number
     return false;
   }
 
+  // The last check, on a fresh read, right before anything is written: the
+  // sweep's cursor read this pod minutes ago, and a booking (or a refund) since
+  // can change the verdict either way. Only a pod still short is cancelled.
+  const fresh = await PodModel.findById(pod._id);
+  if (!fresh || fresh.deleted_at || fresh.completed_at || !fresh.is_active) return false;
+  const finance = await podFinanceNow(fresh);
+  if (!fallsShort(finance)) return false;
+
   // The policy share rides on the reason: it is the DELETE audit note Finance's
   // Cancel & Refunds row shows, so the operator can see why refunded < collected.
+  const why = finance.belowMinBusiness
+    ? `${MINIMUM_NOT_MET_REASON} (venue minimum business ${round2(finance.minBusiness ?? 0)})`
+    : AUTO_CANCEL_REASON;
   const refunded = await podService.systemCancelPod(
     String(pod._id),
-    `${AUTO_CANCEL_REASON} (venue policy refund: ${round2(refundPct)}%)`,
+    `${why} (venue policy refund: ${round2(refundPct)}%)`,
     refundPct
   );
   if (refunded === null) return false;

@@ -18,6 +18,8 @@ import {
 } from '@/hooks/useCheckout';
 import { downloadPaymentInvoice, maybeSaveMainAddress } from '@/hooks/checkoutRequests';
 import type { GiftCardSelection } from '@/utils/gift-cards';
+import type { ShipToValues } from '@duncit/forms/schemas';
+import { GiftCardDeliveryMode as GqlDeliveryMode } from '@/generated/graphql/graphql';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
 import { useMeStore } from '@/stores/me.store';
 
@@ -62,9 +64,12 @@ export function useGiftCardCheckout(selection: GiftCardSelection) {
 
   const initialValues = useMemo(() => buildCheckoutInitialValues(me), [me]);
 
-  const buildInput = (values: CheckoutFormValues) => ({
-    scope_type: selection.scope_type,
-    scope_category_id: selection.scope_category_id,
+  const buildInput = (values: CheckoutFormValues, shipTo: ShipToValues | null) => ({
+    design_id: selection.design_id,
+    quantity: selection.quantity,
+    delivery_mode:
+      selection.delivery_mode === 'PHYSICAL' ? GqlDeliveryMode.Physical : GqlDeliveryMode.Digital,
+    shipping_address: shipTo,
     amount: selection.amount,
     recipient_email: selection.recipient_email || null,
     recipient_name: selection.recipient_name || null,
@@ -77,11 +82,15 @@ export function useGiftCardCheckout(selection: GiftCardSelection) {
     checkout_url: GIFT_CARD_CHECKOUT_URL,
   });
 
-  const pay = async (values: CheckoutFormValues): Promise<GiftCardPayment> => {
+  /** `shipTo` is the delivery address of a printed order; null for email delivery. */
+  const pay = async (
+    values: CheckoutFormValues,
+    shipTo: ShipToValues | null = null,
+  ): Promise<GiftCardPayment> => {
     await maybeSaveMainAddress(values, me);
     const data = await graphqlRequest(
       MobileDummyGiftCardCheckoutDocument,
-      { input: { ...buildInput(values), simulate_failure: values.simulate_failure } },
+      { input: { ...buildInput(values, shipTo), simulate_failure: values.simulate_failure } },
       { auth: true },
     );
     return data.dummyGiftCardCheckout;
@@ -89,11 +98,12 @@ export function useGiftCardCheckout(selection: GiftCardSelection) {
 
   const createRazorpayGiftCardOrder = async (
     values: CheckoutFormValues,
+    shipTo: ShipToValues | null = null,
   ): Promise<RazorpayOrder> => {
     await maybeSaveMainAddress(values, me);
     const data = await graphqlRequest(
       MobileCreateRazorpayGiftCardOrderDocument,
-      { input: buildInput(values) },
+      { input: buildInput(values, shipTo) },
       { auth: true },
     );
     return data.createRazorpayGiftCardOrder;

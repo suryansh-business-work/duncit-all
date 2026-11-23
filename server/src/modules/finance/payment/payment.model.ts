@@ -96,16 +96,10 @@ export interface IPayment extends Document {
   /** Duncit Coins the buyer spent on this payment (1 coin = 1 rupee off). Like
    * the coupon, they cut the gross before GST, so total == amount charged. */
   coins_redeemed: number;
-  /** The pod's multi-ticket discount, frozen at checkout: rupees taken off the
-   * ticket money (never add-on products) before the coupon, coins and GST, so
-   * `total` is already net of it. 0 when no tier applied. */
-  ticket_discount_amount: number;
-  /** The percentage of the tier that produced `ticket_discount_amount` (0 when none). */
-  ticket_discount_pct: number;
   /** The member's unlocked Smart Incentive, frozen at checkout: rupees taken off
-   * the ticket money AFTER the multi-ticket discount and before the coupon,
-   * coins and GST, so `total` is already net of it — host-funded by
-   * construction, exactly like the multi-ticket discount. 0 when none applied. */
+   * the ticket money (never add-on products) before the coupon, coins and GST,
+   * so `total` is already net of it — host-funded by construction. 0 when none
+   * applied. */
   smart_incentive_amount: number;
   /** The offer's percentage that produced `smart_incentive_amount` (0 when none). */
   smart_incentive_pct: number;
@@ -198,8 +192,6 @@ const paymentSchema = new Schema<IPayment>(
     coupon_code: { type: String, default: null, index: true },
     coupon_discount: { type: Number, default: 0, min: 0 },
     coins_redeemed: { type: Number, default: 0, min: 0 },
-    ticket_discount_amount: { type: Number, default: 0, min: 0 },
-    ticket_discount_pct: { type: Number, default: 0, min: 0, max: 99 },
     smart_incentive_amount: { type: Number, default: 0, min: 0 },
     smart_incentive_pct: { type: Number, default: 0, min: 0, max: 90 },
     status: { type: String, enum: ['PENDING', 'SUCCESS', 'FAILED', 'REFUNDED'], default: 'PENDING' },
@@ -268,6 +260,22 @@ paymentSchema.index(
 paymentSchema.index(
   { 'metadata.razorpay_order_id': 1 },
   { partialFilterExpression: { 'metadata.razorpay_order_id': { $exists: true } } }
+);
+
+// Payment Trace and every table's Razorpay-id search match these exactly. With
+// them every branch of that `$or` is indexed, so a pasted id never scans the
+// collection. PARTIAL: only Razorpay checkouts carry them.
+paymentSchema.index(
+  { gateway_ref: 1 },
+  { name: 'gateway_ref_trace', partialFilterExpression: { gateway_ref: { $type: 'string' } } }
+);
+paymentSchema.index(
+  { 'metadata.razorpay_payment_id': 1 },
+  { name: 'razorpay_payment_id_trace', partialFilterExpression: { 'metadata.razorpay_payment_id': { $exists: true } } }
+);
+paymentSchema.index(
+  { 'metadata.razorpay_refund_ids': 1 },
+  { name: 'razorpay_refund_ids_trace', partialFilterExpression: { 'metadata.razorpay_refund_ids': { $exists: true } } }
 );
 
 // The dates of one multi-date booking of a (now retired) recurring pod, found

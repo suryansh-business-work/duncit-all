@@ -1,23 +1,26 @@
 import { GiftCardStatus, type GiftCardScopeType } from '@/generated/graphql/graphql';
+import type { GiftCardDeliveryMode } from '@duncit/forms/schemas';
 import { POD_WEB_BASE } from '@/utils/pod-format';
 
 /**
- * What the buy page hands the gift-card checkout. The name/image are a display
- * snapshot for the summary card — the server snapshots its own copy on payment
- * success, so a category rename mid-checkout never changes what was bought.
+ * What the buy page hands the gift-card checkout: the default design (a display
+ * snapshot — the server freezes its own copy on payment success), the amount
+ * of one card, how many, how they travel and who they are for. Twin of mWeb's.
  */
 export interface GiftCardSelection {
-  scope_type: GiftCardScopeType;
-  /** Category doc id for SUPER/CATEGORY/SUB themes; null for SHOP. */
-  scope_category_id: string | null;
-  scope_name: string;
-  scope_image_url: string;
-  /** The category's uploaded card faces; empty keeps the gradient card. */
-  scope_image_front_url: string;
-  scope_image_back_url: string;
-  /** Face value in whole rupees, within the configured min/max. */
+  design_id: string;
+  design_name: string;
+  front_url: string;
+  back_url: string;
+  /** Face value of one card, within the configured min/max. */
   amount: number;
-  /** Empty strings mean the buyer keeps the card. */
+  quantity: number;
+  delivery_mode: GiftCardDeliveryMode;
+  /** Charged once on a printed order; 0 for email. */
+  shipping_fee: number;
+  /** Digital only: sent to someone else. */
+  gift: boolean;
+  /** Empty strings mean nobody is named (a card kept for yourself). */
   recipient_email: string;
   recipient_name: string;
   message: string;
@@ -29,6 +32,8 @@ export interface GiftCardTheme {
   scope_type: GiftCardScopeType;
   scope_category_id?: string | null;
   scope_name: string;
+  /** The catalogue design's name — the card's title when set. */
+  design_name?: string | null;
 }
 
 const DEFAULT_GRADIENT: readonly [string, string] = ['#7b4397', '#dc2430'];

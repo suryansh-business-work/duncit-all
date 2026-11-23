@@ -16,7 +16,7 @@ import type {
   RequestPasswordChangeDTO,
   ChangePasswordDTO,
 } from '@modules/access/auth/auth.validator';
-import { assertPortalLogin } from '@modules/portals';
+import { assertPortalLogin, pendingClaimFor } from '@modules/portals';
 import { twoFactorService } from '@modules/access/auth/two-factor/two-factor.service';
 import { passwordResetService } from '@modules/access/auth/password-reset.service';
 import { noteSignIn, type SignInContext } from './user.signin';
@@ -239,7 +239,7 @@ export const userCredentialMethods = {
       { $set: { 'auth.last_login_provider': 'EMAIL', 'auth.last_login_at': new Date() } }
     );
     const fresh = await UserModel.findById(user._id);
-    const payload = await authPayload(fresh);
+    const payload = await authPayload(fresh, pendingClaimFor(portalKey));
     // Checked again on the way in: roles can be revoked between the code being
     // sent and it being typed, and this is the moment that grants the session.
     assertPortalLogin(portalKey, payload.user.roles);

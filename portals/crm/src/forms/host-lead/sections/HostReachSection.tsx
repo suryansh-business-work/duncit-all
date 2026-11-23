@@ -2,18 +2,14 @@ import { Stack } from '@mui/material';
 import { FormField } from '@duncit/forms';
 import SwitchField from '../../fields/SwitchField';
 import FieldGrid from '../../fields/FieldGrid';
-import SocialLinksField from '../../fields/SocialLinksField';
 import { useTranslation } from '@duncit/shell';
 
+/** Reach — the host's community and track record. Instagram and other profiles live in the Social step. */
 export default function HostReachSection() {
   const { t } = useTranslation();
   return (
     <Stack spacing={1.5}>
-      <FieldGrid>
-        <FormField name="instagram_link" label={t('crm.forms.instagramSocialLink')} size="small" />
-        <FormField name="community_link" label={t('crm.forms.whatsappCommunityGroupLink')} size="small" />
-      </FieldGrid>
-      <SocialLinksField />
+      <FormField name="community_link" label={t('crm.forms.whatsappCommunityGroupLink')} size="small" />
       <FieldGrid cols={3}>
         <FormField name="community_size" label={t('crm.forms.communitySize')} size="small" slotProps={{ htmlInput: { inputMode: 'numeric' } }} />
         <FormField name="past_attendees" label={t('crm.forms.approxPastAttendees')} size="small" slotProps={{ htmlInput: { inputMode: 'numeric' } }} />

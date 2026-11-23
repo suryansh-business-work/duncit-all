@@ -10,7 +10,7 @@ import { parseApiError } from '@duncit/utils';
 import ContentTable from './ContentTable';
 import ContentDialog from './ContentDialog';
 import {
-  CONTENT_LABELS,
+  contentLabels,
   CONTENT_TABLE,
   CREATE_CONTENT,
   DELETE_CONTENT,
@@ -24,7 +24,7 @@ import { useTranslation } from '@duncit/shell';
 /** Reusable content manager bound to a single website page type. */
 export default function ContentManager({ type }: Readonly<{ type: WebsitePageType }>) {
   const { t } = useTranslation();
-  const labels = CONTENT_LABELS[type];
+  const labels = contentLabels(t, type);
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [createContent] = useMutation<any>(CREATE_CONTENT);

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import type { RazorpayErrorLike } from '@duncit/utils';
+import type { ShipToValues } from '@duncit/forms/schemas';
 import {
   CHECKOUT_ME,
   PUBLIC_FINANCE,
@@ -9,6 +10,7 @@ import {
   type CheckoutPaymentRow,
 } from '../checkout-page/queries';
 import {
+  loadRazorpay,
   openRazorpayCheckout,
   type RazorpayOrderData,
   type RazorpaySignature,
@@ -49,6 +51,13 @@ export function useGiftCardPayment({ onPaymentFailure }: Readonly<Args>) {
   // address — the same billing form the pod checkout uses, prefilled from the profile.
   const billingForm = useCheckoutBillingForm(me);
 
+  // Fetch the Razorpay script while the buyer fills the form, as the pod
+  // checkout does, so Pay opens the sheet without a script download first.
+  const razorpayLive = !!finance?.razorpay_enabled;
+  useEffect(() => {
+    if (razorpayLive) loadRazorpay().catch(() => undefined);
+  }, [razorpayLive]);
+
   const verifyRazorpay = async (paymentDocId: string, sig: RazorpaySignature) => {
     setSubmitting(true);
     try {
@@ -63,16 +72,19 @@ export function useGiftCardPayment({ onPaymentFailure }: Readonly<Args>) {
     }
   };
 
-  const pay = async (selection: GiftCardSelection, values: CheckoutForm) => {
+  /** `shipTo` is the delivery address of a printed order; null for email delivery. */
+  const pay = async (selection: GiftCardSelection, values: CheckoutForm, shipTo: ShipToValues | null) => {
     setError(null);
     setSubmitting(true);
     const input = {
-      scope_type: selection.scope_type,
-      scope_category_id: selection.scope_category_id,
+      design_id: selection.design_id,
+      quantity: selection.quantity,
+      delivery_mode: selection.delivery_mode,
+      shipping_address: shipTo,
       amount: selection.amount,
-      recipient_email: selection.gift ? selection.recipient_email : null,
-      recipient_name: selection.gift ? selection.recipient_name : null,
-      message: selection.gift ? selection.message : null,
+      recipient_email: selection.recipient_email || null,
+      recipient_name: selection.recipient_name || null,
+      message: selection.message || null,
       contact_name: [me?.first_name, me?.last_name].filter(Boolean).join(' ').trim(),
       contact_email: me?.email ?? '',
       contact_phone_extension: me?.phone_extension ?? '',

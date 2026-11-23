@@ -26,7 +26,7 @@ export default function MarkRentalDialog({ booking, onClose, onMarked }: Readonl
   const { t } = useTranslation();
   const [apiError, setApiError] = useState<string | null>(null);
   const [mark, { loading }] = useMutation(MARK_RENTAL_BOOKING);
-  // Finance's rule decides whether the venue hands the deposit back; refundable until it says otherwise.
+  // Finance's rule decides whether Duncit refunds the deposit; refundable until it says otherwise.
   const settings = useQuery(PUBLIC_RENTAL_SETTINGS, { skip: booking === null, fetchPolicy: 'cache-first' });
   const depositRefundable = settings.data?.publicRentalSettings.deposit_refundable !== false;
 

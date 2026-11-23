@@ -83,6 +83,18 @@ describe('queries: roles and category scope', () => {
     expect(email.fields.find((f: any) => f.name === 'port')).toMatchObject({ number: true, bool: false, secret: false });
     expect(email.fields.find((f: any) => f.name === 'secure')).toMatchObject({ bool: true });
     expect(email.fields.find((f: any) => f.name === 'password')).toMatchObject({ secret: true, hint: expect.anything() });
+    // Straight from env-registry.json: why the value is used, its env key, who reads it and how it is checked.
+    const host = email.fields.find((f: any) => f.name === 'host');
+    expect(host).toMatchObject({
+      envKey: 'SMTP_HOST',
+      description: expect.stringContaining('SMTP'),
+      validation: { type: 'hostname', required: false, min: null, max: null },
+    });
+    expect(host.usedIn).toEqual(CATEGORY_FIELDS.EMAIL.find((f) => f.name === 'host')?.usedIn);
+    expect(email.fields.find((f: any) => f.name === 'port').validation).toEqual({ type: 'number', required: false, min: 1, max: 65535 });
+    expect(email.fields.find((f: any) => f.name === 'password').validation.required).toBe(true);
+    expect(email.fields.find((f: any) => f.name === 'secure').envKey).toBeNull();
+    expect(email.usedIn).toEqual(expect.arrayContaining(['server/src/services/email/email.provider.ts']));
     expect(out.some((c: any) => c.apiDocsUrl === null)).toBe(true);
     expect(out.some((c: any) => typeof c.apiDocsUrl === 'string')).toBe(true);
     expect(out.flatMap((c: any) => c.fields).some((f: any) => f.phone === true)).toBe(true);

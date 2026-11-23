@@ -551,6 +551,64 @@ describe('PodDetailsScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('FreeJoinSuccess', { podId: 'p1' });
   });
 
+  describe('a pod that has started but not ended', () => {
+    const ongoingPod = {
+      ...pod,
+      pod_date_time: new Date(Date.now() - 3_600_000).toISOString(),
+      pod_end_date_time: new Date(Date.now() + 3_600_000).toISOString(),
+    };
+    const joinable = () =>
+      mockGraphql.mockImplementation((doc: unknown) =>
+        doc === JoinFreePodDocument
+          ? Promise.resolve({ joinFreePod: { id: 'p1' } })
+          : Promise.reject(new Error('offline')),
+      );
+
+    it('shows it as ongoing, asks first, and joins only on Yes', async () => {
+      joinable();
+      mockedPod.mockReturnValue({
+        ...podData,
+        pod: ongoingPod,
+        savedInitially: false,
+        isLoading: false,
+      });
+      renderWithProviders(<PodDetailsScreen />);
+      // The chip's icon renders as a glyph in front of the label.
+      expect(screen.getByTestId('pod-info-time-chip')).toHaveTextContent(/Pod ongoing$/);
+      expect(screen.queryByTestId('pod-booking-closed')).toBeNull();
+      fireEvent.press(screen.getByTestId('pod-book'));
+      expect(screen.getByText('This pod is already ongoing')).toBeOnTheScreen();
+      expect(mockGraphql).not.toHaveBeenCalledWith(
+        JoinFreePodDocument,
+        expect.anything(),
+        expect.anything(),
+      );
+      fireEvent.press(screen.getByTestId('ongoing-join-dialog-confirm'));
+      await waitFor(() =>
+        expect(mockNavigate).toHaveBeenCalledWith('FreeJoinSuccess', { podId: 'p1' }),
+      );
+    });
+
+    it('joins nothing when the member cancels the ask', async () => {
+      joinable();
+      mockedPod.mockReturnValue({
+        ...podData,
+        pod: ongoingPod,
+        savedInitially: false,
+        isLoading: false,
+      });
+      renderWithProviders(<PodDetailsScreen />);
+      fireEvent.press(screen.getByTestId('pod-book'));
+      fireEvent.press(screen.getByTestId('ongoing-join-dialog-cancel'));
+      await waitFor(() => expect(screen.queryByText('This pod is already ongoing')).toBeNull());
+      expect(mockGraphql).not.toHaveBeenCalledWith(
+        JoinFreePodDocument,
+        expect.anything(),
+        expect.anything(),
+      );
+    });
+  });
+
   describe('a time clash with another booked pod', () => {
     const clash = {
       target_pod_id: 'p1',

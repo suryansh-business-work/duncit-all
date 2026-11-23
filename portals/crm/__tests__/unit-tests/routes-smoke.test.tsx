@@ -102,6 +102,9 @@ const ROUTES = [
   '/data/venues/amenities',
   '/data/venues/event-suitability',
   '/settings/dynamic-fields',
+  '/settings/lead-quality',
+  '/lead-research',
+  '/lead-quality/analytics',
 ];
 
 /** `link` swaps what answers the page: nothing, or the schema-shaped mock. */
@@ -292,6 +295,18 @@ const fillEverything = async () => {
 
 const MAX_CLICKS = 14;
 /**
+ * The with-data pass presses every control on a fully populated page; most
+ * screens finish in 16 s on a CI runner.
+ */
+const WITH_DATA_TIMEOUT = 90_000;
+/**
+ * The Lead Quality settings and analytics screens (a whole scoring form; charts
+ * and four grids, each pressed control re-rendering all of them) took 53 s and
+ * over 91 s on 2026-11-22, so they get a budget of their own.
+ */
+const HEAVY_WITH_DATA = new Set(['/settings/lead-quality', '/lead-quality/analytics']);
+const HEAVY_WITH_DATA_TIMEOUT = 180_000;
+/**
  * Two waves, because a console page is layered.
  *
  * The first wave opens the tabs, drawers and dialogs; their own controls only
@@ -358,7 +373,7 @@ describe('every route mounts with no data behind it', () => {
    * half that only exists once data arrives — the rows, the cards, the chips, the
    * formatted money and dates. See ./schema-mock for what it answers with.
    */
-  it.each(ROUTES)('renders %s with data behind it', async (route) => {
+  const rendersWithData = async (route: string) => {
     const { container, unmount } = mountRoute(route, schemaMockLink());
 
     await settle();
@@ -370,7 +385,18 @@ describe('every route mounts with no data behind it', () => {
 
     expect(container.innerHTML).not.toBe('');
     unmount();
-  });
+  };
+
+  it.each(ROUTES.filter((route) => !HEAVY_WITH_DATA.has(route)))(
+    'renders %s with data behind it',
+    rendersWithData,
+    WITH_DATA_TIMEOUT
+  );
+  it.each(ROUTES.filter((route) => HEAVY_WITH_DATA.has(route)))(
+    'renders %s with data behind it',
+    rendersWithData,
+    HEAVY_WITH_DATA_TIMEOUT
+  );
 });
 
 /** Prints where the router ended up, so a redirect can be asserted. */

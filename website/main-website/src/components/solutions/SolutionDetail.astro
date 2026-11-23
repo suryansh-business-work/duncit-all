@@ -1,0 +1,42 @@
+---
+// One offering's page, from its Website portal entry: the photo as the hero,
+// the summary as the intro, the body as paragraphs, and its call to action.
+// The Venue Kit has a page of its own (components/venue-kit/VenueKitPage).
+import type { SolutionItem } from '@duncit/utils';
+import PageLayout from '../../layouts/PageLayout.astro';
+import CtaBand from '../page/CtaBand.astro';
+import PillLink from '../page/PillLink.astro';
+import { getTranslator } from '../../lib/i18n';
+
+interface Props {
+  item: SolutionItem;
+}
+
+const { item } = Astro.props;
+const { t } = await getTranslator();
+const s = (key: string) => t(`website.main.solutions.${key}`);
+// Plain text from the portal, one paragraph per blank-line break; Astro escapes it.
+const paragraphs = item.body
+  .split(/\n\s*\n/)
+  .map((paragraph) => paragraph.trim())
+  .filter(Boolean);
+const eyebrow = item.coming_soon ? `${item.category} · ${s('comingSoon')}` : item.category;
+---
+
+<PageLayout
+  heading={item.title}
+  description={item.summary || undefined}
+  eyebrow={eyebrow}
+  intro={item.summary || undefined}
+  heroImage={item.image_url || undefined}
+>
+  {paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+
+  <CtaBand title={item.title} kicker={item.coming_soon ? s('comingSoon') : undefined} icon="fa-compass">
+    {s('ctaText')}
+    <Fragment slot="actions">
+      {item.cta_label && item.cta_url && <PillLink href={item.cta_url} label={item.cta_label} />}
+      <PillLink href="/solutions" label={s('backToAll')} icon="fa-table-cells-large" variant="soft" />
+    </Fragment>
+  </CtaBand>
+</PageLayout>

@@ -164,6 +164,9 @@ export const makeDetailBreakdown = (over: Partial<DetailBreakdownMock> = {}): De
   venue_pax: 0,
   venue_agreed_model: null,
   venue_agreed_rate: null,
+  // The bill set the venue's money (₹300 slot + ₹450 bill), and the pod paid its way.
+  venue_bill_applied: true,
+  funding_shortfall: 0,
   ...over,
 });
 
@@ -201,6 +204,7 @@ export const makeDetailRelease = (over: Partial<DetailReleaseMock> = {}): Detail
   approved_amount: null,
   approval_reason: null,
   reviewed_at: null,
+  shortfall_funding_note: '',
   breakdown: makeDetailBreakdown(),
   ...over,
 });
@@ -374,12 +378,11 @@ export const reviewPaymentReleaseMock = (
 export interface PodCoinTotalsMock {
   coins_redeemed_total: number;
   coins_earned_total: number;
-  ticket_discount_total: number;
   /** 0 unless a test says otherwise — the query selects it either way. */
   smart_incentive_total?: number;
 }
 
-/** The pod's live coin movement + multi-ticket and Smart Incentive discounts behind the review's explanatory notes. */
+/** The pod's live coin movement + Smart Incentive discounts behind the review's explanatory notes. */
 export const podCoinTotalsMock = (totals: PodCoinTotalsMock, podId = 'pod1'): MockedResponse => ({
   request: { query: POD_COIN_TOTALS, variables: { podId } },
   result: {

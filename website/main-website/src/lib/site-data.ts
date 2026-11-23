@@ -5,8 +5,15 @@ import {
   type SiteBrandingData,
 } from '@duncit/brand/site-branding';
 import { clientIdentityHeaders } from '@duncit/user-core';
-import { GRIEVANCE_OFFICER_SDL } from '@duncit/utils';
+import {
+  GRIEVANCE_OFFICER_SDL,
+  resolveVenueKitOffer,
+  venueKitFallbackSolution,
+  type SolutionItem,
+  type VenueKitOffer,
+} from '@duncit/utils';
 import { urlConfigs } from '../config/url-configs';
+import { getTranslator } from './i18n';
 
 /** Build-time GraphQL helpers for the static site. Every call degrades to a
  * safe fallback so an unreachable API can never break a deploy; the site
@@ -124,6 +131,64 @@ export async function fetchBlogPosts(): Promise<SiteBlogPost[]> {
     }
   `);
   return data?.publicWebsiteContent ?? [];
+}
+
+/**
+ * The Venue Kit plan (Venues console > Venue Kit). A missing or partial answer
+ * is filled from the shipped plan, so the page never prints a broken price.
+ */
+export async function fetchVenueKitOffer(): Promise<VenueKitOffer> {
+  const data = await gqlFetch<{ venueKitOffer: Partial<VenueKitOffer> }>(`
+    query WebsiteVenueKitOffer {
+      venueKitOffer {
+        annual_price_paise
+        included_table_labels
+        extra_label_price_paise
+        pos_activation_months
+        gift_card_count
+        gift_card_value_paise
+        collab_gift_card_discount_pct
+        order_benefit_pct
+      }
+    }
+  `);
+  return resolveVenueKitOffer(data?.venueKitOffer);
+}
+
+/**
+ * The published Solutions (Website portal > Solutions). When the API cannot be
+ * reached the build lists the Venue Kit as the server seeds it; an empty list
+ * from a reachable API is respected, since that is the portal unpublishing all.
+ */
+export async function fetchSolutions(): Promise<SolutionItem[]> {
+  const data = await gqlFetch<{ publicWebsiteContent: SolutionItem[] | null }>(`
+    query WebsiteSolutions {
+      publicWebsiteContent(type: SOLUTIONS) {
+        title
+        slug
+        summary
+        body
+        category
+        category_slug
+        image_url
+        cta_label
+        cta_url
+        audience
+        coming_soon
+        sort_order
+      }
+    }
+  `);
+  if (data?.publicWebsiteContent) return data.publicWebsiteContent;
+  const { t } = await getTranslator();
+  return [
+    venueKitFallbackSolution({
+      title: t('venueKit.page.heading'),
+      summary: t('venueKit.page.intro'),
+      category: t('website.main.solutions.venueKitCategory'),
+      cta_label: t('venueKit.page.planCta'),
+    }),
+  ];
 }
 
 /** The Grievance Officer the Legal portal publishes. Blank until they fill it in. */

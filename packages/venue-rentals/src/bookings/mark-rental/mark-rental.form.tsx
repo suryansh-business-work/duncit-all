@@ -5,13 +5,13 @@ import { Alert, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup, Sta
 import { RhfTextField } from '@duncit/forms';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
-import { rentalHandBack, rentalMoney } from '@duncit/utils';
+import { rentalDepositRefund, rentalMoney } from '@duncit/utils';
 import { makeMarkRentalSchema } from '@duncit/forms/schemas';
 import type { MarkRentalFormProps, MarkRentalOutput, MarkRentalValues } from './mark-rental.types';
 
 const DEFAULTS: MarkRentalValues = { outcome: 'RETURNED', damage_claim: '', note: '' };
 
-/** The venue records the item back, or keeps part of the deposit for damage. */
+/** The venue records the item back, or keeps part of the deposit for damage; Duncit refunds the rest through Razorpay. */
 export default function MarkRentalForm({
   booking,
   depositRefundable,
@@ -32,8 +32,8 @@ export default function MarkRentalForm({
   const claim = useWatch({ control, name: 'damage_claim' });
   // Nothing to claim from when no deposit was taken.
   const canClaim = booking.deposit_amount > 0;
-  // The cash the venue gives back right now; Duncit repays the whole deposit in the payout.
-  const handBack = rentalHandBack(booking.deposit_amount, outcome === 'DAMAGED' ? Number(claim) : 0, depositRefundable);
+  // What Duncit refunds the guest through Razorpay once this is saved; the venue hands no cash back.
+  const refund = rentalDepositRefund(booking.deposit_amount, outcome === 'DAMAGED' ? Number(claim) : 0, depositRefundable);
 
   return (
     <form noValidate onSubmit={handleSubmit((values) => onSubmit(values))} data-testid="mark-rental-form">
@@ -83,8 +83,8 @@ export default function MarkRentalForm({
         )}
         {canClaim && (
           <Alert severity="info" data-testid="mark-rental-hand-back" aria-live="polite">
-            {handBack > 0
-              ? t('venueRentals.mark.handBack', { vars: { amount: rentalMoney(booking.currency_symbol, handBack) } })
+            {refund > 0
+              ? t('venueRentals.mark.handBack', { vars: { amount: rentalMoney(booking.currency_symbol, refund) } })
               : t('venueRentals.mark.handBackNone')}
           </Alert>
         )}

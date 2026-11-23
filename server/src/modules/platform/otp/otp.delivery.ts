@@ -12,6 +12,7 @@ import {
   sendEnvAccessOtpEmail,
   sendLoginOtpEmail,
   sendPasswordResetOtpEmail,
+  sendVenueKitOtpEmail,
 } from '@services/email/email.service';
 import {
   msg91Identifier,
@@ -178,6 +179,7 @@ const EMAIL_SENDERS: Partial<Record<OtpPurpose, typeof sendPasswordResetOtpEmail
   PASSWORD_RESET: sendPasswordResetOtpEmail,
   LOGIN: sendLoginOtpEmail,
   ENV_ACCESS: sendEnvAccessOtpEmail,
+  VENUE_KIT_EMAIL: sendVenueKitOtpEmail,
 };
 
 /**

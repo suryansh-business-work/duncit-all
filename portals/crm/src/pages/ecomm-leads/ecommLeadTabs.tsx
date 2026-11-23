@@ -18,6 +18,7 @@ import { remindersTab } from '../../components/reminders-tab/remindersTab';
 import ExternalLink from '../../components/ExternalLink';
 import SocialLinksRows from '../../components/SocialLinksRows';
 import LeadSurveyTab from '../../components/lead-survey/LeadSurveyTab';
+import { leadQualityTab } from '../../components/lead-quality-tab';
 import DynamicValuesView from '../../components/DynamicValuesView';
 import type { LeadTab } from '../../components/LeadTabs';
 import { formatDateTime, formatDate as adminDate } from '@duncit/app-settings';
@@ -123,6 +124,7 @@ export function buildEcommLeadTabs(lead: EcommLead, t: Translate): LeadTab[] {
       icon: <StorefrontIcon fontSize="small" />,
       render: () => <OverviewTab lead={lead} />,
     },
+    leadQualityTab('ECOMM_LEAD', lead.id, t),
     {
       value: 'contacts',
       label: `Contacts (${lead.contacts.length})`,

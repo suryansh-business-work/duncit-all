@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import type { UserDataIssue } from '@duncit/gql-types';
+import type { UserDataIssue, UserPlatform } from '@duncit/gql-types';
 
 export const USERS = gql`
   query Users($filter: UsersFilter) {
@@ -51,8 +51,10 @@ export interface UserRow {
   created_at?: string | null;
   /** Missing, duplicate or mismatched contact data; the row is red when any. */
   data_issues?: UserDataIssue[] | null;
-  /** The last day (yyyy-MM-dd, UTC) the app saw the account; null when never. */
-  last_active_on?: string | null;
+  /** Every platform the account has used Duncit from while signed in, in display order. */
+  platforms_used?: UserPlatform[] | null;
+  /** When the account last used Duncit while signed in (ISO); null until first seen. */
+  last_activity_at?: string | null;
 }
 
 /** Same selection as USERS rows — table rows keep feeding the details deep-link. */
@@ -76,7 +78,8 @@ const USER_ROW_FIELDS = gql`
     status
     created_at
     data_issues
-    last_active_on
+    platforms_used
+    last_activity_at
   }
 `;
 

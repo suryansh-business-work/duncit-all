@@ -28,6 +28,7 @@ import { GlobalProgress } from './chrome/GlobalProgress';
 import { loadGoogleClientId } from './lib/google-client-id';
 import { ShellRuntimeProvider } from './lib/runtime';
 import { socketOrigin } from './lib/socket-origin';
+import { PortalSecurityGate } from './security-verification/PortalSecurityGate';
 import type { MountPortalOptions } from './types';
 
 const identity = (node: ReactNode): ReactNode => node;
@@ -118,7 +119,9 @@ export function mountPortal(opts: MountPortalOptions): void {
   const routed = (
     <>
       <LocalizedPortalModeGate portalKey={config.key} graphqlUrl={graphqlUrl} appName={config.name}>
-        {children}
+        {/* Security Verification: a console sign-in that has not completed it sees
+            the screen at whatever address it asked for. One mount, every console. */}
+        <PortalSecurityGate portalName={config.fullName ?? config.name}>{children}</PortalSecurityGate>
       </LocalizedPortalModeGate>
       <PortalBranding />
       {/* Above the gate, not inside it: the login screen and the boot sequence

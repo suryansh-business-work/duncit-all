@@ -68,7 +68,16 @@ const FLOW: FoodOrderStatus[] = ['PLACED', 'ACCEPTED', 'PREPARING', 'READY', 'SE
 const BOARD_PAYMENT_STATUSES = ['PAID', 'REFUND_PENDING', 'REFUNDED'];
 
 const ORDER_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['order_no', 'customer_name', 'customer_phone', 'table_label'],
+  // The venue's own Razorpay ids (pay_/order_/rfnd_), as its dashboard shows them, find the order too.
+  searchFields: [
+    'order_no',
+    'customer_name',
+    'customer_phone',
+    'table_label',
+    'razorpay_payment_id',
+    'razorpay_order_id',
+    'razorpay_refund_id',
+  ],
   sortFields: { order_no: 'order_no', created_at: 'created_at', total: 'total_paise', status: 'status' },
   filterFields: {
     status: { type: 'enum' },

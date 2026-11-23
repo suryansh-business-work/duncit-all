@@ -1,5 +1,8 @@
 import { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Text, XStack, YStack } from 'tamagui';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 import { canMarkRental, formatMoney, rentalStatusKey } from '@duncit/utils';
 
 import { DuncitButton } from '@/components/DuncitButton';
@@ -13,8 +16,10 @@ import {
   type DeskStats,
 } from '@/hooks/useVenueRentalDesk';
 import { useTranslation } from '@/hooks/useTranslation';
+import type { RootStackParamList } from '@/navigation/types';
 import { formatDateTime } from '@/utils/date-format';
 
+import { RentalRefundChip } from './detail/RentalRefundChip';
 import { MarkRentalSheet } from './MarkRentalSheet';
 
 const STAT_TILES: readonly {
@@ -62,22 +67,35 @@ function BookingCard({
   onMark,
 }: Readonly<{ row: DeskBooking; onMark: (row: DeskBooking) => void }>) {
   const { t } = useTranslation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   return (
     <SurfaceCard gap={4} testID={`venue-rental-${row.id}`}>
-      <XStack justifyContent="space-between" gap={8}>
-        <Text flex={1} fontSize={14.5} fontWeight="700" color="$color" numberOfLines={1}>
-          {row.name}
+      {/* The rental's own page; Mark stays a separate control below, never nested in it. */}
+      <YStack
+        gap={4}
+        role="button"
+        aria-label={t('venueRentals.table.open', { vars: { name: row.name } })}
+        tabIndex={0}
+        pressStyle={PRESS_STYLE.row}
+        testID={`venue-rental-${row.id}-open`}
+        onPress={() => navigation.navigate('VenueRentalBookingDetail', { id: row.id })}
+      >
+        <XStack justifyContent="space-between" gap={8}>
+          <Text flex={1} fontSize={14.5} fontWeight="700" color="$color" numberOfLines={1}>
+            {row.name}
+          </Text>
+          <Text fontSize={12} fontWeight="600" color="$muted">
+            {t(rentalStatusKey(row.status))}
+          </Text>
+        </XStack>
+        <Text fontSize={12.5} color="$muted" numberOfLines={1}>
+          {[row.pod_title, row.guest_name, formatDateTime(row.created_at)]
+            .filter(Boolean)
+            .join(' · ')}
         </Text>
-        <Text fontSize={12} fontWeight="600" color="$muted">
-          {t(rentalStatusKey(row.status))}
-        </Text>
-      </XStack>
-      <Text fontSize={12.5} color="$muted" numberOfLines={1}>
-        {[row.pod_title, row.guest_name, formatDateTime(row.created_at)]
-          .filter(Boolean)
-          .join(' · ')}
-      </Text>
-      <RentalUnitsLine row={row} />
+        <RentalUnitsLine row={row} />
+        <RentalRefundChip row={row} testID={`venue-rental-${row.id}-refund`} />
+      </YStack>
       {row.deposit_at_venue > 0 ? (
         <Text fontSize={12.5} color="$muted" testID={`venue-rental-${row.id}-deposit-back`}>
           {`${t('venueRentals.table.depositAtVenue')}: ${formatMoney(row.deposit_at_venue, { symbol: row.currency_symbol })}`}

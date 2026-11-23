@@ -2,12 +2,14 @@ import { gql } from '@apollo/client';
 import type {
   FailedPaymentDetail,
   FailedPaymentEvidenceLink,
+  FailedPaymentRefundPreview,
   FailedPaymentReviewDecision,
   FailedPaymentRow,
   PaymentEvent,
 } from '@duncit/gql-types';
 
-export type { FailedPaymentDetail, FailedPaymentRow, PaymentEvent };
+export type { FailedPaymentAiSummary } from '@duncit/gql-types';
+export type { FailedPaymentDetail, FailedPaymentRefundPreview, FailedPaymentRow, PaymentEvent };
 
 /** Finance › Failed Payments: one page of cases, with the colour and action hints the server works out. */
 export const FAILED_PAYMENTS_TABLE = gql`
@@ -20,6 +22,7 @@ export const FAILED_PAYMENTS_TABLE = gql`
         id
         payment_doc_id
         payment_id
+        payment_source
         user_id
         user_name
         user_email
@@ -41,6 +44,7 @@ export const FAILED_PAYMENTS_TABLE = gql`
         review_decision
         refund_status
         refund_amount
+        razorpay_refund_id
         resolution_state
         highlight
         can_refund
@@ -59,6 +63,7 @@ const DETAIL_FIELDS = gql`
     id
     payment_doc_id
     payment_id
+    payment_source
     amount
     currency_symbol
     pod_id
@@ -106,6 +111,7 @@ const DETAIL_FIELDS = gql`
     needs_review
     can_mark_not_refundable
     refundable_amount
+    ai_summary { recommendation summary reasons generated_at generated_by_name error stale }
     revision
     created_at
     updated_at
@@ -185,6 +191,36 @@ export const REVERIFY_FAILED_PAYMENT = gql`
   }
   ${DETAIL_FIELDS}
 `;
+
+/** What a refund would send right now. Never cached: it is Razorpay's live answer. */
+export const FAILED_PAYMENT_REFUND_PREVIEW = gql`
+  query FailedPaymentRefundPreview($caseId: ID!) {
+    failedPaymentRefundPreview(case_id: $caseId) {
+      refundable
+      amount
+      razorpay_payment_id
+      reason
+    }
+  }
+`;
+
+/** The AI refund note; an unchanged case answers from its cached note unless force is set. */
+export const SUMMARIZE_FAILED_PAYMENT = gql`
+  mutation SummarizeFailedPayment($caseId: ID!, $force: Boolean) {
+    summarizeFailedPayment(case_id: $caseId, force: $force) {
+      ...FailedPaymentDetailFields
+    }
+  }
+  ${DETAIL_FIELDS}
+`;
+
+export interface FailedPaymentRefundPreviewData {
+  failedPaymentRefundPreview: FailedPaymentRefundPreview;
+}
+
+export interface SummarizeFailedPaymentData {
+  summarizeFailedPayment: FailedPaymentDetail;
+}
 
 export interface FailedPaymentsTableData {
   failedPaymentsTable: { rows: FailedPaymentRow[]; total: number; page: number; page_size: number };

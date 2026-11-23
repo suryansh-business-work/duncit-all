@@ -1,5 +1,21 @@
 export type RichTextChangeHandler = (html: string, text: string) => void;
 
+/** One person the @mention list offers. */
+export interface RichTextMentionItem {
+  /** Stored as the mention's `data-id` — what an API reads to know who was mentioned. */
+  id: string;
+  /** Shown in the list and in the document as "@label". */
+  label: string;
+  /** A second line in the list (an email, a role). */
+  description?: string | null;
+}
+
+/** Turns on @mentions: typing "@" opens a list of people found by `search`. */
+export interface RichTextMentions {
+  /** People matching what was typed after "@" ('' right after the "@"). */
+  search: (query: string) => Promise<readonly RichTextMentionItem[]>;
+}
+
 export interface DuncitRichTextInputProps {
   /** Controlled HTML value. Pass an empty string for an empty editor. */
   value: string;
@@ -29,4 +45,9 @@ export interface DuncitRichTextInputProps {
   aiImprove?: boolean;
   /** Offer the toolbar's Insert picture (default true); it uploads through the main Duncit API's media picker. */
   images?: boolean;
+  /**
+   * @mention people (off when omitted). Mentions are saved as
+   * `<span data-type="mention" data-id="…">`; existing ones always render.
+   */
+  mentions?: RichTextMentions;
 }

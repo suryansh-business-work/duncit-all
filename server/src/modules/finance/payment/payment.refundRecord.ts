@@ -12,12 +12,15 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 /**
  * Record a refund on the payment it reverses — the same stamps every other
  * refund flow writes, so it lands in Finance › User Refund Logs for payout.
+ * `razorpayRefundId` is the `rfnd_…` id when the money went back through
+ * Razorpay, kept so the log shows (and searches by) the id the dashboard shows.
  */
 export async function recordPaymentRefund(
   payment: IPayment,
   amount: number,
   reason: string,
-  initiatedBy: string
+  initiatedBy: string,
+  razorpayRefundId?: string | null
 ) {
   if (amount <= 0) return;
   const meta = payment.metadata ?? {};
@@ -28,8 +31,17 @@ export async function recordPaymentRefund(
     'metadata.refund_reason': reason,
     'metadata.refund_initiated_by': initiatedBy,
   };
-  if (refunded >= payment.total - 0.01) update.status = 'REFUNDED';
-  await PaymentModel.updateOne({ _id: payment._id }, { $set: update });
+  if (refunded >= payment.total - 0.01) {
+    update.status = 'REFUNDED';
+    // Nothing is owed any more — a captured-but-unbooked payment leaves the
+    // reconciler's needs-refund count once its money is back.
+    update.needs_refund = false;
+  }
+  const refundId = razorpayRefundId?.trim();
+  await PaymentModel.updateOne(
+    { _id: payment._id },
+    refundId ? { $set: update, $addToSet: { 'metadata.razorpay_refund_ids': refundId } } : { $set: update }
+  );
 }
 
 /** Coins back into a buyer's balance, once per key (the ledger dedupes). */

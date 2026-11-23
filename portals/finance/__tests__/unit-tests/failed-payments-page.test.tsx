@@ -17,6 +17,7 @@ import {
   failedPaymentsTableMock,
   makeFailedPaymentDetail,
   makeFailedPaymentRow,
+  refundPreviewMock,
 } from '../mocks/failed-payments.mock';
 
 function CaseProbe() {
@@ -106,13 +107,17 @@ describe('FailedPaymentsPage', () => {
     const tableCalls: unknown[] = [];
     mount([
       failedPaymentsTableMock([makeFailedPaymentRow()], (v) => tableCalls.push(v)),
+      refundPreviewMock(),
       failedPaymentMutationMock('initiateFailedPaymentRefund', 'Razorpay is unreachable', (v) => calls.push(v)),
       failedPaymentMutationMock('initiateFailedPaymentRefund', makeFailedPaymentDetail({ can_refund: false }), (v) => calls.push(v)),
     ]);
 
     fireEvent.click(await screen.findByTestId('failed-payment-action-refund'));
     const dialog = screen.getByRole('dialog', { name: 'Refund this payment' });
-    expect(within(dialog).getByText('Refund ₹499.00 to Riya Sharma through Razorpay?')).toBeInTheDocument();
+    // Confirm waits for Razorpay's live answer.
+    expect(within(dialog).getByTestId('failed-payment-refund-checking')).toHaveTextContent('Checking with Razorpay…');
+    expect(within(dialog).getByTestId('failed-payment-refund-confirm')).toBeDisabled();
+    expect(await within(dialog).findByText('Refund ₹499.00 to Riya Sharma through Razorpay?')).toBeInTheDocument();
     expect(within(dialog).getByTestId('failed-payment-refund-payment-id')).toHaveTextContent('pay_RZP123');
 
     fireEvent.click(within(dialog).getByTestId('failed-payment-refund-confirm'));
@@ -132,15 +137,17 @@ describe('FailedPaymentsPage', () => {
     const calls: Record<string, unknown>[] = [];
     mount([
       failedPaymentsTableMock([makeFailedPaymentRow({ razorpay_payment_id: null })]),
+      refundPreviewMock({ razorpay_payment_id: null }),
       failedPaymentMutationMock('initiateFailedPaymentRefund', makeFailedPaymentDetail(), (v) => calls.push(v)),
     ]);
 
     fireEvent.click(await screen.findByTestId('failed-payment-action-refund'));
-    expect(screen.getByTestId('failed-payment-refund-payment-id')).toHaveTextContent('—');
+    expect(await screen.findByTestId('failed-payment-refund-payment-id')).toHaveTextContent('—');
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
     fireEvent.click(screen.getByTestId('failed-payment-action-refund'));
+    await screen.findByTestId('failed-payment-refund-payment-id');
     fireEvent.click(screen.getByTestId('failed-payment-refund-confirm'));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0].clientRequestId).toBe('00000000-0000-4000-8000-000000000002');

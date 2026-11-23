@@ -16,9 +16,6 @@ const DEFAULT_API = import.meta.env.PROD
 
 export const GRAPHQL_URL = pick(import.meta.env.VITE_GRAPHQL_URL, DEFAULT_API);
 
-/** Blank hides "Continue with Google" entirely. */
-export const GOOGLE_CLIENT_ID = pick(import.meta.env.VITE_GOOGLE_CLIENT_ID, '');
-
 export const MWEB_URL = withoutTrailingSlash(pick(import.meta.env.VITE_MWEB_URL, 'https://mweb.duncit.com'));
 
 export const SIGNUP_URL = `${MWEB_URL}/signup`;

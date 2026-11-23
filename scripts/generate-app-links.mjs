@@ -14,9 +14,17 @@
  *     node scripts/generate-app-links.mjs
  *
  * The package name and bundle id are read from app.json rather than passed in,
- * because two places to change them is one place to forget. The fingerprint and
- * team id come from the environment: they are per-signing-key, so a value
- * committed here would be wrong for anyone who re-signs.
+ * because two places to change them is one place to forget. The fingerprints
+ * are per-signing-key, so a value committed here would be wrong for anyone who
+ * re-signs: they are MWEB_ANDROID_CERT_SHA256 when the build is handed one, and
+ * otherwise Tech → Environment → Google Play → App Links SHA-256 fingerprints.
+ *
+ * The Apple Team ID is MWEB_IOS_TEAM_ID when the build is handed one, and
+ * otherwise Tech → Environment → Sign in with Apple → Team ID.
+ *
+ * Both Tech portal values are read from the public client config of the server
+ * this mWeb talks to (VITE_GRAPHQL_URL), so changing one needs only an mWeb
+ * redeploy.
  *
  * A MISSING value writes nothing and removes any stale file. That is
  * deliberate — Android caches a failed verification, so shipping a placeholder
@@ -25,6 +33,7 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isAppleTeamId } from '../packages/regex/regex.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '..');
@@ -34,12 +43,46 @@ const app = JSON.parse(readFileSync(join(repo, 'app', 'mobile-app', 'app.json'),
 const androidPackage = app.android?.package;
 const iosBundleId = app.ios?.bundleIdentifier;
 
+const TECH_PORTAL_TEAM_ID = 'Tech → Environment → Sign in with Apple → Team ID';
+const TECH_PORTAL_FINGERPRINTS = 'Tech → Environment → Google Play → App Links SHA-256 fingerprints';
+
+/**
+ * One value and where it came from: the env override when set, else the given
+ * publicClientConfig field. Each field is its own query, so a server that
+ * predates one field still answers the other. Never throws: a server that is
+ * down or does not know the field answers blank and that file is skipped.
+ */
+async function resolveValue(envName, field, techPortalLabel) {
+  const override = (process.env[envName] ?? '').trim();
+  if (override) return { value: override, source: envName };
+  const url = (process.env.VITE_GRAPHQL_URL ?? '').trim();
+  if (!url) return { value: '', source: `${techPortalLabel} (VITE_GRAPHQL_URL is not set)` };
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ query: `{ publicClientConfig { ${field} } }` }),
+      signal: AbortSignal.timeout(20_000),
+    });
+    const json = await res.json();
+    if (json?.errors) console.warn('generate-app-links: server answered', JSON.stringify(json.errors).slice(0, 300));
+    return { value: String(json?.data?.publicClientConfig?.[field] ?? '').trim(), source: techPortalLabel };
+  } catch (error) {
+    console.warn(`generate-app-links: could not read ${field} from ${url} — ${String(error)}`);
+    return { value: '', source: techPortalLabel };
+  }
+}
+
+const [{ value: fingerprintList, source: fingerprintSource }, { value: teamId, source: teamIdSource }] = await Promise.all([
+  resolveValue('MWEB_ANDROID_CERT_SHA256', 'android_app_links_sha256', TECH_PORTAL_FINGERPRINTS),
+  resolveValue('MWEB_IOS_TEAM_ID', 'apple_team_id', TECH_PORTAL_TEAM_ID),
+]);
+
 /** Several fingerprints are normal: the Play signing key AND the upload key. */
-const fingerprints = (process.env.MWEB_ANDROID_CERT_SHA256 ?? '')
+const fingerprints = fingerprintList
   .split(',')
   .map((value) => value.trim().toUpperCase())
   .filter(Boolean);
-const teamId = (process.env.MWEB_IOS_TEAM_ID ?? '').trim();
 
 const written = [];
 const skipped = [];
@@ -68,12 +111,13 @@ if (fingerprints.length > 0 && androidPackage) {
       },
     },
   ]);
+  console.log(`generate-app-links: Android fingerprints from ${fingerprintSource}`);
 } else {
-  drop('assetlinks.json', 'MWEB_ANDROID_CERT_SHA256 is not set');
+  drop('assetlinks.json', `no Android fingerprints — MWEB_ANDROID_CERT_SHA256 is not set and ${fingerprintSource} is empty`);
 }
 
 // --- iOS ---------------------------------------------------------------------
-if (teamId && iosBundleId) {
+if (isAppleTeamId(teamId) && iosBundleId) {
   write('apple-app-site-association', {
     applinks: {
       details: [
@@ -86,8 +130,11 @@ if (teamId && iosBundleId) {
       ],
     },
   });
+  console.log(`generate-app-links: Apple Team ID from ${teamIdSource}`);
+} else if (teamId) {
+  drop('apple-app-site-association', `the Team ID from ${teamIdSource} is not 10 upper-case letters or digits`);
 } else {
-  drop('apple-app-site-association', 'MWEB_IOS_TEAM_ID is not set');
+  drop('apple-app-site-association', `no Apple Team ID — MWEB_IOS_TEAM_ID is not set and ${teamIdSource} is empty`);
 }
 
 for (const name of written) console.log(`generate-app-links: wrote .well-known/${name}`);

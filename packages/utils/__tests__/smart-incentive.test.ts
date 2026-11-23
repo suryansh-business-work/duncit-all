@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { ticketDiscountFor } from '../src/pod-ticket-discount';
 import {
   DEFAULT_SMART_INCENTIVE_DELAY_SECONDS,
   DEFAULT_SMART_INCENTIVE_MAX_PCT,
@@ -18,18 +17,6 @@ describe('smartIncentiveFor', () => {
     const quote = smartIncentiveFor(333.33, 7);
     expect(quote).toEqual({ pct: 7, amount: 23.33, net: 310 });
     expect(quote.amount + quote.net).toBeCloseTo(333.33, 2);
-  });
-
-  it('compounds with the multi-ticket discount instead of adding to it', () => {
-    // 3 tickets of ₹500 with a 20% tier: ₹1200 of ticket money, then 10% off that.
-    const tier = ticketDiscountFor(500, 3, {
-      ticket_discount_enabled: true,
-      ticket_discount_tiers: [{ min_tickets: 3, discount_pct: 20 }],
-    });
-    const quote = smartIncentiveFor(tier.net, 10);
-    expect(quote).toEqual({ pct: 10, amount: 120, net: 1080 });
-    // 30% added would have left ₹1050 — the compounded bill is ₹30 more.
-    expect(quote.net).toBeGreaterThan(1500 * 0.7);
   });
 
   it.each([

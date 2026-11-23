@@ -27,7 +27,6 @@ export const settingsMock = (): MockedResponse => ({
         server_time: '2026-10-26T10:00:00.000Z',
         min_signup_age: 18,
         draft_retention_days: 30,
-        ticket_discount_max_pct: 50,
         happening_nearby_days: 7,
       },
     },

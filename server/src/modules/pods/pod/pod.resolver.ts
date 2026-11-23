@@ -83,6 +83,10 @@ export const podResolvers = {
     // than one of them, and these are non-null.
     is_hidden: (parent: HiddenPodParent): boolean => !!parent.is_hidden,
     hidden_by_club: (parent: HiddenPodParent): boolean => !!parent.hidden_by_club,
+    // The multi-ticket discount was removed. App versions already in the stores
+    // still select these non-null fields, so they always answer "off".
+    ticket_discount_enabled: (): boolean => false,
+    ticket_discount_tiers: (): never[] => [],
     // Staff's note to staff. Gated here, like cancellation_risk, because the
     // pod type is served to every audience.
     hidden_reason: (parent: HiddenPodParent, _a: unknown, ctx: GraphQLContext): string | null =>

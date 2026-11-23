@@ -10,14 +10,18 @@ import { initiateFailedPaymentRefund } from './failedPayment.refund';
 import { markFailedPaymentNotRefundable, reviewFailedPayment } from './failedPayment.decision';
 import { evidenceLink } from './failedPayment.evidence';
 import { failedPaymentDetail, failedPaymentEvents, failedPaymentsTable } from './failedPayment.read';
+import { refundPreviewFor } from './failedPayment.refundPreview';
+import { summarizeFailedPayment } from './failedPayment.aiSummary';
 import { actorOf } from './failedPayment.actor';
 import {
+  caseIdSchema,
   markNotRefundableSchema,
   parseInput,
   refundSchema,
   reportPaymentFailureSchema,
   reviewSchema,
   submitClaimSchema,
+  summarizeSchema,
 } from './failedPayment.validator';
 import { EVIDENCE_READ, FAILED_PAYMENT_READ, FAILED_PAYMENT_WRITE } from './failedPayment.types';
 
@@ -51,6 +55,13 @@ export const failedPaymentResolvers = {
       if (!kase) throw notFound();
       return evidenceLink(kase, args.file_ref);
     },
+    failedPaymentRefundPreview: async (_p: unknown, args: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, FAILED_PAYMENT_READ);
+      const { case_id } = parseInput(caseIdSchema, args);
+      const kase = await FailedPaymentCaseModel.findById(case_id);
+      if (!kase) throw notFound();
+      return refundPreviewFor(kase);
+    },
   },
   Mutation: {
     reportPaymentFailure: (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
@@ -80,6 +91,13 @@ export const failedPaymentResolvers = {
     markFailedPaymentNotRefundable: async (_p: unknown, args: unknown, ctx: GraphQLContext) => {
       const user = requireRole(ctx, FAILED_PAYMENT_WRITE);
       return detailOrThrow(await markFailedPaymentNotRefundable(parseInput(markNotRefundableSchema, args), await actorOf(user)));
+    },
+    // Advice for anyone who may read the case (a read-only seat included): it
+    // writes only the cached note and never moves money.
+    summarizeFailedPayment: async (_p: unknown, args: unknown, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, FAILED_PAYMENT_READ);
+      const input = parseInput(summarizeSchema, args);
+      return detailOrThrow(await summarizeFailedPayment(input.case_id, await actorOf(user), input.force === true));
     },
   },
 };

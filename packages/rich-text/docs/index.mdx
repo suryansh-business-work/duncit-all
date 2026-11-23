@@ -136,6 +136,29 @@ Read-only surfaces printing this HTML without the editor get the image sizing fr
 `RICH_TEXT_BODY_SX` in `@duncit/ui` — a 4000px phone photo overflows a page that does not
 constrain it.
 
+## Mentions
+
+Pass `mentions` and typing "@" opens a list of people under the caret. ↑ ↓ move through it,
+Enter or Tab picks, Esc closes it for that "@", and a click picks without losing the caret.
+
+```tsx
+const mentions = useMemo<RichTextMentions>(
+  () => ({ search: async (query) => (await findTeam(query)).map((u) => ({ id: u.id, label: u.name, description: u.email })) }),
+  [findTeam],
+);
+<DuncitRichTextInput value={bodyHtml} onChange={setBody} mentions={mentions} />
+```
+
+- A pick is stored as `<span data-type="mention" data-id="…" data-label="…">@Label</span>`. That
+  span is the contract: an API reads `data-id` to know who was mentioned (CRM manual logs email
+  each new one), so never store the label alone.
+- "@" only opens at the start of the text or after a space, so an email address never does.
+- `search` gets what was typed after "@" ('' right after it). Answers that arrive after the
+  name changed are dropped, and a failed search shows "No one matches that name".
+- The mention node is always registered, so saved mentions render in a read-only document
+  and survive a round trip through an editor that has mentioning off. The list never opens
+  while the editor is read-only or disabled.
+
 ## API
 
 | Prop          | Type                   | Default            | Meaning                                |
@@ -153,6 +176,7 @@ constrain it.
 | `imageFolder` | `string`               | `'/rich-text'`     | ImageKit folder for inserted pictures. |
 | `aiImprove`   | `boolean`              | `true`             | Offer Improve with AI (main Duncit API). |
 | `images`      | `boolean`              | `true`             | Offer Insert picture (main Duncit API). |
+| `mentions`    | `RichTextMentions`     | omitted            | Turn on @mentions; `search(query)` finds people. |
 
 `htmlToText(html)` extracts the plain-text companion used by search, previews and API payloads.
 

@@ -57,6 +57,8 @@ import {
   isMetaName,
   PAYMENT_TRANSACTION_ID,
   isPaymentTransactionId,
+  APPLE_TEAM_ID,
+  isAppleTeamId,
   FSSAI_NUMBER,
   isFssaiNumber,
   YOUTUBE_URL,
@@ -598,6 +600,27 @@ describe('PAYMENT_TRANSACTION_ID / isPaymentTransactionId', () => {
   it('refuses spaces, punctuation and anything that is not a single reference', () => {
     for (const ref of [' pay_29QQoUBi66xm2f', 'pay_29QQ oUBi66', 'pay.29QQoUBi66', 'UTR:43211234', 'pay_29QQ/oUBi', 'ref#123456', 'पे123456']) {
       expect(isPaymentTransactionId(ref)).toBe(false);
+    }
+  });
+});
+
+describe('APPLE_TEAM_ID / isAppleTeamId', () => {
+  it('accepts exactly ten upper-case letters or digits', () => {
+    for (const id of ['A1B2C3D4E5', 'ABCDEFGHIJ', '0123456789']) {
+      expect(isAppleTeamId(id)).toBe(true);
+      expect(APPLE_TEAM_ID.test(id)).toBe(true);
+    }
+  });
+
+  it('refuses nine or eleven characters', () => {
+    for (const id of ['', 'A1B2C3D4E', 'A1B2C3D4E5F']) {
+      expect(isAppleTeamId(id)).toBe(false);
+    }
+  });
+
+  it('refuses lower case, spaces and anything that is not a bare id', () => {
+    for (const id of ['a1b2c3d4e5', ' A1B2C3D4E5', 'A1B2C3D4E5 ', 'A1B2-C3D4E', 'A1B2C3D4E5.com.duncit']) {
+      expect(isAppleTeamId(id)).toBe(false);
     }
   });
 });

@@ -4,7 +4,6 @@ import { PodProductsField } from '@duncit/pod-product-picker';
 import { MONEY_EXTRA_FIELDS, anyFieldFailed, moneyExtrasFilled } from '@duncit/utils';
 import PlaceChargesField from '../fields/PlaceChargesField';
 import SmartIncentiveStepField from '../fields/SmartIncentiveStepField';
-import TicketDiscountStepField from '../fields/TicketDiscountStepField';
 import MoreOptionsSection from '../MoreOptionsSection';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import { SURFACE_SX } from '../../../../theme';
@@ -31,7 +30,6 @@ export default function MoneyMoreOptions({ form, products, showProducts }: Reado
 
   return (
     <MoreOptionsSection testId="create-pod-money-more" hint={t('mweb.createPod.moreOptionsMoneyHint')} defaultOpen={filled} forceOpen={failed}>
-      {paid && <TicketDiscountStepField form={form} />}
       {/* Renders nothing while Loyalty has the programme switched off. */}
       {paid && <SmartIncentiveStepField form={form} />}
       {/* Payment terms describe refunds and charges a free pod does not have. */}

@@ -13,7 +13,10 @@ import { invoiceDataForPayment } from './payment.invoice';
 import { generateInvoicePdf } from '@services/invoice/invoice.pdf';
 import { paymentFinalizer } from './payment.finalize';
 import { roundOffOf, roundUpBill } from './payment.roundoff';
+import { RAZORPAY_ID_SEARCH_FIELDS, razorpayIdsOf } from './payment.gatewayIds';
 import { PAYMENT_SHOP_FILTER, type PaymentShop } from './payment.source';
+import { paymentSearchAlso } from './payment.podSearch';
+import { processGatewayRefund, publicRefundStatus, queueGatewayRefund } from './payment.gatewayRefund';
 import { recordPaymentEvent } from '@modules/finance/failedPayment/paymentEvent.service';
 import {
   createRazorpayOrder,
@@ -26,9 +29,10 @@ import {
   giftcardService,
   type GiftCardPurchaseFacts,
 } from '@modules/finance/giftcard/giftcard.service';
+import { factsQuantity, factsTotal } from '@modules/finance/giftcard/giftcard.facts';
+import { giftCardOrderService } from '@modules/finance/giftcardOrder/giftCardOrder.service';
 import { toPostalAddress, composeAddressLine, type PostalAddress } from '@utils/address';
 import { maxSeatsForBooking, normalizeSeats } from '@modules/pods/pod/pod.seats';
-import { ticketDiscountFor } from '@modules/pods/pod/pod.ticketDiscount';
 import { smartIncentiveFor } from '@modules/engagement/smartIncentive/smartIncentive.rules';
 import { smartIncentiveService } from '@modules/engagement/smartIncentive/smartIncentive.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -36,6 +40,7 @@ import { logs } from '@observability/log';
 import { sendEmail } from '@services/email/email.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { assertPodOpenForBooking } from '@utils/hidden';
+import { podBookingClosed } from '@modules/pods/pod/pod.lifecycle';
 import { EMPTY_RENTALS, resolveRentalLines, type RentalResolution } from '@modules/venues/venueRental/rentalCheckout';
 import { paymentRentalLines } from '@modules/venues/venueRental/rentalLines';
 import {
@@ -88,20 +93,21 @@ export const toPub = (p: IPayment) => ({
   coupon_code: p.coupon_code ?? null,
   coupon_discount: p.coupon_discount ?? 0,
   coins_redeemed: p.coins_redeemed ?? 0,
-  // Payments priced before the multi-ticket discount existed carry neither.
-  ticket_discount_amount: p.ticket_discount_amount ?? 0,
-  ticket_discount_pct: p.ticket_discount_pct ?? 0,
-  // Likewise for the Smart Incentive.
+  // Payments priced before the Smart Incentive existed carry neither.
   smart_incentive_amount: p.smart_incentive_amount ?? 0,
   smart_incentive_pct: p.smart_incentive_pct ?? 0,
   status: p.status,
   gateway: p.gateway,
   gateway_ref: p.gateway_ref,
+  // The ids Razorpay's dashboard shows — never our own payment_id reference.
+  ...razorpayIdsOf(p),
   paid_at: p.paid_at ? p.paid_at.toISOString() : null,
   // How far the post-payment pipeline got, and whether it left money owing.
   // Payments captured before the pipeline existed have no stored state.
   finalize_state: p.finalize_state ?? 'NOT_STARTED',
   needs_refund: p.needs_refund === true,
+  // Where its latest refund stands at Razorpay — accepted is not yet in the bank.
+  refund_status: publicRefundStatus(p.metadata),
   coins_earned: p.coins_earned ?? 0,
   // Frozen at checkout, so a later rate change cannot rewrite what was rented.
   rental_lines: paymentRentalLines(p.metadata),
@@ -111,7 +117,8 @@ export const toPub = (p: IPayment) => ({
 
 /** Allowlists for the shared table engine (paymentsTable — DUNCIT TABLE CONTRACT v1). */
 const PAYMENT_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['payment_id', 'invoice_no', 'user_name', 'user_email'],
+  // A Razorpay payment / order / refund id pasted from the dashboard finds its row too.
+  searchFields: ['payment_id', 'invoice_no', 'user_name', 'user_email', ...RAZORPAY_ID_SEARCH_FIELDS],
   sortFields: {
     payment_id: 'payment_id',
     invoice_no: 'invoice_no',
@@ -125,7 +132,6 @@ const PAYMENT_TABLE_CONFIG: TableEntityConfig = {
     coins_earned: 'coins_earned',
     total: 'total',
     round_off: 'round_off',
-    ticket_discount_amount: 'ticket_discount_amount',
     smart_incentive_amount: 'smart_incentive_amount',
     status: 'status',
     gateway: 'gateway',
@@ -150,7 +156,6 @@ const PAYMENT_TABLE_CONFIG: TableEntityConfig = {
     coins_earned: { type: 'number' },
     total: { type: 'number' },
     round_off: { type: 'number' },
-    ticket_discount_amount: { type: 'number' },
     smart_incentive_amount: { type: 'number' },
     paid_at: { type: 'date' },
     created_at: { type: 'date' },
@@ -209,8 +214,15 @@ export async function computeQuote(
   };
 }
 
+/**
+ * Duncit's own payment reference. It used to be `pay_…`, the exact shape of a
+ * Razorpay payment id, so Finance read it as one and it never matched the
+ * dashboard; new rows carry an unmistakable DPAY- reference instead. Older rows
+ * keep theirs — nothing parses the prefix, and invoices, tickets and messages
+ * already quote them.
+ */
 export const newPaymentId = () =>
-  `pay_${Date.now().toString(36)}${crypto.randomBytes(4).toString('hex')}`;
+  `DPAY-${Date.now().toString(36).toUpperCase()}${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
 /** One resolved, invoice-ready checkout line per product+variant selection. */
 interface ResolvedProductLine {
@@ -420,90 +432,81 @@ export function buildBuyerFields(input: any, user: any) {
   return { user_name: name, user_email: email, user_phone: contactPhone, billing, billing_address };
 }
 
-/** A pod's multi-ticket discount as priced for one booking. */
-type TicketDiscount = ReturnType<typeof ticketDiscountFor>;
-
-/** No pod on the checkout, so no ticket money and nothing to discount. */
-const NO_TICKET_DISCOUNT: TicketDiscount = { gross: 0, pct: 0, min_tickets: 0, amount: 0 };
-
 /** A member's unlocked Smart Incentive as priced for one booking. */
 type SmartIncentive = ReturnType<typeof smartIncentiveFor>;
 
 const NO_SMART_INCENTIVE: SmartIncentive = { pct: 0, amount: 0 };
 
 /** The discount fields a checkout quote reports beside its tax lines. */
-const quoteDiscounts = (ticketDiscount: TicketDiscount, smartIncentive: SmartIncentive) => ({
-  ticket_discount_amount: ticketDiscount.amount,
-  ticket_discount_pct: ticketDiscount.pct,
+const quoteDiscounts = (smartIncentive: SmartIncentive) => ({
   smart_incentive_amount: smartIncentive.amount,
   smart_incentive_pct: smartIncentive.pct,
 });
 
+/** Every seat of a booking at the pod's list price. */
+const ticketGrossOf = (pod: { pod_amount?: number | null }, seats: number) =>
+  round2(Number(pod.pod_amount || 0) * seats);
+
 /**
- * A pod booking's payable: the ticket money after the pod's multi-ticket
- * discount and then the member's unlocked Smart Incentive (`incentivePct`, 0
- * when none), plus add-on products charged once at full price. Neither
- * discount touches the products, so `product_cost_total` stays the product
- * gross that settlement and refunds subtract.
+ * A pod booking's payable: the ticket money less the member's unlocked Smart
+ * Incentive (`incentivePct`, 0 when none), plus add-on products charged once at
+ * full price. The incentive never touches the products, so
+ * `product_cost_total` stays the product gross that settlement and refunds
+ * subtract.
  */
 function pricePodBooking(pod: any, seats: number, addOns: number, incentivePct = 0) {
-  const ticketDiscount = ticketDiscountFor(Number(pod.pod_amount || 0), seats, pod);
-  const smartIncentive = smartIncentiveFor(round2(ticketDiscount.gross - ticketDiscount.amount), incentivePct);
+  const gross = ticketGrossOf(pod, seats);
+  const smartIncentive = smartIncentiveFor(gross, incentivePct);
   return {
-    ticketDiscount,
     smartIncentive,
-    payableAmount: round2(ticketDiscount.gross - ticketDiscount.amount - smartIncentive.amount + addOns),
+    payableAmount: round2(gross - smartIncentive.amount + addOns),
   };
 }
 
 /** The metadata blob recorded on every payment doc (source + pod breakdown).
- * `products` is the checkout's resolved product selection (variant-aware);
- * `ticketDiscount` is the multi-ticket tier that priced it, frozen here so the
- * invoice, finance and refunds never re-read the pod's (editable) tiers. */
+ * `products` is the checkout's resolved product selection (variant-aware). */
 export const paymentMetadata = (
   input: any,
   pod: any,
   products: ProductResolution,
-  ticketDiscount: TicketDiscount,
   rentals: RentalResolution = EMPTY_RENTALS
-) => ({
-  source: 'app_checkout',
-  checkout_url: input.checkout_url,
-  pod_id: input.pod_id || null,
-  ticket_amount: pod ? Number(pod.pod_amount || 0) : null,
-  // Read back at capture time — a webhook replay must book the seats that were
-  // actually paid for, never the client's word at that later moment.
-  seats: pod ? clampSeatsForPod(pod, input.seats) : null,
-  // Every ticket at list price, before the multi-ticket discount came off.
-  ticket_gross: pod ? ticketDiscount.gross : null,
-  ticket_discount_pct: ticketDiscount.pct,
-  ticket_discount_amount: ticketDiscount.amount,
-  ticket_discount_min_tickets: ticketDiscount.min_tickets,
-  product_cost_total: pod ? products.total : null,
-  selected_products: input.selected_products ?? [],
-  // Invoice-ready product lines (name/qty/unit/gross + chosen variant).
-  product_lines: products.lines,
-  // Fulfilment intent for the product order created on payment success.
-  fulfilment_method: input.fulfilment_method ?? 'PICKUP',
-  shipping_address: input.shipping_address ?? null,
-  // Rented items: priced lines plus their money, kept apart from the ticket the
-  // way products are (addOnMoneyOf). The venue is frozen beside them so the
-  // capture books the venue that was paid for.
-  rental_lines: rentals.lines,
-  rental_rent_total: rentals.rent_total,
-  rental_deposit_total: rentals.deposit_total,
-  rental_total: rentals.total,
-  rental_venue_id: rentals.lines.length > 0 && pod?.venue_id ? String(pod.venue_id) : null,
-  // Frozen: whether these deposits were taxed, as the venue was set at checkout.
-  rental_deposit_gst: rentals.deposit_gst,
-});
+) => {
+  const seats = pod ? clampSeatsForPod(pod, input.seats) : null;
+  return {
+    source: 'app_checkout',
+    checkout_url: input.checkout_url,
+    pod_id: input.pod_id || null,
+    ticket_amount: pod ? Number(pod.pod_amount || 0) : null,
+    // Read back at capture time — a webhook replay must book the seats that were
+    // actually paid for, never the client's word at that later moment.
+    seats,
+    // Every ticket at list price.
+    ticket_gross: pod && seats ? ticketGrossOf(pod, seats) : null,
+    product_cost_total: pod ? products.total : null,
+    selected_products: input.selected_products ?? [],
+    // Invoice-ready product lines (name/qty/unit/gross + chosen variant).
+    product_lines: products.lines,
+    // Fulfilment intent for the product order created on payment success.
+    fulfilment_method: input.fulfilment_method ?? 'PICKUP',
+    shipping_address: input.shipping_address ?? null,
+    // Rented items: priced lines plus their money, kept apart from the ticket the
+    // way products are (addOnMoneyOf). The venue is frozen beside them so the
+    // capture books the venue that was paid for.
+    rental_lines: rentals.lines,
+    rental_rent_total: rentals.rent_total,
+    rental_deposit_total: rentals.deposit_total,
+    rental_total: rentals.total,
+    rental_venue_id: rentals.lines.length > 0 && pod?.venue_id ? String(pod.venue_id) : null,
+    // Frozen: whether these deposits were taxed, as the venue was set at checkout.
+    rental_deposit_gst: rentals.deposit_gst,
+  };
+};
 
 /** Apply an optional coupon to the payable, returning the priced quote, the
  * undiscounted original total (for strikethrough/records) and the coupon meta.
- * The payable already has the multi-ticket discount and the Smart Incentive
- * off (`discountsOff`, both together), so the coupon (its floor and
- * min_order_amount) is evaluated on the discounted bill; the original total
- * adds them back — the gross before EVERY discount.
+ * The payable already has the Smart Incentive off (`discountsOff`), so the
+ * coupon (its floor and min_order_amount) is evaluated on the discounted bill;
+ * the original total adds it back — the gross before EVERY discount.
  * Throws when a supplied coupon is invalid — never silently ignores it. */
 async function applyCoupon(
   input: any,
@@ -660,7 +663,6 @@ export async function resolvePayable(input: any, userId?: string) {
   let description = input.description || 'Booking';
   let products: ProductResolution = EMPTY_PRODUCT_RESOLUTION;
   let seats = 1;
-  let ticketDiscount = NO_TICKET_DISCOUNT;
   let smartIncentive = NO_SMART_INCENTIVE;
   let rentals = EMPTY_RENTALS;
   if (input.pod_id) {
@@ -668,7 +670,8 @@ export async function resolvePayable(input: any, userId?: string) {
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
     assertBookableRow(pod);
     assertPodOpenForBooking(pod);
-    if (pod.pod_date_time && new Date(pod.pod_date_time).getTime() < Date.now()) {
+    // Open until the pod ENDS: a running pod can still be booked.
+    if (podBookingClosed(pod)) {
       throw new GraphQLError('This pod has already taken place — booking is closed.', {
         extensions: { code: 'BAD_REQUEST' },
       });
@@ -687,14 +690,13 @@ export async function resolvePayable(input: any, userId?: string) {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
-    // The ticket price is per seat, less the pod's multi-ticket discount for
-    // this many seats and then the member's unlocked Smart Incentive; add-on
-    // products are charged once. Both discounts come off BEFORE the coupon, the
-    // coins and the GST split.
+    // The ticket price is per seat, less the member's unlocked Smart Incentive;
+    // add-on products are charged once. The incentive comes off BEFORE the
+    // coupon, the coins and the GST split.
     // Rented items ride with the seat too, charged once at full price.
     rentals = await resolveRentalLines(pod, input.selected_rentals ?? [], seats);
     const incentivePct = await smartIncentiveService.pctForCheckout(pod, userId);
-    ({ ticketDiscount, smartIncentive, payableAmount } = pricePodBooking(
+    ({ smartIncentive, payableAmount } = pricePodBooking(
       pod,
       seats,
       products.total + rentals.total,
@@ -705,7 +707,7 @@ export async function resolvePayable(input: any, userId?: string) {
     throw new GraphQLError('Amount must be greater than 0', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
-  return { pod, payableAmount, description, products, seats, ticketDiscount, smartIncentive, rentals };
+  return { pod, payableAmount, description, products, seats, smartIncentive, rentals };
 }
 
 /**
@@ -718,11 +720,11 @@ async function priceCheckout(input: Parameters<typeof resolvePayable>[0], userId
   const payable = await resolvePayable(input, userId);
   const uncharged = payable.rentals.total;
   const untaxed = payable.rentals.untaxed;
-  const discountsOff = round2(payable.ticketDiscount.amount + payable.smartIncentive.amount);
+  const discountsOff = round2(payable.smartIncentive.amount);
   const couponed = await applyCoupon(input, payable.payableAmount, userId, discountsOff, uncharged, untaxed);
   const { quote, coinsRedeemed } = await applyCoins(input.redeem_coins, userId, couponed.quote, uncharged, untaxed);
   const metadata = {
-    ...paymentMetadata(input, payable.pod, payable.products, payable.ticketDiscount, payable.rentals),
+    ...paymentMetadata(input, payable.pod, payable.products, payable.rentals),
     original_total: couponed.originalTotal,
   };
   return { ...payable, ...couponed, quote, coinsRedeemed, metadata };
@@ -843,11 +845,13 @@ const giftCardPaymentMetadata = (input: any, facts: GiftCardPurchaseFacts) => ({
   gift_card: facts,
 });
 
-/** A gift card charges exactly its face value: no platform fee and no GST at
+/** A gift card charges exactly its face value — every card of the order, plus
+ * the flat delivery fee once on a physical order: no platform fee and no GST at
  * sale (a prepaid instrument is taxed when the goods are bought with it), and
  * no coupon or coin discounts — stored value must not buy stored value. */
-async function giftCardQuote(amount: number): Promise<QuoteBreakup> {
+async function giftCardQuote(facts: GiftCardPurchaseFacts): Promise<QuoteBreakup> {
   const fs = await getFinanceSettings();
+  const amount = factsTotal(facts);
   // Face values are whole rupees, so this adds nothing today — but a gift card
   // is a payment like any other, and no payment is charged in paise.
   const bill = roundUpBill(amount);
@@ -866,8 +870,11 @@ async function giftCardQuote(amount: number): Promise<QuoteBreakup> {
 
 /** The payment row's human line. Payment descriptions are server-side English
  * data, like 'Pod booking · …' — clients localize their own UI copy. */
-const giftCardDescription = (facts: GiftCardPurchaseFacts) =>
-  facts.scope_name ? `Gift card · ${facts.scope_name}` : 'Gift card · Pod Shop';
+const giftCardDescription = (facts: GiftCardPurchaseFacts) => {
+  const count = factsQuantity(facts);
+  const label = facts.design_name || facts.scope_name || 'Pod Shop';
+  return count > 1 ? `Gift cards · ${label} × ${count}` : `Gift card · ${label}`;
+};
 
 export interface RazorpaySheetArgs {
   paymentDocId: string;
@@ -986,6 +993,40 @@ async function answerRepeatVerify(doc: IPayment, input: RazorpayVerifyInput, com
 }
 
 /**
+ * A verify for a capture the `payment.captured` webhook (or the reconciler)
+ * already adopted, while its booking is still being written or after it failed.
+ * The webhook usually lands within the same second as the buyer's own verify,
+ * so this is the normal race, not an edge: without it the buyer who just paid
+ * would be told "Payment/order mismatch".
+ */
+function isAdoptedCapture(doc: IPayment, input: RazorpayVerifyInput): boolean {
+  return (
+    doc.status === 'PENDING' &&
+    Boolean(input.razorpay_payment_id) &&
+    doc.gateway_ref === input.razorpay_payment_id &&
+    doc.metadata?.razorpay_order_id === input.razorpay_order_id
+  );
+}
+
+/**
+ * Answer that verify from the same finalizer, never a second booking: the
+ * finalizer is idempotent and waits out the adopter's transaction. A capture
+ * whose booking FAILED is not re-run — its money is being refunded
+ * automatically, so the buyer gets the failure, not a seat bought twice.
+ */
+async function settleAdoptedCapture(doc: IPayment, input: RazorpayVerifyInput, component: string) {
+  if (!(await checkRazorpaySignature(doc, input))) {
+    throw new GraphQLError('Payment signature verification failed', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  if (doc.finalize_state === 'FAILED') {
+    throw new GraphQLError(doc.finalize_error || 'Payment could not be completed', {
+      extensions: { code: 'PAYMENT_NOT_COMPLETED' },
+    });
+  }
+  return settle(String(doc._id), 'Razorpay', component);
+}
+
+/**
  * The other dates of a multi-date booking of a (now retired) recurring pod,
  * kept so a booking paid before the retirement still settles: one Razorpay
  * order paid for every date, and each date has its own payment, so once the
@@ -1022,6 +1063,7 @@ export async function verifyRazorpayAndSettle(doc: IPayment, input: any, compone
   if (doc.gateway !== 'RAZORPAY')
     throw new GraphQLError('Payment/order mismatch', { extensions: { code: 'BAD_USER_INPUT' } });
   if (isRepeatOfSettledVerify(doc, input)) return answerRepeatVerify(doc, input, component);
+  if (isAdoptedCapture(doc, input)) return settleAdoptedCapture(doc, input, component);
   if (doc.gateway_ref !== input.razorpay_order_id)
     throw new GraphQLError('Payment/order mismatch', { extensions: { code: 'BAD_USER_INPUT' } });
   if (doc.status === 'SUCCESS') {
@@ -1086,14 +1128,22 @@ export async function verifyRazorpayAndSettle(doc: IPayment, input: any, compone
 type PaymentListFilter = { status?: string; user_id?: string; pod_id?: string; search?: string };
 
 /** Mongo match for a PaymentFilterInput — shared by the list query and the KPI totals. */
-const buildListFilter = (filter?: PaymentListFilter) => {
+const buildListFilter = async (filter?: PaymentListFilter) => {
   const q: any = {};
   if (filter?.status) q.status = filter.status;
   if (filter?.user_id) q.user_id = new Types.ObjectId(filter.user_id);
   if (filter?.pod_id) q.pod_id = new Types.ObjectId(filter.pod_id);
   if (filter?.search) {
     const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
-    q.$or = [{ payment_id: r }, { invoice_no: r }, { user_name: r }, { user_email: r }];
+    q.$or = [
+      { payment_id: r },
+      { invoice_no: r },
+      { user_name: r },
+      { user_email: r },
+      ...RAZORPAY_ID_SEARCH_FIELDS.map((path) => ({ [path]: r })),
+      // The pod's title, and a pasted payment or pod id — same as the table.
+      ...(await paymentSearchAlso(filter.search)),
+    ];
   }
   return q;
 };
@@ -1165,34 +1215,33 @@ export const paymentService = {
     // Single-seat quotes keep their exact previous behaviour (the caller's
     // amount already carries any add-on products), less only the caller's
     // unlocked Smart Incentive on the one ticket; the multi-seat case needs the
-    // server to re-price, and only the ticket multiplies. A single seat never
-    // earns a multi-ticket discount — every tier starts at 2.
+    // server to re-price, and only the ticket multiplies.
     // Settled like a charge with no coins, so the preview carries the same
     // whole-rupee total and round-off a checkout of this amount would.
     const settled = async (amount: number) =>
       (await applyCoins(0, null, await computeQuote(amount))).quote;
     if (!input.pod_id) {
-      return { ...(await settled(input.amount)), ...quoteDiscounts(NO_TICKET_DISCOUNT, NO_SMART_INCENTIVE) };
+      return { ...(await settled(input.amount)), ...quoteDiscounts(NO_SMART_INCENTIVE) };
     }
     const pod = await PodModel.findById(input.pod_id).select(
-      'pod_type pod_amount no_of_spots pod_attendees extra_seats ticket_discount_enabled ticket_discount_tiers smart_incentive_enabled smart_incentive_pct'
+      'pod_type pod_amount no_of_spots pod_attendees extra_seats smart_incentive_enabled smart_incentive_pct'
     );
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
     const incentivePct = await smartIncentiveService.pctForCheckout(pod, userId);
     if (seats <= 1) {
       const smartIncentive = smartIncentiveFor(Number(pod.pod_amount || 0), incentivePct);
       const amount = round2((Number(input.amount) || 0) - smartIncentive.amount);
-      return { ...(await settled(amount)), ...quoteDiscounts(NO_TICKET_DISCOUNT, smartIncentive) };
+      return { ...(await settled(amount)), ...quoteDiscounts(smartIncentive) };
     }
     clampSeatsForPod(pod, seats);
     const ticket = Number(pod.pod_amount || 0);
     const extras = Math.max(round2(Number(input.amount) || 0) - ticket, 0);
     const priced = pricePodBooking(pod, seats, extras, incentivePct);
-    return { ...(await settled(priced.payableAmount)), ...quoteDiscounts(priced.ticketDiscount, priced.smartIncentive) };
+    return { ...(await settled(priced.payableAmount)), ...quoteDiscounts(priced.smartIncentive) };
   },
 
   async list(filter?: PaymentListFilter, limit = 200) {
-    const docs = await PaymentModel.find(buildListFilter(filter)).sort({ created_at: -1 }).limit(limit);
+    const docs = await PaymentModel.find(await buildListFilter(filter)).sort({ created_at: -1 }).limit(limit);
     return docs.map(toPub);
   },
 
@@ -1203,8 +1252,8 @@ export const paymentService = {
    * status matches nothing, exactly like SUCCESS-only cards over that list.
    */
   async totals(filter?: PaymentListFilter, shop?: PaymentShop | null) {
-    const empty = { count: 0, gross: 0, fee: 0, gst: 0, ticket_discount_total: 0, smart_incentive_total: 0 };
-    const q = buildListFilter(filter);
+    const empty = { count: 0, gross: 0, fee: 0, gst: 0, smart_incentive_total: 0 };
+    const q = await buildListFilter(filter);
     if (q.status && q.status !== 'SUCCESS') return empty;
     q.status = 'SUCCESS';
     // One shop's cards: AND-ed with the shop's own filter, never merged into
@@ -1220,7 +1269,6 @@ export const paymentService = {
           fee: { $sum: '$platform_fee_amount' },
           gst: { $sum: '$gst_amount' },
           // Already off `gross` — reported so the gap to list price is explained.
-          ticket_discount_total: { $sum: '$ticket_discount_amount' },
           smart_incentive_total: { $sum: { $ifNull: ['$smart_incentive_amount', 0] } },
         },
       },
@@ -1231,7 +1279,6 @@ export const paymentService = {
       gross: round2(row.gross),
       fee: round2(row.fee),
       gst: round2(row.gst),
-      ticket_discount_total: round2(row.ticket_discount_total),
       smart_incentive_total: round2(row.smart_incentive_total),
     };
   },
@@ -1242,7 +1289,8 @@ export const paymentService = {
       PaymentModel,
       {},
       input,
-      PAYMENT_TABLE_CONFIG
+      PAYMENT_TABLE_CONFIG,
+      { searchAlso: await paymentSearchAlso(input?.search) }
     );
     return { rows: docs.map(toPub), total, page, page_size };
   },
@@ -1281,7 +1329,8 @@ export const paymentService = {
       PaymentModel,
       PAYMENT_SHOP_FILTER[shop],
       input,
-      PAYMENT_TABLE_CONFIG
+      PAYMENT_TABLE_CONFIG,
+      { searchAlso: await paymentSearchAlso(input?.search) }
     );
     return { rows: docs.map(toPub), total, page, page_size };
   },
@@ -1339,7 +1388,7 @@ export const paymentService = {
     const user = await UserModel.findById(userId);
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
 
-    const { description, ticketDiscount, smartIncentive, quote, couponCode, couponDiscount, coinsRedeemed, metadata } =
+    const { description, smartIncentive, quote, couponCode, couponDiscount, coinsRedeemed, metadata } =
       await priceCheckout(input, userId);
 
     // Created PENDING even on the happy path: the finalizer is the only thing
@@ -1366,8 +1415,6 @@ export const paymentService = {
       coupon_code: couponCode,
       coupon_discount: couponDiscount,
       coins_redeemed: coinsRedeemed,
-      ticket_discount_amount: ticketDiscount.amount,
-      ticket_discount_pct: ticketDiscount.pct,
       smart_incentive_amount: smartIncentive.amount,
       smart_incentive_pct: smartIncentive.pct,
       status: failed ? 'FAILED' : 'PENDING',
@@ -1384,12 +1431,15 @@ export const paymentService = {
   /** Step 1 of live checkout: create a Razorpay order + a PENDING payment row,
    * and return everything the client needs to open the Razorpay sheet. */
   async createRazorpayCheckout(input: any, userId: string) {
-    const fs = await getFinanceSettings();
-    const { keyId } = await getRazorpayKeys();
-    const user = await UserModel.findById(userId);
+    // Independent reads, so the buyer waits for the slowest one rather than all three in turn.
+    const [fs, { keyId }, user] = await Promise.all([
+      getFinanceSettings(),
+      getRazorpayKeys(),
+      UserModel.findById(userId),
+    ]);
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
 
-    const { description, ticketDiscount, smartIncentive, quote, couponCode, couponDiscount, coinsRedeemed, metadata } =
+    const { description, smartIncentive, quote, couponCode, couponDiscount, coinsRedeemed, metadata } =
       await priceCheckout(input, userId);
     const payment_id = newPaymentId();
     const base = {
@@ -1411,8 +1461,6 @@ export const paymentService = {
       coupon_code: couponCode,
       coupon_discount: couponDiscount,
       coins_redeemed: coinsRedeemed,
-      ticket_discount_amount: ticketDiscount.amount,
-      ticket_discount_pct: ticketDiscount.pct,
       smart_incentive_amount: smartIncentive.amount,
       smart_incentive_pct: smartIncentive.pct,
     };
@@ -1697,7 +1745,7 @@ export const paymentService = {
 
     await giftcardService.assertPurchaseEnabled();
     const facts = await giftcardService.purchaseFacts(input);
-    const quote = await giftCardQuote(facts.amount);
+    const quote = await giftCardQuote(facts);
 
     // PENDING until the finalizer promotes it — see dummyCheckout.
     const failed = !!input.simulate_failure;
@@ -1727,6 +1775,9 @@ export const paymentService = {
       paid_at: null,
       metadata: giftCardPaymentMetadata(input, facts),
     });
+    // The order exists from checkout on, so a failed or abandoned payment is
+    // still a row the buyer and the Loyalty team can see.
+    await giftCardOrderService.createForPayment(doc, facts);
 
     if (failed) return toPub(doc);
     return settle(String(doc._id), 'Dummy Gateway', 'dummyGiftCardCheckout');
@@ -1743,7 +1794,7 @@ export const paymentService = {
 
     await giftcardService.assertPurchaseEnabled();
     const facts = await giftcardService.purchaseFacts(input);
-    const quote = await giftCardQuote(facts.amount);
+    const quote = await giftCardQuote(facts);
     const payment_id = newPaymentId();
     const description = giftCardDescription(facts);
 
@@ -1781,6 +1832,7 @@ export const paymentService = {
       paid_at: null,
       metadata: { ...giftCardPaymentMetadata(input, facts), razorpay_order_id: order.id },
     });
+    await giftCardOrderService.createForPayment(doc, facts);
 
     return razorpaySheet({
       paymentDocId: String(doc._id),
@@ -1798,8 +1850,11 @@ export const paymentService = {
   },
 
   /**
-   * Finance marks a payment refunded (the money itself is returned outside this
-   * call — no gateway refund is issued here).
+   * Finance refunds a payment: it is marked refunded and what it still holds
+   * goes back through Razorpay (payment.gatewayRefund) — sent before this call
+   * answers, so Finance sees Razorpay's verdict on the row; a send that fails is
+   * retried by the sweep. A payment with no Razorpay money records the refund
+   * only (NOT_APPLICABLE).
    *
    * The SUCCESS → REFUNDED move is ONE conditional write: it used to read the
    * status, decide, and save, so two submits of the same refund both passed
@@ -1838,8 +1893,20 @@ export const paymentService = {
       total: doc.total,
       msg: 'payment marked refunded by Finance',
     });
+    // What a Backout already returned stays returned; the rest goes back now.
+    const owed = round2(Math.max(0, doc.total - (Number(doc.metadata?.refunded_amount) || 0)));
+    const record = await queueGatewayRefund({
+      payment: doc,
+      amount: owed,
+      key: `finance_refund:${String(doc._id)}`,
+      source: 'FINANCE_REFUND',
+      reason: reason || 'Refunded by Finance',
+      initiatedBy: 'FINANCE',
+      initiatorId: actorId ?? null,
+    });
+    if (record?.status === 'QUEUED') await processGatewayRefund(record._id);
     await mailRefund(doc, reason);
-    return toPub(doc);
+    return toPub((await PaymentModel.findById(doc._id)) ?? doc);
   },
 
   async invoicePdfBase64(paymentDocId: string, requesterId: string, isAdmin: boolean) {

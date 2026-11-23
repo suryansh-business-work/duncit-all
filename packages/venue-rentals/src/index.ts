@@ -8,11 +8,13 @@
  */
 export { default as VenueRentalDesk, type VenueRentalDeskProps } from './VenueRentalDesk';
 export { default as VenueRentalItems, type VenueRentalItemsProps } from './items/VenueRentalItems';
-export { default as VenueRentalBookings } from './bookings/VenueRentalBookings';
+export { default as VenueRentalBookings, type VenueRentalBookingsProps } from './bookings/VenueRentalBookings';
 export { default as FinanceRentalBookings } from './bookings/FinanceRentalBookings';
 export { default as VenueRentalStatsTiles } from './dashboard/VenueRentalStats';
 export { default as MarkRentalDialog } from './bookings/MarkRentalDialog';
-export { default as RentalRefundDialog } from './bookings/RentalRefundDialog';
+export { default as RentalDetailDrawer, type RentalDetailOptions } from './bookings/detail/RentalDetailDrawer';
+export { RENTAL_PARAM, useRentalParam } from './bookings/detail/useRentalParam';
+export type { RentalDetailLinks } from './bookings/detail/types';
 export { buildRentalBookingColumns, getRentalBookingRowId, type RentalColumnOptions } from './bookings/rental-booking-columns';
 export type { VenueRentalProps } from './types';
 export type { MarkRentalInput } from './documents';

@@ -18,7 +18,10 @@ import { LIFECYCLE_EMAILS } from './catalogue.lifecycle';
 import { VENUE_OFFER_EMAILS } from './catalogue.offers';
 import { HOST_PERFORMANCE_EMAILS } from './catalogue.hostPerformance';
 import { TARGETS_EMAILS } from './catalogue.targets';
+import { CRM_EMAILS } from './catalogue.crm';
 import { PAYOUT_EMAILS } from './catalogue.payouts';
+import { RENTAL_EMAILS } from './catalogue.rentals';
+import { GIFT_CARD_ORDER_EMAILS } from './catalogue.giftCardOrders';
 
 export * from './catalogue.types';
 export * from './mjml';
@@ -56,7 +59,10 @@ export const EMAIL_CATALOGUE: readonly EmailDef[] = [
   ...APP_BUILD_EMAILS,
   ...LIFECYCLE_EMAILS,
   ...TARGETS_EMAILS,
+  ...CRM_EMAILS,
   ...PAYOUT_EMAILS,
+  ...RENTAL_EMAILS,
+  ...GIFT_CARD_ORDER_EMAILS,
   ...EXISTING_EMAILS,
 ];
 

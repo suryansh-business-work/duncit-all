@@ -32,3 +32,17 @@ describe('payment unit', () => {
     ).rejects.toThrow();
   });
 });
+
+describe('retired multi-ticket discount fields', () => {
+  const field = (type: 'Payment' | 'PaymentTotals' | 'CheckoutQuote', name: string) =>
+    (paymentResolvers[type] as unknown as Record<string, (p: unknown) => number>)[name];
+
+  it('answer 0 for clients that still select them, even on a payment that froze a discount', () => {
+    const legacy = { ticket_discount_amount: 94.16, ticket_discount_pct: 10, ticket_discount_total: 94.16 };
+    expect(field('Payment', 'ticket_discount_amount')(legacy)).toBe(0);
+    expect(field('Payment', 'ticket_discount_pct')(legacy)).toBe(0);
+    expect(field('PaymentTotals', 'ticket_discount_total')(legacy)).toBe(0);
+    expect(field('CheckoutQuote', 'ticket_discount_amount')(legacy)).toBe(0);
+    expect(field('CheckoutQuote', 'ticket_discount_pct')(legacy)).toBe(0);
+  });
+});

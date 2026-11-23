@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { cleanup, screen } from '@testing-library/react';
 import { renderWithProviders } from '../testkit';
 
 const m = vi.hoisted(() => ({ token: 'tok' as string | null }));
@@ -29,6 +29,10 @@ vi.mock('../../src/pages/feature-flags-page/FeatureFlagsPage', () => ({ default:
 vi.mock('../../src/pages/AuthenticationPage', () => ({ default: () => <div>authentication-page</div> }));
 vi.mock('../../src/pages/server/ServerInfoPage', () => ({ default: () => <div>server-info-page</div> }));
 vi.mock('../../src/pages/server/DockerPage', () => ({ default: () => <div>docker-page</div> }));
+vi.mock('../../src/pages/security/login-verifications', () => ({ default: () => <div>login-verifications-page</div> }));
+vi.mock('../../src/pages/security/verification-requests', () => ({
+  default: () => <div>verification-requests-page</div>,
+}));
 
 import App from '../../src/App';
 
@@ -73,6 +77,19 @@ describe('App routing', () => {
   it('shows the login fallback when unauthenticated', () => {
     m.token = null;
     at('/');
+    expect(screen.getByText('need-login')).toBeInTheDocument();
+  });
+
+  it('mounts the two Security verification pages at the paths the sidebar links to, behind the session gate', () => {
+    at('/security/login-verifications');
+    expect(screen.getByText('login-verifications-page')).toBeInTheDocument();
+    at('/security/verification-requests');
+    expect(screen.getByText('verification-requests-page')).toBeInTheDocument();
+
+    cleanup();
+    m.token = null;
+    at('/security/login-verifications');
+    expect(screen.queryByText('login-verifications-page')).not.toBeInTheDocument();
     expect(screen.getByText('need-login')).toBeInTheDocument();
   });
 });

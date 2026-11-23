@@ -352,7 +352,7 @@ describe('Venue charges', () => {
 });
 
 describe('SuccessReceiptCard', () => {
-  const payment = (over: object = {}) => ({ total: 1180, currency_symbol: '₹', payment_id: 'pay_1', invoice_no: 'INV-1', paid_at: '2026-06-01', created_at: '2026-05-31', ticket_discount_amount: 0, ...over });
+  const payment = (over: object = {}) => ({ total: 1180, currency_symbol: '₹', payment_id: 'pay_1', invoice_no: 'INV-1', paid_at: '2026-06-01', created_at: '2026-05-31', smart_incentive_amount: 0, ...over });
 
   it('shows the amount, paid time, payment id and invoice number', () => {
     render(<SuccessReceiptCard payment={payment()} />);
@@ -360,18 +360,18 @@ describe('SuccessReceiptCard', () => {
     expect(screen.getByText('at:2026-06-01')).toBeInTheDocument();
     expect(screen.getByText('pay_1')).toBeInTheDocument();
     expect(screen.getByText('INV-1')).toBeInTheDocument();
-    expect(screen.queryByTestId('checkout-success-ticket-discount')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('checkout-success-smart-incentive')).not.toBeInTheDocument();
   });
 
-  it('shows the multi-ticket discount the booking got', () => {
-    render(<SuccessReceiptCard payment={payment({ ticket_discount_amount: 100 })} />);
-    expect(screen.getByTestId('checkout-success-ticket-discount')).toHaveTextContent('− ₹100.00');
+  it('shows the Smart Incentive the booking got', () => {
+    render(<SuccessReceiptCard payment={payment({ smart_incentive_amount: 100 })} />);
+    expect(screen.getByTestId('checkout-success-smart-incentive')).toHaveTextContent('− ₹100.00');
   });
 
   it('falls back to the created time when unpaid time is missing, and omits the date and invoice when neither exists', () => {
     const { rerender } = render(<SuccessReceiptCard payment={payment({ paid_at: null })} />);
     expect(screen.getByText('at:2026-05-31')).toBeInTheDocument();
-    rerender(<SuccessReceiptCard payment={payment({ paid_at: null, created_at: null, invoice_no: null, ticket_discount_amount: null })} />);
+    rerender(<SuccessReceiptCard payment={payment({ paid_at: null, created_at: null, invoice_no: null, smart_incentive_amount: null })} />);
     expect(screen.queryByText(/^at:/)).not.toBeInTheDocument();
     expect(screen.queryByText('INV-1')).not.toBeInTheDocument();
   });

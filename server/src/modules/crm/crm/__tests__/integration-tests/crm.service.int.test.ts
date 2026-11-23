@@ -520,14 +520,16 @@ describe('crmService.addManualLog', () => {
     });
     expect(typeof entry.created_at).toBe('string');
     const stored = await HostLeadModel.findById(lead!.id).lean();
-    expect(stored!.activity_log).toHaveLength(1);
-    expect(stored!.activity_log[0]).toMatchObject({ type: 'NOTE', body_text: 'Liked the hall' });
+    // The log, then its own NOTE_CREATED history entry pointing back at it.
+    expect(stored!.activity_log).toHaveLength(2);
+    expect(stored!.activity_log[0]).toMatchObject({ type: 'NOTE', body_text: 'Liked the hall', log_id: entry.id });
+    expect(stored!.activity_log[1]).toMatchObject({ type: 'NOTE_CREATED', target: entry.id, created_by: 'crm-user-1' });
   });
 
   it('refuses an empty body and a lead that does not exist', async () => {
     await expect(
       crmService.addManualLog({ entity_type: 'VENUE_LEAD', entity_id: new Types.ObjectId().toHexString(), body_html: '  ' })
-    ).rejects.toThrow('Log body is required');
+    ).rejects.toThrow('Write something in the log before saving.');
     await expect(
       crmService.addManualLog({ entity_type: 'ECOMM_LEAD', entity_id: new Types.ObjectId().toHexString(), body_html: '<p>x</p>' })
     ).rejects.toThrow('Ecomm lead not found');

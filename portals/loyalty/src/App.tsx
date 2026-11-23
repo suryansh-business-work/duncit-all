@@ -25,6 +25,9 @@ import {
   PhysicalGeneratePage,
   PhysicalHistoryPage,
 } from './pages/gift-cards/physical';
+import { DesignEditorPage, DesignsPage } from './pages/gift-cards/designs';
+import { GiftCardOrderDetailPage, GiftCardOrdersPage } from './pages/gift-cards/orders';
+import GiftCardSettingsPage from './pages/gift-cards/settings/GiftCardSettingsPage';
 import { runtime } from './runtime';
 
 const { LoginPage, session } = runtime;
@@ -69,6 +72,12 @@ export default function App() {
       <Route path="/gift-cards/physical/batches" element={authed(<PhysicalBatchesPage />)} />
       <Route path="/gift-cards/physical/batches/:id" element={authed(<PhysicalBatchDetailPage />)} />
       <Route path="/gift-cards/physical/history" element={authed(<PhysicalHistoryPage />)} />
+
+      <Route path="/gift-cards/designs" element={authed(<DesignsPage />)} />
+      <Route path="/gift-cards/designs/:id" element={authed(<DesignEditorPage />)} />
+      <Route path="/gift-cards/orders" element={authed(<GiftCardOrdersPage />)} />
+      <Route path="/gift-cards/orders/:id" element={authed(<GiftCardOrderDetailPage />)} />
+      <Route path="/gift-cards/settings" element={authed(<GiftCardSettingsPage />)} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

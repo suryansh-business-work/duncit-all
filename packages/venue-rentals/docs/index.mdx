@@ -1,6 +1,6 @@
 ---
 name: '@duncit/venue-rentals'
-summary: 'A venue''s rented items as its owner and Finance work them: the bookings board with return and damage marking, the refund record and the rental numbers, as one MUI set the Finance, Venues and Partners consoles mount.'
+summary: 'A venue''s rented items as its owner and Finance work them: the bookings board with return and damage marking, each rental''s detail (refund, Razorpay refunds, proofs, timeline) and the rental numbers, as one MUI set the Finance, Venues and Partners consoles and mWeb mount.'
 category: 'domain'
 zeroDeps: false
 frameworkFree: false
@@ -9,6 +9,7 @@ consumers:
   - 'portals/finance'
   - 'portals/partners-app'
   - 'portals/venues'
+  - 'app/mweb'
 exports:
   - 'VenueRentalDesk'
   - 'VenueRentalItems'
@@ -16,7 +17,9 @@ exports:
   - 'FinanceRentalBookings'
   - 'VenueRentalStatsTiles'
   - 'MarkRentalDialog'
-  - 'RentalRefundDialog'
+  - 'RentalDetailDrawer'
+  - 'useRentalParam'
+  - 'RENTAL_PARAM'
   - 'buildRentalBookingColumns'
   - 'getRentalBookingRowId'
 ---
@@ -27,8 +30,8 @@ A venue can rent things out with a pod booking: a racket, court shoes, a project
 for them through Duncit with the seat, Duncit keeps its rental commission and pays the rest to the
 venue. Three consoles look at the same rentals:
 
-- **Finance** sees every rental, records the refunds it pays back, and sets the rules (Finance >
-  Rented Items > Settings).
+- **Finance** sees every rental and where its Razorpay refund stands, sends a refund that waits for
+  review through Razorpay, and sets the rules (Finance > Rented Items > Settings).
 - **The venue owner** (Partners console) marks each item returned or damaged and sees its numbers.
 - **The Venues console** does the same for any venue its editors look after.
 
@@ -36,9 +39,10 @@ So the board, the dialogs and the tiles are one package instead of three copies.
 cannot import MUI, so everything that is not drawing lives in **`@duncit/utils` →
 `venue-rentals.ts`**: the GraphQL documents as plain strings, the row types, the label keys
 (`rentalStatusKey`, `rentalRefundKey`, `rentalUnitKey`), the rules (`canMarkRental`,
-`canRecordRentalRefund`, `rentalMaxQuantity`) and the client twin of the server's price
+`canSendRentalRefund`, `rentalMaxQuantity`) and the client twin of the server's price
 (`rentalLinePrice` for one item's rent and deposit, the breakdown Pod Rent prints under each
-picked item; `rentalSelectionTotals` sums those lines). Copy is the `venueRentals` namespace.
+picked item; `rentalSelectionTotals` sums those lines). The refund side (states, the detail view,
+proofs) is **`venue-rentals-refunds.ts`** beside it. Copy is the `venueRentals` namespace.
 
 ## How the money moves
 
@@ -46,22 +50,29 @@ picked item; `rentalSelectionTotals` sums those lines). Copy is the `venueRental
    HOUR item, × 1 for a SLOT item, deposit per unit). Coupons and coins apply to the ticket only.
 2. **Capture.** Inside the payment's transaction each line reserves the pod's stock atomically. A line
    that sold out since checkout is recorded **UNAVAILABLE** with its money due back; the seat still books.
-3. **Outcome.** Items are handed over AT THE VENUE and their deposits are settled there. The venue
-   checks the returned item and marks **RETURNED** (it hands the whole deposit back in cash) or
-   **DAMAGED** (it hands back the deposit less its claim). Duncit never refunds such a deposit
-   through the gateway: it pays the WHOLE deposit to the venue in its payout, so the venue is made
-   whole for the cash it handed back. `deposit_at_venue` records that cash (0 when Finance made
-   deposits non-refundable). An item never marked is closed as returned after the configured days. A
-   guest whose backout spot is filled is **RELEASED** (the item never went out, so Duncit refunds the
-   deposit, and the rent per the settings). A cancelled pod returns the rentals with the payment's own
-   refund (**IN_PAYMENT**).
-4. **Payout.** An hourly sweep raises one **VENUE_RENTAL** payout per ended pod from the settled bookings
-   (rent less commission, plus the deposits settled at the venue); its notes split the two.
+3. **Outcome.** Items are handed over AT THE VENUE. The venue checks the returned item and marks
+   **RETURNED** or **DAMAGED** (keeping part of the deposit as its claim). Since 2026-11-22 the venue
+   hands NO cash back: **Duncit refunds the deposit, less any claim, to the guest's original payment
+   method through Razorpay, automatically**. The same goes for a sold-out line (**UNAVAILABLE**) and a
+   guest whose backout spot is filled (**RELEASED**: the deposit, and the rent per the settings). An
+   item never marked is closed as returned after the configured days. A cancelled pod returns the
+   rentals with the payment's own refund (**IN_PAYMENT**). Older bookings keep their
+   `deposit_at_venue` (cash a venue handed back before the change; `deposit_policy` = `VENUE_CASH`).
+4. **Refund.** Each refund is a Razorpay refund record; the booking reads `refund_state`
+   (`AWAITING_RETURN` → `ELIGIBLE` → `PROCESSING` → `REFUNDED`, or `FAILED` while it retries, or
+   `REQUIRES_REVIEW`) and the amounts `refund_eligible`, `refund_pending`, `refunded_amount`,
+   `refund_outstanding`. Only Razorpay's confirmation marks a refund refunded. **Finance can never
+   mark a rental refunded by hand**: `markRentalRefunded` is deprecated and always refuses. For a
+   refund in `REQUIRES_REVIEW`, Finance may only **Send refund via Razorpay**
+   (`sendRentalRefund(id, note)`, a reason of at least `RENTAL_REFUND_NOTE_MIN` characters).
+5. **Payout.** An hourly sweep raises one **VENUE_RENTAL** payout per ended pod from the settled bookings
+   (rent less commission, plus any damage the venue kept); its notes split the two.
    Finance approves it in Payment Release like any other.
 
 Every outcome freezes `refund_due`, `deposit_at_venue`, `venue_amount` and the commission on the
-booking, so a later settings change never rewrites a closed rental. `rentalHandBack` in
-`@duncit/utils` is the client twin the mark dialogs use to say "hand ₹X back now".
+booking, so a later settings change never rewrites a closed rental. `rentalDepositRefund` in
+`@duncit/utils` is the client twin the mark dialogs use to say "Duncit refunds ₹X through Razorpay"
+(`rentalHandBack` is its deprecated alias).
 
 ## Categories
 
@@ -77,6 +88,31 @@ numbers and the bookings), **Items** (the rented-items editor: name, photos, per
 rate, deposit, units per pod, most per guest, available) and **Bookings**. The editor saves through
 `updateApprovedVenue`, so only an approved venue lists items, and every kept item sends its id so its
 bookings stay linked.
+
+## A rental's detail
+
+Every board row opens that rental's detail: click the row, press Enter on a focused cell, or use its
+**Open** button. The detail is a right-hand drawer (full width on a phone) addressed by
+`?rental=<id>` (`useRentalParam`, `RENTAL_PARAM`), so a reload or a shared link opens the same
+rental. It loads `rentalBookingDetail(id)` and shows: the item, its charge and status; **Rented by**;
+the **Pod** (with *Open pod* on mWeb); **Return to**; **Money** (rent, deposit, commission, venue
+earns, damage kept, deposit policy); **Refund** (eligible, pending, refunded, outstanding, its state
+and, in review, why); the **Razorpay refunds**; the **Payment**; the **Proofs**; and the **Activity**
+timeline.
+
+The server decides the view (`viewer`): **FINANCE** sees the guest's and venue's email, the payment
+and the Razorpay refund ids, attempts and errors, and an *Open profile* link (the Admin console's
+`/users/:user_id`); **VENUE** (the owner or a Venues-console editor) sees the guest's name and phone to
+arrange the return, never those. The UI hides the Finance-only parts too.
+
+**Add proof** (Finance and the venue): an optional note (at most `RENTAL_PROOF_NOTE_MAX` characters),
+photos (at most `RENTAL_PROOF_IMAGES_MAX`, uploaded through the venue photo field's ImageKit picker),
+or both, never neither (`makeRentalProofSchema` from `@duncit/forms/schemas`). Proofs are notes:
+Razorpay's record, not a proof, is what shows a refund happened.
+
+Links are the mounting page's: pass `links={{ mwebUrl, profileUrl }}` to `FinanceRentalBookings`,
+`VenueRentalBookings` or `VenueRentalDesk`. A link not passed is not drawn (`mwebUrl: ''` links
+relative, which mWeb uses). The Venues console passes none yet, so it shows no *Open pod*.
 
 ## The venue's own rental terms
 
@@ -106,13 +142,13 @@ venue's rental terms; it links to the Partners console to edit them, where the r
 ## Usage
 
 ```tsx
-import { FinanceRentalBookings, VenueRentalBookings, VenueRentalStatsTiles } from '@duncit/venue-rentals';
+import { FinanceRentalBookings, VenueRentalBookings, VenueRentalDesk, VenueRentalStatsTiles } from '@duncit/venue-rentals';
 
-// Finance > Rented Items
-<FinanceRentalBookings />
+// Finance > Rented Items: rows open the detail; the links are the console's own.
+<FinanceRentalBookings links={{ mwebUrl, profileUrl: (id) => `${adminUrl}/users/${id}` }} />
 
 // A venue's desk: the host page picks the venue.
-<VenueRentalDesk venueId={venueId} surface="partners-app" mode="owner" />
+<VenueRentalDesk venueId={venueId} surface="partners-app" mode="owner" links={{ mwebUrl }} />
 
 // Or its parts:
 <VenueRentalStatsTiles venueId={venueId} />

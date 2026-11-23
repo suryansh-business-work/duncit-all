@@ -1,0 +1,115 @@
+import type { PageCopy } from './types';
+
+/** The star slices every App Insights rating distribution shares — the bundle's existing star words. */
+const STARS = {
+  '1': 'analytics.slice.star1',
+  '2': 'analytics.slice.star2',
+  '3': 'analytics.slice.star3',
+  '4': 'analytics.slice.star4',
+  '5': 'analytics.slice.star5',
+};
+
+const STORES = { ANDROID: 'analytics.slice.appAndroid', IOS: 'analytics.slice.appIos' };
+
+/** Analytics > App Insights: Overview, Google Play and App Store. Server keys are prefixed `ai_`. */
+export const APP_INSIGHTS_COPY: PageCopy = {
+  kpis: {
+    ai_new_installs: { title: 'analytics.kpi.aiNewInstalls', hint: 'analytics.kpi.aiNewInstallsHint' },
+    ai_new_installs_android: { title: 'analytics.kpi.aiNewInstallsAndroid', hint: 'analytics.kpi.aiNewInstallsAndroidHint' },
+    ai_new_installs_ios: { title: 'analytics.kpi.aiNewInstallsIos', hint: 'analytics.kpi.aiNewInstallsIosHint' },
+    ai_android_share: { title: 'analytics.kpi.aiAndroidShare', hint: 'analytics.kpi.aiAndroidShareHint' },
+    ai_uninstalls: { title: 'analytics.kpi.aiUninstalls', hint: 'analytics.kpi.aiUninstallsHint' },
+    ai_crashes: { title: 'analytics.kpi.aiCrashes', hint: 'analytics.kpi.aiCrashesHint' },
+    ai_play_review_avg: { title: 'analytics.kpi.aiPlayReviewAvg', hint: 'analytics.kpi.aiPlayReviewAvgHint' },
+    ai_ios_review_avg: { title: 'analytics.kpi.aiIosReviewAvg', hint: 'analytics.kpi.aiIosReviewAvgHint' },
+    ai_play_total_installs: { title: 'analytics.kpi.aiPlayTotalInstalls', hint: 'analytics.kpi.aiPlayTotalInstallsHint' },
+    ai_play_new_installs: { title: 'analytics.kpi.aiPlayNewInstalls', hint: 'analytics.kpi.aiPlayNewInstallsHint' },
+    ai_play_uninstalls: { title: 'analytics.kpi.aiPlayUninstalls', hint: 'analytics.kpi.aiPlayUninstallsHint' },
+    ai_play_updates: { title: 'analytics.kpi.aiPlayUpdates', hint: 'analytics.kpi.aiPlayUpdatesHint' },
+    ai_play_active_devices: { title: 'analytics.kpi.aiPlayActiveDevices', hint: 'analytics.kpi.aiPlayActiveDevicesHint' },
+    ai_play_crashes: { title: 'analytics.kpi.aiPlayCrashes', hint: 'analytics.kpi.aiPlayCrashesHint' },
+    ai_play_anrs: { title: 'analytics.kpi.aiPlayAnrs', hint: 'analytics.kpi.aiPlayAnrsHint' },
+    ai_play_rating: { title: 'analytics.kpi.aiPlayRating', hint: 'analytics.kpi.aiPlayRatingHint' },
+    ai_play_reviews: { title: 'analytics.kpi.aiPlayReviews', hint: 'analytics.kpi.aiPlayReviewsHint' },
+    ai_play_daily_rating: { title: 'analytics.kpi.aiPlayDailyRating', hint: 'analytics.kpi.aiPlayDailyRatingHint' },
+    ai_ios_first_downloads: { title: 'analytics.kpi.aiIosFirstDownloads', hint: 'analytics.kpi.aiIosFirstDownloadsHint' },
+    ai_ios_redownloads: { title: 'analytics.kpi.aiIosRedownloads', hint: 'analytics.kpi.aiIosRedownloadsHint' },
+    ai_ios_updates: { title: 'analytics.kpi.aiIosUpdates', hint: 'analytics.kpi.aiIosUpdatesHint' },
+    ai_ios_installs: { title: 'analytics.kpi.aiIosInstalls', hint: 'analytics.kpi.aiIosInstallsHint' },
+    ai_ios_deletions: { title: 'analytics.kpi.aiIosDeletions', hint: 'analytics.kpi.aiIosDeletionsHint' },
+    ai_ios_active_devices: { title: 'analytics.kpi.aiIosActiveDevices', hint: 'analytics.kpi.aiIosActiveDevicesHint' },
+    ai_ios_sessions: { title: 'analytics.kpi.aiIosSessions', hint: 'analytics.kpi.aiIosSessionsHint' },
+    ai_ios_crashes: { title: 'analytics.kpi.aiIosCrashes', hint: 'analytics.kpi.aiIosCrashesHint' },
+    ai_ios_reviews: { title: 'analytics.kpi.aiIosReviews', hint: 'analytics.kpi.aiIosReviewsHint' },
+  },
+  trends: {
+    ai_new_installs_by_store: { title: 'analytics.trend.aiNewInstallsByStore', hint: 'analytics.trend.aiNewInstallsByStoreHint' },
+    ai_uninstalls_by_store: { title: 'analytics.trend.aiUninstallsByStore', hint: 'analytics.trend.aiUninstallsByStoreHint' },
+    ai_crashes_by_store: { title: 'analytics.trend.aiCrashesByStore', hint: 'analytics.trend.aiCrashesByStoreHint' },
+    ai_play_installs: { title: 'analytics.trend.aiPlayInstalls', hint: 'analytics.trend.aiPlayInstallsHint' },
+    ai_play_active_devices: { title: 'analytics.trend.aiPlayActiveDevices', hint: 'analytics.trend.aiPlayActiveDevicesHint' },
+    ai_play_stability: { title: 'analytics.trend.aiPlayStability', hint: 'analytics.trend.aiPlayStabilityHint' },
+    ai_play_daily_rating: { title: 'analytics.trend.aiPlayDailyRating', hint: 'analytics.trend.aiPlayDailyRatingHint' },
+    ai_ios_downloads: { title: 'analytics.trend.aiIosDownloads', hint: 'analytics.trend.aiIosDownloadsHint' },
+    ai_ios_installs: { title: 'analytics.trend.aiIosInstalls', hint: 'analytics.trend.aiIosInstallsHint' },
+    ai_ios_sessions: { title: 'analytics.trend.aiIosSessions', hint: 'analytics.trend.aiIosSessionsHint' },
+    ai_ios_active_devices: { title: 'analytics.trend.aiIosActiveDevices', hint: 'analytics.trend.aiIosActiveDevicesHint' },
+    ai_ios_crashes: { title: 'analytics.trend.aiIosCrashes', hint: 'analytics.trend.aiIosCrashesHint' },
+  },
+  series: {
+    ai_store_android: 'analytics.series.aiStoreAndroid',
+    ai_store_ios: 'analytics.series.aiStoreIos',
+  },
+  breakdowns: {
+    ai_installs_by_store: 'analytics.breakdown.aiInstallsByStore',
+    ai_top_countries: 'analytics.breakdown.aiTopCountries',
+    ai_reviews_by_store: 'analytics.breakdown.aiReviewsByStore',
+    ai_play_rating_distribution: 'analytics.breakdown.aiPlayRatingDistribution',
+    ai_play_top_countries: 'analytics.breakdown.aiPlayTopCountries',
+    ai_play_versions_active: 'analytics.breakdown.aiPlayVersionsActive',
+    ai_ios_rating_distribution: 'analytics.breakdown.aiIosRatingDistribution',
+    ai_ios_top_territories: 'analytics.breakdown.aiIosTopTerritories',
+    ai_ios_download_types: 'analytics.breakdown.aiIosDownloadTypes',
+  },
+  slices: {
+    ai_installs_by_store: STORES,
+    ai_reviews_by_store: STORES,
+    ai_play_rating_distribution: STARS,
+    ai_ios_rating_distribution: STARS,
+    ai_ios_download_types: {
+      FIRST: 'analytics.slice.aiFirstDownload',
+      REDOWNLOAD: 'analytics.slice.aiRedownload',
+      UPDATE: 'analytics.slice.aiUpdate',
+    },
+  },
+  leaderboards: {
+    ai_countries: {
+      title: 'analytics.leaderboard.aiCountries',
+      hint: 'analytics.leaderboard.aiCountriesHint',
+      name: 'analytics.leaderboard.aiCountryName',
+      empty: 'analytics.page.noData',
+    },
+    ai_play_versions: {
+      title: 'analytics.leaderboard.aiPlayVersions',
+      hint: 'analytics.leaderboard.aiPlayVersionsHint',
+      name: 'analytics.leaderboard.aiVersionCode',
+      empty: 'analytics.page.noData',
+    },
+    ai_ios_versions: {
+      title: 'analytics.leaderboard.aiIosVersions',
+      hint: 'analytics.leaderboard.aiIosVersionsHint',
+      name: 'analytics.leaderboard.aiVersionName',
+      empty: 'analytics.page.noData',
+    },
+  },
+  columns: {
+    ai_country_android: 'analytics.leaderboard.aiCountryAndroid',
+    ai_country_ios: 'analytics.leaderboard.aiCountryIos',
+    ai_country_total: 'analytics.leaderboard.aiCountryTotal',
+    ai_ver_active_devices: 'analytics.leaderboard.aiVerActiveDevices',
+    ai_ver_installs: 'analytics.leaderboard.aiVerInstalls',
+    ai_ver_crashes: 'analytics.leaderboard.aiVerCrashes',
+    ai_ver_anrs: 'analytics.leaderboard.aiVerAnrs',
+    ai_ver_sessions: 'analytics.leaderboard.aiVerSessions',
+  },
+};

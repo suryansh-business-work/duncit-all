@@ -396,7 +396,7 @@ describe('usePodCheckoutBill', () => {
     return renderHook(() => usePodCheckoutBill({ session: session as never, pod, seats, linkTotal }));
   };
 
-  it('prices one ticket with only the ticket discount row, which comes to nothing', () => {
+  it('prices one ticket at full price, with no coupon or coins row', () => {
     const { result } = run();
     expect(result.current.unitAmount).toBe(500);
     expect(result.current.amount).toBe(500);
@@ -410,7 +410,7 @@ describe('usePodCheckoutBill', () => {
     expect(result.current.amount).toBe(900);
   });
 
-  it('lists an accepted coupon after the tier row, naming the code', () => {
+  it('lists an accepted coupon, naming the code', () => {
     const { result } = run({ coupon: { ok: true, code: 'SAVE10', final_total: 450 } });
     const keys = result.current.discounts.map((row) => row.key);
     expect(keys).toContain('coupon');

@@ -13,6 +13,20 @@ jest.mock('@/services/secure-storage', () => ({
 jest.mock('@/hooks/useActiveAds', () => ({
   useActiveAds: () => ({ ads: [], loading: false }),
 }));
+const mockNavigate = jest.fn();
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ navigate: mockNavigate }),
+}));
+// `me.is_email_verified` — false keeps Host, Venue and Club Admin shut.
+let mockEmailVerified: boolean | null = true;
+jest.mock('@/hooks/useMe', () => ({
+  useMe: () => ({ data: { me: { is_email_verified: mockEmailVerified } } }),
+}));
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockEmailVerified = true;
+});
 
 const FULL_ACCOUNT = {
   first_name: 'Asha',
@@ -115,5 +129,65 @@ describe('SidebarUserContent — Studio entry', () => {
       />,
     );
     expect(screen.queryByTestId('sidebar-studio-options')).toBeNull();
+  });
+
+  it('explains instead of opening the Club Admin studio on an unverified email', () => {
+    mockEmailVerified = false;
+    const onNavigate = jest.fn();
+    renderWithProviders(
+      <SidebarUserContent
+        me={{ full_name: 'Owner' }}
+        account={FULL_ACCOUNT}
+        roles={['CLUB_ADMIN']}
+        mode="CLUB"
+        flags={{}}
+        onNavigate={onNavigate}
+      />,
+    );
+    fireEvent.press(screen.getByTestId('sidebar-studio-options'));
+    expect(onNavigate).not.toHaveBeenCalled();
+    expect(screen.getByTestId('studio-email-gate-dialog')).toBeOnTheScreen();
+    expect(screen.getByText('Verify your email first')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('studio-email-gate-dialog-confirm'));
+    expect(mockNavigate).toHaveBeenCalledWith('Profile', { verifyEmail: true });
+    expect(onNavigate).not.toHaveBeenCalled();
+  });
+
+  it('closes the message on "Not now" without opening anything', () => {
+    mockEmailVerified = false;
+    const onNavigate = jest.fn();
+    renderWithProviders(
+      <SidebarUserContent
+        me={{ full_name: 'Host Roy' }}
+        account={FULL_ACCOUNT}
+        roles={['HOST']}
+        mode="USER"
+        flags={{}}
+        onNavigate={onNavigate}
+      />,
+    );
+    fireEvent.press(screen.getByTestId('sidebar-studio-options'));
+    fireEvent.press(screen.getByTestId('studio-email-gate-dialog-cancel'));
+    expect(screen.queryByText('Verify your email first')).toBeNull();
+    expect(onNavigate).not.toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('still opens the Brand studio on an unverified email — it is not gated', () => {
+    mockEmailVerified = false;
+    const onNavigate = jest.fn();
+    renderWithProviders(
+      <SidebarUserContent
+        me={{ full_name: 'Brand' }}
+        account={FULL_ACCOUNT}
+        roles={['ECOMM_MANAGER']}
+        mode="USER"
+        flags={{ products: true }}
+        onNavigate={onNavigate}
+      />,
+    );
+    fireEvent.press(screen.getByTestId('sidebar-studio-options'));
+    expect(onNavigate).toHaveBeenCalledWith('BrandOptions');
+    expect(screen.queryByTestId('studio-email-gate-dialog')).toBeNull();
   });
 });

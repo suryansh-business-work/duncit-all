@@ -930,7 +930,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // cannot be joined any more, so the rail says what it is rather than
       // inviting a booking.
       ongoingPodsTitle: 'Ongoing Pods',
-      ongoingPodsSubtitle: 'Happening right now — joining is closed',
+      ongoingPodsSubtitle: 'Happening right now — you can still join',
       previousPodsTitle: 'Previous Pods',
       previousPodsSubtitle: 'Pods that have already taken place',
       previousPodsEmpty: 'No previous pods to show yet.',
@@ -1433,6 +1433,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       physical: 'Physical',
       // The countdown chip. The number is the pod's own, only the words are copy.
       podExpired: 'Pod expired',
+      // Started but not over: it can still be joined.
+      podOngoing: 'Pod ongoing',
       daysRemaining: '{days} days remaining',
       hoursRemaining: '{hours} hours remaining',
       startingSoon: 'Starting soon',
@@ -1475,16 +1477,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       sectionPayment: 'Payment details',
       sectionTerms: 'Payment terms',
       sectionCharges: 'Place charges',
-      // The multi-ticket offer: its accordion, its tier rows and the booking
-      // bar's caption once the chosen seats reach a tier.
-      sectionTicketDiscount: 'Multi-ticket offer',
-      ticketDiscountIntro: 'Book more tickets in one booking and pay less per ticket.',
-      ticketDiscountBaseRow: '1 ticket',
-      ticketDiscountTierRow: '{count}+ tickets',
-      ticketDiscountPct: '{pct}% off',
-      ticketDiscountFullPrice: 'Full price',
-      ticketDiscountPerTicket: '{price} per ticket',
-      ticketDiscountApplied: '{pct}% off for {count} tickets',
       aboutEmpty: 'No description provided.',
       offersEmpty: 'Details coming soon.',
       perksEmpty: 'No additional perks listed.',
@@ -1535,10 +1527,15 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       youreHosting: "You're hosting",
       youHosted: 'You hosted',
       yourPod: 'Your Pod',
-      // Closed state. A pod that is RUNNING has not "taken place" yet, so it
-      // gets its own sentence rather than being told it is over.
+      // Closed state: only once the pod's end time has passed.
       bookingClosed: 'This pod has already taken place — booking is closed.',
+      // No longer rendered: a running pod can be joined now. Kept because
+      // installed app builds still show it.
       bookingClosedOngoing: 'This pod is happening right now — joining is closed.',
+      // Asked before joining or booking a pod that has already started.
+      ongoingJoinTitle: 'This pod is already ongoing',
+      ongoingJoinBody: 'This pod has already started. Do you still want to join?',
+      ongoingJoinConfirm: 'Yes, join',
       // Backout-in-process state.
       backoutLocked:
         'A replacement has been confirmed — this Backout request can no longer be cancelled. Your refund will be processed as per the backout policy.',
@@ -2159,10 +2156,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // can see applied above it reads as the discount having failed. The coin
       // row reuses `mweb.coin.checkoutTitle`, so only the coupon needs a label.
       couponDiscount: 'Coupon {code}',
-      // The multi-ticket tier comes off the ticket money FIRST, before the
-      // coupon and coins; the Saved label names it on the payment result.
-      ticketDiscount: 'Multi-ticket discount ({pct}% on {count} tickets)',
-      ticketDiscountSaved: 'Multi-ticket discount',
       // Every charge is rounded UP to the whole rupee. The difference is its own
       // row, after the tax lines — it is not taxed — and only when above zero.
       roundOff: 'Round off',
@@ -2385,30 +2378,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       simulate: 'Simulate',
       successfulPayment: 'Successful Payment',
       dummyGatewayOnly: 'Dummy gateway only',
-    },
-    // The multi-ticket discount editor — host create, the Club Admin editor and
-    // the host's Edit Pod sheet, on mWeb and native alike. Rendered through
-    // `mwebTicketDiscountLabels` in @duncit/utils; word-for-word identical to
-    // `shell.ticketDiscount` and `podForm.ticketDiscount`.
-    ticketDiscount: {
-      title: 'Multi-ticket discount',
-      switchLabel: 'Offer a discount when one person books multiple tickets',
-      hint: 'The best matching tier applies to the ticket price when a single booking has at least that many tickets.',
-      baseRow: '1 ticket · 0% (full price)',
-      ticketsLabel: 'Tickets',
-      discountLabel: 'Discount %',
-      addTier: 'Add tier',
-      removeTier: 'Remove tier',
-      maxHint: 'Up to {max}% off',
-      perTicket: '{price} per ticket',
-      errorTiersRequired: 'Add at least one discount tier',
-      errorTooManyTiers: 'You can add up to {max} tiers',
-      errorTicketsMin: 'Tickets must be a whole number of at least 2',
-      errorTicketsMax: 'Tickets can’t be more than {max}',
-      errorTicketsNotIncreasing: 'Needs more tickets than the row above',
-      errorPctMin: 'Discount must be a whole number of at least 1%',
-      errorPctMax: 'Discount can’t be more than {max}%',
-      errorPctNotIncreasing: 'Needs a bigger discount than the row above',
     },
     // Smart Incentive, on mWeb and native alike. The member's offer on a pod
     // page and its checkout lines, then the host's editor in Create Pod and
@@ -2839,13 +2808,33 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       priceTier3: 'Better earnings — still comfortable for most guests.',
       priceTier4: 'Premium — fewer but more committed guests.',
       priceTier5: 'Best for high-value pods and exclusive experiences.',
-      // The two rules that keep Create Pod disabled: a ₹0 projected payout, and
-      // a pod worth less than the venue slot it books.
+      // A ₹0 projected payout, and a pod worth less than the venue slot it books
+      // (the venue row's error) — also the NO_EARNINGS / VENUE_NOT_COVERED
+      // copy when no ticket price works (viability, below).
       zeroEarningsTitle: 'No Earnings Generated',
       zeroEarningsBody:
         'Based on the current Ticket Price, your estimated earnings are ₹0 after applicable deductions. Please increase the Ticket Price to earn from this Pod.',
       venueShortfall:
         'Your venue price is greater than the total Pod value. Please increase the Ticket Price so that the total Pod value is equal to or greater than the Venue Price.',
+      // Why the server would refuse this paid pod (PodEarningsProjection
+      // .viability_reason), judged with every spot filled. NO_EARNINGS reuses
+      // zeroEarningsTitle; a reason with no working price falls back to
+      // zeroEarningsBody / venueShortfall. Create Pod stays off until a fresh
+      // projection says the pod works.
+      viability: {
+        belowMinBusinessTitle: "Below the venue's minimum business",
+        belowMinBusiness:
+          "This venue's minimum business is {minimum}. With every spot filled, your ticket money minus Duncit's venue commission has to be more than that. Set the ticket price to at least {price}, or add spots.",
+        belowMinBusinessNoPrice:
+          "This venue's minimum business is {minimum}. With every spot filled, your ticket money minus Duncit's venue commission has to be more than that. Add spots or raise the ticket price.",
+        venueNotCoveredTitle: 'The pod does not cover the venue',
+        venueNotCovered:
+          'With every spot filled, your ticket money is less than the venue costs. Set the ticket price to at least {price}.',
+        noEarnings:
+          'After GST, fees, the venue and commissions you would earn nothing at this ticket price. Set it to at least {price} to earn from this pod.',
+        checkFailed: "We couldn't check your earnings for this price. Check your connection and try again.",
+        retry: 'Try again',
+      },
       earningsEstimateNote:
         'This is an estimate based on the spots you set. When you complete the pod we recalculate it on the people who actually attended — your own spot is always free.',
       totalSpots: 'Total spots',
@@ -3633,7 +3622,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     giftCards: {
       title: 'Gift Cards',
       sidebarBuyLabel: 'Buy a gift card',
-      sidebarBuyCaption: 'For a category or the Pod Shop',
+      sidebarBuyCaption: 'By email, or printed and delivered',
       sidebarRedeemLabel: 'Redeem a gift card',
       sidebarRedeemCaption: 'Turn a code into Duncit Coins',
       // Buy page
@@ -3659,6 +3648,71 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       messageHint: 'Printed on the card and in the email (optional).',
       continueCta: 'Continue to payment',
       loadError: 'Gift cards could not be loaded. Please try again.',
+      unavailable: 'Gift cards are not available right now. Please check back soon.',
+      // Quantity, delivery and the total (one card design, any number of cards)
+      quantityHeading: 'How many cards?',
+      quantityLabel: 'Number of cards',
+      quantityHint: 'Each card is worth the amount above — up to {max} in one order.',
+      quantityLess: 'One card fewer',
+      quantityMore: 'One card more',
+      quantityRange: 'Choose between 1 and {max} cards.',
+      messageMax: 'Keep the message to {max} characters.',
+      deliveryHeading: 'How should the cards arrive?',
+      deliveryDigital: 'By email',
+      deliveryPhysical: 'Printed card',
+      deliveryDigitalHint: 'Each card and its code is emailed — instantly.',
+      deliveryPhysicalHint: 'Printed scratch cards, delivered by courier. Delivery is {fee} per order, however many cards.',
+      physicalUnavailable: 'Printed cards are not available right now.',
+      printedForHeading: 'Who are the printed cards for?',
+      totalCards: '{n} × {amount}',
+      totalDelivery: 'Delivery',
+      // Checkout (one card design, quantity, delivery)
+      checkoutFor: 'For: {who}',
+      checkoutPrinted: 'Printed cards, delivered by courier',
+      checkoutNotePrinted: 'Cards are charged at face value; the delivery fee is charged once for the whole order.',
+      deliveryAddressTitle: 'Deliver to',
+      deliveryAddressHint: 'Where the courier brings the printed cards.',
+      successPrintedBody: 'Your order is confirmed. We will print the cards and send them by courier — follow it in Orders.',
+      viewMyOrders: 'View my orders',
+      // Orders and tracking
+      ordersTab: 'Orders',
+      ordersEmpty: 'No gift card orders yet.',
+      ordersLoadError: 'Your orders could not be loaded. Please try again.',
+      orderLine: '{n} × {amount} · {delivery}',
+      orderTitle: 'Order {order}',
+      orderNotFound: 'This order could not be found.',
+      orderLiveHint: 'This page updates by itself while your order is on its way.',
+      sentTo: 'Sent to',
+      trackingTitle: 'Delivery',
+      deliverTo: 'Deliver to',
+      courier: 'Courier',
+      trackingNumber: 'Tracking number',
+      expectedDelivery: 'Expected delivery',
+      notShippedYet: 'Your cards are being printed. Courier details appear here once they ship.',
+      paymentPending: 'Awaiting payment',
+      paymentPaid: 'Paid',
+      paymentFailed: 'Payment failed',
+      paymentRefunded: 'Refunded',
+      orderStatusPending: 'Not started',
+      orderStatusProcessing: 'Being prepared',
+      orderStatusPrinted: 'Printed',
+      orderStatusPacked: 'Packed for the courier',
+      orderStatusShipped: 'On its way',
+      orderStatusOutForDelivery: 'Out for delivery',
+      orderStatusDelivered: 'Delivered',
+      orderStatusAttemptFailed: 'Delivery attempt failed',
+      orderStatusReturning: 'Returning to us',
+      orderStatusReturned: 'Returned to us',
+      orderStatusLost: 'Lost in transit',
+      orderStatusCancelled: 'Cancelled',
+      orderStatusFailed: 'Failed',
+      stepPlaced: 'Placed',
+      stepPaid: 'Paid',
+      stepEmailed: 'Emailed',
+      stepPrinted: 'Printed',
+      stepShipped: 'Shipped',
+      stepOutForDelivery: 'Out for delivery',
+      stepDelivered: 'Delivered',
       // My cards
       myCardsTab: 'My cards',
       buyTab: 'Buy',
@@ -3735,8 +3789,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       claimRedeemedBody: 'This gift card has already been redeemed.',
       // How it works — the instructions block on the buy and redeem pages
       howTitle: 'How gift cards work',
-      howStep1: 'Pick a theme — any category, or the Pod Shop — choose an amount, and pay.',
-      howStep2: 'The card and its code go out by email, and you can share the link too. Keeping it for yourself works the same way.',
+      howStep1: 'Choose an amount and how many cards, then pay — by email, or printed and delivered by courier.',
+      howStep2: 'Emailed cards arrive with their code, and you can share the link too. Printed cards carry a number and a scratch-off passcode. Follow every order in Orders.',
       howStep3: 'Whoever holds the code redeems it once, and the full value is added to their Duncit Coins instantly.',
       howStep4: 'Coins pay for pod bookings and Pod Shop orders at checkout — 1 coin = 1 rupee.',
       howNote: 'A card can be redeemed once, by one person, before its expiry date. Anyone with the code can redeem it, so share it only with the person it is for.',
@@ -5687,6 +5741,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       roleVenue: 'Venue',
       roleClub: 'Club Admin',
       roleBrand: 'Brand',
+      // Shown when an account whose email is not verified opens the Host,
+      // Venue or Club Admin studio (@duncit/utils STUDIO_EMAIL_GATE_KEYS).
+      emailGateTitle: 'Verify your email first',
+      emailGateBody: 'Host, Venue and Club Admin options open once your email address is verified. Verify it from your profile, then come back here.',
+      emailGateAction: 'Verify email',
+      emailGateDismiss: 'Not now',
       dashboard: 'Dashboard',
       venueDashboardHint: 'Bookings, earnings and requests at a glance',
       hostDashboardHint: 'Earnings, pods and insights at a glance',

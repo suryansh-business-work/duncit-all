@@ -9,6 +9,7 @@ import { PriorityChip, StatusChip } from '../../../components/StatusChips';
 import LeadContactActions from '../../../components/LeadContactActions';
 import { MatchedUserChip } from '../../../components/MatchedUserBox';
 import { venueVariableValues } from '../../../config/leadVariables';
+import { LeadQualityHeaderRing } from '../../../components/lead-quality-tab';
 import type { TranslateFn } from './helpers';
 
 interface Props {
@@ -116,6 +117,7 @@ export default function VenueHeroCard({ lead, t, onAskAi, onEdit }: Readonly<Pro
           <DuncitButton startIcon={<EditIcon />} variant="contained" onClick={onEdit}>
             {t('shell.common.edit')}
           </DuncitButton>
+          <LeadQualityHeaderRing entity="VENUE_LEAD" leadId={lead.id} />
         </Stack>
       </CardContent>
     </Card>

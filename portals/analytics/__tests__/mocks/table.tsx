@@ -30,8 +30,14 @@ interface MockTableProps {
 }
 
 /** A value getter's result as the grid would print it. */
-const cellText = (value: unknown): string =>
-  typeof value === 'string' || typeof value === 'number' ? String(value) : JSON.stringify(value);
+const cellText = (value: unknown): string => {
+  if (value === null || value === undefined) return '';
+  return typeof value === 'string' || typeof value === 'number' ? String(value) : JSON.stringify(value);
+};
+
+/** A plain `field` column — no getter, no renderer — prints the row's value, as the grid does. */
+const fieldValue = (row: unknown, field: string): unknown =>
+  row !== null && typeof row === 'object' ? (row as Record<string, unknown>)[field] : undefined;
 
 export function DuncitTable(props: Readonly<MockTableProps>) {
   const { tableId, columns, fetchRows, getRowId, emptyText, searchPlaceholder, defaultSort } = props;
@@ -74,6 +80,9 @@ export function DuncitTable(props: Readonly<MockTableProps>) {
             <span key={column.field} data-testid={`cell-${column.field}`}>
               {column.valueGetter ? <span data-testid="cell-value">{cellText(column.valueGetter(row))}</span> : null}
               {column.cellRenderer ? column.cellRenderer(row) : null}
+              {column.valueGetter || column.cellRenderer ? null : (
+                <span data-testid="cell-value">{cellText(fieldValue(row, column.field))}</span>
+              )}
             </span>
           ))}
         </div>

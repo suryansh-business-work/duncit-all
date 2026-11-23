@@ -5,7 +5,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { RhfAdminCategoryRows } from '@duncit/category';
 import { fireAndForget, logs } from '@duncit/logs';
-import { AdminLocationSelect, Fieldset, MapEmbedCard, type AdminLocationValue } from '@duncit/location';
+import { AdminLocationSelect, Fieldset, MapEmbedCard, useGoogleMapsApiKey, type AdminLocationValue } from '@duncit/location';
 import { VideoLinksField } from '@duncit/venue-food';
 import VenueImagesField from './VenueImagesField';
 import { NO_CATEGORY_LIMIT, type RegisterVenueMode, type RegisterVenueValues } from '../register-venue/register-venue.types';
@@ -42,7 +42,7 @@ export default function VenueDetailsSection({
     setValue(key, value, { shouldDirty: true, shouldValidate: validate });
 
   const categoryError = Boolean(formState.errors.venue_categories);
-
+  const mapsKey = useGoogleMapsApiKey();
   const locValue: AdminLocationValue = {
     location_id: values.location_id,
     country: values.country,
@@ -192,7 +192,7 @@ export default function VenueDetailsSection({
           values.postal_code,
           values.country,
         ]}
-        apiKey={import.meta.env.VITE_GOOGLE_MAP_API as string | undefined}
+        apiKey={mapsKey}
         hideWhenKeyMissing
       />
     </Stack>

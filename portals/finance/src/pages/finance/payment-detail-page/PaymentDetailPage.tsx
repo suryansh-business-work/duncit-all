@@ -8,6 +8,7 @@ import PaymentDetailHeader from './PaymentDetailHeader';
 import AmountBreakupCard from './AmountBreakupCard';
 import RentalBreakupCard from './RentalBreakupCard';
 import PaymentSection from './PaymentSection';
+import RefundSection from './RefundSection';
 import CheckoutTabs from './CheckoutTabs';
 import CoinsCard from './CoinsCard';
 import CouponCard from './CouponCard';
@@ -55,6 +56,13 @@ function PaymentDetailBody({ detail, formatDateTime }: Readonly<Props>) {
         </Stack>
 
         <RentalBreakupCard payment={detail.payment} />
+
+        <RefundSection
+          paymentDocId={p.id}
+          currencySymbol={p.currency_symbol}
+          refunds={detail.refunds}
+          formatDateTime={formatDateTime}
+        />
 
         <PaymentSection
           detail={detail}

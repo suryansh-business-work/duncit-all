@@ -1,6 +1,25 @@
 import { describe, expect, it } from 'vitest';
 
-import { APP_HEADER, SURFACE_HEADER, clientIdentityHeaders } from '../src/surface';
+import {
+  APP_HEADER,
+  PLATFORM_HEADER,
+  SURFACE_HEADER,
+  clientIdentityHeaders,
+  nativePlatformHeaders,
+} from '../src/surface';
+
+describe('nativePlatformHeaders', () => {
+  it('names the store build the server reads as Android or iOS', () => {
+    expect(nativePlatformHeaders('android')).toEqual({ 'x-duncit-platform': 'ANDROID' });
+    expect(nativePlatformHeaders('ios')).toEqual({ [PLATFORM_HEADER]: 'IOS' });
+  });
+
+  it('sends nothing from the web build, so a browser preflight never meets the header', () => {
+    expect(nativePlatformHeaders('web')).toEqual({});
+    expect(nativePlatformHeaders('windows')).toEqual({});
+    expect(nativePlatformHeaders('')).toEqual({});
+  });
+});
 
 describe('clientIdentityHeaders', () => {
   it('names the surface and the app in the two headers nginx allowlists', () => {

@@ -815,6 +815,46 @@ col.valueGetter({ contract_no: null });        // '—'
 The matching server field must be in that entity's `searchFields`, `sortFields` and
 `filterFields` allowlists, or the column renders but the toolbar cannot reach it.
 
+`<LabeledIds ids={…} />` is the cell for a row that carries ids from **more than one system** —
+a payment's Razorpay payment, order and refund ids next to Duncit's own reference. Each id is
+printed under its own (translated) name, monospace; ids the row does not have are left out,
+and a row with none shows `EM_DASH`. Never stack such ids unlabelled: a person comparing
+against the other system's dashboard reads the first one as "the" id and concludes the two
+disagree. `labeledIdsText(ids)` is the same list as one line for the column's `valueGetter`
+(export, copy, quick filter):
+
+```tsx
+const ids = (p: PaymentRow) => [
+  { label: t('finance.payment.idRazorpayPayment'), value: p.razorpay_payment_id },
+  { label: t('finance.payment.idRazorpayOrder'), value: p.razorpay_order_id },
+  { label: t('finance.payment.idDuncitRef'), value: p.payment_id },
+];
+// column: { field: 'payment_id', cellRenderer: (p) => <LabeledIds ids={ids(p)} />,
+//           valueGetter: (p) => labeledIdsText(ids(p)) }
+
+labeledIdsText([{ label: 'Razorpay payment', value: 'pay_U39hOwzQiUFqHT' }, { label: 'Razorpay refund', value: null }]);
+// 'Razorpay payment: pay_U39hOwzQiUFqHT'
+```
+
+Every id the cell shows must also be in the server table's `searchFields`, so the id a person
+pastes from the other dashboard finds the row.
+
+`renderValue` draws each present value instead of the plain monospace text — a portal passes
+one to make every id a link to wherever it traces ids (Finance links each to its Payment
+Trace page). The package never imports a router; the caller owns the link, and should stop
+the click from also triggering the row's own `onRowClick`. The same label may appear more
+than once (one line per refund id):
+
+```tsx
+<LabeledIds
+  ids={ids(p)}
+  renderValue={(id) => (
+    <Link component={RouterLink} to={`/payment-trace?ref=${encodeURIComponent(id.value)}`}
+      onClick={(e) => e.stopPropagation()}>{id.value}</Link>
+  )}
+/>
+```
+
 Dates go through `date-fns` (a peer dependency), never `toLocaleDateString` — rule 11.
 
 ## Peer dependencies and AG Grid registration

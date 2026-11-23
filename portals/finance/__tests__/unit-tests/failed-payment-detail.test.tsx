@@ -21,6 +21,7 @@ import {
   failedPaymentMutationMock,
   makeFailedPaymentDetail,
   makePaymentEvent,
+  refundPreviewMock,
 } from '../mocks/failed-payments.mock';
 
 const mount = (mocks: readonly MockedResponse[]) =>
@@ -47,7 +48,10 @@ describe('FailedPaymentDetailPage', () => {
 
     expect(await waitForPage()).toHaveTextContent('DUN-PAY-9001');
     expect(card('failed-payment-payment-card').getByText('order_RZP9')).toBeInTheDocument();
-    expect(card('failed-payment-payment-card').getByRole('link', { name: 'DUN-PAY-9001' })).toHaveAttribute('href', '/payment-logs/pd1');
+    // Every id opens Payment Trace: every payment and log it appears in.
+    expect(card('failed-payment-payment-card').getByRole('link', { name: 'Trace DUN-PAY-9001' })).toHaveAttribute('href', '/payment-trace?ref=DUN-PAY-9001');
+    expect(card('failed-payment-payment-card').getByRole('link', { name: 'Trace pay_RZP123' })).toHaveAttribute('href', '/payment-trace?ref=pay_RZP123');
+    expect(card('failed-payment-payment-card').getByText('Pod booking')).toBeInTheDocument();
     expect(card('failed-payment-user-card').getByText('riya@duncit.com')).toBeInTheDocument();
     expect(card('failed-payment-error-card').getByText('payment_authorization')).toBeInTheDocument();
     expect(card('failed-payment-retry-card').getByText('CLIENT_REPORT, CLAIM')).toBeInTheDocument();
@@ -159,11 +163,12 @@ describe('FailedPaymentDetailPage', () => {
     mount([
       failedPaymentMock(makeFailedPaymentDetail({ refundable_amount: 450 })),
       failedPaymentEventsMock([]),
+      refundPreviewMock({ amount: 450 }),
       failedPaymentMutationMock('initiateFailedPaymentRefund', makeFailedPaymentDetail({ can_refund: false, highlight: 'NONE', revision: 5 }), (v) => calls.push(v)),
     ]);
     await waitForPage();
     fireEvent.click(screen.getByTestId('failed-payment-action-refund'));
-    expect(screen.getByText('Refund ₹450.00 to Riya Sharma through Razorpay?')).toBeInTheDocument();
+    expect(await screen.findByText('Refund ₹450.00 to Riya Sharma through Razorpay?')).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('failed-payment-refund-confirm'));
     await waitFor(() => expect(calls).toHaveLength(1));
     await waitFor(() => expect(screen.queryByTestId('failed-payment-action-refund')).not.toBeInTheDocument());

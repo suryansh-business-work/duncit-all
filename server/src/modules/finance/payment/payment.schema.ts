@@ -71,25 +71,50 @@ export const paymentTypeDefs = /* GraphQL */ `
     coupon_discount: Float!
     "Duncit Coins spent on this payment (1 coin = 1 rupee off the gross)."
     coins_redeemed: Float!
-    "Multi-ticket discount frozen at checkout: rupees taken off the ticket price (never add-on products) before the coupon and coins. 0 when no tier applied."
-    ticket_discount_amount: Float!
-    "Percentage of the multi-ticket tier that applied (0 when none)."
-    ticket_discount_pct: Int!
-    "The member's unlocked Smart Incentive, frozen at checkout: rupees taken off the ticket money after the multi-ticket discount and before the coupon and coins (host-funded). 0 when none applied."
+    ticket_discount_amount: Float! @deprecated(reason: "The multi-ticket discount was removed. Always 0.")
+    ticket_discount_pct: Int! @deprecated(reason: "The multi-ticket discount was removed. Always 0.")
+    "The member's unlocked Smart Incentive, frozen at checkout: rupees taken off the ticket money before the coupon and coins (host-funded). 0 when none applied."
     smart_incentive_amount: Float!
     "Percentage of the Smart Incentive that applied (0 when none)."
     smart_incentive_pct: Int!
     status: PaymentStatus!
     gateway: String!
     gateway_ref: String
+    "Razorpay's payment id (pay_…), exactly as the Razorpay dashboard shows it. Null until the buyer paid, and for other gateways. payment_id is Duncit's own reference, not this."
+    razorpay_payment_id: String
+    "Razorpay's order id (order_…) the checkout was opened with. Null for other gateways."
+    razorpay_order_id: String
+    "Every Razorpay refund id (rfnd_…) sent against this payment, oldest first. Empty when none went through Razorpay."
+    razorpay_refund_ids: [String!]
     paid_at: String
     created_at: String!
     updated_at: String!
     finalize_state: String!
     needs_refund: Boolean!
+    """
+    Where this payment's latest refund stands at Razorpay. Null when no refund
+    was ever sent through the refund engine (older refunds included).
+    """
+    refund_status: PaymentRefundStatus
     coins_earned: Float!
     "The rented items this pod payment carried, as checkout froze them (empty when none)."
     rental_lines: [PaymentRentalLine!]!
+  }
+
+  "A refund's progress at Razorpay. Accepted by Razorpay (PROCESSING) is not yet money in the buyer's bank."
+  enum PaymentRefundStatus {
+    "Recorded and being sent to Razorpay."
+    REQUESTED
+    "Razorpay accepted it; the bank has not confirmed yet."
+    PROCESSING
+    "Razorpay reports the refund processed."
+    SUCCEEDED
+    "The last attempt failed; it is retried automatically."
+    FAILED
+    "Retries are used up or the Razorpay payment cannot be found; Finance must check the Razorpay dashboard."
+    RECONCILIATION_REQUIRED
+    "No Razorpay money to send back (a test-gateway or offline payment) — the refund is recorded only."
+    NOT_APPLICABLE
   }
 
   "One rented item on a pod payment, frozen at checkout: collected at the venue, its deposit settled there."
@@ -238,12 +263,106 @@ export const paymentTypeDefs = /* GraphQL */ `
     can_retry_finalize: Boolean!
     "Every deferred step still owed. What the page's Retry all sends."
     retryable_step_keys: [String!]!
-    "Gross before every discount (multi-ticket discount, coupon, coins), taken from the frozen checkout metadata."
+    "Gross before every discount (Smart Incentive, coupon, coins), taken from the frozen checkout metadata."
     original_total: Float!
     "Coins spent on this payment (1 coin = 1 rupee off the gross)."
     coins_redeemed: Float!
     "Coins this payment earned the buyer back."
     coins_earned: Float!
+    """
+    Every refund this payment has seen, one section per kind of refund (pod
+    payment, coins, pod shop, failed payment, ...). Empty when nothing was ever
+    refunded or is owed. Read lazily: only a query that selects it pays for it.
+    """
+    refunds: [PaymentRefundSection!]
+  }
+
+  "Which kind of refund a section of the payment's Refund area is."
+  enum PaymentRefundKind {
+    "A pod booking's money going back: a cancellation, a Finance refund, a Backout, or a held cancellation refund."
+    POD_PAYMENT
+    "A refund of a payment that is not a pod booking (a shop cart or gift card Finance refunded)."
+    PAYMENT
+    "A pod-shop order cancelled or a return refunded."
+    POD_SHOP
+    "An e-commerce store order refund. Separate from the pod shop, never mixed with it."
+    ECOMM
+    "A captured payment that bought nothing and was refunded through Failed Payments."
+    FAILED_PAYMENT
+    "A rented item's deposit or rent going back."
+    RENTAL
+    "Duncit Coins returned to the buyer's wallet."
+    COIN
+  }
+
+  "Where a refund stands, in three buckets the page colours: owed, done, or refused."
+  enum PaymentRefundState {
+    "Money is owed or on its way and not yet confirmed back (yellow)."
+    PENDING
+    "The money (or coins) are back with the buyer."
+    COMPLETED
+    "Razorpay refused it or the retries are used up; somebody must act (red)."
+    FAILED
+  }
+
+  "One refund inside a section: one gateway refund, one order, one return, one case, or one coin ledger row."
+  type PaymentRefundEntry {
+    id: ID!
+    "The business reference: an order or return number, a booking, a Duncit payment reference. Null when it has none."
+    ref: String
+    "Why it was sent: FINANCE_REFUND, POD_CANCELLATION, BACKOUT, RENTAL, HELD, RECORDED, CANCELLATION, RETURN, CASE, LEDGER."
+    source: String!
+    "The refund engine's own status (QUEUED, PROCESSING, SUCCEEDED, FAILED, HELD, PROCESSED, RECORDED ...), for the label."
+    status: String!
+    state: PaymentRefundState!
+    "Cash going back, in the payment's currency (0 for a coins-only row)."
+    amount: Float!
+    "Duncit Coins going back."
+    coins: Int!
+    "The Razorpay refund id (rfnd_…) of this row; the first of razorpay_refund_ids. Null when none was sent."
+    razorpay_refund_id: String
+    "Every Razorpay refund id behind this row (an older recorded refund can carry more than one)."
+    razorpay_refund_ids: [String!]!
+    razorpay_payment_id: String
+    "Who set it off: an admin, SYSTEM, a pod-cancel initiator."
+    initiated_by: String
+    reason: String
+    "The last error Razorpay or the engine reported."
+    error: String
+    attempts: Int!
+    requested_at: String
+    processed_at: String
+    "When a held cancellation refund is released."
+    due_at: String
+    "True when the caller may press Refund on this row now: it is owed, it is safe to send and the caller's role may."
+    can_refund: Boolean!
+  }
+
+  "One kind of refund on a payment, with what happened to it."
+  type PaymentRefundSection {
+    kind: PaymentRefundKind!
+    "FAILED when any row needs somebody, else PENDING when any row is owed, else COMPLETED."
+    state: PaymentRefundState!
+    amount: Float!
+    coins: Int!
+    entries: [PaymentRefundEntry!]!
+    "This kind's refund activity, oldest first (the payment's audit trail)."
+    events: [PaymentEvent!]!
+  }
+
+  """
+  Send one owed refund back to the payment's own source (the same Razorpay
+  payment, never anywhere else), with the note Finance wants on record.
+  """
+  input RefundPaymentToSourceInput {
+    payment_doc_id: ID!
+    kind: PaymentRefundKind!
+    "The PaymentRefundEntry.id to send."
+    entry_id: ID!
+    "Why Finance is sending it (3 to 500 characters). Saved on the payment's trail."
+    note: String!
+    "Makes a double click answer once. Optional: one is derived from the entry when absent."
+    client_request_id: String
   }
 
   "Server-side table page for the shared table engine (paymentsTable)."
@@ -283,10 +402,18 @@ export const paymentTypeDefs = /* GraphQL */ `
     "Who set the refund off — a pod-cancel initiator or SYSTEM. Null for an admin refund from the console."
     refund_initiated_by: String
     refunded_at: String
+    "Razorpay's payment id (pay_…), exactly as the Razorpay dashboard shows it. Null until the buyer paid, and for other gateways. payment_id is Duncit's own reference, not this."
+    razorpay_payment_id: String
+    "Razorpay's order id (order_…) the checkout was opened with. Null for other gateways."
+    razorpay_order_id: String
+    "Every Razorpay refund id (rfnd_…) sent against this payment, oldest first. Empty when none went through Razorpay."
+    razorpay_refund_ids: [String!]
     paid_at: String
     created_at: String!
     "True when only part of the booking came back — the buyer kept the rest of their seats, so the payment is still SUCCESS."
     partial: Boolean!
+    "Where the refund stands at Razorpay. Null for refunds recorded before refunds were sent through Razorpay."
+    refund_status: PaymentRefundStatus
   }
 
   "Server-side table page for the shared table engine (userRefundsTable)."
@@ -335,6 +462,10 @@ export const paymentTypeDefs = /* GraphQL */ `
     currency_symbol: String!
     status: PaymentStatus!
     gateway: String!
+    "Razorpay's payment id (pay_…), exactly as the Razorpay dashboard shows it. Null for other gateways."
+    razorpay_payment_id: String
+    "Razorpay's order id (order_…). Null for other gateways."
+    razorpay_order_id: String
     paid_at: String
     created_at: String!
   }
@@ -440,8 +571,7 @@ export const paymentTypeDefs = /* GraphQL */ `
     gross: Float!
     fee: Float!
     gst: Float!
-    "Multi-ticket discounts given on the matching payments — already off gross."
-    ticket_discount_total: Float!
+    ticket_discount_total: Float! @deprecated(reason: "The multi-ticket discount was removed. Always 0.")
     "Smart Incentive discounts given on the matching payments — already off gross."
     smart_incentive_total: Float!
   }
@@ -458,10 +588,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     round_off: Float!
     currency_symbol: String!
     dummy_mode: Boolean!
-    "Multi-ticket discount taken off the ticket price for the quoted seats (0 when no tier applies)."
-    ticket_discount_amount: Float!
-    "Percentage of the multi-ticket tier that applied (0 when none)."
-    ticket_discount_pct: Int!
+    ticket_discount_amount: Float! @deprecated(reason: "The multi-ticket discount was removed. Always 0.")
+    ticket_discount_pct: Int! @deprecated(reason: "The multi-ticket discount was removed. Always 0.")
     "The caller's unlocked Smart Incentive taken off the ticket money (0 when none applies)."
     smart_incentive_amount: Float!
     "Percentage of that Smart Incentive (0 when none)."
@@ -485,9 +613,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     currency_symbol: String!
     "Every ticket of every date at list price."
     ticket_gross: Float!
-    "Multi-ticket discount across the dates."
-    ticket_discount_amount: Float!
-    ticket_discount_pct: Int!
+    ticket_discount_amount: Float! @deprecated(reason: "The multi-ticket discount was removed. Always 0.")
+    ticket_discount_pct: Int! @deprecated(reason: "The multi-ticket discount was removed. Always 0.")
     "Multi-date discount across the dates."
     multi_date_discount_amount: Float!
     multi_date_discount_pct: Int!
@@ -684,9 +811,17 @@ export const paymentTypeDefs = /* GraphQL */ `
   only on payment success.
   """
   input GiftCardCheckoutInput {
-    "The card's theme. SUPER/CATEGORY/SUB need scope_category_id; SHOP must not send one."
-    scope_type: GiftCardScopeType!
+    "Legacy (apps before the catalogue): the card's theme. SUPER/CATEGORY/SUB need scope_category_id; SHOP must not send one. Current apps send design_id/quantity/delivery_mode instead."
+    scope_type: GiftCardScopeType
     scope_category_id: ID
+    "The catalogue design. Omitted with scope_type omitted = the current default design."
+    design_id: ID
+    "How many cards (each worth amount), 1 to the configured maximum. Omitted = 1."
+    quantity: Int
+    "DIGITAL (emailed codes, default) or PHYSICAL (printed scratch cards by courier)."
+    delivery_mode: GiftCardDeliveryMode
+    "Where printed cards are delivered. Required for PHYSICAL."
+    shipping_address: OrderShippingAddressInput
     "Face value in whole rupees, within the configured min/max."
     amount: Float!
     "Who the card is for. Empty means the buyer keeps it."
@@ -705,8 +840,16 @@ export const paymentTypeDefs = /* GraphQL */ `
   }
 
   input DummyGiftCardCheckoutInput {
-    scope_type: GiftCardScopeType!
+    scope_type: GiftCardScopeType
     scope_category_id: ID
+    "The catalogue design. Omitted with scope_type omitted = the current default design."
+    design_id: ID
+    "How many cards (each worth amount), 1 to the configured maximum. Omitted = 1."
+    quantity: Int
+    "DIGITAL (emailed codes, default) or PHYSICAL (printed scratch cards by courier)."
+    delivery_mode: GiftCardDeliveryMode
+    "Where printed cards are delivered. Required for PHYSICAL."
+    shipping_address: OrderShippingAddressInput
     amount: Float!
     recipient_email: String
     recipient_name: String
@@ -803,6 +946,12 @@ export const paymentTypeDefs = /* GraphQL */ `
     recurringCheckoutQuote(input: RecurringCheckoutQuoteInput!): RecurringCheckoutQuote!
       @deprecated(reason: "Recurring pods are retired.")
     paymentInvoicePdfBase64(payment_doc_id: ID!): String!
+    """
+    The Payment Logs table as a PDF the reader can print or share: the rows the
+    query selects (search, filters, sort), capped, with a totals line. Pass shop
+    for one shop's log. Same read roles as the table.
+    """
+    paymentLogsPdfBase64(query: TableQueryInput, shop: PaymentShop): String!
     "Live ShipRocket delivery estimate for a product cart (preview only; the charged amount is recomputed server-side at checkout)."
     productShippingQuote(input: ProductShippingQuoteInput!): ProductShippingQuote!
   }
@@ -812,6 +961,12 @@ export const paymentTypeDefs = /* GraphQL */ `
     createRazorpayOrder(input: RazorpayOrderInput!): RazorpayOrder!
     verifyRazorpayPayment(input: VerifyRazorpayInput!): Payment!
     refundPayment(payment_doc_id: ID!, reason: String): Payment!
+    """
+    Send one owed refund back to the payment's own source, with a note on record.
+    Only a refund that is owed and safe to repeat is accepted; the answer is the
+    payment's fresh audit, so the page refreshes from its own reply.
+    """
+    refundPaymentToSource(input: RefundPaymentToSourceInput!): PaymentDetail!
     """
     Re-run the checkout work that did not land, and answer with the fresh audit.
 

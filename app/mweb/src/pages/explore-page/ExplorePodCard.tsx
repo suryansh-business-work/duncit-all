@@ -18,11 +18,10 @@ import ExplorePodOverlay from './ExplorePodOverlay';
 import LikesListDialog from './LikesListDialog';
 import PodCommentsSheet from '../../components/PodCommentsSheet';
 import { usePricing } from '../../hooks/usePricing';
-import { isPodExpired } from '../../utils/podStatus';
 import { likersWithViewer, shareExplorePod } from './explorePodActions';
 import { useExploreLike } from './useExploreLike';
 import { useReelSoundAction } from './useReelSoundAction';
-import { podSeatsTaken } from '@duncit/utils';
+import { podPhase, podSeatsTaken } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -53,8 +52,10 @@ export default function ExplorePodCard({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { format } = usePricing();
-  // Expired pods can't be joined — the join rail + CTA become an "expired" notice.
-  const expired = isPodExpired(pod.pod_date_time);
+  // Over (past its end): the join rail + CTA become an "expired" notice. Running:
+  // still joinable, the bar says it is ongoing. Same rule as Pod details.
+  const phase = podPhase(pod.pod_date_time, pod.pod_end_date_time);
+  const expired = phase === 'PREVIOUS';
   const ctaSubtitle = pod.pod_type === 'FREE'
     ? 'Free spot'
     : `${format(pod.pod_amount)} · Confirm with UPI`;
@@ -172,6 +173,7 @@ export default function ExplorePodCard({
 
       <ExploreJoinBar
         expired={expired}
+        ongoing={phase === 'ONGOING'}
         subtitle={ctaSubtitle}
         goAriaLabel={t('mweb.explore.openPodDetails')}
         onGo={openPod}

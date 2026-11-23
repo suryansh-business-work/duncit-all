@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
-import { rentalMoney, rentalRefundKey, rentalStatusKey } from '@duncit/utils';
+import { rentalGuestRefundLine, rentalMoney, rentalStatusKey } from '@duncit/utils';
 
 import { DuncitButton } from '@/components/DuncitButton';
 import { EmptyState } from '@/components/EmptyState';
@@ -22,24 +22,11 @@ const fetchPage = async (limit: number) =>
   (await graphqlRequest(MyRentalBookingsDocument, { limit, offset: 0 }, { auth: true }))
     .myRentalBookings;
 
-/** What comes back to the member once a rental closed, or what was kept. */
-function outcomeKey(row: Row): { key: string; amount: number } | null {
-  const refund = String(row.refund_status);
-  if (refund === 'PAID' || refund === 'IN_PAYMENT')
-    return { key: 'venueRentals.guest.refunded', amount: row.refund_due };
-  if (refund === 'DUE') return { key: 'venueRentals.guest.refundDue', amount: row.refund_due };
-  // Settled at the venue: the venue handed this back in cash when the item came back.
-  if (row.deposit_at_venue > 0)
-    return { key: 'venueRentals.guest.depositBack', amount: row.deposit_at_venue };
-  if (row.damage_claim > 0)
-    return { key: 'venueRentals.guest.damageKept', amount: row.damage_claim };
-  return null;
-}
-
 function RentalRow({ row }: Readonly<{ row: Row }>) {
   const { t } = useTranslation();
   const money = (amount: number) => rentalMoney(row.currency_symbol, amount);
-  const outcome = outcomeKey(row);
+  // The shared rule (mWeb reads the same): refunded only once Razorpay confirms it.
+  const outcome = rentalGuestRefundLine(row);
   return (
     <SurfaceCard gap={4} testID={`rented-item-${row.id}`}>
       <XStack justifyContent="space-between" alignItems="center" gap={8}>
@@ -56,11 +43,13 @@ function RentalRow({ row }: Readonly<{ row: Row }>) {
       </Text>
       <RentalUnitsLine row={row} />
       {outcome ? (
-        <Text fontSize={12.5} fontWeight="600" color="$color">
+        <Text
+          fontSize={12.5}
+          fontWeight="600"
+          color="$color"
+          testID={`rented-item-${row.id}-outcome`}
+        >
           {t(outcome.key, { vars: { amount: money(outcome.amount) } })}
-          {String(row.refund_status) === 'NONE'
-            ? ''
-            : ` · ${t(rentalRefundKey(row.refund_status))}`}
         </Text>
       ) : null}
     </SurfaceCard>

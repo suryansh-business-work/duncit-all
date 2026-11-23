@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { PaymentRefundStatus } from '@duncit/gql-types';
 
 /** The two shops Finance tracks separately — never mixed in one list. */
 export type PaymentShop = 'POD_SHOP' | 'ECOMM';
@@ -10,7 +11,6 @@ export const PAYMENT_TOTALS = gql`
       gross
       fee
       gst
-      ticket_discount_total
       smart_incentive_total
     }
   }
@@ -22,9 +22,7 @@ export interface PaymentTotals {
   gross: number;
   fee: number;
   gst: number;
-  /** Sum of the multi-ticket discounts frozen on those payments. */
-  ticket_discount_total: number;
-  /** Sum of the Smart Incentive discounts frozen on those payments — like the tiers, already off gross. */
+  /** Sum of the Smart Incentive discounts frozen on those payments — already off gross. */
   smart_incentive_total: number;
 }
 
@@ -41,9 +39,6 @@ export interface PaymentRow {
   gst_amount: number;
   coins_redeemed?: number | null;
   coins_earned?: number | null;
-  /** The multi-ticket tier frozen on the payment at checkout (0 when none applied). */
-  ticket_discount_amount: number;
-  ticket_discount_pct: number;
   /** The member's unlocked Smart Incentive frozen on the payment at checkout (0 when none applied). */
   smart_incentive_amount: number;
   total: number;
@@ -55,6 +50,14 @@ export interface PaymentRow {
   status: string;
   gateway: string;
   gateway_ref: string | null;
+  /** Razorpay's own ids, as its dashboard shows them (null/empty for other gateways). */
+  razorpay_payment_id?: string | null;
+  razorpay_order_id?: string | null;
+  razorpay_refund_ids?: string[];
+  /** Where its latest refund stands at Razorpay (null when none was sent through the refund engine). */
+  refund_status?: PaymentRefundStatus | null;
+  /** A capture that bought nothing and is still owed back. */
+  needs_refund?: boolean | null;
   paid_at: string | null;
   created_at: string;
 }
@@ -73,8 +76,6 @@ const PAYMENT_ROW_FIELDS = gql`
     gst_amount
     coins_redeemed
     coins_earned
-    ticket_discount_amount
-    ticket_discount_pct
     smart_incentive_amount
     total
     round_off
@@ -83,6 +84,11 @@ const PAYMENT_ROW_FIELDS = gql`
     status
     gateway
     gateway_ref
+    razorpay_payment_id
+    razorpay_order_id
+    razorpay_refund_ids
+    refund_status
+    needs_refund
     paid_at
     created_at
   }
@@ -116,6 +122,13 @@ export const PAYMENTS_TABLE = gql`
 export const INVOICE_PDF = gql`
   query InvoicePdf($id: ID!) {
     paymentInvoicePdfBase64(payment_doc_id: $id)
+  }
+`;
+
+/** The table as a PDF: the rows its current search, filters and sort select, capped by the server. */
+export const PAYMENT_LOGS_PDF = gql`
+  query PaymentLogsPdf($query: TableQueryInput, $shop: PaymentShop) {
+    paymentLogsPdfBase64(query: $query, shop: $shop)
   }
 `;
 

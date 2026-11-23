@@ -546,14 +546,21 @@ export const ECOMM_PORTAL_BUNDLE: NestedCatalogue = {
 
     paymentLogs: {
       subtitle: 'Every payment the pet store took — online, cash on delivery, refunds — newest first.',
-      search: 'Search payment ID, invoice, buyer or email',
+      search: 'Search Razorpay id, Duncit ref, invoice, buyer or email',
       empty: 'No store payments yet.',
       when: 'When',
       buyer: 'Buyer',
       gateway: 'Gateway',
       total: 'Total',
       status: 'Status',
-      ids: 'Payment / invoice',
+      ids: 'IDs',
+      // Each id in the IDs cell under its own name: Razorpay's ids are what its
+      // dashboard shows; the Duncit ref is our own and never matches it.
+      idRazorpayPayment: 'Razorpay payment',
+      idRazorpayOrder: 'Razorpay order',
+      idRazorpayRefund: 'Razorpay refund',
+      idDuncitRef: 'Duncit ref',
+      idInvoice: 'Invoice',
       paidAt: 'Paid on',
       coupon: 'Coupon',
       coins: 'Coins used',

@@ -3,7 +3,6 @@ import {
   isVideoUrl,
   mediaTypeForUrl,
   smartIncentiveInput,
-  ticketDiscountInput,
   venueOfferInput,
 } from '@duncit/utils';
 import { isFreePodType, type CreatePodFormValues } from './create-pod.types';
@@ -91,9 +90,7 @@ export function buildCreatePodInput(values: CreatePodFormValues, { smartIncentiv
     what_this_pod_offers: values.what_this_pod_offers,
     available_perks: values.available_perks,
     place_charges: values.place_charges,
-    // A FREE pod or a switched-off offer always sends the cleared pair.
-    ...ticketDiscountInput(values, isFreePodType(values.pod_type)),
-    // Likewise the Smart Incentive: off at 0%, else the typed % as a number.
+    // A FREE pod or a switched-off Smart Incentive sends it off at 0%, else the typed % as a number.
     ...smartIncentiveInput(values, isFreePodType(values.pod_type) || !smartIncentiveOn),
     // Derived, not chosen: the "Attach products" switch is gone, so a pod's shop
     // is open exactly when it carries products. Guarding on the rows rather than

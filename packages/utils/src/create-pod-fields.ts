@@ -151,14 +151,13 @@ export function categoryIconLookup(icons: readonly CreatePodCategoryIconSource[]
     byId.get(category.sub_category_id ?? '') || byId.get(category.category_id ?? '') || '';
 }
 
-/** Money's folded extras — early-bird prices, Smart Incentive, payment terms, place charges, products. */
-export const MONEY_EXTRA_FIELDS = ['ticket_discount_tiers', 'smart_incentive_pct', 'payment_terms', 'place_charges', 'product_requests'] as const;
+/** Money's folded extras — Smart Incentive, payment terms, place charges, products. */
+export const MONEY_EXTRA_FIELDS = ['smart_incentive_pct', 'payment_terms', 'place_charges', 'product_requests'] as const;
 
 /** Details' folded extras — hashtags, more info, perks, the reel. */
 export const DETAILS_EXTRA_FIELDS = ['pod_hashtag_text', 'pod_info', 'available_perks', 'reel_url'] as const;
 
 export interface MoneyExtrasSource {
-  ticket_discount_enabled: boolean;
   smart_incentive_enabled: boolean;
   payment_terms: string;
   place_charges: readonly unknown[];
@@ -174,7 +173,6 @@ export interface DetailsExtrasSource {
 
 /** Money's More options opens on arrival when the host already set one of its extras. */
 export const moneyExtrasFilled = (values: Readonly<MoneyExtrasSource>): boolean =>
-  values.ticket_discount_enabled ||
   values.smart_incentive_enabled ||
   values.payment_terms.trim().length > 0 ||
   values.place_charges.length > 0 ||

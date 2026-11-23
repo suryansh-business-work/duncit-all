@@ -76,6 +76,12 @@ export interface IPaymentReleaseBreakdown {
   /** The agreed offer's model and rate. Absent on older docs and bookings made before offers. */
   venue_agreed_model?: string | null;
   venue_agreed_rate?: number | null;
+  /** Whether venue_bill set the venue's money (false = recorded as evidence
+   * only). Absent on releases written before this was recorded. */
+  venue_bill_applied?: boolean | null;
+  /** Payouts beyond what the pod's takings fund (the host remainder below
+   * zero), frozen at completion. 0 on older releases. */
+  funding_shortfall?: number;
 }
 
 export interface IPaymentRelease extends Document {
@@ -109,6 +115,9 @@ export interface IPaymentRelease extends Document {
   approval_type?: PaymentReleaseApprovalType | null;
   approved_amount?: number | null;
   approval_reason?: string;
+  /** Who funds the snapshot's funding_shortfall, as the approving reviewer
+   * stated it. Empty when there was no shortfall. */
+  shortfall_funding_note?: string;
   breakdown?: IPaymentReleaseBreakdown | null;
   created_at: Date;
   updated_at: Date;
@@ -158,6 +167,8 @@ const releaseBreakdownSchema = new Schema<IPaymentReleaseBreakdown>(
     venue_extra_amount: { type: Number, default: 0 },
     venue_agreed_model: { type: String, default: null },
     venue_agreed_rate: { type: Number, default: null },
+    venue_bill_applied: { type: Boolean, default: null },
+    funding_shortfall: { type: Number, default: 0, min: 0 },
   },
   { _id: false }
 );
@@ -190,6 +201,7 @@ const paymentReleaseSchema = new Schema<IPaymentRelease>(
     approval_type: { type: String, enum: ['FULL', 'PARTIAL'], default: null },
     approved_amount: { type: Number, default: null, min: 0 },
     approval_reason: { type: String, default: '', trim: true, maxlength: 2000 },
+    shortfall_funding_note: { type: String, default: '', trim: true, maxlength: 2000 },
     breakdown: { type: releaseBreakdownSchema, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

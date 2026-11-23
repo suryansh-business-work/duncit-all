@@ -21,10 +21,6 @@ vi.mock('../MyCardTile', () => ({
 }));
 
 const settings = { min_amount: 100, max_amount: 5000, denominations: [500, 1000] };
-const categories = [
-  { id: 'c1', name: 'Fitness', slug: 'f', icon: 'https://img/i.png', level: 'CATEGORY', parent_id: null, gift_card_image_front: 'https://img/f.png', gift_card_image_back: 'https://img/b.png' },
-  { id: 'c2', name: 'Plain', slug: 'p', icon: null, level: 'CATEGORY', parent_id: null, gift_card_image_front: '', gift_card_image_back: '' },
-];
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -145,15 +141,20 @@ describe('BuyTab', () => {
     const location = useLocation();
     return <div data-testid="where" data-state={JSON.stringify(location.state)}>{location.pathname}</div>;
   };
-  const queries = (state: { settings?: object; categories?: object[]; finance?: object; loading?: boolean; settingsError?: boolean; categoriesError?: boolean } = {}) =>
-    h.useQuery.mockImplementation((doc: { loc?: { source: { body: string } } }) => {
-      const body = doc.loc?.source.body ?? '';
-      if (body.includes('publicGiftCardSettings')) {
-        return { data: state.settings ? { publicGiftCardSettings: state.settings } : undefined, loading: state.loading ?? false, error: state.settingsError ? new Error('x') : undefined };
-      }
-      if (body.includes('categories')) return { data: state.categories ? { categories: state.categories } : undefined, error: state.categoriesError ? new Error('x') : undefined };
-      return { data: state.finance };
-    });
+  const design = { id: 'des-1', name: 'Classic', front_image_url: 'https://img/front.png', back_image_url: 'https://img/back.png' };
+  const store = (over: Record<string, unknown> = {}, settingsOver: Record<string, unknown> = {}) => ({
+    design,
+    settings: { ...settings, validity_months: 12, max_quantity: 5, physical_enabled: true, shipping_fee: 99, updated_at: '', ...settingsOver },
+    physical_available: 3,
+    currency_symbol: '$',
+    ...over,
+  });
+  const queries = (state: { store?: object; loading?: boolean; error?: boolean } = {}) =>
+    h.useQuery.mockImplementation(() => ({
+      data: state.store ? { giftCardStorefront: state.store } : undefined,
+      loading: state.loading ?? false,
+      error: state.error ? new Error('x') : undefined,
+    }));
   const mount = () =>
     render(
       <MemoryRouter initialEntries={['/gift-cards']}>
@@ -163,43 +164,43 @@ describe('BuyTab', () => {
         </Routes>
       </MemoryRouter>
     );
+  const sent = () => JSON.parse(screen.getByTestId('where').getAttribute('data-state') ?? '{}');
+  const go = () => screen.getByTestId('gift-card-continue');
 
-  it('shows a spinner while the settings load, and the how-it-works card regardless', () => {
+  it('shows a spinner while the storefront loads, and the how-it-works card regardless', () => {
     queries({ loading: true });
     mount();
     expect(screen.getByTestId('gift-cards-buy-loading')).toBeInTheDocument();
     expect(screen.queryByTestId('gift-card-continue')).not.toBeInTheDocument();
   });
 
-  it('shows the load error when settings or categories fail', () => {
-    queries({ settingsError: true });
+  it('says so when the storefront fails, or when no design has been uploaded yet', () => {
+    queries({ error: true });
     const { unmount } = mount();
     expect(screen.getByTestId('gift-cards-buy-error')).toBeInTheDocument();
     unmount();
-    queries({ settings, categoriesError: true });
+    queries({ store: store({ design: null }) });
     mount();
-    expect(screen.getByTestId('gift-cards-buy-error')).toBeInTheDocument();
+    expect(screen.getByTestId('gift-cards-unavailable')).toHaveTextContent(fallbackT('mweb.giftCards.unavailable'));
+    expect(screen.queryByTestId('gift-card-continue')).not.toBeInTheDocument();
   });
 
-  it('keeps Continue off until the amount is valid, then sends the shop card to checkout', async () => {
-    queries({ settings, categories, finance: { publicFinanceSettings: { currency_symbol: '$' } } });
+  it('starts on the first preset for the default design and sends one emailed card to checkout', async () => {
+    queries({ store: store() });
     mount();
-    const go = screen.getByTestId('gift-card-continue');
-    expect(go).toBeDisabled();
-    fireEvent.change(screen.getByTestId('gift-card-custom-amount-input'), { target: { value: '50' } });
-    expect(go).toBeDisabled();
-    fireEvent.click(screen.getByTestId('gift-card-amount-1000'));
-    expect(go).toBeEnabled();
-    fireEvent.click(go);
+    expect(screen.getByTestId('gift-card-total-value')).toHaveTextContent('$500');
+    await waitFor(() => expect(go()).toBeEnabled());
+    fireEvent.click(go());
     await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent('/gift-cards/checkout'));
-    expect(JSON.parse(screen.getByTestId('where').getAttribute('data-state') ?? '{}')).toEqual({
-      scope_type: 'SHOP',
-      scope_category_id: null,
-      scope_name: '',
-      scope_image_url: '',
-      scope_image_front_url: '',
-      scope_image_back_url: '',
-      amount: 1000,
+    expect(sent()).toEqual({
+      design_id: 'des-1',
+      design_name: 'Classic',
+      front_url: 'https://img/front.png',
+      back_url: 'https://img/back.png',
+      amount: 500,
+      quantity: 1,
+      delivery_mode: 'DIGITAL',
+      shipping_fee: 0,
       gift: false,
       recipient_email: '',
       recipient_name: '',
@@ -207,79 +208,64 @@ describe('BuyTab', () => {
     });
   });
 
-  it('needs a theme picked for a category card, and sends its name, icon and artwork', async () => {
-    queries({ settings, categories });
+  it('keeps Continue off for an amount outside the policy', async () => {
+    queries({ store: store() });
     mount();
-    fireEvent.click(screen.getByTestId('gift-card-group-CATEGORY'));
-    fireEvent.click(screen.getByTestId('gift-card-amount-500'));
-    expect(screen.getByTestId('gift-card-continue')).toBeDisabled();
-    fireEvent.click(screen.getByTestId('gift-card-theme-c1'));
-    fireEvent.click(screen.getByTestId('gift-card-continue'));
+    fireEvent.change(screen.getByTestId('gift-card-custom-amount-input'), { target: { value: '50' } });
+    await waitFor(() => expect(go()).toBeDisabled());
+  });
+
+  it('counts cards with the stepper up to the policy maximum, and totals them', async () => {
+    queries({ store: store() });
+    mount();
+    expect(screen.getByTestId('gift-card-quantity-minus')).toBeDisabled();
+    fireEvent.click(screen.getByTestId('gift-card-quantity-plus'));
+    fireEvent.click(screen.getByTestId('gift-card-quantity-plus'));
+    expect(screen.getByTestId('gift-card-total-value')).toHaveTextContent('$1,500');
+    fireEvent.change(screen.getByTestId('gift-card-quantity-input'), { target: { value: '9' } });
+    expect(await screen.findByText(fallbackT('mweb.giftCards.quantityRange', { vars: { max: 5 } }))).toBeInTheDocument();
+    expect(go()).toBeDisabled();
+    fireEvent.change(screen.getByTestId('gift-card-quantity-input'), { target: { value: '5' } });
+    expect(screen.getByTestId('gift-card-quantity-plus')).toBeDisabled();
+    fireEvent.click(screen.getByTestId('gift-card-quantity-minus'));
+    expect(screen.getByTestId('gift-card-quantity-input')).toHaveValue('4');
+  });
+
+  it('sends printed cards with the delivery fee once, the recipient name and no inbox', async () => {
+    queries({ store: store() });
+    mount();
+    fireEvent.click(screen.getByTestId('gift-card-delivery-physical'));
+    fireEvent.click(screen.getByTestId('gift-card-quantity-plus'));
+    expect(screen.getByTestId('gift-card-total-delivery-value')).toHaveTextContent('$99');
+    expect(screen.getByTestId('gift-card-total-value')).toHaveTextContent('$1,099');
+    fireEvent.change(screen.getByTestId('gift-card-recipient-name-input'), { target: { value: '  Priya ' } });
+    await waitFor(() => expect(go()).toBeEnabled());
+    fireEvent.click(go());
     await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent('/gift-cards/checkout'));
-    expect(JSON.parse(screen.getByTestId('where').getAttribute('data-state') ?? '{}')).toMatchObject({
-      scope_type: 'CATEGORY',
-      scope_category_id: 'c1',
-      scope_name: 'Fitness',
-      scope_image_url: 'https://img/i.png',
-      scope_image_front_url: 'https://img/f.png',
-      scope_image_back_url: 'https://img/b.png',
-      amount: 500,
-    });
+    expect(sent()).toMatchObject({ delivery_mode: 'PHYSICAL', quantity: 2, shipping_fee: 99, gift: false, recipient_email: '', recipient_name: 'Priya' });
   });
 
-  it('sends empty icon and artwork for a category that ships none', async () => {
-    queries({ settings, categories });
+  it('offers no printed cards while they are off or out of stock', () => {
+    queries({ store: store({ physical_available: 0 }) });
     mount();
-    fireEvent.click(screen.getByTestId('gift-card-group-CATEGORY'));
-    fireEvent.click(screen.getByTestId('gift-card-amount-500'));
-    fireEvent.click(screen.getByTestId('gift-card-theme-c2'));
-    fireEvent.click(screen.getByTestId('gift-card-continue'));
-    await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent('/gift-cards/checkout'));
-    expect(JSON.parse(screen.getByTestId('where').getAttribute('data-state') ?? '{}')).toMatchObject({ scope_name: 'Plain', scope_image_url: '', scope_image_front_url: '', scope_image_back_url: '' });
+    expect(screen.getByTestId('gift-card-delivery-physical')).toBeDisabled();
+    expect(screen.getByTestId('gift-card-delivery-caption')).toHaveTextContent(fallbackT('mweb.giftCards.physicalUnavailable'));
   });
 
-  it('resets the chosen theme when the group changes', () => {
-    queries({ settings, categories });
+  it('sends a gift with a trimmed recipient, and blocks Continue on an invalid email', async () => {
+    queries({ store: store() });
     mount();
-    fireEvent.click(screen.getByTestId('gift-card-group-CATEGORY'));
-    fireEvent.click(screen.getByTestId('gift-card-theme-c1'));
-    fireEvent.click(screen.getByTestId('gift-card-group-SUPER'));
-    fireEvent.click(screen.getByTestId('gift-card-amount-500'));
-    expect(screen.getByTestId('gift-card-continue')).toBeDisabled();
-  });
-
-  it('sends a gift with a trimmed recipient, and blocks Continue on an invalid or missing email', async () => {
-    queries({ settings, categories });
-    mount();
-    fireEvent.click(screen.getByTestId('gift-card-amount-500'));
     fireEvent.click(screen.getByTestId('gift-card-for-someone'));
-    expect(screen.getByTestId('gift-card-continue')).toBeDisabled();
+    await waitFor(() => expect(go()).toBeDisabled());
     fireEvent.change(screen.getByTestId('gift-card-recipient-email-input'), { target: { value: 'nope' } });
-    expect(screen.getByTestId('gift-card-recipient-email-input')).toHaveAttribute('aria-invalid', 'true');
-    expect(screen.getByTestId('gift-card-continue')).toBeDisabled();
+    await waitFor(() => expect(screen.getByTestId('gift-card-recipient-email-input')).toHaveAttribute('aria-invalid', 'true'));
     fireEvent.change(screen.getByTestId('gift-card-recipient-email-input'), { target: { value: '  friend@example.com ' } });
     fireEvent.change(screen.getByTestId('gift-card-recipient-name-input'), { target: { value: '  Friend ' } });
     fireEvent.change(screen.getByTestId('gift-card-message-input'), { target: { value: '  Enjoy ' } });
-    fireEvent.click(screen.getByTestId('gift-card-continue'));
+    await waitFor(() => expect(go()).toBeEnabled());
+    fireEvent.click(go());
     await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent('/gift-cards/checkout'));
-    expect(JSON.parse(screen.getByTestId('where').getAttribute('data-state') ?? '{}')).toMatchObject({
-      gift: true,
-      recipient_email: 'friend@example.com',
-      recipient_name: 'Friend',
-      message: 'Enjoy',
-    });
-  });
-
-  it('previews the first denomination, or the minimum, before an amount is valid', () => {
-    queries({ settings: { ...settings, denominations: [] }, categories });
-    mount();
-    expect(screen.getByTestId('theme-picker-shop')).toBeInTheDocument();
-  });
-
-  it('copes with settings that list no denominations and no minimum preview', () => {
-    queries({ settings: { min_amount: 0, max_amount: 10, denominations: [] }, categories: undefined });
-    mount();
-    expect(screen.getByTestId('theme-picker-shop')).toBeInTheDocument();
+    expect(sent()).toMatchObject({ gift: true, recipient_email: 'friend@example.com', recipient_name: 'Friend', message: 'Enjoy' });
   });
 });
 

@@ -41,6 +41,44 @@ function isAlreadyRunning(error: unknown): boolean {
   return /already (started|starting|authenticated|exists)/i.test(errorMessage(error));
 }
 
+/**
+ * How long connect() waits on the gateway's start before answering. A start fails fast for a refusal
+ * (e.g. the concurrent-session cap), but booting WhatsApp Web can take minutes, longer than a request
+ * should hang, so a start still running after this carries on in the background while the portal polls
+ * the QR. Held in an object so tests can shorten it.
+ */
+export const waTimings = { startAnswerMs: 8_000 };
+
+/** Record a start that failed after connect() already answered, unless a newer state replaced CONNECTING. */
+function recordLateStartFailure(error: unknown): void {
+  if (isAlreadyRunning(error)) return;
+  logs.server.warn('crm.whatsapp', 'connect.start', { error });
+  WaConnectionModel.updateOne(
+    { key: KEY, status: 'CONNECTING' },
+    { status: 'ERROR', last_error: errorMessage(error) || 'Starting the WhatsApp session failed.' }
+  ).catch((saveError: unknown) => logs.server.warn('crm.whatsapp', 'connect.recordFailure', { error: saveError }));
+}
+
+/** Start the session engine: throws a refusal that arrives within the answer window, otherwise lets it run on. */
+async function startEngine(client: WaClient, sessionId: string): Promise<void> {
+  const started = client.startSession(sessionId).then(
+    () => 'started' as const,
+    (error: unknown) => {
+      if (!isAlreadyRunning(error)) throw error;
+      return 'started' as const;
+    }
+  );
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const stillBooting = new Promise<'booting'>((resolve) => {
+    timer = setTimeout(() => resolve('booting'), waTimings.startAnswerMs);
+  });
+  try {
+    if ((await Promise.race([started, stillBooting])) === 'booting') started.catch(recordLateStartFailure);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /** Find our session's gateway id (a UUID) by its name. */
 async function findSessionIdByName(client: WaClient): Promise<string | undefined> {
   const list = await client.listSessions().catch(() => []);
@@ -164,11 +202,9 @@ export const whatsappService = {
         logs.server.warn('crm.whatsapp', 'restart.stop', { error });
       });
     }
-    // Start the engine. "Already started/starting" is fine; surface any other
-    // failure so the user sees why it didn't connect.
-    await client.startSession(sessionId).catch((error) => {
-      if (!isAlreadyRunning(error)) throw error;
-    });
+    // Start the engine. "Already started/starting" is fine; a quick refusal is
+    // surfaced so the user sees why it didn't connect, a slow boot runs on.
+    await startEngine(client, sessionId);
     conn.status = 'CONNECTING';
     conn.last_error = null;
     await conn.save();

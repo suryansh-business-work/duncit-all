@@ -18,7 +18,6 @@ import {
   offerBelowFloor,
   offerRateOf,
   smartIncentiveInput,
-  ticketDiscountInput,
   venueOfferInput,
   venueOfferPriceInput,
   type VenueOfferFloor,
@@ -35,11 +34,6 @@ import {
   refineSmartIncentive,
   smartIncentiveSchemaShape,
 } from './smart-incentive.form';
-import {
-  hydrateTicketDiscount,
-  refineTicketDiscount,
-  ticketDiscountSchemaShape,
-} from './ticket-discount.form';
 
 /** Minimum pod length — the end picker blocks the first 30 minutes after the
  * start, and the schema enforces the same for typed times. mWeb twin. */
@@ -315,8 +309,7 @@ function refineTicketPrice(values: CreatePodFormValues, ctx: z.RefinementCtx, t:
   }
 }
 
-/** A FREE pod, or one priced at ₹0, never carries a multi-ticket discount or a
- * Smart Incentive. mWeb twin. */
+/** A FREE pod, or one priced at ₹0, never carries a Smart Incentive. mWeb twin. */
 export const isFreeTicket = (
   values: Pick<CreatePodFormValues, 'pod_type' | 'pod_amount_text'>,
 ): boolean => values.pod_type === 'FREE' || (Number(values.pod_amount_text) || 0) <= 0;
@@ -467,7 +460,6 @@ export function makeCreatePodSchema(
           }),
         )
         .max(10),
-      ...ticketDiscountSchemaShape,
       ...smartIncentiveSchemaShape,
       payment_terms: z.string().max(4000),
       agreed_to_terms: z.boolean(),
@@ -481,16 +473,6 @@ export function makeCreatePodSchema(
       refinePodType(values, ctx, t);
       refineTicketPrice(values, ctx, t);
       if (needsFreeJustification(values)) addFreeJustificationIssues(values, ctx, t);
-      refineTicketDiscount(
-        {
-          ticket_discount_enabled: values.ticket_discount_enabled,
-          ticket_discount_tiers: values.ticket_discount_tiers,
-          noOfSpots: Number(values.no_of_spots_text) || 0,
-          free: isFreeTicket(values),
-        },
-        ctx,
-        t,
-      );
       refineSmartIncentive(
         {
           smart_incentive_enabled: values.smart_incentive_enabled,
@@ -535,8 +517,6 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
     'pod_type',
     'pod_amount_text',
     'place_charges',
-    'ticket_discount_enabled',
-    'ticket_discount_tiers',
     'smart_incentive_enabled',
     'smart_incentive_pct',
     'payment_terms',
@@ -720,8 +700,6 @@ export function buildCreatePodInput(values: CreatePodFormValues, { smartIncentiv
     what_this_pod_offers: values.what_this_pod_offers,
     available_perks: values.available_perks,
     place_charges: values.place_charges,
-    // Off with no tiers for a free pod, whatever a stale draft still holds.
-    ...ticketDiscountInput(values, isFreeTicket(values)),
     ...podSmartIncentiveOf(values, smartIncentiveOn),
     // Derived, not chosen: the "Attach products" switch is gone, so a pod's shop
     // is open exactly when it carries products. Guarding on the rows rather than
@@ -803,9 +781,8 @@ export function hydrateDraft(payload: string): CreatePodFormValues {
     };
     // Old drafts may carry retired pod types — coerce onto FREE/PAID.
     values.pod_type = normalizePodType(values.pod_type);
-    // …and the discount tiers may be missing or half-typed, and the Smart
-    // Incentive missing altogether (a draft from before it existed).
-    return { ...values, ...hydrateTicketDiscount(values), ...hydrateSmartIncentive(values) };
+    // …and the Smart Incentive may be missing altogether (a draft from before it existed).
+    return { ...values, ...hydrateSmartIncentive(values) };
   } catch {
     return blankCreatePodForm;
   }

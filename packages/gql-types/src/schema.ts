@@ -1529,6 +1529,12 @@ export type AnalyticsCompare =
 export type AnalyticsEntity =
   | 'AI_USAGE'
   | 'API_PERFORMANCE'
+  /** Both app stores side by side — new installs, uninstalls, crashes and ratings (Analytics > App Insights > Overview). */
+  | 'APP_INSIGHTS'
+  /** Google Play Console's statistics for the Android app (Analytics > App Insights > Google Play). */
+  | 'APP_INSIGHTS_ANDROID'
+  /** App Store Connect's analytics for the iOS app (Analytics > App Insights > App Store). */
+  | 'APP_INSIGHTS_IOS'
   | 'APP_RELEASES'
   | 'CLUBS'
   | 'CLUB_ADMINS'
@@ -2188,6 +2194,120 @@ export type AppFeedbackInput = {
   source_screen?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** One store day, for one slice. A metric the store does not report is null. */
+export type AppInsightDailyRow = {
+  __typename?: 'AppInsightDailyRow';
+  /** Google Play: devices active in the last 30 days. App Store: devices with a session that day. */
+  active_devices?: Maybe<Scalars['Float']['output']>;
+  anrs?: Maybe<Scalars['Float']['output']>;
+  crashes?: Maybe<Scalars['Float']['output']>;
+  day: Scalars['String']['output'];
+  deletions?: Maybe<Scalars['Float']['output']>;
+  device_installs?: Maybe<Scalars['Float']['output']>;
+  dimension: AppInsightDimension;
+  /** App Store: first-time downloads. */
+  first_downloads?: Maybe<Scalars['Float']['output']>;
+  id: Scalars['ID']['output'];
+  install_events?: Maybe<Scalars['Float']['output']>;
+  installs?: Maybe<Scalars['Float']['output']>;
+  /** Empty for TOTAL; a country code; an app version (version code on Google Play). */
+  key: Scalars['String']['output'];
+  /** Google Play: users installing on their first device. */
+  new_installs?: Maybe<Scalars['Float']['output']>;
+  rating_daily_avg?: Maybe<Scalars['Float']['output']>;
+  rating_total_avg?: Maybe<Scalars['Float']['output']>;
+  redownloads?: Maybe<Scalars['Float']['output']>;
+  reviews_1?: Maybe<Scalars['Float']['output']>;
+  reviews_2?: Maybe<Scalars['Float']['output']>;
+  reviews_3?: Maybe<Scalars['Float']['output']>;
+  reviews_4?: Maybe<Scalars['Float']['output']>;
+  reviews_5?: Maybe<Scalars['Float']['output']>;
+  sessions?: Maybe<Scalars['Float']['output']>;
+  store: AppInsightStore;
+  total_installs?: Maybe<Scalars['Float']['output']>;
+  uninstall_events?: Maybe<Scalars['Float']['output']>;
+  uninstalls?: Maybe<Scalars['Float']['output']>;
+  update_events?: Maybe<Scalars['Float']['output']>;
+  /** Google Play: device upgrades. App Store: update downloads. */
+  updates?: Maybe<Scalars['Float']['output']>;
+  user_uninstalls?: Maybe<Scalars['Float']['output']>;
+};
+
+/** What a history row is split by. */
+export type AppInsightDimension =
+  | 'COUNTRY'
+  | 'TOTAL'
+  | 'VERSION';
+
+/** One store's integration. Never carries a credential. */
+export type AppInsightIntegration = {
+  __typename?: 'AppInsightIntegration';
+  configured: Scalars['Boolean']['output'];
+  /** The first and last store day the history holds (yyyy-MM-dd). */
+  first_day?: Maybe<Scalars['String']['output']>;
+  last_attempt_at?: Maybe<Scalars['String']['output']>;
+  last_day?: Maybe<Scalars['String']['output']>;
+  last_error?: Maybe<Scalars['String']['output']>;
+  last_success_at?: Maybe<Scalars['String']['output']>;
+  /** The Environment Variables fields still blank (service_account_json, package_name, reports_bucket, issuer_id, key_id, private_key, bundle_id). */
+  missing: Array<Scalars['String']['output']>;
+  /** Why a value that is set cannot be used, e.g. a key that is not JSON. */
+  problem?: Maybe<Scalars['String']['output']>;
+  /** Tech > Environment Variables, opened on this store's entry. */
+  setup_url?: Maybe<Scalars['String']['output']>;
+  status: AppInsightStatus;
+  store: AppInsightStore;
+};
+
+/** How one store's integration stands. */
+export type AppInsightStatus =
+  /** The last sync succeeded. */
+  | 'CONNECTED'
+  /** Credentials are missing or unusable — set them in Tech > Environment Variables. */
+  | 'DISCONNECTED'
+  /** The last sync failed; last_error says why. */
+  | 'ERROR'
+  /** Configured, but no sync has finished yet. */
+  | 'PENDING'
+  /** A sync is running. */
+  | 'SYNCING';
+
+/** The app stores App Insights reads (Analytics > App Insights). */
+export type AppInsightStore =
+  /** App Store Connect — Analytics Reports and customer reviews. */
+  | 'APP_STORE'
+  /** Google Play Console — bulk reports in the developer account's Cloud Storage bucket. */
+  | 'GOOGLE_PLAY';
+
+/** One sync of one store. */
+export type AppInsightSyncLog = {
+  __typename?: 'AppInsightSyncLog';
+  api_calls: Scalars['Int']['output'];
+  duration_ms?: Maybe<Scalars['Float']['output']>;
+  finished_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  message: Scalars['String']['output'];
+  outcome: AppInsightSyncOutcome;
+  retries: Scalars['Int']['output'];
+  rows_written: Scalars['Int']['output'];
+  /** Report files or instances (and review pages) read this time. */
+  sources_read: Scalars['Int']['output'];
+  /** Already read and unchanged, so skipped. */
+  sources_skipped: Scalars['Int']['output'];
+  started_at: Scalars['String']['output'];
+  store: AppInsightStore;
+  trigger: AppInsightSyncTrigger;
+};
+
+export type AppInsightSyncOutcome =
+  | 'FAILED'
+  | 'RUNNING'
+  | 'SUCCESS';
+
+export type AppInsightSyncTrigger =
+  | 'MANUAL'
+  | 'SCHEDULE';
+
 export type AppPopup = {
   __typename?: 'AppPopup';
   /** Set only for AUDIENCE_LIST — membership is recomputed on every app open. */
@@ -2346,7 +2466,7 @@ export type AppSettings = {
   pod_reminder_lead_hours: Scalars['Int']['output'];
   /** How many hours before a pod starts its guests get the short same-day reminder (where and what time). 0 switches it off. */
   pod_sameday_reminder_hours: Scalars['Int']['output'];
-  /** The biggest discount (whole %, 1-99) any multi-ticket tier on a pod may give. Pods already above it keep their tiers until they are edited. */
+  /** @deprecated The multi-ticket discount was removed. Always 50. */
   ticket_discount_max_pct: Scalars['Int']['output'];
   time_format: Scalars['String']['output'];
   /** Where every app reads 'now' from: SERVER, BROWSER or CUSTOM. */
@@ -4011,6 +4131,8 @@ export type BackgroundJobKind =
   | 'AI_TRANSLATE'
   | 'BULK_DELETE'
   | 'EMAIL_VERIFY'
+  | 'LEAD_DISCOVERY'
+  | 'LEAD_QUALITY_RECALC'
   | 'MEDIA_ORGANIZE';
 
 export type BackgroundJobStatus =
@@ -5506,9 +5628,9 @@ export type CheckoutQuote = {
   /** Percentage of that Smart Incentive (0 when none). */
   smart_incentive_pct: Scalars['Int']['output'];
   subtotal: Scalars['Float']['output'];
-  /** Multi-ticket discount taken off the ticket price for the quoted seats (0 when no tier applies). */
+  /** @deprecated The multi-ticket discount was removed. Always 0. */
   ticket_discount_amount: Scalars['Float']['output'];
-  /** Percentage of the multi-ticket tier that applied (0 when none). */
+  /** @deprecated The multi-ticket discount was removed. Always 0. */
   ticket_discount_pct: Scalars['Int']['output'];
   /** The quoted amount rounded UP to a whole rupee — what a checkout with no coupon and no coins is charged. */
   total: Scalars['Float']['output'];
@@ -7169,14 +7291,21 @@ export type CommunityLead = {
   __typename?: 'CommunityLead';
   activity_log: Array<CrmActivity>;
   area?: Maybe<Scalars['String']['output']>;
+  /** The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here. */
   assigned_to?: Maybe<Scalars['String']['output']>;
+  /** The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name. */
+  assigned_user_id?: Maybe<Scalars['ID']['output']>;
   city?: Maybe<Scalars['String']['output']>;
   community_link?: Maybe<Scalars['String']['output']>;
   community_name: Scalars['String']['output'];
   community_type?: Maybe<Scalars['String']['output']>;
   contacts: Array<CrmContact>;
   created_at?: Maybe<Scalars['String']['output']>;
+  /** Kilometres from the centre of a Nearby leads search. Set only on a table page read with near; null elsewhere. */
+  distance_km?: Maybe<Scalars['Float']['output']>;
   dynamic_values_json: Scalars['String']['output'];
+  /** How exactly the lead sits on the map: PIN (its map link), AREA or CITY (that centre). Null until a Nearby leads search places it, or when it has no known city. */
+  geo_precision?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   instagram_link?: Maybe<Scalars['String']['output']>;
   interests: Array<Scalars['String']['output']>;
@@ -7193,6 +7322,8 @@ export type CommunityLead = {
   platform?: Maybe<Scalars['String']['output']>;
   priority: Scalars['String']['output'];
   profile_photo_url?: Maybe<Scalars['String']['output']>;
+  /** Lead Quality Score summary (score, classification, qualification); null until the lead is first scored. */
+  quality?: Maybe<CrmLeadQualitySummary>;
   services_offered: Array<CrmServiceOffered>;
   social_links: Array<CrmSocialLink>;
   super_category?: Maybe<CrmSuperCategoryRef>;
@@ -7204,7 +7335,10 @@ export type CommunityLead = {
 
 export type CommunityLeadInput = {
   area?: InputMaybe<Scalars['String']['input']>;
+  /** The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here. */
   assigned_to?: InputMaybe<Scalars['String']['input']>;
+  /** The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name. */
+  assigned_user_id?: InputMaybe<Scalars['ID']['input']>;
   city?: InputMaybe<Scalars['String']['input']>;
   community_link?: InputMaybe<Scalars['String']['input']>;
   community_name: Scalars['String']['input'];
@@ -7237,6 +7371,8 @@ export type CommunityLeadTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<CommunityLead>;
   total: Scalars['Int']['output'];
+  /** Leads of this kind with no place on the map (no city, or one the map does not know), so a Nearby leads search cannot include them. Null outside a nearby search. */
+  unplaced?: Maybe<Scalars['Int']['output']>;
 };
 
 export type CompletePasswordResetInput = {
@@ -8129,8 +8265,9 @@ export type CreatePodInput = {
   smart_incentive_pct?: InputMaybe<Scalars['Int']['input']>;
   /** The sub-category the host picked in step 2. Required to enforce the co-host cap. */
   sub_category_id?: InputMaybe<Scalars['ID']['input']>;
-  /** Offer a multi-ticket discount. Ignored (stored off) on a free or zero-priced pod. */
+  /** @deprecated The multi-ticket discount was removed. Ignored. */
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** @deprecated The multi-ticket discount was removed. Ignored. */
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
   /** @deprecated Venues are booked with an offer now (venue_offer). Refused with a message to update the app. */
   venue_booking?: InputMaybe<InstantBookingInput>;
@@ -8267,16 +8404,23 @@ export type CreatorLead = {
   __typename?: 'CreatorLead';
   activity_log: Array<CrmActivity>;
   area?: Maybe<Scalars['String']['output']>;
+  /** The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here. */
   assigned_to?: Maybe<Scalars['String']['output']>;
+  /** The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name. */
+  assigned_user_id?: Maybe<Scalars['ID']['output']>;
   city?: Maybe<Scalars['String']['output']>;
   collaboration_types: Array<Scalars['String']['output']>;
   contacts: Array<CrmContact>;
   created_at?: Maybe<Scalars['String']['output']>;
   creator_name: Scalars['String']['output'];
+  /** Kilometres from the centre of a Nearby leads search. Set only on a table page read with near; null elsewhere. */
+  distance_km?: Maybe<Scalars['Float']['output']>;
   dynamic_values_json: Scalars['String']['output'];
   /** Average engagement, in percent. */
   engagement_rate?: Maybe<Scalars['Float']['output']>;
   followers_count?: Maybe<Scalars['Float']['output']>;
+  /** How exactly the lead sits on the map: PIN (its map link), AREA or CITY (that centre). Null until a Nearby leads search places it, or when it has no known city. */
+  geo_precision?: Maybe<Scalars['String']['output']>;
   handle?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   instagram_link?: Maybe<Scalars['String']['output']>;
@@ -8291,6 +8435,8 @@ export type CreatorLead = {
   priority: Scalars['String']['output'];
   profile_links: Array<Scalars['String']['output']>;
   profile_photo_url?: Maybe<Scalars['String']['output']>;
+  /** Lead Quality Score summary (score, classification, qualification); null until the lead is first scored. */
+  quality?: Maybe<CrmLeadQualitySummary>;
   rate_card?: Maybe<Scalars['String']['output']>;
   services_offered: Array<CrmServiceOffered>;
   social_links: Array<CrmSocialLink>;
@@ -8303,7 +8449,10 @@ export type CreatorLead = {
 
 export type CreatorLeadInput = {
   area?: InputMaybe<Scalars['String']['input']>;
+  /** The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here. */
   assigned_to?: InputMaybe<Scalars['String']['input']>;
+  /** The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name. */
+  assigned_user_id?: InputMaybe<Scalars['ID']['input']>;
   city?: InputMaybe<Scalars['String']['input']>;
   collaboration_types?: InputMaybe<Array<Scalars['String']['input']>>;
   contacts?: InputMaybe<Array<CrmContactInput>>;
@@ -8337,18 +8486,34 @@ export type CreatorLeadTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<CreatorLead>;
   total: Scalars['Int']['output'];
+  /** Leads of this kind with no place on the map (no city, or one the map does not know), so a Nearby leads search cannot include them. Null outside a nearby search. */
+  unplaced?: Maybe<Scalars['Int']['output']>;
 };
 
 export type CrmActivity = {
   __typename?: 'CrmActivity';
+  /** Empty once the log is deleted. */
   body_html?: Maybe<Scalars['String']['output']>;
   body_text?: Maybe<Scalars['String']['output']>;
+  /** True when the signed-in user may edit / delete this manual log (its author, or a SUPER_ADMIN). */
+  can_change: Scalars['Boolean']['output'];
   created_at?: Maybe<Scalars['String']['output']>;
   created_by?: Maybe<Scalars['String']['output']>;
+  deleted_at?: Maybe<Scalars['String']['output']>;
+  deleted_by?: Maybe<Scalars['String']['output']>;
+  /** A manual log's id (edit / delete it with this). Null for EMAIL / CALL entries and audit entries. */
+  id?: Maybe<Scalars['ID']['output']>;
+  /** A deleted manual log keeps its place in the history, without its words. */
+  is_deleted: Scalars['Boolean']['output'];
+  /** CRM users the log @mentions (crmUsersByIds names them). */
+  mention_user_ids: Array<Scalars['ID']['output']>;
   status?: Maybe<Scalars['String']['output']>;
   summary?: Maybe<Scalars['String']['output']>;
   target?: Maybe<Scalars['String']['output']>;
+  /** EMAIL, CALL, NOTE (a manual log), or NOTE_CREATED / NOTE_UPDATED / NOTE_DELETED (a manual log's history; target = its id). */
   type: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+  updated_by?: Maybe<Scalars['String']['output']>;
 };
 
 /** Result of placing a CRM call (AI or portal/agent-bridge). */
@@ -8887,6 +9052,207 @@ export type CrmLeadAiThread = {
   messages: Array<CrmLeadAiMessage>;
 };
 
+/** A researched lead in the CRM › Lead Research review queue, scored like a CRM lead. */
+export type CrmLeadCandidate = {
+  __typename?: 'CrmLeadCandidate';
+  address: Scalars['String']['output'];
+  area: Scalars['String']['output'];
+  category: Scalars['String']['output'];
+  city: Scalars['String']['output'];
+  classification_label: Scalars['String']['output'];
+  config_version?: Maybe<Scalars['Int']['output']>;
+  created_at: Scalars['String']['output'];
+  created_by: CrmLeadQualityActor;
+  crm_lead_id?: Maybe<Scalars['ID']['output']>;
+  decided_at?: Maybe<Scalars['String']['output']>;
+  decided_by?: Maybe<CrmLeadQualityActor>;
+  decision_note: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  duplicates: Array<CrmLeadCandidateDuplicate>;
+  emails: Array<Scalars['String']['output']>;
+  evidence: Array<CrmLeadQualityEvidence>;
+  id: Scalars['ID']['output'];
+  instagram_handle: Scalars['String']['output'];
+  instagram_url: Scalars['String']['output'];
+  job_id?: Maybe<Scalars['ID']['output']>;
+  lead_type: CrmEntityType;
+  /** Items still unverified — what to research next. */
+  missing_evidence: Array<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  /** DISCOVERY (found by a discovery job) or MCP (handed in by an AI assistant). */
+  origin: Scalars['String']['output'];
+  phones: Array<Scalars['String']['output']>;
+  qualification: CrmLeadQualification;
+  result?: Maybe<CrmLeadQualityResult>;
+  score?: Maybe<Scalars['Float']['output']>;
+  skipped_checks: Array<Scalars['String']['output']>;
+  sources: Array<CrmLeadCandidateSource>;
+  status: CrmLeadCandidateStatus;
+  tone: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+  website: Scalars['String']['output'];
+};
+
+export type CrmLeadCandidateApproval = {
+  __typename?: 'CrmLeadCandidateApproval';
+  candidate_id: Scalars['ID']['output'];
+  crm_lead_id?: Maybe<Scalars['ID']['output']>;
+  message: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  /** ADDED, DUPLICATE, NOT_QUALIFIED, SKIPPED or FAILED */
+  outcome: Scalars['String']['output'];
+};
+
+export type CrmLeadCandidateDuplicate = {
+  __typename?: 'CrmLeadCandidateDuplicate';
+  entity_type: CrmEntityType;
+  lead_id: Scalars['ID']['output'];
+  lead_name: Scalars['String']['output'];
+  /** What matched, e.g. PHONE 98765 43210 or INSTAGRAM @thebarn. */
+  match: Scalars['String']['output'];
+};
+
+/** A researched lead. Use only facts found on public pages, and list those pages in sources — never invent handles, numbers or evidence. */
+export type CrmLeadCandidateInput = {
+  address?: InputMaybe<Scalars['String']['input']>;
+  area?: InputMaybe<Scalars['String']['input']>;
+  category?: InputMaybe<Scalars['String']['input']>;
+  city?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  emails?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Quality items already verified, each with its evidence and public source link. */
+  evidence?: InputMaybe<Array<CrmLeadEvidenceDecisionInput>>;
+  /** Instagram profile link or handle. */
+  instagram?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  phones?: InputMaybe<Array<Scalars['String']['input']>>;
+  sources?: InputMaybe<Array<CrmLeadCandidateSourceInput>>;
+  website?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type CrmLeadCandidateQueued = {
+  __typename?: 'CrmLeadCandidateQueued';
+  candidate_id: Scalars['ID']['output'];
+  index: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+};
+
+export type CrmLeadCandidateRefusal = {
+  __typename?: 'CrmLeadCandidateRefusal';
+  index: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  reasons: Array<Scalars['String']['output']>;
+};
+
+export type CrmLeadCandidateSaveReport = {
+  __typename?: 'CrmLeadCandidateSaveReport';
+  /** Not saved: the same lead is already in the queue. */
+  already_queued: Array<CrmLeadCandidateQueued>;
+  /** Queued as DUPLICATE: they match an existing CRM lead and can never be added. */
+  duplicates: Array<CrmLeadCandidate>;
+  /** Not saved: invalid or untraceable input, with the reasons. */
+  refused: Array<CrmLeadCandidateRefusal>;
+  /** New candidates queued for review. */
+  saved: Array<CrmLeadCandidate>;
+};
+
+/** A public page a candidate was found on, with the text read from it. */
+export type CrmLeadCandidateSource = {
+  __typename?: 'CrmLeadCandidateSource';
+  kind: CrmLeadSourceKind;
+  text: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
+export type CrmLeadCandidateSourceInput = {
+  kind?: InputMaybe<CrmLeadSourceKind>;
+  /** The text read on that page (bio, listing, snippet). */
+  text?: InputMaybe<Scalars['String']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
+  /** The public page (http/https) this lead was found on. */
+  url: Scalars['String']['input'];
+};
+
+/** NEW: waiting for review. ADDED: now a CRM lead. REJECTED: dismissed. DUPLICATE: already in the CRM, can never be added. */
+export type CrmLeadCandidateStatus =
+  | 'ADDED'
+  | 'DUPLICATE'
+  | 'NEW'
+  | 'REJECTED';
+
+export type CrmLeadCandidateTablePage = {
+  __typename?: 'CrmLeadCandidateTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<CrmLeadCandidate>;
+  total: Scalars['Int']['output'];
+};
+
+export type CrmLeadDiscoveryInput = {
+  /** Let the AI quote evidence from each candidate's public text (default true). */
+  ai_evidence?: InputMaybe<Scalars['Boolean']['input']>;
+  category?: InputMaybe<Scalars['String']['input']>;
+  city: Scalars['String']['input'];
+  keywords?: InputMaybe<Scalars['String']['input']>;
+  lead_type: CrmEntityType;
+  locality?: InputMaybe<Scalars['String']['input']>;
+  /** Count only candidates scoring at least this (0-100). */
+  min_score?: InputMaybe<Scalars['Float']['input']>;
+  /** INSTAGRAM and/or GOOGLE_MAPS; defaults by lead type. */
+  sources?: InputMaybe<Array<CrmLeadSourceKind>>;
+  /** How many qualifying new leads to find, 1-100 (default 20). */
+  target_count?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** A lead discovery running (or finished) in the background. */
+export type CrmLeadDiscoveryJob = {
+  __typename?: 'CrmLeadDiscoveryJob';
+  candidates: Array<CrmLeadCandidate>;
+  category: Scalars['String']['output'];
+  city: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  error_message: Scalars['String']['output'];
+  failed: Scalars['Int']['output'];
+  failures: Array<BackgroundJobFailure>;
+  finished_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  keywords: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  lead_type: CrmEntityType;
+  locality: Scalars['String']['output'];
+  min_score?: Maybe<Scalars['Float']['output']>;
+  plan_note: Scalars['String']['output'];
+  queries: Array<Scalars['String']['output']>;
+  searches_run: Scalars['Int']['output'];
+  sources: Array<CrmLeadSourceKind>;
+  stats: CrmLeadDiscoveryStats;
+  status: BackgroundJobStatus;
+  /** Qualifying new leads found so far. */
+  succeeded: Scalars['Int']['output'];
+  target_count: Scalars['Int']['output'];
+  /** The number of qualifying new leads asked for. */
+  total: Scalars['Int']['output'];
+};
+
+export type CrmLeadDiscoveryStats = {
+  __typename?: 'CrmLeadDiscoveryStats';
+  already_queued: Scalars['Int']['output'];
+  duplicates: Scalars['Int']['output'];
+  found: Scalars['Int']['output'];
+  qualifying: Scalars['Int']['output'];
+  refused: Scalars['Int']['output'];
+  saved: Scalars['Int']['output'];
+};
+
+export type CrmLeadDuplicateCheck = {
+  __typename?: 'CrmLeadDuplicateCheck';
+  crm_matches: Array<CrmLeadCandidateDuplicate>;
+  is_duplicate: Scalars['Boolean']['output'];
+  lead_type: CrmEntityType;
+  queued_candidates: Array<CrmLeadQueuedCandidate>;
+};
+
 export type CrmLeadDuplicateCheckInput = {
   contacts?: InputMaybe<Array<CrmContactInput>>;
   /** The kind of the lead being edited — with lead_id, so it never matches itself. */
@@ -8908,6 +9274,28 @@ export type CrmLeadDuplicateMatch = {
   /** The value as it was typed. */
   value: Scalars['String']['output'];
 };
+
+/** One decision on one item. VERIFIED needs the evidence (and, from MCP, the public source link); PENDING clears an earlier decision. */
+export type CrmLeadEvidenceDecisionInput = {
+  evidence?: InputMaybe<Scalars['String']['input']>;
+  item_key: Scalars['String']['input'];
+  notes?: InputMaybe<Scalars['String']['input']>;
+  source_url?: InputMaybe<Scalars['String']['input']>;
+  status: CrmLeadEvidenceStatus;
+};
+
+/** VERIFIED earns the item's points; PENDING (unknown) and FAILED (checked, not met) earn none. */
+export type CrmLeadEvidenceStatus =
+  | 'FAILED'
+  | 'PENDING'
+  | 'VERIFIED';
+
+/** Who decided an item: a person in the console, an AI assistant through MCP, the server's own check, or the discovery AI quoting a source. */
+export type CrmLeadEvidenceVia =
+  | 'AI'
+  | 'MANUAL'
+  | 'MCP'
+  | 'SYSTEM';
 
 export type CrmLeadFilter = {
   city?: InputMaybe<Scalars['String']['input']>;
@@ -8960,6 +9348,466 @@ export type CrmLeadMediaUpdateInput = {
   url?: InputMaybe<Scalars['String']['input']>;
   width?: InputMaybe<Scalars['Int']['input']>;
 };
+
+/** Centre and radius of a Nearby leads search: the searcher position (lat and lng together) or a city, optionally with an area, from the admin Location list. radius_km is 0.5 to 50. */
+export type CrmLeadNearInput = {
+  area?: InputMaybe<Scalars['String']['input']>;
+  city?: InputMaybe<Scalars['String']['input']>;
+  lat?: InputMaybe<Scalars['Float']['input']>;
+  lng?: InputMaybe<Scalars['Float']['input']>;
+  radius_km: Scalars['Float']['input'];
+};
+
+export type CrmLeadQualification =
+  | 'NOT_QUALIFIED'
+  | 'PENDING_VERIFICATION'
+  | 'QUALIFIED';
+
+export type CrmLeadQualityActor = {
+  __typename?: 'CrmLeadQualityActor';
+  id?: Maybe<Scalars['ID']['output']>;
+  name: Scalars['String']['output'];
+};
+
+export type CrmLeadQualityAnalytics = {
+  __typename?: 'CrmLeadQualityAnalytics';
+  by_type: Array<CrmLeadQualityTypeStats>;
+  cities: Array<CrmLeadQualityCityStat>;
+  conversion: Array<CrmLeadQualityConversion>;
+  duplicate_leads: Scalars['Int']['output'];
+  generated_at: Scalars['String']['output'];
+  missing_evidence: Array<CrmLeadQualityMissing>;
+  origins: Array<CrmLeadQualityOrigin>;
+  research_queue: Array<CrmLeadQualityQueueStat>;
+  top_leads: Array<CrmLeadQualityTopLead>;
+  trend: Array<CrmLeadQualityTrendPoint>;
+};
+
+/** An automatic check the server runs against a real source. NONE: a person or an AI assistant records the evidence. */
+export type CrmLeadQualityAutoCheck =
+  | 'CRM_UNIQUENESS'
+  | 'EMAIL_DELIVERABLE'
+  | 'GOOGLE_MAPS_LISTING'
+  | 'GOOGLE_REVIEWS_MIN'
+  | 'INSTAGRAM_BUSINESS_PROFILE'
+  | 'INSTAGRAM_FOLLOWERS_MIN'
+  | 'INSTAGRAM_RECENT_POST_DAYS'
+  | 'NONE'
+  | 'WEBSITE_REACHABLE';
+
+export type CrmLeadQualityBand = {
+  __typename?: 'CrmLeadQualityBand';
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  min: Scalars['Float']['output'];
+  tone: Scalars['String']['output'];
+};
+
+export type CrmLeadQualityBandInput = {
+  key?: InputMaybe<Scalars['String']['input']>;
+  label: Scalars['String']['input'];
+  min: Scalars['Float']['input'];
+  /** success, warning or error */
+  tone: Scalars['String']['input'];
+};
+
+export type CrmLeadQualityCityStat = {
+  __typename?: 'CrmLeadQualityCityStat';
+  average_score?: Maybe<Scalars['Float']['output']>;
+  city: Scalars['String']['output'];
+  leads: Scalars['Int']['output'];
+  qualified: Scalars['Int']['output'];
+};
+
+/** One version of a lead type's scoring model. Published versions are never edited; a new draft is published instead. */
+export type CrmLeadQualityConfig = {
+  __typename?: 'CrmLeadQualityConfig';
+  archived_at?: Maybe<Scalars['String']['output']>;
+  bands: Array<CrmLeadQualityBand>;
+  change_note: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  created_by: CrmLeadQualityActor;
+  criteria: Array<CrmLeadQualityCriterion>;
+  id: Scalars['ID']['output'];
+  lead_type: CrmEntityType;
+  /** Null: qualification depends on the mandatory gates only. */
+  min_qualification_score?: Maybe<Scalars['Float']['output']>;
+  published_at?: Maybe<Scalars['String']['output']>;
+  published_by?: Maybe<CrmLeadQualityActor>;
+  revision: Scalars['Int']['output'];
+  status: CrmLeadQualityConfigStatus;
+  updated_at?: Maybe<Scalars['String']['output']>;
+  updated_by: CrmLeadQualityActor;
+  version: Scalars['Int']['output'];
+  /** Sum of the enabled criteria's weightage (exactly 100 once published). */
+  weightage_total: Scalars['Float']['output'];
+};
+
+/** A scoring model as an array of criteria, each with optional sub-criteria. Enabled weightage must total exactly 100 to publish. */
+export type CrmLeadQualityConfigInput = {
+  bands: Array<CrmLeadQualityBandInput>;
+  criteria: Array<CrmLeadQualityCriterionInput>;
+  min_qualification_score?: InputMaybe<Scalars['Float']['input']>;
+};
+
+export type CrmLeadQualityConfigStatus =
+  | 'ARCHIVED'
+  | 'DRAFT'
+  | 'PUBLISHED';
+
+export type CrmLeadQualityConversion = {
+  __typename?: 'CrmLeadQualityConversion';
+  classification: Scalars['String']['output'];
+  conversion_rate?: Maybe<Scalars['Float']['output']>;
+  label: Scalars['String']['output'];
+  leads: Scalars['Int']['output'];
+  won: Scalars['Int']['output'];
+};
+
+export type CrmLeadQualityCount = {
+  __typename?: 'CrmLeadQualityCount';
+  count: Scalars['Int']['output'];
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+};
+
+export type CrmLeadQualityCriterion = {
+  __typename?: 'CrmLeadQualityCriterion';
+  auto_check: CrmLeadQualityAutoCheck;
+  enabled: Scalars['Boolean']['output'];
+  guidance: Scalars['String']['output'];
+  key: Scalars['String']['output'];
+  /** A gate: the lead cannot qualify until at least one item of this criterion is verified. */
+  mandatory: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  sub_criteria: Array<CrmLeadQualitySubCriterion>;
+  threshold?: Maybe<Scalars['Int']['output']>;
+  weightage: Scalars['Float']['output'];
+};
+
+export type CrmLeadQualityCriterionInput = {
+  auto_check?: InputMaybe<CrmLeadQualityAutoCheck>;
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  guidance?: InputMaybe<Scalars['String']['input']>;
+  /** Stable id evidence is stored against. Leave empty on a new criterion; it is made from the name. */
+  key?: InputMaybe<Scalars['String']['input']>;
+  mandatory?: InputMaybe<Scalars['Boolean']['input']>;
+  name: Scalars['String']['input'];
+  sub_criteria?: InputMaybe<Array<CrmLeadQualitySubCriterionInput>>;
+  threshold?: InputMaybe<Scalars['Int']['input']>;
+  weightage: Scalars['Float']['input'];
+};
+
+export type CrmLeadQualityCriterionResult = {
+  __typename?: 'CrmLeadQualityCriterionResult';
+  earned: Scalars['Float']['output'];
+  items: Array<CrmLeadQualityItemResult>;
+  key: Scalars['String']['output'];
+  mandatory: Scalars['Boolean']['output'];
+  max: Scalars['Float']['output'];
+  name: Scalars['String']['output'];
+  /** VERIFIED, PARTIAL, PENDING or FAILED */
+  status: Scalars['String']['output'];
+};
+
+export type CrmLeadQualityDetails = {
+  __typename?: 'CrmLeadQualityDetails';
+  config: CrmLeadQualityConfig;
+  entity_type: CrmEntityType;
+  evidence: Array<CrmLeadQualityEvidence>;
+  lead_id: Scalars['ID']['output'];
+  lead_name: Scalars['String']['output'];
+  /** MANUAL or RESEARCH (added from a Lead Research candidate). */
+  origin: Scalars['String']['output'];
+  published_version: Scalars['Int']['output'];
+  result?: Maybe<CrmLeadQualityResult>;
+  scored_at?: Maybe<Scalars['String']['output']>;
+  scored_version?: Maybe<Scalars['Int']['output']>;
+  /** True when the stored score was worked out with an older configuration version (a recalculation is due). */
+  stale: Scalars['Boolean']['output'];
+};
+
+export type CrmLeadQualityEvent = {
+  __typename?: 'CrmLeadQualityEvent';
+  actor: CrmLeadQualityActor;
+  classification: Scalars['String']['output'];
+  config_version?: Maybe<Scalars['Int']['output']>;
+  created_at: Scalars['String']['output'];
+  entity_type: CrmEntityType;
+  evidence: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  item_key: Scalars['String']['output'];
+  /** SCORE, EVIDENCE, CONFIG_DRAFT, CONFIG_PUBLISH or CONFIG_DISCARD */
+  kind: Scalars['String']['output'];
+  lead_id?: Maybe<Scalars['ID']['output']>;
+  note: Scalars['String']['output'];
+  qualification: Scalars['String']['output'];
+  score_after?: Maybe<Scalars['Float']['output']>;
+  score_before?: Maybe<Scalars['Float']['output']>;
+  source_url: Scalars['String']['output'];
+  status_after: Scalars['String']['output'];
+  status_before: Scalars['String']['output'];
+  trigger?: Maybe<Scalars['String']['output']>;
+  via?: Maybe<CrmLeadEvidenceVia>;
+};
+
+export type CrmLeadQualityEvidence = {
+  __typename?: 'CrmLeadQualityEvidence';
+  actor: CrmLeadQualityActor;
+  decided_at: Scalars['String']['output'];
+  evidence: Scalars['String']['output'];
+  item_key: Scalars['String']['output'];
+  notes: Scalars['String']['output'];
+  source_url: Scalars['String']['output'];
+  status: CrmLeadEvidenceStatus;
+  via: CrmLeadEvidenceVia;
+};
+
+export type CrmLeadQualityGate = {
+  __typename?: 'CrmLeadQualityGate';
+  key: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  /** PASSED, FAILED or PENDING */
+  state: Scalars['String']['output'];
+};
+
+/** One problem with a scoring configuration: where, a stable code the console translates, and the English message. */
+export type CrmLeadQualityIssue = {
+  __typename?: 'CrmLeadQualityIssue';
+  amount?: Maybe<Scalars['Float']['output']>;
+  code: Scalars['String']['output'];
+  message: Scalars['String']['output'];
+  path: Scalars['String']['output'];
+};
+
+export type CrmLeadQualityItemResult = {
+  __typename?: 'CrmLeadQualityItemResult';
+  auto_check: CrmLeadQualityAutoCheck;
+  criterion_key: Scalars['String']['output'];
+  earned: Scalars['Float']['output'];
+  guidance?: Maybe<Scalars['String']['output']>;
+  /** The key evidence is recorded against: criterion_key or criterion_key.sub_key. */
+  key: Scalars['String']['output'];
+  mandatory: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  points: Scalars['Float']['output'];
+  status: CrmLeadEvidenceStatus;
+  sub_key?: Maybe<Scalars['String']['output']>;
+  threshold?: Maybe<Scalars['Int']['output']>;
+};
+
+export type CrmLeadQualityJobRef = {
+  __typename?: 'CrmLeadQualityJobRef';
+  /** Null when nothing matched (no leads to score). */
+  job_id?: Maybe<Scalars['ID']['output']>;
+  total: Scalars['Int']['output'];
+};
+
+export type CrmLeadQualityMissing = {
+  __typename?: 'CrmLeadQualityMissing';
+  criterion: Scalars['String']['output'];
+  entity_type: CrmEntityType;
+  leads: Scalars['Int']['output'];
+};
+
+export type CrmLeadQualityOrigin = {
+  __typename?: 'CrmLeadQualityOrigin';
+  average_score?: Maybe<Scalars['Float']['output']>;
+  leads: Scalars['Int']['output'];
+  origin: Scalars['String']['output'];
+  qualified: Scalars['Int']['output'];
+};
+
+export type CrmLeadQualityPublishResult = {
+  __typename?: 'CrmLeadQualityPublishResult';
+  config: CrmLeadQualityConfig;
+  /** The background job rescoring every lead of this type with the new version; null when the type has no leads. */
+  recalculation_job_id?: Maybe<Scalars['ID']['output']>;
+};
+
+export type CrmLeadQualityQueueStat = {
+  __typename?: 'CrmLeadQualityQueueStat';
+  average_score?: Maybe<Scalars['Float']['output']>;
+  count: Scalars['Int']['output'];
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+};
+
+/** The calculated score. The ring, the breakdown table and the qualification all read this one result. */
+export type CrmLeadQualityResult = {
+  __typename?: 'CrmLeadQualityResult';
+  classification: Scalars['String']['output'];
+  classification_label: Scalars['String']['output'];
+  criteria: Array<CrmLeadQualityCriterionResult>;
+  failed_items: Scalars['Int']['output'];
+  gates: Array<CrmLeadQualityGate>;
+  max_score: Scalars['Float']['output'];
+  min_qualification_score?: Maybe<Scalars['Float']['output']>;
+  pending_items: Scalars['Int']['output'];
+  potential_score: Scalars['Float']['output'];
+  qualification: CrmLeadQualification;
+  score: Scalars['Float']['output'];
+  tone: Scalars['String']['output'];
+  verification: CrmLeadVerificationProgress;
+  verified_items: Scalars['Int']['output'];
+};
+
+export type CrmLeadQualityScoreResponse = {
+  __typename?: 'CrmLeadQualityScoreResponse';
+  details: CrmLeadQualityDetails;
+  /** Automatic checks that could not run (no connected Instagram account, no Serper key…), and why. */
+  skipped_checks: Array<Scalars['String']['output']>;
+};
+
+export type CrmLeadQualitySettings = {
+  __typename?: 'CrmLeadQualitySettings';
+  draft?: Maybe<CrmLeadQualityConfig>;
+  lead_type: CrmEntityType;
+  published: CrmLeadQualityConfig;
+};
+
+export type CrmLeadQualitySubCriterion = {
+  __typename?: 'CrmLeadQualitySubCriterion';
+  auto_check: CrmLeadQualityAutoCheck;
+  guidance: Scalars['String']['output'];
+  key: Scalars['String']['output'];
+  /** A gate: the lead cannot qualify until this item is verified. */
+  mandatory: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  points: Scalars['Float']['output'];
+  threshold?: Maybe<Scalars['Int']['output']>;
+};
+
+export type CrmLeadQualitySubCriterionInput = {
+  auto_check?: InputMaybe<CrmLeadQualityAutoCheck>;
+  guidance?: InputMaybe<Scalars['String']['input']>;
+  key?: InputMaybe<Scalars['String']['input']>;
+  mandatory?: InputMaybe<Scalars['Boolean']['input']>;
+  name: Scalars['String']['input'];
+  points: Scalars['Float']['input'];
+  threshold?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** A lead's Lead Quality Score as listings show it; null until the lead is first scored. */
+export type CrmLeadQualitySummary = {
+  __typename?: 'CrmLeadQualitySummary';
+  classification: Scalars['String']['output'];
+  classification_label: Scalars['String']['output'];
+  config_version?: Maybe<Scalars['Int']['output']>;
+  failed_gates: Scalars['Int']['output'];
+  pending_gates: Scalars['Int']['output'];
+  pending_items: Scalars['Int']['output'];
+  qualification: CrmLeadQualification;
+  score: Scalars['Float']['output'];
+  scored_at?: Maybe<Scalars['String']['output']>;
+  /** success (green), warning (yellow) or error (red) — the score band's colour. */
+  tone: Scalars['String']['output'];
+  verification: CrmLeadVerificationProgress;
+};
+
+export type CrmLeadQualityTopLead = {
+  __typename?: 'CrmLeadQualityTopLead';
+  city: Scalars['String']['output'];
+  classification_label: Scalars['String']['output'];
+  entity_type: CrmEntityType;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  qualification: Scalars['String']['output'];
+  score: Scalars['Float']['output'];
+};
+
+export type CrmLeadQualityTrendPoint = {
+  __typename?: 'CrmLeadQualityTrendPoint';
+  average_score?: Maybe<Scalars['Float']['output']>;
+  leads: Scalars['Int']['output'];
+  week: Scalars['String']['output'];
+};
+
+export type CrmLeadQualityTypeStats = {
+  __typename?: 'CrmLeadQualityTypeStats';
+  average_score?: Maybe<Scalars['Float']['output']>;
+  classifications: Array<CrmLeadQualityCount>;
+  distribution: Array<CrmLeadQualityCount>;
+  entity_type: CrmEntityType;
+  failed_gate_leads: Scalars['Int']['output'];
+  not_qualified: Scalars['Int']['output'];
+  pending_items: Scalars['Int']['output'];
+  pending_verification: Scalars['Int']['output'];
+  qualified: Scalars['Int']['output'];
+  scored: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+};
+
+export type CrmLeadQualityValidationMode =
+  | 'DRAFT'
+  | 'PUBLISH';
+
+export type CrmLeadQueuedCandidate = {
+  __typename?: 'CrmLeadQueuedCandidate';
+  candidate_id: Scalars['ID']['output'];
+  lead_type: CrmEntityType;
+  name: Scalars['String']['output'];
+  status: CrmLeadCandidateStatus;
+};
+
+export type CrmLeadSearchInput = {
+  city?: InputMaybe<Scalars['String']['input']>;
+  classification?: InputMaybe<Scalars['String']['input']>;
+  /** Lead types to search; all five when empty. */
+  entity_types?: InputMaybe<Array<CrmEntityType>>;
+  has_failed_gates?: InputMaybe<Scalars['Boolean']['input']>;
+  max_score?: InputMaybe<Scalars['Float']['input']>;
+  min_score?: InputMaybe<Scalars['Float']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  /** 1-100, default 25. */
+  page_size?: InputMaybe<Scalars['Int']['input']>;
+  qualification?: InputMaybe<CrmLeadQualification>;
+  /** Name, city, phone, email or Instagram link contains this. */
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<CrmLeadSearchSort>;
+  /** Only leads that have never been scored. */
+  unscored?: InputMaybe<Scalars['Boolean']['input']>;
+  verification?: InputMaybe<CrmLeadVerificationProgress>;
+};
+
+export type CrmLeadSearchPage = {
+  __typename?: 'CrmLeadSearchPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<CrmLeadSearchRow>;
+  total: Scalars['Int']['output'];
+};
+
+export type CrmLeadSearchRow = {
+  __typename?: 'CrmLeadSearchRow';
+  area: Scalars['String']['output'];
+  city: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  emails: Array<Scalars['String']['output']>;
+  entity_type: CrmEntityType;
+  id: Scalars['ID']['output'];
+  instagram_link: Scalars['String']['output'];
+  lead_status: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  phones: Array<Scalars['String']['output']>;
+  quality?: Maybe<CrmLeadQualitySummary>;
+  website: Scalars['String']['output'];
+};
+
+export type CrmLeadSearchSort =
+  | 'NEWEST'
+  | 'SCORE_ASC'
+  | 'SCORE_DESC';
+
+export type CrmLeadSourceKind =
+  | 'GOOGLE_MAPS'
+  | 'INSTAGRAM'
+  | 'WEB';
+
+export type CrmLeadVerificationProgress =
+  | 'COMPLETE'
+  | 'IN_PROGRESS'
+  | 'PENDING';
 
 export type CrmLinkedHost = {
   __typename?: 'CrmLinkedHost';
@@ -9160,6 +10008,16 @@ export type CrmSocialLink = {
 export type CrmSocialLinkInput = {
   name: Scalars['String']['input'];
   url: Scalars['String']['input'];
+};
+
+/** A CRM team member, or the name behind a user id the CRM shows. Email and roles only for active CRM staff. */
+export type CrmStaffUser = {
+  __typename?: 'CrmStaffUser';
+  email?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  is_staff: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  roles: Array<Scalars['String']['output']>;
 };
 
 export type CrmSuperCategoryRef = {
@@ -9772,11 +10630,19 @@ export type DummyGiftCardCheckoutInput = {
   contact_phone?: InputMaybe<Scalars['String']['input']>;
   contact_phone_extension: Scalars['String']['input'];
   contact_phone_number: Scalars['String']['input'];
+  /** DIGITAL (emailed codes, default) or PHYSICAL (printed scratch cards by courier). */
+  delivery_mode?: InputMaybe<GiftCardDeliveryMode>;
+  /** The catalogue design. Omitted with scope_type omitted = the current default design. */
+  design_id?: InputMaybe<Scalars['ID']['input']>;
   message?: InputMaybe<Scalars['String']['input']>;
+  /** How many cards (each worth amount), 1 to the configured maximum. Omitted = 1. */
+  quantity?: InputMaybe<Scalars['Int']['input']>;
   recipient_email?: InputMaybe<Scalars['String']['input']>;
   recipient_name?: InputMaybe<Scalars['String']['input']>;
   scope_category_id?: InputMaybe<Scalars['ID']['input']>;
-  scope_type: GiftCardScopeType;
+  scope_type?: InputMaybe<GiftCardScopeType>;
+  /** Where printed cards are delivered. Required for PHYSICAL. */
+  shipping_address?: InputMaybe<OrderShippingAddressInput>;
   simulate_failure?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
@@ -10537,7 +11403,10 @@ export type EcommLead = {
   __typename?: 'EcommLead';
   activity_log: Array<CrmActivity>;
   area?: Maybe<Scalars['String']['output']>;
+  /** The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here. */
   assigned_to?: Maybe<Scalars['String']['output']>;
+  /** The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name. */
+  assigned_user_id?: Maybe<Scalars['ID']['output']>;
   brand_name?: Maybe<Scalars['String']['output']>;
   business_type?: Maybe<Scalars['String']['output']>;
   catalog_size?: Maybe<Scalars['String']['output']>;
@@ -10545,8 +11414,12 @@ export type EcommLead = {
   city?: Maybe<Scalars['String']['output']>;
   contacts: Array<CrmContact>;
   created_at?: Maybe<Scalars['String']['output']>;
+  /** Kilometres from the centre of a Nearby leads search. Set only on a table page read with near; null elsewhere. */
+  distance_km?: Maybe<Scalars['Float']['output']>;
   dynamic_values_json: Scalars['String']['output'];
   fulfilment_mode?: Maybe<Scalars['String']['output']>;
+  /** How exactly the lead sits on the map: PIN (its map link), AREA or CITY (that centre). Null until a Nearby leads search places it, or when it has no known city. */
+  geo_precision?: Maybe<Scalars['String']['output']>;
   gst_applicable: Scalars['Boolean']['output'];
   gst_number?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
@@ -10564,6 +11437,8 @@ export type EcommLead = {
   priority: Scalars['String']['output'];
   product_categories: Array<Scalars['String']['output']>;
   profile_photo_url?: Maybe<Scalars['String']['output']>;
+  /** Lead Quality Score summary (score, classification, qualification); null until the lead is first scored. */
+  quality?: Maybe<CrmLeadQualitySummary>;
   seller_name: Scalars['String']['output'];
   services_offered: Array<CrmServiceOffered>;
   social_links: Array<CrmSocialLink>;
@@ -10577,7 +11452,10 @@ export type EcommLead = {
 
 export type EcommLeadInput = {
   area?: InputMaybe<Scalars['String']['input']>;
+  /** The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here. */
   assigned_to?: InputMaybe<Scalars['String']['input']>;
+  /** The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name. */
+  assigned_user_id?: InputMaybe<Scalars['ID']['input']>;
   brand_name?: InputMaybe<Scalars['String']['input']>;
   business_type?: InputMaybe<Scalars['String']['input']>;
   catalog_size?: InputMaybe<Scalars['String']['input']>;
@@ -10615,6 +11493,8 @@ export type EcommLeadTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<EcommLead>;
   total: Scalars['Int']['output'];
+  /** Leads of this kind with no place on the map (no city, or one the map does not know), so a Nearby leads search cannot include them. Null outside a nearby search. */
+  unplaced?: Maybe<Scalars['Int']['output']>;
 };
 
 export type EditAdjustmentInput = {
@@ -11312,6 +12192,7 @@ export type EnvCategory =
   | 'OPENAI'
   | 'PEXELS'
   | 'RAZORPAY'
+  | 'REMOTION'
   | 'SERPER'
   | 'SERVAM'
   | 'SHIPROCKET'
@@ -11353,6 +12234,8 @@ export type EnvCategoryDef = {
   groupKey: Scalars['String']['output'];
   groupLabel: Scalars['String']['output'];
   label: Scalars['String']['output'];
+  /** Repo files that read the category directly (env-registry.json). */
+  usedIn: Array<Scalars['String']['output']>;
 };
 
 export type EnvConfigPair = {
@@ -11428,12 +12311,30 @@ export type EnvEntryTablePage = {
 export type EnvFieldDef = {
   __typename?: 'EnvFieldDef';
   bool: Scalars['Boolean']['output'];
+  /** Why the value is used — what stops working without it (env-registry.json). */
+  description?: Maybe<Scalars['String']['output']>;
+  /** The legacy env key the server resolves to this field, e.g. SMTP_HOST. Null when code reads the category directly. */
+  envKey?: Maybe<Scalars['String']['output']>;
   hint?: Maybe<Scalars['String']['output']>;
   label: Scalars['String']['output'];
   name: Scalars['String']['output'];
   number: Scalars['Boolean']['output'];
   phone: Scalars['Boolean']['output'];
   secret: Scalars['Boolean']['output'];
+  /** Repo files that read this field through its env key. */
+  usedIn: Array<Scalars['String']['output']>;
+  /** How the value is checked when it is saved. */
+  validation: EnvFieldValidation;
+};
+
+/** A field's save-time check. type: text, url, hostname, email, phone, number, bool, json, pem, list or fingerprints. */
+export type EnvFieldValidation = {
+  __typename?: 'EnvFieldValidation';
+  max?: Maybe<Scalars['Float']['output']>;
+  min?: Maybe<Scalars['Float']['output']>;
+  /** Must be filled when an entry is created. */
+  required: Scalars['Boolean']['output'];
+  type: Scalars['String']['output'];
 };
 
 /**
@@ -11853,6 +12754,27 @@ export type ExpenseTablePage = {
   total: Scalars['Int']['output'];
 };
 
+/** What the AI note suggests. Advice only: the refund rules and Razorpay's live check decide. */
+export type FailedPaymentAiRecommendation =
+  | 'DO_NOT_REFUND'
+  | 'NEEDS_REVIEW'
+  | 'REFUND';
+
+/** The AI's short refund note on a case. Never moves money. */
+export type FailedPaymentAiSummary = {
+  __typename?: 'FailedPaymentAiSummary';
+  /** Why the last run produced no note: AI switched off, an outage, an unreadable answer. */
+  error?: Maybe<Scalars['String']['output']>;
+  generated_at?: Maybe<Scalars['String']['output']>;
+  generated_by_name?: Maybe<Scalars['String']['output']>;
+  reasons: Array<Scalars['String']['output']>;
+  /** Null when the last run failed (see error). */
+  recommendation?: Maybe<FailedPaymentAiRecommendation>;
+  /** True once the case changed after the note was written; ask for a fresh one. */
+  stale: Scalars['Boolean']['output'];
+  summary: Scalars['String']['output'];
+};
+
 export type FailedPaymentBooking = {
   __typename?: 'FailedPaymentBooking';
   booked_razorpay_payment_id?: Maybe<Scalars['String']['output']>;
@@ -11874,6 +12796,8 @@ export type FailedPaymentClaim = {
 
 export type FailedPaymentDetail = {
   __typename?: 'FailedPaymentDetail';
+  /** The AI refund note, once someone asked for one. */
+  ai_summary?: Maybe<FailedPaymentAiSummary>;
   amount: Scalars['Float']['output'];
   attempts: Scalars['Int']['output'];
   booking: FailedPaymentBooking;
@@ -11888,6 +12812,7 @@ export type FailedPaymentDetail = {
   needs_review: Scalars['Boolean']['output'];
   payment_doc_id: Scalars['ID']['output'];
   payment_id: Scalars['String']['output'];
+  payment_source?: Maybe<PaymentSource>;
   pod_id?: Maybe<Scalars['ID']['output']>;
   pod_title: Scalars['String']['output'];
   razorpay_order_id?: Maybe<Scalars['String']['output']>;
@@ -11964,6 +12889,17 @@ export type FailedPaymentRefund = {
   status: FailedPaymentRefundStatus;
 };
 
+/** What a refund would do right now, from Razorpay's live answer. Nothing is sent. */
+export type FailedPaymentRefundPreview = {
+  __typename?: 'FailedPaymentRefundPreview';
+  /** Rupees Razorpay would send back, when refundable. */
+  amount?: Maybe<Scalars['Float']['output']>;
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  /** Why it cannot be refunded, when not refundable. */
+  reason?: Maybe<Scalars['String']['output']>;
+  refundable: Scalars['Boolean']['output'];
+};
+
 /** NONE means no refund was ever started. */
 export type FailedPaymentRefundStatus =
   | 'FAILED'
@@ -12005,7 +12941,7 @@ export type FailedPaymentRow = {
   attempts: Scalars['Int']['output'];
   /** Razorpay never captured it; Finance can close it as a bank reversal. */
   can_mark_not_refundable: Scalars['Boolean']['output'];
-  /** Refundable now (green, or yellow after approval). Only FINANCE_MANAGER / SUPER_ADMIN may act on it. */
+  /** Refund may be offered: the evidence was verified (green, or yellow after approval), or the buyer sent none and Razorpay's live check decides. Only FINANCE_MANAGER / SUPER_ADMIN may act on it. */
   can_refund: Scalars['Boolean']['output'];
   claim_count: Scalars['Int']['output'];
   created_at: Scalars['String']['output'];
@@ -12018,10 +12954,14 @@ export type FailedPaymentRow = {
   needs_review: Scalars['Boolean']['output'];
   payment_doc_id: Scalars['ID']['output'];
   payment_id: Scalars['String']['output'];
+  /** The checkout the payment came from (pod booking, pod shop, pet store, gift card / other). Null when the payment is gone. */
+  payment_source?: Maybe<PaymentSource>;
   pod_id?: Maybe<Scalars['ID']['output']>;
   pod_title: Scalars['String']['output'];
   razorpay_order_id?: Maybe<Scalars['String']['output']>;
   razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  /** The Razorpay refund id (rfnd_…) of this case's refund, as the Razorpay dashboard shows it. Null until one was sent. */
+  razorpay_refund_id?: Maybe<Scalars['String']['output']>;
   /** Rupees sent back, once a refund was started. */
   refund_amount?: Maybe<Scalars['Float']['output']>;
   refund_status: FailedPaymentRefundStatus;
@@ -12598,6 +13538,10 @@ export type GiftCard = {
   /** Redemption code (XXXX-XXXX-XXXX-XXXX). */
   code: Scalars['String']['output'];
   created_at: Scalars['String']['output'];
+  /** The catalogue design the card was bought in. Null on cards bought with a category theme. */
+  design_id?: Maybe<Scalars['ID']['output']>;
+  /** The design's name, frozen at purchase. Empty on category-theme cards. */
+  design_name: Scalars['String']['output'];
   expires_at: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   initial_amount: Scalars['Float']['output'];
@@ -12674,6 +13618,73 @@ export type GiftCardAdminDetail = {
   transactions: Array<GiftCardAdminTransaction>;
 };
 
+/** A gift card order in the Loyalty console. */
+export type GiftCardAdminOrder = {
+  __typename?: 'GiftCardAdminOrder';
+  amount: Scalars['Float']['output'];
+  buyer_email: Scalars['String']['output'];
+  buyer_name: Scalars['String']['output'];
+  buyer_phone: Scalars['String']['output'];
+  cards_issued: Scalars['Int']['output'];
+  cards_value: Scalars['Float']['output'];
+  created_at: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  delivered_at?: Maybe<Scalars['String']['output']>;
+  delivery_mode: GiftCardDeliveryMode;
+  design_back_url: Scalars['String']['output'];
+  design_front_url: Scalars['String']['output'];
+  design_id?: Maybe<Scalars['ID']['output']>;
+  design_name: Scalars['String']['output'];
+  emailed_at?: Maybe<Scalars['String']['output']>;
+  fulfilment_status: GiftCardOrderFulfilmentStatus;
+  /** The virtual cards a digital order issued (Loyalty > Virtual Gift Cards). */
+  gift_card_ids: Array<Scalars['ID']['output']>;
+  id: Scalars['ID']['output'];
+  label_available: Scalars['Boolean']['output'];
+  /** The last courier booking refusal, until a booking succeeds. */
+  last_error: Scalars['String']['output'];
+  message: Scalars['String']['output'];
+  order_no: Scalars['String']['output'];
+  paid_at?: Maybe<Scalars['String']['output']>;
+  /** The payment document id — what the Finance payment page is addressed by. */
+  payment_doc_id: Scalars['ID']['output'];
+  payment_id: Scalars['String']['output'];
+  payment_status: GiftCardOrderPaymentStatus;
+  /** The scratch-card batch printed for a physical order (Loyalty > Physical Gift Cards). */
+  physical_batch_id?: Maybe<Scalars['ID']['output']>;
+  printed_at?: Maybe<Scalars['String']['output']>;
+  quantity: Scalars['Int']['output'];
+  recipient_email: Scalars['String']['output'];
+  recipient_name: Scalars['String']['output'];
+  shipment?: Maybe<GiftCardOrderShipment>;
+  /** LOW_WALLET or NDR when the courier side needs the team. */
+  shipment_alert: Scalars['String']['output'];
+  shipment_alert_message: Scalars['String']['output'];
+  shipment_sandbox: Scalars['Boolean']['output'];
+  shipping_address?: Maybe<GiftCardOrderAddress>;
+  shipping_fee: Scalars['Float']['output'];
+  /** Paid while the design's stock could not cover it — print more before shipping. */
+  stock_short: Scalars['Boolean']['output'];
+  total: Scalars['Float']['output'];
+  tracking_events: Array<GiftCardOrderTrackingEvent>;
+  updated_at: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
+export type GiftCardAdminOrderDetail = {
+  __typename?: 'GiftCardAdminOrderDetail';
+  history: Array<GiftCardOrderHistoryEntry>;
+  order: GiftCardAdminOrder;
+};
+
+export type GiftCardAdminOrderTablePage = {
+  __typename?: 'GiftCardAdminOrderTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<GiftCardAdminOrder>;
+  total: Scalars['Int']['output'];
+};
+
 /**
  * Platform-wide gift card position for Loyalty > Virtual Gift Cards > Dashboard.
  * Outstanding + expired + redeemed value always equals sold value.
@@ -12746,14 +13757,22 @@ export type GiftCardCheckoutInput = {
   contact_phone?: InputMaybe<Scalars['String']['input']>;
   contact_phone_extension: Scalars['String']['input'];
   contact_phone_number: Scalars['String']['input'];
+  /** DIGITAL (emailed codes, default) or PHYSICAL (printed scratch cards by courier). */
+  delivery_mode?: InputMaybe<GiftCardDeliveryMode>;
+  /** The catalogue design. Omitted with scope_type omitted = the current default design. */
+  design_id?: InputMaybe<Scalars['ID']['input']>;
   /** Personal note printed on the card and in the email. */
   message?: InputMaybe<Scalars['String']['input']>;
+  /** How many cards (each worth amount), 1 to the configured maximum. Omitted = 1. */
+  quantity?: InputMaybe<Scalars['Int']['input']>;
   /** Who the card is for. Empty means the buyer keeps it. */
   recipient_email?: InputMaybe<Scalars['String']['input']>;
   recipient_name?: InputMaybe<Scalars['String']['input']>;
   scope_category_id?: InputMaybe<Scalars['ID']['input']>;
-  /** The card's theme. SUPER/CATEGORY/SUB need scope_category_id; SHOP must not send one. */
-  scope_type: GiftCardScopeType;
+  /** Legacy (apps before the catalogue): the card's theme. SUPER/CATEGORY/SUB need scope_category_id; SHOP must not send one. Current apps send design_id/quantity/delivery_mode instead. */
+  scope_type?: InputMaybe<GiftCardScopeType>;
+  /** Where printed cards are delivered. Required for PHYSICAL. */
+  shipping_address?: InputMaybe<OrderShippingAddressInput>;
 };
 
 /**
@@ -12771,6 +13790,47 @@ export type GiftCardCoinCredit = {
   user_id: Scalars['ID']['output'];
 };
 
+/** DIGITAL: codes emailed to the recipient. PHYSICAL: printed scratch cards delivered by courier. */
+export type GiftCardDeliveryMode =
+  | 'DIGITAL'
+  | 'PHYSICAL';
+
+/** A design in the Loyalty gift card catalogue. */
+export type GiftCardDesign = {
+  __typename?: 'GiftCardDesign';
+  back_image_url: Scalars['String']['output'];
+  /** Internal grouping label (e.g. Festive, Birthday) — never shown to members. */
+  category: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  front_image_url: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  /** The one design members see and buy. */
+  is_default: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  /** Blank printed cards of this design in hand. */
+  physical_stock: Scalars['Int']['output'];
+  sort_order: Scalars['Int']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+export type GiftCardDesignInput = {
+  back_image_url?: InputMaybe<Scalars['String']['input']>;
+  category?: InputMaybe<Scalars['String']['input']>;
+  front_image_url?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type GiftCardDesignTablePage = {
+  __typename?: 'GiftCardDesignTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<GiftCardDesign>;
+  total: Scalars['Int']['output'];
+};
+
 /** One calendar month of gift card flow. The client formats the label from the key. */
 export type GiftCardMonthBucket = {
   __typename?: 'GiftCardMonthBucket';
@@ -12778,6 +13838,150 @@ export type GiftCardMonthBucket = {
   month: Scalars['String']['output'];
   redeemed: Scalars['Float']['output'];
   sold: Scalars['Float']['output'];
+};
+
+/** A gift card order as its buyer sees it. Never carries a card code or passcode. */
+export type GiftCardOrder = {
+  __typename?: 'GiftCardOrder';
+  /** Face value of one card. */
+  amount: Scalars['Float']['output'];
+  cards_issued: Scalars['Int']['output'];
+  cards_value: Scalars['Float']['output'];
+  created_at: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  delivered_at?: Maybe<Scalars['String']['output']>;
+  delivery_mode: GiftCardDeliveryMode;
+  design_back_url: Scalars['String']['output'];
+  design_front_url: Scalars['String']['output'];
+  design_name: Scalars['String']['output'];
+  emailed_at?: Maybe<Scalars['String']['output']>;
+  fulfilment_status: GiftCardOrderFulfilmentStatus;
+  id: Scalars['ID']['output'];
+  message: Scalars['String']['output'];
+  order_no: Scalars['String']['output'];
+  paid_at?: Maybe<Scalars['String']['output']>;
+  payment_status: GiftCardOrderPaymentStatus;
+  printed_at?: Maybe<Scalars['String']['output']>;
+  quantity: Scalars['Int']['output'];
+  recipient_email: Scalars['String']['output'];
+  recipient_name: Scalars['String']['output'];
+  /** Null until the courier is booked. */
+  shipment?: Maybe<GiftCardOrderShipment>;
+  shipping_address?: Maybe<GiftCardOrderAddress>;
+  shipping_fee: Scalars['Float']['output'];
+  total: Scalars['Float']['output'];
+  tracking_events: Array<GiftCardOrderTrackingEvent>;
+  updated_at: Scalars['String']['output'];
+};
+
+export type GiftCardOrderAddress = {
+  __typename?: 'GiftCardOrderAddress';
+  city: Scalars['String']['output'];
+  country: Scalars['String']['output'];
+  landmark: Scalars['String']['output'];
+  line1: Scalars['String']['output'];
+  line2: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+  pincode: Scalars['String']['output'];
+  state: Scalars['String']['output'];
+};
+
+export type GiftCardOrderAddressInput = {
+  city?: InputMaybe<Scalars['String']['input']>;
+  country?: InputMaybe<Scalars['String']['input']>;
+  landmark?: InputMaybe<Scalars['String']['input']>;
+  line1?: InputMaybe<Scalars['String']['input']>;
+  line2?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  phone?: InputMaybe<Scalars['String']['input']>;
+  pincode?: InputMaybe<Scalars['String']['input']>;
+  state?: InputMaybe<Scalars['String']['input']>;
+};
+
+/**
+ * Where a gift card order is. Digital: PENDING → PROCESSING → DELIVERED (every
+ * card emailed). Physical: PENDING → PROCESSING (cards minted) → PRINTED → the
+ * courier's statuses, fed by ShipRocket.
+ */
+export type GiftCardOrderFulfilmentStatus =
+  | 'AWAITING_SHIPMENT'
+  | 'AWB_ASSIGNED'
+  | 'CANCELLED'
+  | 'DELIVERED'
+  | 'FAILED'
+  | 'LOST'
+  | 'NDR'
+  | 'OUT_FOR_DELIVERY'
+  | 'PENDING'
+  | 'PICKUP_SCHEDULED'
+  | 'PRINTED'
+  | 'PROCESSING'
+  | 'RTO'
+  | 'RTO_DELIVERED'
+  | 'SHIPPED';
+
+/** One line of an order's audit trail. */
+export type GiftCardOrderHistoryEntry = {
+  __typename?: 'GiftCardOrderHistoryEntry';
+  action: Scalars['String']['output'];
+  /** Who did it — empty for the courier feed and the payment system. */
+  actor_name: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  note: Scalars['String']['output'];
+};
+
+export type GiftCardOrderPage = {
+  __typename?: 'GiftCardOrderPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<GiftCardOrder>;
+  total: Scalars['Int']['output'];
+};
+
+export type GiftCardOrderPaymentStatus =
+  | 'FAILED'
+  | 'PAID'
+  | 'PENDING'
+  | 'REFUNDED';
+
+export type GiftCardOrderShipment = {
+  __typename?: 'GiftCardOrderShipment';
+  /** The courier's tracking number. */
+  awb: Scalars['String']['output'];
+  courier_name: Scalars['String']['output'];
+  /** Expected delivery, as the courier states it. */
+  etd: Scalars['String']['output'];
+  last_synced_at?: Maybe<Scalars['String']['output']>;
+  pickup_scheduled_date: Scalars['String']['output'];
+  /** The courier's own status line. */
+  tracking_status: Scalars['String']['output'];
+};
+
+/** The order book at a glance (Loyalty > Gift Card Orders). */
+export type GiftCardOrderStats = {
+  __typename?: 'GiftCardOrderStats';
+  delivered: Scalars['Int']['output'];
+  in_transit: Scalars['Int']['output'];
+  /** Stock short, a courier alert or a booking refusal. */
+  needs_attention: Scalars['Int']['output'];
+  paid_orders: Scalars['Int']['output'];
+  paid_value: Scalars['Float']['output'];
+  pending_payment: Scalars['Int']['output'];
+  returned_or_lost: Scalars['Int']['output'];
+  /** Physical orders paid and waiting to be printed. */
+  to_print: Scalars['Int']['output'];
+  /** Printed and waiting for the courier to be booked. */
+  to_ship: Scalars['Int']['output'];
+};
+
+export type GiftCardOrderTrackingEvent = {
+  __typename?: 'GiftCardOrderTrackingEvent';
+  at: Scalars['String']['output'];
+  location: Scalars['String']['output'];
+  note: Scalars['String']['output'];
+  status: Scalars['String']['output'];
 };
 
 /** The purchase payment behind a virtual card, as Finance recorded it. */
@@ -12804,11 +14008,24 @@ export type GiftCardPaymentSummary = {
   paid_at?: Maybe<Scalars['String']['output']>;
   payment_id: Scalars['String']['output'];
   platform_fee_amount: Scalars['Float']['output'];
+  /** Razorpay's order id (order_…) the purchase was opened with. */
+  razorpay_order_id?: Maybe<Scalars['String']['output']>;
+  /** Razorpay's payment id (pay_…), exactly as the Razorpay dashboard shows it. payment_id is Duncit's own reference, not this. */
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
   status: Scalars['String']['output'];
   subtotal: Scalars['Float']['output'];
   total: Scalars['Float']['output'];
   /** The buyer's phone as given at checkout. */
   user_phone?: Maybe<Scalars['String']['output']>;
+};
+
+/** What members see of a design: its name and two faces. */
+export type GiftCardPublicDesign = {
+  __typename?: 'GiftCardPublicDesign';
+  back_image_url: Scalars['String']['output'];
+  front_image_url: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
 };
 
 /** What redeeming a card left behind: the coins minted and the new balance. */
@@ -12839,8 +14056,14 @@ export type GiftCardSettings = {
   /** Preset amount chips the buy page offers. */
   denominations: Array<Scalars['Int']['output']>;
   max_amount: Scalars['Int']['output'];
+  /** Most cards one order may buy. */
+  max_quantity: Scalars['Int']['output'];
   /** Bounds for a custom amount (whole rupees). */
   min_amount: Scalars['Int']['output'];
+  /** Whether printed cards can be ordered for courier delivery. */
+  physical_enabled: Scalars['Boolean']['output'];
+  /** Flat delivery fee charged once on every physical order, whatever its quantity. */
+  shipping_fee: Scalars['Float']['output'];
   updated_at: Scalars['String']['output'];
   /** Months from purchase until a card expires. */
   validity_months: Scalars['Int']['output'];
@@ -12850,8 +14073,27 @@ export type GiftCardSettings = {
 export type GiftCardSettingsInput = {
   denominations?: InputMaybe<Array<Scalars['Int']['input']>>;
   max_amount?: InputMaybe<Scalars['Int']['input']>;
+  max_quantity?: InputMaybe<Scalars['Int']['input']>;
   min_amount?: InputMaybe<Scalars['Int']['input']>;
+  parcel_breadth_cm?: InputMaybe<Scalars['Float']['input']>;
+  parcel_height_cm?: InputMaybe<Scalars['Float']['input']>;
+  parcel_length_cm?: InputMaybe<Scalars['Float']['input']>;
+  parcel_weight_kg?: InputMaybe<Scalars['Float']['input']>;
+  physical_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** ShipRocket pickup nickname printed cards ship from. Empty = the account default. */
+  pickup_location?: InputMaybe<Scalars['String']['input']>;
+  shipping_fee?: InputMaybe<Scalars['Float']['input']>;
   validity_months?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** The courier side of the gift card policy (Loyalty only). */
+export type GiftCardShippingSettings = {
+  __typename?: 'GiftCardShippingSettings';
+  parcel_breadth_cm: Scalars['Float']['output'];
+  parcel_height_cm: Scalars['Float']['output'];
+  parcel_length_cm: Scalars['Float']['output'];
+  parcel_weight_kg: Scalars['Float']['output'];
+  pickup_location: Scalars['String']['output'];
 };
 
 /** EXPIRED is derived from the expiry date at read time. */
@@ -12859,6 +14101,17 @@ export type GiftCardStatus =
   | 'ACTIVE'
   | 'EXPIRED'
   | 'REDEEMED';
+
+/** Everything the buy page needs, in one request. */
+export type GiftCardStorefront = {
+  __typename?: 'GiftCardStorefront';
+  currency_symbol: Scalars['String']['output'];
+  /** The default design. Null until the Loyalty team uploads one — the page then says gift cards are unavailable. */
+  design?: Maybe<GiftCardPublicDesign>;
+  /** Printed cards of the default design that can still be ordered (0 when physical delivery is off). */
+  physical_available: Scalars['Int']['output'];
+  settings: GiftCardSettings;
+};
 
 export type GigCategory = {
   __typename?: 'GigCategory';
@@ -13754,7 +15007,10 @@ export type HostLead = {
   __typename?: 'HostLead';
   activity_log: Array<CrmActivity>;
   area?: Maybe<Scalars['String']['output']>;
+  /** The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here. */
   assigned_to?: Maybe<Scalars['String']['output']>;
+  /** The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name. */
+  assigned_user_id?: Maybe<Scalars['ID']['output']>;
   budget_range?: Maybe<Scalars['String']['output']>;
   category_ids: Array<Scalars['ID']['output']>;
   city?: Maybe<Scalars['String']['output']>;
@@ -13762,9 +15018,13 @@ export type HostLead = {
   community_size?: Maybe<Scalars['Int']['output']>;
   contacts: Array<CrmContact>;
   created_at?: Maybe<Scalars['String']['output']>;
+  /** Kilometres from the centre of a Nearby leads search. Set only on a table page read with near; null elsewhere. */
+  distance_km?: Maybe<Scalars['Float']['output']>;
   dynamic_values_json: Scalars['String']['output'];
   expected_audience_size?: Maybe<Scalars['String']['output']>;
   frequency?: Maybe<Scalars['String']['output']>;
+  /** How exactly the lead sits on the map: PIN (its map link), AREA or CITY (that centre). Null until a Nearby leads search places it, or when it has no known city. */
+  geo_precision?: Maybe<Scalars['String']['output']>;
   host_intent_scores: Array<Scalars['String']['output']>;
   host_name: Scalars['String']['output'];
   host_type?: Maybe<Scalars['String']['output']>;
@@ -13788,6 +15048,8 @@ export type HostLead = {
   previous_events_hosted: Scalars['Boolean']['output'];
   priority: Scalars['String']['output'];
   profile_photo_url?: Maybe<Scalars['String']['output']>;
+  /** Lead Quality Score summary (score, classification, qualification); null until the lead is first scored. */
+  quality?: Maybe<CrmLeadQualitySummary>;
   revenue_models: Array<Scalars['String']['output']>;
   services_offered: Array<CrmServiceOffered>;
   social_links: Array<CrmSocialLink>;
@@ -13801,7 +15063,10 @@ export type HostLead = {
 
 export type HostLeadInput = {
   area?: InputMaybe<Scalars['String']['input']>;
+  /** The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here. */
   assigned_to?: InputMaybe<Scalars['String']['input']>;
+  /** The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name. */
+  assigned_user_id?: InputMaybe<Scalars['ID']['input']>;
   budget_range?: InputMaybe<Scalars['String']['input']>;
   category_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   city?: InputMaybe<Scalars['String']['input']>;
@@ -13846,6 +15111,8 @@ export type HostLeadTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<HostLead>;
   total: Scalars['Int']['output'];
+  /** Leads of this kind with no place on the map (no city, or one the map does not know), so a Nearby leads search cannot include them. Null outside a nearby search. */
+  unplaced?: Maybe<Scalars['Int']['output']>;
 };
 
 /** One month's host payout total (bucket = 'YYYY-MM'). */
@@ -14015,8 +15282,9 @@ export type HostResubmitPodInput = {
   /** Offer a Smart Incentive — omit both fields to leave it alone. Cleared when the pod becomes free or zero-priced. */
   smart_incentive_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   smart_incentive_pct?: InputMaybe<Scalars['Int']['input']>;
-  /** Offer a multi-ticket discount. Cleared when the pod becomes free or zero-priced. */
+  /** @deprecated The multi-ticket discount was removed. Ignored. */
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** @deprecated The multi-ticket discount was removed. Ignored. */
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
   /** A fresh offer to a venue: another partner's venue accepts, rejects or counters it. */
@@ -14115,8 +15383,9 @@ export type HostUpdatePodInput = {
   /** Offer a Smart Incentive — omit both fields to leave it alone. */
   smart_incentive_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   smart_incentive_pct?: InputMaybe<Scalars['Int']['input']>;
-  /** Offer a multi-ticket discount — omit both discount fields to leave it alone. */
+  /** @deprecated The multi-ticket discount was removed. Ignored. */
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** @deprecated The multi-ticket discount was removed. Ignored. */
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
 };
 
@@ -15408,6 +16677,7 @@ export type MailTicketType =
   | 'SUPPORT';
 
 export type ManualLogInput = {
+  /** Rich text. Each @mention is a span with data-type mention and data-id set to the user id; every mentioned CRM team member is emailed. */
   body_html: Scalars['String']['input'];
   body_text?: InputMaybe<Scalars['String']['input']>;
   entity_id: Scalars['ID']['input'];
@@ -17389,8 +18659,12 @@ export type Mutation = {
   addReelUploadAssets: ReelProject;
   /** Refused for somebody who is not a Club Admin, or is already in a region. */
   addRegionClubAdmin: Region;
+  /** Finance, or the rental's venue owner / venues console: attach optional evidence (a note and/or up to 6 photos uploaded through Duncit). */
+  addRentalBookingProof: RentalBookingDetail;
   addTutorialComment: TutorialComment;
   addUserRole: User;
+  /** Correct a design's printed stock by delta (+ after a print run, − for damaged cards), with the reason. */
+  adjustGiftCardDesignStock: GiftCardDesign;
   /**  Admin-only: append a delta with an optional remark. Returns the updated score.  */
   adjustHealth: HealthScore;
   /**
@@ -17478,6 +18752,8 @@ export type Mutation = {
   applyReferralCode: MyReferral;
   /** Approve the Club Admin — the table reads Active from here on. */
   approveClubAdminProfile: ClubAdminProfile;
+  /** Add candidates to the CRM as leads. Only QUALIFIED, non-duplicate candidates are added unless allow_unqualified is true. */
+  approveCrmLeadCandidates: Array<CrmLeadCandidateApproval>;
   /** Onboarding/admin: approve a brand (grants the owner the E-commerce Manager role). */
   approveEcommBrand: EcommBrand;
   approveHost: Host;
@@ -17486,7 +18762,10 @@ export type Mutation = {
   approveMcpAuthorization: McpAuthorizationDecision;
   /**
    * Approve every payout still pending on one pod request, in full, and credit
-   * each beneficiary's wallet. Finance roles only.
+   * each beneficiary's wallet. Finance roles only. When its releases carry a
+   * funding_shortfall (payouts beyond what the pod took), shortfall_funding_note
+   * must say who funds that amount, at least 10 characters; it is recorded on
+   * every release approved.
    */
   approvePodPaymentRelease: PodPaymentReleaseDetail;
   /** Brand owner or Products team: accept — a SHIP order gets a ShipRocket reverse pickup on the brand's account. */
@@ -17567,6 +18846,8 @@ export type Mutation = {
    * the blocked member is never told.
    */
   blockUser: Scalars['Boolean']['output'];
+  /** Book (or resume booking) the courier for a printed order. Spends the ShipRocket wallet. */
+  bookGiftCardOrderShipment: GiftCardAdminOrder;
   /** Partner: book, or resume booking, the ShipRocket shipment of an own-brand order. */
   brandBookProductOrderShipment: ProductOrder;
   /**
@@ -17598,6 +18879,8 @@ export type Mutation = {
   cancelBackgroundJob: BackgroundJob;
   /** Keep My Spot — cancel an in-process backout and restore the booking (seat must still be free). */
   cancelBackoutPod: PodMember;
+  /** Stop a running discovery after its current search. Candidates found so far stay queued. */
+  cancelCrmLeadDiscovery: CrmLeadDiscoveryJob;
   /** The requester withdraws their own pending ask (tapping Requested). */
   cancelFollowRequest: User;
   /**
@@ -17840,6 +19123,8 @@ export type Mutation = {
   createExpenseOption: ExpenseOption;
   createFaq: Faq;
   createFeatureFlag: FeatureFlag;
+  /** Add a design. The first design ever added becomes the default. */
+  createGiftCardDesign: GiftCardDesign;
   createGigCategory: GigCategory;
   createGigJob: GigJob;
   createHostLead: HostLead;
@@ -17932,6 +19217,8 @@ export type Mutation = {
   decideMarketingRun: MarketingRun;
   /** Onboarding staff approve or deny a DONE meeting themselves — approval drafts the onboarded host/venue/seller (or grants the club-admin role). No admin round-trip. */
   decideMeeting: OnboardingMeeting;
+  /** Approve or reject an alternative-verification request. Cannot be your own. */
+  decidePortalSecurityException: PortalSecurityException;
   /** Approve, partially approve or reject a pending withdrawal; an approval pays through Razorpay. */
   decideWithdrawal: WalletWithdrawal;
   /** Owner declines a pending booking request — the slot frees up again. round: the offer round read. */
@@ -18002,7 +19289,11 @@ export type Mutation = {
   deleteCrmDynamicField: Scalars['Boolean']['output'];
   deleteCrmEmailTemplate: Scalars['Boolean']['output'];
   deleteCrmLeadMedia: Scalars['Boolean']['output'];
+  /** Throw away the draft. The published version is untouched. */
+  deleteCrmLeadQualityDraft: Scalars['Boolean']['output'];
   deleteCrmManagedOption: Scalars['Boolean']['output'];
+  /** Delete a manual log (its author, or a SUPER_ADMIN). It stays in the history as deleted, without its words. */
+  deleteCrmManualLog: CrmActivity;
   deleteCrmReminder: Scalars['Boolean']['output'];
   /** @deprecated Use the Services Offered catalogue mutations (createCrmServicesOffered etc.). */
   deleteCrmService: Scalars['Boolean']['output'];
@@ -18296,6 +19587,8 @@ export type Mutation = {
    * issued for avatars cannot be spent writing somewhere else.
    */
   getImagekitAuth: ImagekitAuth;
+  /** The shipping label as a base64 PDF. */
+  giftCardOrderLabelFile: Scalars['String']['output'];
   grantAdminAccess: User;
   /**
    * Add roles to this run's account, so the suite can follow what the member
@@ -18510,6 +19803,8 @@ export type Mutation = {
   markChatRead: Scalars['Boolean']['output'];
   /** Close a NOT_CAPTURED case as a bank reversal and resolve its ticket with that explanation. */
   markFailedPaymentNotRefundable: FailedPaymentDetail;
+  /** A paid physical order's scratch cards are printed and packed. */
+  markGiftCardOrderPrinted: GiftCardAdminOrder;
   /** Record a DM the marketer is sending from Instagram; schedules the next follow-up. */
   markIgLeadSent: IgLead;
   markNotificationRead: Scalars['Boolean']['output'];
@@ -18517,7 +19812,10 @@ export type Mutation = {
   markPodShopReturnReceived: PodShopReturn;
   /** Venue owner or venues console: the item came back, or part of the deposit is kept for damage. */
   markRentalBooking: RentalBooking;
-  /** Finance: the rental refund was paid back to the guest. */
+  /**
+   * Retired: rental refunds go out through Razorpay and read paid only when Razorpay confirms them. Always refuses.
+   * @deprecated Rental refunds are sent through Razorpay automatically. Read rentalBookingDetail for the refund, or use sendRentalRefund for one waiting for review.
+   */
   markRentalRefunded: RentalBooking;
   /** The content is fine: close every open report on it as DISMISSED. */
   markReportedContentOk: ContentReport;
@@ -18581,6 +19879,8 @@ export type Mutation = {
   publishCmsPage: CmsPage;
   /** Makes that saved version live: it becomes the draft and is published. */
   publishCmsVersion: Scalars['Boolean']['output'];
+  /** Publish the draft (must total exactly 100% with every criterion's sub-criteria adding up to it). Every lead of this type is rescored with it in the background. */
+  publishCrmLeadQualityConfig: CrmLeadQualityPublishResult;
   /** Finalize & Publish. Republishing is a staff-only correction and needs a reason. */
   publishPodChallengeResult: PodChallenge;
   publishPodDraft: Pod;
@@ -18658,6 +19958,10 @@ export type Mutation = {
   reactToStaffMessage: StaffMessage;
   /** React to any line of a venue chat; the same emoji again takes the reaction back. */
   reactToVenueChatMessage: PodMessage;
+  /** Rescore one lead now. external: also run the checks that call Instagram, Google Maps and the website (reverify). */
+  recalculateCrmLeadQuality: CrmLeadQualityScoreResponse;
+  /** Rescore many leads in the background: the given ids, or every lead of the type when none are given. */
+  recalculateCrmLeadQualityScores: CrmLeadQualityJobRef;
   /** Partner: check the saved credential again without changing it. */
   recheckBrandIntegration: BrandIntegrationStatus;
   /** Partner: check a saved connection again; every brand using it takes the new result. */
@@ -18674,6 +19978,8 @@ export type Mutation = {
   recordAppEvent: Scalars['Boolean']['output'];
   /** Stores a batch of up to 50 product-analytics events; answers how many were new. Needs the analytics consent; works signed out. */
   recordAppEvents: Scalars['Int']['output'];
+  /** Record evidence decisions on a lead's quality items, then rescore it. VERIFIED needs evidence; from MCP it also needs the public source link. */
+  recordCrmLeadEvidence: CrmLeadQualityScoreResponse;
   recordInventoryStockMovement: InventoryProduct;
   /** Signed in. Marks one slide watched, so its ring stops showing as unseen. */
   recordOfficialStatusView: Scalars['Boolean']['output'];
@@ -18705,9 +20011,17 @@ export type Mutation = {
    */
   redeemPhysicalGiftCard: PhysicalGiftCardRedeemResult;
   redeemPodReferral: PodMember;
+  /** Pull the latest courier tracking for an order now. */
+  refreshGiftCardOrderTracking: GiftCardAdminOrder;
   /** Ops: pull the latest tracking from ShipRocket. */
   refreshProductOrderTracking: ProductOrder;
   refundPayment: Payment;
+  /**
+   * Send one owed refund back to the payment's own source, with a note on record.
+   * Only a refund that is owed and safe to repeat is accepted; the answer is the
+   * payment's fresh audit, so the page refreshes from its own reply.
+   */
+  refundPaymentToSource: PaymentDetail;
   /** Goods checked: back in stock, and the buyer refunded through Razorpay. */
   refundPodShopReturn: PodShopReturn;
   /** Render one slide of a pod's carousel again. */
@@ -18721,6 +20035,8 @@ export type Mutation = {
   rejectAccountDeletionRequest: AccountDeletionDetail;
   /** Reject the Club Admin. A reason is required. */
   rejectClubAdminProfile: ClubAdminProfile;
+  /** Dismiss candidates from the queue. Returns how many were rejected. */
+  rejectCrmLeadCandidates: Scalars['Int']['output'];
   /** Onboarding/admin: reject a brand with notes. */
   rejectEcommBrand: EcommBrand;
   /** The private profile's owner rejects. No follow is created. */
@@ -18963,6 +20279,8 @@ export type Mutation = {
    * works here and what they can reach.
    */
   requestPortalLoginOtp: OtpRequestResult;
+  /** Declined or could not share a location: ask an administrator for another way. Recorded. */
+  requestPortalSecurityException: PortalSecurityExceptionStatus;
   /**
    * Signup step one: send a code to the WhatsApp number joining Duncit.
    *
@@ -18972,6 +20290,10 @@ export type Mutation = {
    * discovered only after a code has been typed.
    */
   requestSignupWhatsAppOtp: WhatsAppOtpRequestResult;
+  /** Public, captcha-gated when signed out. Emails a 6-digit code to the address on the Venue Kit form. */
+  requestVenueKitEmailOtp: VenueKitOtpRequest;
+  /** Public, needs a live email proof. Texts a 6-digit code to a +91 mobile (optional step). */
+  requestVenueKitPhoneOtp: VenueKitOtpRequest;
   requestWithdrawal: WalletWithdrawal;
   /** Move the caller's own meeting to a new open slot (one-time; keeps contact details, resets staff scheduling). */
   rescheduleMyMeeting: OnboardingMeeting;
@@ -19050,6 +20372,8 @@ export type Mutation = {
   resumeAutomationTest: AutomationRun;
   /** Carry on a paused enrollment, or retry the step a failed one stopped on. */
   resumeEnrollment: OutreachEnrollment;
+  /** Run a finished, failed or cancelled discovery again with the same request. */
+  retryCrmLeadDiscovery: CrmLeadDiscoveryJob;
   /** Run a failed or partly completed run again, through its own workflow. */
   retryMarketingRun: MarketingRun;
   /**
@@ -19151,6 +20475,10 @@ export type Mutation = {
   saveBrandPickupLocation: BrandPickupLocation;
   saveCmsFragmentDraft: CmsFragment;
   saveCmsPageDraft: CmsPage;
+  /** Queue researched leads for review: validated, checked against every CRM lead and earlier batches for duplicates, and scored with the published model. */
+  saveCrmLeadCandidates: CrmLeadCandidateSaveReport;
+  /** Create or replace a lead type's draft scoring model. A draft may total under 100% but never over. Pass the revision you loaded to avoid overwriting someone else's save. */
+  saveCrmLeadQualityDraft: CrmLeadQualityConfig;
   /**
    * Store the caller's arrangement of one dashboard, replacing any previous
    * one. Positions only — widget ids the running build does not define are
@@ -19255,6 +20583,8 @@ export type Mutation = {
   sendPodPartnerRequest: PodPartnerRequest;
   /** One chat turn: the request (and any attached pictures) goes to the editor, and the reel comes back as it now stands. */
   sendReelMessage: ReelProject;
+  /** Finance managers: send a rental refund that is waiting for review through Razorpay (never marks anything paid). note: why, at least 10 characters. */
+  sendRentalRefund: RentalBookingDetail;
   /** Post a message to a Slack channel (full message surface). */
   sendSlackMessage: SlackSendResult;
   /** Send a message, a file, or both. Text may be empty when a file comes with it. */
@@ -19333,6 +20663,8 @@ export type Mutation = {
   setDefaultBrandPickupLocation: BrandPickupLocation;
   setDefaultCommsProvider: CommsProvider;
   setDefaultEnvEntry: EnvEntry;
+  /** Make this the one design members see and buy. */
+  setDefaultGiftCardDesign: GiftCardDesign;
   setDefaultMyAddress: UserAddress;
   setDefaultMyBrandPickupLocation: BrandPickupLocation;
   setDefaultSlotTemplate: SlotTemplate;
@@ -19439,6 +20771,8 @@ export type Mutation = {
   setVenueFoodOrderStatus: VenueFoodOrder;
   /** Admin-only: the venue's monthly host Pod Request limit (null = the default of 10). */
   setVenueHostRequestLimit: Venue;
+  /** Venues console: move an interested venue along (contacted, converted…) with an optional note. */
+  setVenueKitInterestStatus: VenueKitInterest;
   /** Venues console: whether this venue's refundable deposits carry GST with the rent (default on). */
   setVenueRentalDepositGst: VenueRentalDepositGst;
   /** Set one of the platform default header assets — what a media-header scenario sends when neither it nor its campaign carries one. An empty url clears it. */
@@ -19505,6 +20839,10 @@ export type Mutation = {
   startBulkDelete: BackgroundJob;
   /** Place an outbound AI call (Servam-driven) using a Static Content prompt and Servam voice. */
   startCrmAiCall: CrmAiCallResult;
+  /** Start a background discovery of new public leads (Instagram and Google Maps through Serper). Candidates go to the review queue, never straight into the CRM. */
+  startCrmLeadDiscovery: CrmLeadDiscoveryJob;
+  /** Start a draft from an existing version (edit the current one, or restore an older one). */
+  startCrmLeadQualityDraftFromVersion: CrmLeadQualityConfig;
   /** Place a portal call: Twilio dials the lead, then rings the agent leg (agent_number, else the user's profile phone) into the same conference. */
   startCrmPortalCall: CrmAiCallResult;
   /**
@@ -19727,6 +21065,8 @@ export type Mutation = {
   submitPaymentDeductionClaim: PaymentDeductionClaimResult;
   /** Competitor (or host on their behalf): submit or replace an entry. */
   submitPodChallengeEntry: PodChallenge;
+  /** Complete the screen: record the consent and location, and swap the sign-in token for a session. */
+  submitPortalSecurityVerification: PortalSecurityVerificationResult;
   submitProductListing: InventoryProduct;
   /**
    * PUBLIC and unauthenticated, on purpose: somebody locked out of every
@@ -19741,6 +21081,8 @@ export type Mutation = {
   submitVenueFinal: Venue;
   /** Public: rate a served order. Once per order. */
   submitVenueFoodFeedback: VenueFoodOrder;
+  /** Public. Registers (or refreshes) the venue's interest; spends the email proof and, when given, the phone proof. */
+  submitVenueKitInterest: VenueKitSubmitResult;
   /** venue_id targets a specific editable (DRAFT/REJECTED) venue of the owner; omitted = current draft (created if needed). */
   submitVenueStep1: Venue;
   submitVenueStep2: Venue;
@@ -19763,8 +21105,12 @@ export type Mutation = {
    * follow-up becomes one reminder, never two.
    */
   summarizeCommunicationLog: CommunicationLog;
+  /** Write the AI refund note for a case (advice only; moves no money). An unchanged case answers from its cached note unless force is true. */
+  summarizeFailedPayment: FailedPaymentDetail;
   /** Support agents can create a user account on a caller's behalf. */
   supportCreateUser: User;
+  /** Sync now: starts a sync of the given store, or both, in the background, and returns the integrations. */
+  syncAppInsights: Array<AppInsightIntegration>;
   /** Products portal: check the next batch of a brand's pincodes against ShipRocket from its own warehouse. */
   syncBrandDeliveryPincodes: BrandDeliveryPincodeSyncResult;
   /**
@@ -19945,6 +21291,8 @@ export type Mutation = {
   updateCrmEmailTheme: CrmEmailSettings;
   updateCrmLeadMedia: CrmLeadMedia;
   updateCrmManagedOption: CrmManagedOption;
+  /** Edit a manual log (its author, or a SUPER_ADMIN). Leaves a NOTE_UPDATED entry in the history. */
+  updateCrmManualLog: CrmActivity;
   updateCrmReminder: CrmReminder;
   /** @deprecated Use the Services Offered catalogue mutations (createCrmServicesOffered etc.). */
   updateCrmService: CrmService;
@@ -19977,6 +21325,9 @@ export type Mutation = {
   updateFinanceSettings: FinanceSettings;
   /** Finance roles: set the default GST on venue food orders. Venues that override it keep their own. */
   updateFoodTaxDefaults: FoodTaxDefaults;
+  updateGiftCardDesign: GiftCardDesign;
+  /** Correct a physical order's delivery address before the courier is booked. */
+  updateGiftCardOrderAddress: GiftCardAdminOrder;
   /** Loyalty: set the amounts offered and how long a card lives. */
   updateGiftCardSettings: GiftCardSettings;
   updateGigCategory: GigCategory;
@@ -20086,6 +21437,8 @@ export type Mutation = {
   updateVenueBannerKit: Venue;
   /** Venue owner / venues console: edit a food coupon. */
   updateVenueFoodCoupon: VenueFoodCoupon;
+  /** Super Admin: change the Venue Kit plan every surface shows. */
+  updateVenueKitOffer: VenueKitOffer;
   updateVenueLead: VenueLead;
   /** Owner or admin saves the venue's pricing. Existing bookings keep their frozen price. */
   updateVenuePricing: VenuePricing;
@@ -20134,6 +21487,8 @@ export type Mutation = {
   venueFoodFeedbackUploadPass: ImagekitAuth;
   /** The venue takes its slot back while the offer is still enrolling; the offer returns to venues' lists and the venue pays the Pod Settings penalty. */
   venueWithdrawAutoPod: AutoPod;
+  /** Record evidence on a queued candidate and rescore it. */
+  verifyCrmLeadCandidateEvidence: CrmLeadCandidate;
   verifyEmailVerificationOtp: User;
   verifyEnvAccessCode: EnvAccessStatus;
   verifyEventTicketQr: EventTicketVerifyResult;
@@ -20161,6 +21516,10 @@ export type Mutation = {
   verifySignupWhatsAppOtp: SignupWhatsAppProof;
   /** Public: confirm the Razorpay payment of an order. */
   verifyVenueFoodOrderPayment: VenueFoodOrder;
+  /** Public. Checks the emailed code and returns the proof the submit spends. */
+  verifyVenueKitEmailOtp: VenueKitOtpProof;
+  /** Public. Checks the texted code and returns the phone proof. */
+  verifyVenueKitPhoneOtp: VenueKitOtpProof;
   /** Loyalty: cancel an unredeemed card so it can never pay out. */
   voidPhysicalGiftCard: PhysicalGiftCardAdminCard;
   voidPodChallengeScore: PodChallenge;
@@ -20361,6 +21720,12 @@ export type MutationAddRegionClubAdminArgs = {
 };
 
 
+export type MutationAddRentalBookingProofArgs = {
+  id: Scalars['ID']['input'];
+  input: RentalProofInput;
+};
+
+
 export type MutationAddTutorialCommentArgs = {
   text: Scalars['String']['input'];
   tutorial_id: Scalars['ID']['input'];
@@ -20370,6 +21735,13 @@ export type MutationAddTutorialCommentArgs = {
 export type MutationAddUserRoleArgs = {
   role_key: Scalars['String']['input'];
   user_id: Scalars['ID']['input'];
+};
+
+
+export type MutationAdjustGiftCardDesignStockArgs = {
+  delta: Scalars['Int']['input'];
+  id: Scalars['ID']['input'];
+  reason: Scalars['String']['input'];
 };
 
 
@@ -20571,6 +21943,13 @@ export type MutationApproveClubAdminProfileArgs = {
 };
 
 
+export type MutationApproveCrmLeadCandidatesArgs = {
+  allow_unqualified?: InputMaybe<Scalars['Boolean']['input']>;
+  ids: Array<Scalars['ID']['input']>;
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationApproveEcommBrandArgs = {
   brand_doc_id: Scalars['ID']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
@@ -20599,6 +21978,7 @@ export type MutationApproveMcpAuthorizationArgs = {
 
 export type MutationApprovePodPaymentReleaseArgs = {
   id: Scalars['ID']['input'];
+  shortfall_funding_note?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -20730,6 +22110,11 @@ export type MutationBlockUserArgs = {
 };
 
 
+export type MutationBookGiftCardOrderShipmentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationBrandBookProductOrderShipmentArgs = {
   id: Scalars['ID']['input'];
 };
@@ -20822,6 +22207,11 @@ export type MutationCancelBackgroundJobArgs = {
 export type MutationCancelBackoutPodArgs = {
   backout_id?: InputMaybe<Scalars['ID']['input']>;
   pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationCancelCrmLeadDiscoveryArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -21329,6 +22719,11 @@ export type MutationCreateFeatureFlagArgs = {
 };
 
 
+export type MutationCreateGiftCardDesignArgs = {
+  input: GiftCardDesignInput;
+};
+
+
 export type MutationCreateGigCategoryArgs = {
   input: GigCategoryInput;
 };
@@ -21664,6 +23059,11 @@ export type MutationDecideMeetingArgs = {
 };
 
 
+export type MutationDecidePortalSecurityExceptionArgs = {
+  input: PortalSecurityExceptionDecisionInput;
+};
+
+
 export type MutationDecideWithdrawalArgs = {
   input: DecideWithdrawalInput;
   withdrawal_id: Scalars['ID']['input'];
@@ -21849,8 +23249,20 @@ export type MutationDeleteCrmLeadMediaArgs = {
 };
 
 
+export type MutationDeleteCrmLeadQualityDraftArgs = {
+  lead_type: CrmEntityType;
+};
+
+
 export type MutationDeleteCrmManagedOptionArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteCrmManualLogArgs = {
+  entity_id: Scalars['ID']['input'];
+  entity_type: CrmEntityType;
+  log_id: Scalars['ID']['input'];
 };
 
 
@@ -22744,6 +24156,11 @@ export type MutationGetImagekitAuthArgs = {
 };
 
 
+export type MutationGiftCardOrderLabelFileArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationGrantAdminAccessArgs = {
   user_id: Scalars['ID']['input'];
 };
@@ -22995,6 +24412,11 @@ export type MutationMarkFailedPaymentNotRefundableArgs = {
 };
 
 
+export type MutationMarkGiftCardOrderPrintedArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationMarkIgLeadSentArgs = {
   id: Scalars['ID']['input'];
   text: Scalars['String']['input'];
@@ -23174,6 +24596,13 @@ export type MutationPublishCmsVersionArgs = {
 };
 
 
+export type MutationPublishCrmLeadQualityConfigArgs = {
+  change_note?: InputMaybe<Scalars['String']['input']>;
+  lead_type: CrmEntityType;
+  revision?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type MutationPublishPodChallengeResultArgs = {
   id: Scalars['ID']['input'];
   reason?: InputMaybe<Scalars['String']['input']>;
@@ -23276,6 +24705,20 @@ export type MutationReactToVenueChatMessageArgs = {
 };
 
 
+export type MutationRecalculateCrmLeadQualityArgs = {
+  entity_type: CrmEntityType;
+  external?: InputMaybe<Scalars['Boolean']['input']>;
+  lead_id: Scalars['ID']['input'];
+};
+
+
+export type MutationRecalculateCrmLeadQualityScoresArgs = {
+  entity_type: CrmEntityType;
+  external?: InputMaybe<Scalars['Boolean']['input']>;
+  lead_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
+};
+
+
 export type MutationRecheckBrandIntegrationArgs = {
   brand_doc_id: Scalars['ID']['input'];
   provider: BrandIntegrationProvider;
@@ -23316,6 +24759,13 @@ export type MutationRecordAppEventArgs = {
 
 export type MutationRecordAppEventsArgs = {
   events: Array<AppEventInput>;
+};
+
+
+export type MutationRecordCrmLeadEvidenceArgs = {
+  decisions: Array<CrmLeadEvidenceDecisionInput>;
+  entity_type: CrmEntityType;
+  lead_id: Scalars['ID']['input'];
 };
 
 
@@ -23378,6 +24828,11 @@ export type MutationRedeemPodReferralArgs = {
 };
 
 
+export type MutationRefreshGiftCardOrderTrackingArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationRefreshProductOrderTrackingArgs = {
   id: Scalars['ID']['input'];
 };
@@ -23386,6 +24841,11 @@ export type MutationRefreshProductOrderTrackingArgs = {
 export type MutationRefundPaymentArgs = {
   payment_doc_id: Scalars['ID']['input'];
   reason?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationRefundPaymentToSourceArgs = {
+  input: RefundPaymentToSourceInput;
 };
 
 
@@ -23427,6 +24887,12 @@ export type MutationRejectAccountDeletionRequestArgs = {
 export type MutationRejectClubAdminProfileArgs = {
   id: Scalars['ID']['input'];
   notes: Scalars['String']['input'];
+};
+
+
+export type MutationRejectCrmLeadCandidatesArgs = {
+  ids: Array<Scalars['ID']['input']>;
+  note?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -23795,10 +25261,25 @@ export type MutationRequestPortalLoginOtpArgs = {
 };
 
 
+export type MutationRequestPortalSecurityExceptionArgs = {
+  input: PortalSecurityExceptionRequestInput;
+};
+
+
 export type MutationRequestSignupWhatsAppOtpArgs = {
   email?: InputMaybe<Scalars['String']['input']>;
   phone_extension: Scalars['String']['input'];
   phone_number: Scalars['String']['input'];
+};
+
+
+export type MutationRequestVenueKitEmailOtpArgs = {
+  input: VenueKitEmailOtpInput;
+};
+
+
+export type MutationRequestVenueKitPhoneOtpArgs = {
+  input: VenueKitPhoneOtpInput;
 };
 
 
@@ -23956,6 +25437,11 @@ export type MutationResumeAutomationTestArgs = {
 
 
 export type MutationResumeEnrollmentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationRetryCrmLeadDiscoveryArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -24184,6 +25670,21 @@ export type MutationSaveCmsFragmentDraftArgs = {
 export type MutationSaveCmsPageDraftArgs = {
   input: CmsDraftInput;
   page_id: Scalars['ID']['input'];
+};
+
+
+export type MutationSaveCrmLeadCandidatesArgs = {
+  candidates: Array<CrmLeadCandidateInput>;
+  external_checks?: InputMaybe<Scalars['Boolean']['input']>;
+  lead_type: CrmEntityType;
+};
+
+
+export type MutationSaveCrmLeadQualityDraftArgs = {
+  change_note?: InputMaybe<Scalars['String']['input']>;
+  input: CrmLeadQualityConfigInput;
+  lead_type: CrmEntityType;
+  revision?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -24421,6 +25922,12 @@ export type MutationSendReelMessageArgs = {
 };
 
 
+export type MutationSendRentalRefundArgs = {
+  id: Scalars['ID']['input'];
+  note: Scalars['String']['input'];
+};
+
+
 export type MutationSendSlackMessageArgs = {
   input: SendSlackMessageInput;
 };
@@ -24615,6 +26122,11 @@ export type MutationSetDefaultCommsProviderArgs = {
 
 
 export type MutationSetDefaultEnvEntryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationSetDefaultGiftCardDesignArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -24946,6 +26458,11 @@ export type MutationSetVenueHostRequestLimitArgs = {
 };
 
 
+export type MutationSetVenueKitInterestStatusArgs = {
+  input: VenueKitInterestStatusInput;
+};
+
+
 export type MutationSetVenueRentalDepositGstArgs = {
   charge_gst: Scalars['Boolean']['input'];
   venue_id: Scalars['ID']['input'];
@@ -25072,6 +26589,17 @@ export type MutationStartCrmAiCallArgs = {
   id: Scalars['ID']['input'];
   prompt_id: Scalars['ID']['input'];
   voice?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationStartCrmLeadDiscoveryArgs = {
+  input: CrmLeadDiscoveryInput;
+};
+
+
+export type MutationStartCrmLeadQualityDraftFromVersionArgs = {
+  lead_type: CrmEntityType;
+  version: Scalars['Int']['input'];
 };
 
 
@@ -25675,6 +27203,11 @@ export type MutationSubmitPodChallengeEntryArgs = {
 };
 
 
+export type MutationSubmitPortalSecurityVerificationArgs = {
+  input: PortalSecurityVerificationInput;
+};
+
+
 export type MutationSubmitProductListingArgs = {
   input: ProductListingInput;
 };
@@ -25712,6 +27245,11 @@ export type MutationSubmitVenueFinalArgs = {
 
 export type MutationSubmitVenueFoodFeedbackArgs = {
   input: SubmitVenueFoodFeedbackInput;
+};
+
+
+export type MutationSubmitVenueKitInterestArgs = {
+  input: VenueKitInterestInput;
 };
 
 
@@ -25760,8 +27298,19 @@ export type MutationSummarizeCommunicationLogArgs = {
 };
 
 
+export type MutationSummarizeFailedPaymentArgs = {
+  case_id: Scalars['ID']['input'];
+  force?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
 export type MutationSupportCreateUserArgs = {
   input: SupportCreateUserInput;
+};
+
+
+export type MutationSyncAppInsightsArgs = {
+  store?: InputMaybe<AppInsightStore>;
 };
 
 
@@ -26272,6 +27821,11 @@ export type MutationUpdateCrmManagedOptionArgs = {
 };
 
 
+export type MutationUpdateCrmManualLogArgs = {
+  input: UpdateManualLogInput;
+};
+
+
 export type MutationUpdateCrmReminderArgs = {
   id: Scalars['ID']['input'];
   input: UpdateCrmReminderInput;
@@ -26404,6 +27958,18 @@ export type MutationUpdateFinanceSettingsArgs = {
 
 export type MutationUpdateFoodTaxDefaultsArgs = {
   input: FoodTaxDefaultsInput;
+};
+
+
+export type MutationUpdateGiftCardDesignArgs = {
+  id: Scalars['ID']['input'];
+  input: GiftCardDesignInput;
+};
+
+
+export type MutationUpdateGiftCardOrderAddressArgs = {
+  id: Scalars['ID']['input'];
+  input: GiftCardOrderAddressInput;
 };
 
 
@@ -26840,6 +28406,11 @@ export type MutationUpdateVenueFoodCouponArgs = {
 };
 
 
+export type MutationUpdateVenueKitOfferArgs = {
+  input: VenueKitOfferInput;
+};
+
+
 export type MutationUpdateVenueLeadArgs = {
   id: Scalars['ID']['input'];
   input: VenueLeadInput;
@@ -26988,6 +28559,13 @@ export type MutationVenueWithdrawAutoPodArgs = {
 };
 
 
+export type MutationVerifyCrmLeadCandidateEvidenceArgs = {
+  decisions: Array<CrmLeadEvidenceDecisionInput>;
+  external_checks?: InputMaybe<Scalars['Boolean']['input']>;
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationVerifyEmailVerificationOtpArgs = {
   otp: Scalars['String']['input'];
 };
@@ -27029,6 +28607,16 @@ export type MutationVerifySignupWhatsAppOtpArgs = {
 
 export type MutationVerifyVenueFoodOrderPaymentArgs = {
   input: VerifyVenueFoodOrderInput;
+};
+
+
+export type MutationVerifyVenueKitEmailOtpArgs = {
+  input: VenueKitEmailVerifyInput;
+};
+
+
+export type MutationVerifyVenueKitPhoneOtpArgs = {
+  input: VenueKitPhoneVerifyInput;
 };
 
 
@@ -28641,20 +30229,31 @@ export type Payment = {
   platform_fee_pct: Scalars['Float']['output'];
   pod?: Maybe<Pod>;
   pod_id?: Maybe<Scalars['ID']['output']>;
+  /** Razorpay's order id (order_…) the checkout was opened with. Null for other gateways. */
+  razorpay_order_id?: Maybe<Scalars['String']['output']>;
+  /** Razorpay's payment id (pay_…), exactly as the Razorpay dashboard shows it. Null until the buyer paid, and for other gateways. payment_id is Duncit's own reference, not this. */
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  /** Every Razorpay refund id (rfnd_…) sent against this payment, oldest first. Empty when none went through Razorpay. */
+  razorpay_refund_ids?: Maybe<Array<Scalars['String']['output']>>;
+  /**
+   * Where this payment's latest refund stands at Razorpay. Null when no refund
+   * was ever sent through the refund engine (older refunds included).
+   */
+  refund_status?: Maybe<PaymentRefundStatus>;
   /** The rented items this pod payment carried, as checkout froze them (empty when none). */
   rental_lines: Array<PaymentRentalLine>;
   /** What rounding the bill UP to a whole rupee added (0 ≤ x < 1; 0 when it was already whole or the payment predates the rule). Already inside total; never taxable and never part of a fee, commission or settlement. */
   round_off: Scalars['Float']['output'];
-  /** The member's unlocked Smart Incentive, frozen at checkout: rupees taken off the ticket money after the multi-ticket discount and before the coupon and coins (host-funded). 0 when none applied. */
+  /** The member's unlocked Smart Incentive, frozen at checkout: rupees taken off the ticket money before the coupon and coins (host-funded). 0 when none applied. */
   smart_incentive_amount: Scalars['Float']['output'];
   /** Percentage of the Smart Incentive that applied (0 when none). */
   smart_incentive_pct: Scalars['Int']['output'];
   status: PaymentStatus;
   subtotal: Scalars['Float']['output'];
   target_type: PaymentTargetType;
-  /** Multi-ticket discount frozen at checkout: rupees taken off the ticket price (never add-on products) before the coupon and coins. 0 when no tier applied. */
+  /** @deprecated The multi-ticket discount was removed. Always 0. */
   ticket_discount_amount: Scalars['Float']['output'];
-  /** Percentage of the multi-ticket tier that applied (0 when none). */
+  /** @deprecated The multi-ticket discount was removed. Always 0. */
   ticket_discount_pct: Scalars['Int']['output'];
   total: Scalars['Float']['output'];
   updated_at: Scalars['String']['output'];
@@ -28733,11 +30332,17 @@ export type PaymentDetail = {
   finalized_at?: Maybe<Scalars['String']['output']>;
   gift_card?: Maybe<PaymentGiftCard>;
   needs_refund: Scalars['Boolean']['output'];
-  /** Gross before every discount (multi-ticket discount, coupon, coins), taken from the frozen checkout metadata. */
+  /** Gross before every discount (Smart Incentive, coupon, coins), taken from the frozen checkout metadata. */
   original_total: Scalars['Float']['output'];
   payment: Payment;
   pod_booking?: Maybe<PaymentPodBooking>;
   product_orders: Array<PaymentProductOrderLine>;
+  /**
+   * Every refund this payment has seen, one section per kind of refund (pod
+   * payment, coins, pod shop, failed payment, ...). Empty when nothing was ever
+   * refunded or is owed. Read lazily: only a query that selects it pays for it.
+   */
+  refunds?: Maybe<Array<PaymentRefundSection>>;
   /** Every deferred step still owed. What the page's Retry all sends. */
   retryable_step_keys: Array<Scalars['String']['output']>;
   steps: Array<PaymentStep>;
@@ -28830,6 +30435,94 @@ export type PaymentProductOrderLine = {
   total: Scalars['Float']['output'];
 };
 
+/** One refund inside a section: one gateway refund, one order, one return, one case, or one coin ledger row. */
+export type PaymentRefundEntry = {
+  __typename?: 'PaymentRefundEntry';
+  /** Cash going back, in the payment's currency (0 for a coins-only row). */
+  amount: Scalars['Float']['output'];
+  attempts: Scalars['Int']['output'];
+  /** True when the caller may press Refund on this row now: it is owed, it is safe to send and the caller's role may. */
+  can_refund: Scalars['Boolean']['output'];
+  /** Duncit Coins going back. */
+  coins: Scalars['Int']['output'];
+  /** When a held cancellation refund is released. */
+  due_at?: Maybe<Scalars['String']['output']>;
+  /** The last error Razorpay or the engine reported. */
+  error?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  /** Who set it off: an admin, SYSTEM, a pod-cancel initiator. */
+  initiated_by?: Maybe<Scalars['String']['output']>;
+  processed_at?: Maybe<Scalars['String']['output']>;
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  /** The Razorpay refund id (rfnd_…) of this row; the first of razorpay_refund_ids. Null when none was sent. */
+  razorpay_refund_id?: Maybe<Scalars['String']['output']>;
+  /** Every Razorpay refund id behind this row (an older recorded refund can carry more than one). */
+  razorpay_refund_ids: Array<Scalars['String']['output']>;
+  reason?: Maybe<Scalars['String']['output']>;
+  /** The business reference: an order or return number, a booking, a Duncit payment reference. Null when it has none. */
+  ref?: Maybe<Scalars['String']['output']>;
+  requested_at?: Maybe<Scalars['String']['output']>;
+  /** Why it was sent: FINANCE_REFUND, POD_CANCELLATION, BACKOUT, RENTAL, HELD, RECORDED, CANCELLATION, RETURN, CASE, LEDGER. */
+  source: Scalars['String']['output'];
+  state: PaymentRefundState;
+  /** The refund engine's own status (QUEUED, PROCESSING, SUCCEEDED, FAILED, HELD, PROCESSED, RECORDED ...), for the label. */
+  status: Scalars['String']['output'];
+};
+
+/** Which kind of refund a section of the payment's Refund area is. */
+export type PaymentRefundKind =
+  /** Duncit Coins returned to the buyer's wallet. */
+  | 'COIN'
+  /** An e-commerce store order refund. Separate from the pod shop, never mixed with it. */
+  | 'ECOMM'
+  /** A captured payment that bought nothing and was refunded through Failed Payments. */
+  | 'FAILED_PAYMENT'
+  /** A refund of a payment that is not a pod booking (a shop cart or gift card Finance refunded). */
+  | 'PAYMENT'
+  /** A pod booking's money going back: a cancellation, a Finance refund, a Backout, or a held cancellation refund. */
+  | 'POD_PAYMENT'
+  /** A pod-shop order cancelled or a return refunded. */
+  | 'POD_SHOP'
+  /** A rented item's deposit or rent going back. */
+  | 'RENTAL';
+
+/** One kind of refund on a payment, with what happened to it. */
+export type PaymentRefundSection = {
+  __typename?: 'PaymentRefundSection';
+  amount: Scalars['Float']['output'];
+  coins: Scalars['Int']['output'];
+  entries: Array<PaymentRefundEntry>;
+  /** This kind's refund activity, oldest first (the payment's audit trail). */
+  events: Array<PaymentEvent>;
+  kind: PaymentRefundKind;
+  /** FAILED when any row needs somebody, else PENDING when any row is owed, else COMPLETED. */
+  state: PaymentRefundState;
+};
+
+/** Where a refund stands, in three buckets the page colours: owed, done, or refused. */
+export type PaymentRefundState =
+  /** The money (or coins) are back with the buyer. */
+  | 'COMPLETED'
+  /** Razorpay refused it or the retries are used up; somebody must act (red). */
+  | 'FAILED'
+  /** Money is owed or on its way and not yet confirmed back (yellow). */
+  | 'PENDING';
+
+/** A refund's progress at Razorpay. Accepted by Razorpay (PROCESSING) is not yet money in the buyer's bank. */
+export type PaymentRefundStatus =
+  /** The last attempt failed; it is retried automatically. */
+  | 'FAILED'
+  /** No Razorpay money to send back (a test-gateway or offline payment) — the refund is recorded only. */
+  | 'NOT_APPLICABLE'
+  /** Razorpay accepted it; the bank has not confirmed yet. */
+  | 'PROCESSING'
+  /** Retries are used up or the Razorpay payment cannot be found; Finance must check the Razorpay dashboard. */
+  | 'RECONCILIATION_REQUIRED'
+  /** Recorded and being sent to Razorpay. */
+  | 'REQUESTED'
+  /** Razorpay reports the refund processed. */
+  | 'SUCCEEDED';
+
 export type PaymentReleaseApprovalType =
   | 'FULL'
   | 'PARTIAL';
@@ -28854,6 +30547,12 @@ export type PaymentReleaseBreakdown = {
   duncit_amount: Scalars['Float']['output'];
   duncit_pct: Scalars['Float']['output'];
   duncit_revenue: Scalars['Float']['output'];
+  /**
+   * What this completion's payouts send out beyond what the pod took: the host
+   * remainder below zero that the floored host payout does not take back. 0 when
+   * the pod paid its way (and on older releases).
+   */
+  funding_shortfall: Scalars['Float']['output'];
   gst_amount: Scalars['Float']['output'];
   gst_pct: Scalars['Float']['output'];
   /** True when the final bill was paid on top of the slot price rather than instead of it. */
@@ -28870,6 +30569,12 @@ export type PaymentReleaseBreakdown = {
   venue_agreed_model?: Maybe<Scalars['String']['output']>;
   venue_agreed_rate?: Maybe<Scalars['Float']['output']>;
   venue_bill: Scalars['Float']['output'];
+  /**
+   * True when venue_bill set the venue's money; false when it was recorded as
+   * evidence only and the booked price stood. Null on releases written before
+   * this was recorded, so a large venue_bill there is not proof it was owed.
+   */
+  venue_bill_applied?: Maybe<Scalars['Boolean']['output']>;
   /** Extra charges on the venue's bill paid on top of the agreed amount (0 on older releases). */
   venue_extra_amount: Scalars['Float']['output'];
   /** An agreed per-guest booking's minimum guests (0 = none) and the people the roster counted — frozen at completion. */
@@ -28944,6 +30649,8 @@ export type PaymentReleaseRequest = {
   requested_by?: Maybe<Scalars['ID']['output']>;
   reviewed_at?: Maybe<Scalars['String']['output']>;
   reviewed_by?: Maybe<Scalars['ID']['output']>;
+  /** Who funds this release's funding_shortfall, as the approving reviewer stated it. Empty when there was none. */
+  shortfall_funding_note: Scalars['String']['output'];
   status: PaymentReleaseStatus;
   updated_at: Scalars['String']['output'];
   venue_id?: Maybe<Scalars['ID']['output']>;
@@ -28993,6 +30700,10 @@ export type PaymentRoundOff = {
   invoice_no?: Maybe<Scalars['String']['output']>;
   paid_at?: Maybe<Scalars['String']['output']>;
   payment_id: Scalars['String']['output'];
+  /** Razorpay's order id (order_…). Null for other gateways. */
+  razorpay_order_id?: Maybe<Scalars['String']['output']>;
+  /** Razorpay's payment id (pay_…), exactly as the Razorpay dashboard shows it. Null for other gateways. */
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
   /** What rounding the bill up to a whole rupee added (0 < x < 1). */
   round_off: Scalars['Float']['output'];
   source: PaymentSource;
@@ -29104,8 +30815,155 @@ export type PaymentTotals = {
   gst: Scalars['Float']['output'];
   /** Smart Incentive discounts given on the matching payments — already off gross. */
   smart_incentive_total: Scalars['Float']['output'];
-  /** Multi-ticket discounts given on the matching payments — already off gross. */
+  /** @deprecated The multi-ticket discount was removed. Always 0. */
   ticket_discount_total: Scalars['Float']['output'];
+};
+
+export type PaymentTrace = {
+  __typename?: 'PaymentTrace';
+  events: Array<PaymentTraceEvent>;
+  failed_cases: Array<PaymentTraceFailedCase>;
+  food_orders: Array<PaymentTraceFoodOrder>;
+  /** False when nothing anywhere carries this id. */
+  found: Scalars['Boolean']['output'];
+  gateway_refunds: Array<PaymentTraceGatewayRefund>;
+  payments: Array<PaymentTracePayment>;
+  ref: Scalars['String']['output'];
+  shop_orders: Array<PaymentTraceShopOrder>;
+  steps: Array<PaymentTraceStep>;
+  webhooks: Array<PaymentTraceWebhook>;
+};
+
+/** One entry of a payment's event timeline. */
+export type PaymentTraceEvent = {
+  __typename?: 'PaymentTraceEvent';
+  actor_name?: Maybe<Scalars['String']['output']>;
+  created_at: Scalars['String']['output'];
+  details: Array<PaymentEventDetail>;
+  id: Scalars['ID']['output'];
+  payment_id: Scalars['String']['output'];
+  source: Scalars['String']['output'];
+  type: Scalars['String']['output'];
+};
+
+export type PaymentTraceFailedCase = {
+  __typename?: 'PaymentTraceFailedCase';
+  created_at: Scalars['String']['output'];
+  /** Failed-payment case id (opens Failed Payments › detail). */
+  id: Scalars['ID']['output'];
+  payment_id: Scalars['String']['output'];
+  refund_status: Scalars['String']['output'];
+  resolution_state: Scalars['String']['output'];
+  verification_status: Scalars['String']['output'];
+};
+
+/** A venue food order paid to the venue's own Razorpay account. */
+export type PaymentTraceFoodOrder = {
+  __typename?: 'PaymentTraceFoodOrder';
+  /** Rupees. */
+  amount: Scalars['Float']['output'];
+  created_at: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  order_no: Scalars['String']['output'];
+  payment_status: Scalars['String']['output'];
+  razorpay_order_id?: Maybe<Scalars['String']['output']>;
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  razorpay_refund_id?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  venue_name: Scalars['String']['output'];
+};
+
+/** One refund sent back through Razorpay for the payment. */
+export type PaymentTraceGatewayRefund = {
+  __typename?: 'PaymentTraceGatewayRefund';
+  /** Rupees. */
+  amount: Scalars['Float']['output'];
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  last_error?: Maybe<Scalars['String']['output']>;
+  payment_id: Scalars['String']['output'];
+  processed_at?: Maybe<Scalars['String']['output']>;
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  razorpay_refund_id?: Maybe<Scalars['String']['output']>;
+  reason?: Maybe<Scalars['String']['output']>;
+  source: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+};
+
+/** Which of a payment's ids the traced id equals. One id can match several (an old Duncit ref shaped like pay_…). */
+export type PaymentTraceMatch =
+  | 'DOCUMENT_ID'
+  | 'DUNCIT_REF'
+  | 'INVOICE'
+  | 'RAZORPAY_ORDER'
+  | 'RAZORPAY_PAYMENT'
+  | 'RAZORPAY_REFUND';
+
+export type PaymentTracePayment = {
+  __typename?: 'PaymentTracePayment';
+  /** Rupees. */
+  amount: Scalars['Float']['output'];
+  created_at: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  finalize_state: Scalars['String']['output'];
+  /** Payment document id (opens Payment Logs › detail). */
+  id: Scalars['ID']['output'];
+  invoice_no?: Maybe<Scalars['String']['output']>;
+  matched_on: Array<PaymentTraceMatch>;
+  paid_at?: Maybe<Scalars['String']['output']>;
+  /** Duncit reference (DPAY-…, or pay_… on older payments). */
+  payment_id: Scalars['String']['output'];
+  razorpay_order_id?: Maybe<Scalars['String']['output']>;
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  razorpay_refund_ids: Array<Scalars['String']['output']>;
+  /** Which checkout it came from: pod booking, pod shop, pet store, gift card / other. */
+  source: PaymentSource;
+  status: Scalars['String']['output'];
+  user_name: Scalars['String']['output'];
+};
+
+/** A pod shop or pet store order the payment paid for. */
+export type PaymentTraceShopOrder = {
+  __typename?: 'PaymentTraceShopOrder';
+  /** POD_SHOP or PET_STORE. */
+  channel: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  fulfilment_status: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  order_no: Scalars['String']['output'];
+  payment_id: Scalars['String']['output'];
+  refund_status: Scalars['String']['output'];
+  /** Rupees. */
+  total: Scalars['Float']['output'];
+};
+
+/** One finalization step of a payment (booking, invoice, email, shipment…). */
+export type PaymentTraceStep = {
+  __typename?: 'PaymentTraceStep';
+  at?: Maybe<Scalars['String']['output']>;
+  detail?: Maybe<Scalars['String']['output']>;
+  key: Scalars['String']['output'];
+  /** Duncit reference of the payment it belongs to. */
+  payment_id: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+};
+
+/** One Razorpay webhook delivery that mentions the payment's Razorpay ids. */
+export type PaymentTraceWebhook = {
+  __typename?: 'PaymentTraceWebhook';
+  /** Rupees. */
+  amount?: Maybe<Scalars['Float']['output']>;
+  error?: Maybe<Scalars['String']['output']>;
+  event: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  outcome?: Maybe<Scalars['String']['output']>;
+  razorpay_order_id?: Maybe<Scalars['String']['output']>;
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  razorpay_refund_id?: Maybe<Scalars['String']['output']>;
+  received_at: Scalars['String']['output'];
+  status?: Maybe<Scalars['String']['output']>;
 };
 
 /** One row of the immutable money-out audit trail. */
@@ -29610,11 +31468,11 @@ export type Pod = {
   series_total?: Maybe<Scalars['Int']['output']>;
   /** The host offers members who stay on the pod page without booking a one-time discount (Smart Incentive). Always false on a free or zero-priced pod. */
   smart_incentive_enabled: Scalars['Boolean']['output'];
-  /** Percent off the ticket money that offer gives (after any multi-ticket discount); 0 when switched off. */
+  /** Percent off the ticket money that offer gives; 0 when switched off. */
   smart_incentive_pct: Scalars['Int']['output'];
-  /** Whether one booking of several seats gets a tiered discount on its tickets. Always false on a free or zero-priced pod. */
+  /** @deprecated The multi-ticket discount was removed. Always false. */
   ticket_discount_enabled: Scalars['Boolean']['output'];
-  /** The multi-ticket discount tiers, ascending. Empty when the discount is off; one ticket always pays full price. */
+  /** @deprecated The multi-ticket discount was removed. Always empty. */
   ticket_discount_tiers: Array<PodTicketDiscountTier>;
   updated_at: Scalars['String']['output'];
   venue_approval_status: PodVenueApproval;
@@ -30034,6 +31892,8 @@ export type PodCancellationRisk = {
   alerted_at?: Maybe<Scalars['String']['output']>;
   at_risk: Scalars['Boolean']['output'];
   attendees: PodCancellationRiskAttendees;
+  /** True when the ticket money collected, less Duncit's venue commission, is not more than venue_min_business — the pod has not reached the bookings it needs. */
+  below_min_business: Scalars['Boolean']['output'];
   /** The moment the sweep cancels this pod if it is still negative — the start minus the lead window. Null unless at risk. */
   cancel_at?: Maybe<Scalars['String']['output']>;
   collected_total: Scalars['Float']['output'];
@@ -30043,11 +31903,13 @@ export type PodCancellationRisk = {
   lead_hours: Scalars['Int']['output'];
   next_alert_at?: Maybe<Scalars['String']['output']>;
   pod_id: Scalars['ID']['output'];
-  /** How far below zero the host side sits — what the bookings must still raise. */
+  /** How far short the pod is — the host's loss, or what the ticket money (after Duncit's commission) must still raise to pass the venue's minimum business, whichever is larger. */
   shortfall: Scalars['Float']['output'];
   state: PodCancellationRiskState;
   /** The venue's booked slot price the pool has to cover. */
   venue_amount: Scalars['Float']['output'];
+  /** The venue's minimum business for the people booked so far (Partners, Fees and Minimum Spend); 0 when none applies. */
+  venue_min_business: Scalars['Float']['output'];
   /** The unclamped settlement waterfall on today's collections; all zeros for the states that never ran one. */
   waterfall: PodFinanceWaterfall;
   /** The risk window (hours before start) from Pod Settings. */
@@ -30721,6 +32583,11 @@ export type PodEarningsProjection = {
    * no minimum was asked for.
    */
   minimum?: Maybe<PodEarningsProjection>;
+  /**
+   * The fewest whole rupees per ticket that would make the pod viable, on the
+   * same rules. Null for a free pod, and when no price up to 99999 works.
+   */
+  minimum_viable_ticket_price?: Maybe<Scalars['Float']['output']>;
   /** Spots that can actually be sold: total_spots - 1 (0 when unset/unlimited). */
   payable_spots: Scalars['Int']['output'];
   /** Spots the host entered (physical capacity, including the host's own seat). */
@@ -30732,6 +32599,21 @@ export type PodEarningsProjection = {
    * the ceiling before any venue is chosen — an Auto Pod has none yet.
    */
   venue_budget: Scalars['Float']['output'];
+  /**
+   * The venue's minimum business for this booking (Partners, Fees and Minimum
+   * Spend) that the ticket money was held to. 0 when the venue set none.
+   */
+  venue_min_business: Scalars['Float']['output'];
+  /** The first of those rules the pod breaks, in the order a host fixes them. Null when viable. */
+  viability_reason?: Maybe<PodViabilityReason>;
+  /**
+   * True when the pod would pass the server's create and edit guard, judged with
+   * every spot filled: its ticket money less Duncit's venue commission is MORE
+   * than the venue's minimum business, the ticket money covers the venue, and the
+   * host earns MORE than 0. Always true for a free pod. A client enables Create
+   * only on a fresh projection that says true.
+   */
+  viable: Scalars['Boolean']['output'];
   waterfall: PodFinanceWaterfall;
 };
 
@@ -30920,11 +32802,7 @@ export type PodFinanceBreakdown = {
    * by this much — the host funds them, since settlement runs on what was collected.
    */
   smart_incentive_total: Scalars['Float']['output'];
-  /**
-   * Multi-ticket discounts given across this pod's successful bookings. Like
-   * coins, they come off the ticket price before GST, so collected_total is
-   * already lower by this much — stated so the gap is explainable.
-   */
+  /** @deprecated The multi-ticket discount was removed. Always 0. */
   ticket_discount_total: Scalars['Float']['output'];
   waterfall: PodFinanceWaterfall;
 };
@@ -31976,7 +33854,7 @@ export type PodSeriesPreview = {
   /** The multi-date discount a new recurring pod starts with (Pod Settings). */
   default_multi_date_discount_tiers: Array<MultiDateDiscountTier>;
   frequency: PodSeriesFrequency;
-  /** The largest discount a tier may give (Pod Settings' multi-ticket ceiling). */
+  /** The largest discount a multi-date tier may give. */
   max_discount_pct: Scalars['Int']['output'];
   /** Admin limits the plan was checked against. */
   max_occurrences: Scalars['Int']['output'];
@@ -32034,6 +33912,12 @@ export type PodSettlement = {
   /** True once that window has passed with the pod still uncompleted — the host can no longer mark attendance and their share of this pod is nil. */
   complete_expired: Scalars['Boolean']['output'];
   currency_symbol: Scalars['String']['output'];
+  /**
+   * What the payouts would send out beyond what the pod took — the host
+   * remainder below zero. Approving a request that carries one needs a note
+   * saying who funds it.
+   */
+  funding_shortfall: Scalars['Float']['output'];
   gst_pct: Scalars['Float']['output'];
   has_venue: Scalars['Boolean']['output'];
   host: PodSettlementParty;
@@ -32061,6 +33945,8 @@ export type PodSettlement = {
   venue_agreed_rate?: Maybe<Scalars['Float']['output']>;
   /** The venue's final bill as entered. 0 when none was. */
   venue_bill: Scalars['Float']['output'];
+  /** True when venue_bill set the venue's money; false when it is recorded as evidence only or there is none. */
+  venue_bill_applied: Scalars['Boolean']['output'];
   venue_commission_pct: Scalars['Float']['output'];
   /** Extra charges on the venue's bill, paid on top of the agreed amount once Finance approves. */
   venue_extra_amount: Scalars['Float']['output'];
@@ -32227,7 +34113,7 @@ export type PodSmartIncentive = {
   __typename?: 'PodSmartIncentive';
   /** Seconds on the pod page before the offer shows (Loyalty > Smart Incentive > Settings). */
   delay_seconds: Scalars['Int']['output'];
-  /** Percent off the ticket money, after any multi-ticket discount. Frozen once unlocked. */
+  /** Percent off the ticket money. Frozen once unlocked. */
   discount_pct: Scalars['Int']['output'];
   pod_id: Scalars['ID']['output'];
   /** True once the offer was shown: checkout takes it off on its own. */
@@ -32285,14 +34171,14 @@ export type PodTablePage = {
   total: Scalars['Int']['output'];
 };
 
-/** One multi-ticket discount tier: a single booking of at least min_tickets seats gets discount_pct off its ticket price. */
+/** Retired multi-ticket discount tier. Kept only so older app versions can still read Pod.ticket_discount_tiers, which is always empty. */
 export type PodTicketDiscountTier = {
   __typename?: 'PodTicketDiscountTier';
   discount_pct: Scalars['Int']['output'];
   min_tickets: Scalars['Int']['output'];
 };
 
-/** One multi-ticket discount tier: min_tickets 2 or more, discount_pct 1 up to the admin's max; each row must beat the one above on both. */
+/** Retired multi-ticket discount tier. Older app versions may still send it; the server ignores it. */
 export type PodTicketDiscountTierInput = {
   discount_pct: Scalars['Int']['input'];
   min_tickets: Scalars['Int']['input'];
@@ -32309,6 +34195,15 @@ export type PodVenueApproval =
   | 'DECLINED'
   | 'NONE'
   | 'PENDING';
+
+/** Why a paid pod's money does not work (PodEarningsProjection.viability_reason). */
+export type PodViabilityReason =
+  /** Ticket money less Duncit's venue commission is not more than the venue's minimum business. */
+  | 'BELOW_MIN_BUSINESS'
+  /** After GST, fees, the venue and commissions the host would earn 0 or less. */
+  | 'NO_EARNINGS'
+  /** Ticket money is less than what the venue costs. */
+  | 'VENUE_NOT_COVERED';
 
 /** One pod somebody has withdrawn against — a row of the Withdrawal Payments list. */
 export type PodWithdrawalGroup = {
@@ -32578,6 +34473,8 @@ export type PortalAccessEntry = {
   name: Scalars['String']['output'];
   /** The user's latest PORTAL_ACCESS request outcome for this console, if any. */
   request_status?: Maybe<ApprovalStatus>;
+  /** Roles that open this console (SUPER_ADMIN opens every one). Empty for ungated surfaces. */
+  required_roles: Array<Scalars['String']['output']>;
   url: Scalars['String']['output'];
 };
 
@@ -32638,6 +34535,267 @@ export type PortalModeTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<PortalMode>;
   total: Scalars['Int']['output'];
+};
+
+export type PortalSecurityAccessEntry = {
+  __typename?: 'PortalSecurityAccessEntry';
+  /** LIST or VIEW. */
+  action: Scalars['String']['output'];
+  actor_name: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+};
+
+/** Everything the Security Verification screen renders. Only a console sign-in that owes the screen may ask. */
+export type PortalSecurityChallenge = {
+  __typename?: 'PortalSecurityChallenge';
+  detected: PortalSecurityDetected;
+  exception?: Maybe<PortalSecurityExceptionStatus>;
+  links: Array<PortalSecurityPolicyLink>;
+  notice_version: Scalars['String']['output'];
+  /** The version a consent is recorded against — send it back with the consent. */
+  policy_version: Scalars['String']['output'];
+  portal_key: Scalars['String']['output'];
+  retention_days: Scalars['Int']['output'];
+  /** True when the person verified before and the terms have changed since. */
+  reverify: Scalars['Boolean']['output'];
+  sections: Array<PortalSecuritySection>;
+  user_name: Scalars['String']['output'];
+};
+
+export type PortalSecurityClientInput = {
+  language?: InputMaybe<Scalars['String']['input']>;
+  platform?: InputMaybe<Scalars['String']['input']>;
+  timezone?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PortalSecurityConsentInput = {
+  authorized_person: Scalars['Boolean']['input'];
+  credentials_not_shared: Scalars['Boolean']['input'];
+  location_consent: Scalars['Boolean']['input'];
+  policies_acknowledged: Scalars['Boolean']['input'];
+};
+
+export type PortalSecurityConsentRecord = {
+  __typename?: 'PortalSecurityConsentRecord';
+  authorized_person: Scalars['Boolean']['output'];
+  credentials_not_shared: Scalars['Boolean']['output'];
+  location_consent: Scalars['Boolean']['output'];
+  policies_acknowledged: Scalars['Boolean']['output'];
+};
+
+/**
+ * What the server itself sees of this sign-in. The address is read from the
+ * request through the trusted proxy, never taken from the screen; the place
+ * derived from it is always approximate.
+ */
+export type PortalSecurityDetected = {
+  __typename?: 'PortalSecurityDetected';
+  browser?: Maybe<Scalars['String']['output']>;
+  city?: Maybe<Scalars['String']['output']>;
+  country?: Maybe<Scalars['String']['output']>;
+  device_type?: Maybe<Scalars['String']['output']>;
+  ip?: Maybe<Scalars['String']['output']>;
+  /** Always true: an address maps to a provider's region, not to a person's position. */
+  ip_location_is_approximate: Scalars['Boolean']['output'];
+  os?: Maybe<Scalars['String']['output']>;
+  region?: Maybe<Scalars['String']['output']>;
+  server_time: Scalars['String']['output'];
+  user_agent?: Maybe<Scalars['String']['output']>;
+};
+
+export type PortalSecurityException = {
+  __typename?: 'PortalSecurityException';
+  created_at: Scalars['String']['output'];
+  decided_at?: Maybe<Scalars['String']['output']>;
+  decided_by_name?: Maybe<Scalars['String']['output']>;
+  decision_note?: Maybe<Scalars['String']['output']>;
+  expires_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  location_error?: Maybe<Scalars['String']['output']>;
+  portal_key: Scalars['String']['output'];
+  reason: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  used_at?: Maybe<Scalars['String']['output']>;
+  user_id: Scalars['ID']['output'];
+  user_name: Scalars['String']['output'];
+};
+
+export type PortalSecurityExceptionDecisionInput = {
+  approve: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PortalSecurityExceptionPage = {
+  __typename?: 'PortalSecurityExceptionPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<PortalSecurityException>;
+  total: Scalars['Int']['output'];
+};
+
+export type PortalSecurityExceptionRequestInput = {
+  /** PERMISSION_DENIED, POSITION_UNAVAILABLE, TIMEOUT or UNSUPPORTED. */
+  location_error?: InputMaybe<Scalars['String']['input']>;
+  reason: Scalars['String']['input'];
+};
+
+/** Where an alternative-verification request stands, as its owner sees it. */
+export type PortalSecurityExceptionStatus = {
+  __typename?: 'PortalSecurityExceptionStatus';
+  created_at: Scalars['String']['output'];
+  decided_at?: Maybe<Scalars['String']['output']>;
+  decision_note?: Maybe<Scalars['String']['output']>;
+  /** An APPROVED request can be used until this moment. */
+  expires_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  reason: Scalars['String']['output'];
+  /** PENDING, APPROVED, REJECTED, USED or EXPIRED. */
+  status: Scalars['String']['output'];
+};
+
+export type PortalSecurityExceptionSummary = {
+  __typename?: 'PortalSecurityExceptionSummary';
+  decided_at?: Maybe<Scalars['String']['output']>;
+  decided_by_name?: Maybe<Scalars['String']['output']>;
+  decision_note?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  reason: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+};
+
+/** A fix from the browser's location API. Accuracy is the radius, in metres, the browser reports. */
+export type PortalSecurityLocationInput = {
+  accuracy_meters: Scalars['Float']['input'];
+  latitude: Scalars['Float']['input'];
+  longitude: Scalars['Float']['input'];
+};
+
+/** A row of the verification log. No address and no coordinates: those are opened one row at a time. */
+export type PortalSecurityLog = {
+  __typename?: 'PortalSecurityLog';
+  accuracy_m?: Maybe<Scalars['Float']['output']>;
+  browser?: Maybe<Scalars['String']['output']>;
+  created_at: Scalars['String']['output'];
+  device_type?: Maybe<Scalars['String']['output']>;
+  employee_department?: Maybe<Scalars['String']['output']>;
+  employee_title?: Maybe<Scalars['String']['output']>;
+  employment_type?: Maybe<Scalars['String']['output']>;
+  has_location: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  ip_city?: Maybe<Scalars['String']['output']>;
+  ip_country?: Maybe<Scalars['String']['output']>;
+  /** The address with its host part hidden, e.g. 103.21.x.x. */
+  ip_masked?: Maybe<Scalars['String']['output']>;
+  ip_region?: Maybe<Scalars['String']['output']>;
+  /** Whether the HR portal's team structure holds this person, as recorded at the time. */
+  is_employee: Scalars['Boolean']['output'];
+  /** GPS or ADMIN_EXCEPTION. */
+  method?: Maybe<Scalars['String']['output']>;
+  os?: Maybe<Scalars['String']['output']>;
+  policy_version: Scalars['String']['output'];
+  portal_key: Scalars['String']['output'];
+  /** VERIFIED, EXCEPTION_APPROVED or LOCATION_DENIED. */
+  result: Scalars['String']['output'];
+  roles: Array<Scalars['String']['output']>;
+  signed_in_at?: Maybe<Scalars['String']['output']>;
+  user_email: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+  user_name: Scalars['String']['output'];
+};
+
+/** One verification opened in full. Reading it is recorded in access_history. */
+export type PortalSecurityLogDetail = {
+  __typename?: 'PortalSecurityLogDetail';
+  /** Who has opened this record. */
+  access_history: Array<PortalSecurityAccessEntry>;
+  accuracy_m?: Maybe<Scalars['Float']['output']>;
+  browser?: Maybe<Scalars['String']['output']>;
+  consent: PortalSecurityConsentRecord;
+  created_at: Scalars['String']['output'];
+  current_employee_title?: Maybe<Scalars['String']['output']>;
+  /** Today's answer from the HR portal, beside the one recorded at the time. */
+  current_is_employee: Scalars['Boolean']['output'];
+  device_type?: Maybe<Scalars['String']['output']>;
+  duid?: Maybe<Scalars['String']['output']>;
+  employee_department?: Maybe<Scalars['String']['output']>;
+  employee_title?: Maybe<Scalars['String']['output']>;
+  employment_type?: Maybe<Scalars['String']['output']>;
+  exception?: Maybe<PortalSecurityExceptionSummary>;
+  has_location: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  ip?: Maybe<Scalars['String']['output']>;
+  ip_city?: Maybe<Scalars['String']['output']>;
+  ip_country?: Maybe<Scalars['String']['output']>;
+  /** Always true: the place above is derived from the address, never a GPS fix. */
+  ip_location_is_approximate: Scalars['Boolean']['output'];
+  ip_masked?: Maybe<Scalars['String']['output']>;
+  ip_region?: Maybe<Scalars['String']['output']>;
+  is_employee: Scalars['Boolean']['output'];
+  language?: Maybe<Scalars['String']['output']>;
+  latitude?: Maybe<Scalars['Float']['output']>;
+  location_error?: Maybe<Scalars['String']['output']>;
+  longitude?: Maybe<Scalars['Float']['output']>;
+  method?: Maybe<Scalars['String']['output']>;
+  notice_version: Scalars['String']['output'];
+  os?: Maybe<Scalars['String']['output']>;
+  platform?: Maybe<Scalars['String']['output']>;
+  policy_version: Scalars['String']['output'];
+  portal_key: Scalars['String']['output'];
+  /** This person's other verifications, newest first. */
+  related: Array<PortalSecurityLog>;
+  result: Scalars['String']['output'];
+  roles: Array<Scalars['String']['output']>;
+  signed_in_at?: Maybe<Scalars['String']['output']>;
+  timezone?: Maybe<Scalars['String']['output']>;
+  user_agent?: Maybe<Scalars['String']['output']>;
+  user_email: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+  user_name: Scalars['String']['output'];
+};
+
+export type PortalSecurityLogPage = {
+  __typename?: 'PortalSecurityLogPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<PortalSecurityLog>;
+  total: Scalars['Int']['output'];
+};
+
+/** A link to a full policy published by Legal. */
+export type PortalSecurityPolicyLink = {
+  __typename?: 'PortalSecurityPolicyLink';
+  policy_type: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
+/** One titled block of the consent wording (security, access, privacy, location notice…). Plain text. */
+export type PortalSecuritySection = {
+  __typename?: 'PortalSecuritySection';
+  key: Scalars['String']['output'];
+  paragraphs: Array<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
+};
+
+export type PortalSecurityVerificationInput = {
+  client?: InputMaybe<PortalSecurityClientInput>;
+  consent: PortalSecurityConsentInput;
+  /** An APPROVED alternative-verification request, used instead of a location. */
+  exception_id?: InputMaybe<Scalars['ID']['input']>;
+  /** Required unless exception_id is given. */
+  location?: InputMaybe<PortalSecurityLocationInput>;
+  policy_version: Scalars['String']['input'];
+};
+
+export type PortalSecurityVerificationResult = {
+  __typename?: 'PortalSecurityVerificationResult';
+  policy_version: Scalars['String']['output'];
+  record_id: Scalars['ID']['output'];
+  /** The session token. Replaces the one the sign-in returned, which could not call anything else. */
+  token: Scalars['String']['output'];
+  verified_at: Scalars['String']['output'];
 };
 
 export type Post = {
@@ -33460,7 +35618,7 @@ export type PublicAppSettings = {
   pod_complete_timeout_hours: Scalars['Int']['output'];
   /** The server's clock at the moment this response was built (ISO). Clients add their own elapsed time to keep it ticking. */
   server_time: Scalars['String']['output'];
-  /** The biggest discount (whole %, 1-99) any multi-ticket tier on a pod may give — the pod editors cap their tiers at it. */
+  /** @deprecated The multi-ticket discount was removed. Always 50. */
   ticket_discount_max_pct: Scalars['Int']['output'];
   time_format: Scalars['String']['output'];
   /** Where every app reads 'now' from: SERVER, BROWSER or CUSTOM. */
@@ -33473,12 +35631,16 @@ export type PublicAppSettings = {
 
 export type PublicClientConfig = {
   __typename?: 'PublicClientConfig';
+  /** SHA-256 fingerprints of the Android app's signing certificates, comma separated (Tech → Google Play → App Links SHA-256 fingerprints); blank when unset. mWeb's build writes them into /.well-known/assetlinks.json so Android opens mWeb links in the app. */
+  android_app_links_sha256: Scalars['String']['output'];
   /** Sign in with Apple on the iOS app — its App ID. Blank: the iOS app offers no Apple button. */
   apple_bundle_id: Scalars['String']['output'];
   /** Where Apple posts the web flow's answer for the Android app and native web: <server>/apple/callback. */
   apple_relay_url: Scalars['String']['output'];
   /** Sign in with Apple on the web flow (mWeb, Android, native web) — its Services ID. Blank: those doors offer no Apple button. */
   apple_services_id: Scalars['String']['output'];
+  /** The Apple Developer Team ID (Tech → Environment → Sign in with Apple), trimmed; blank when unset. mWeb's build writes it into apple-app-site-association so iOS opens mWeb links in the app. */
+  apple_team_id: Scalars['String']['output'];
   /** The Return URL mWeb hands Apple's web SDK, as registered under the Services ID. */
   apple_web_redirect_uri: Scalars['String']['output'];
   /** Google sign-in on the Android app — its Android OAuth client. Blank: the app falls back to google_client_id. */
@@ -33487,6 +35649,8 @@ export type PublicClientConfig = {
   /** Google sign-in on the iOS app — its iOS OAuth client. Blank: the app falls back to google_client_id. */
   google_ios_client_id: Scalars['String']['output'];
   google_maps_api_key: Scalars['String']['output'];
+  /** Remotion company licence key Reel Studio renders under (Tech → Remotion); blank when unset. */
+  remotion_license_key: Scalars['String']['output'];
   /** Truecaller on the Android app — its OAuth client ID. Blank: the Android app offers no Truecaller button. */
   truecaller_android_client_id: Scalars['String']['output'];
   /** Truecaller on the iOS app and mobile web — the partner app key. Blank: those doors offer no Truecaller button. */
@@ -33778,6 +35942,12 @@ export type Query = {
   appBuildTriggerConfig: AppBuildTriggerConfig;
   /** CI builds of one platform, newest first (Tech portal App Builds tables). app_env narrows them to one environment; left out lists both. */
   appBuildsTable: AppBuildTablePage;
+  /** The stored history for one store over a range of at most a year (yyyy-MM-dd, inclusive). */
+  appInsightsDaily: Array<AppInsightDailyRow>;
+  /** Both stores' integrations: configured, status, last sync and the days held. */
+  appInsightsStatus: Array<AppInsightIntegration>;
+  /** Recent syncs, newest first (at most 200). */
+  appInsightsSyncLogs: Array<AppInsightSyncLog>;
   appPopupsTable: AppPopupTablePage;
   /**
    * The raw app screens kept for the websites' app phone (Store Listing >
@@ -33958,6 +36128,8 @@ export type Query = {
   chatPreview: ChatPreview;
   /** Unread lines across the viewer's pod and club rooms, muted rooms left out. */
   chatUnreadTotal: Scalars['Int']['output'];
+  /** Would this lead be a duplicate? Existing CRM leads (any type) and queued candidates sharing its phone, email, website or Instagram. */
+  checkCrmLeadDuplicates: CrmLeadDuplicateCheck;
   checkoutQuote: CheckoutQuote;
   /** GoDaddy's zone beside Cloudflare's, and the nameservers the domain uses today. */
   cloudflareMigration: CloudflareMigration;
@@ -34124,6 +36296,7 @@ export type Query = {
   communicationLog?: Maybe<CommunicationLog>;
   communicationLogs: CommunicationLogPage;
   communityLead?: Maybe<CommunityLead>;
+  /** With near, only the leads within the radius, nearest first unless another sort is picked. */
   communityLeadsTable: CommunityLeadTablePage;
   contactSubmissions: Array<ContactSubmission>;
   contactSubmissionsTable: ContactSubmissionTablePage;
@@ -34175,7 +36348,10 @@ export type Query = {
   /** Everyone you could message, minus yourself. Search matches name or email. */
   coworkers: Array<Coworker>;
   creatorLead?: Maybe<CreatorLead>;
+  /** With near, only the leads within the radius, nearest first unless another sort is picked. */
   creatorLeadsTable: CreatorLeadTablePage;
+  /** Active CRM team members matching a name / email search — the Assigned To picker and @mentions. */
+  crmAssignableUsers: Array<CrmStaffUser>;
   /** The configured Twilio caller-ID (From) number, shown on call dialogs. */
   crmCallFromNumber?: Maybe<Scalars['String']['output']>;
   crmCallPrompt?: Maybe<CrmCallPrompt>;
@@ -34201,11 +36377,31 @@ export type Query = {
   crmExcelTemplate: CrmExcelFile;
   /**  The signed-in agent's Ask AI conversation about one lead, with a fresh context summary.  */
   crmLeadAiThread: CrmLeadAiThread;
+  /** One researched candidate with its score breakdown, evidence, sources and CRM duplicates. */
+  crmLeadCandidate?: Maybe<CrmLeadCandidate>;
+  /** The Lead Research review queue (search, filter by status, lead type, job or score; sort by score). */
+  crmLeadCandidatesTable: CrmLeadCandidateTablePage;
   crmLeadConfig: CrmOptionGroup;
+  /** A discovery job's progress, counts, failures and best candidates. */
+  crmLeadDiscoveryJob: CrmLeadDiscoveryJob;
+  /** Recent discovery jobs, newest first. */
+  crmLeadDiscoveryJobs: Array<CrmLeadDiscoveryJob>;
   /** Which of these phone numbers, emails or website already belong to a lead of any kind (the lead forms' live duplicate check). */
   crmLeadDuplicates: Array<CrmLeadDuplicateMatch>;
   /** Every logo and image of one lead: logos first, each kind in its upload order. */
   crmLeadMedia: Array<CrmLeadMedia>;
+  /** One lead's score, criterion-wise breakdown, evidence with sources and the configuration it was scored with. */
+  crmLeadQuality: CrmLeadQualityDetails;
+  /** Lead quality analytics from the stored scores, for one lead type or all five. */
+  crmLeadQualityAnalytics: CrmLeadQualityAnalytics;
+  /** One lead's score and evidence history, newest first. */
+  crmLeadQualityHistory: Array<CrmLeadQualityEvent>;
+  /** The published scoring model of a lead type (seeded with the default the first time) and its draft, if one is being edited. */
+  crmLeadQualitySettings: CrmLeadQualitySettings;
+  /** Settings changes (drafts saved, versions published, drafts discarded) of a lead type, newest first. */
+  crmLeadQualitySettingsHistory: Array<CrmLeadQualityEvent>;
+  /** Every version of a lead type's scoring model, newest first. */
+  crmLeadQualityVersions: Array<CrmLeadQualityConfig>;
   crmManagedOptions: Array<CrmManagedOption>;
   crmManagedOptionsTable: CrmManagedOptionTablePage;
   crmReminders: Array<CrmReminder>;
@@ -34213,6 +36409,8 @@ export type Query = {
   crmServices: Array<CrmService>;
   crmServicesOffered: Array<CrmServiceOffered>;
   crmServicesOfferedTable: CrmServiceOfferedTablePage;
+  /** Names for the user ids a lead page shows (log authors, mentions, assignee), in one request. */
+  crmUsersByIds: Array<CrmStaffUser>;
   crmWebsitePages: Array<CrmWebsitePage>;
   crmWebsitePagesTable: CrmWebsitePageTablePage;
   dashboardTotals: DashboardTotals;
@@ -34311,6 +36509,7 @@ export type Query = {
   ecommBrandsTable: EcommBrandTablePage;
   ecommLead?: Maybe<EcommLead>;
   ecommLeads: Array<EcommLead>;
+  /** With near, only the leads within the radius, nearest first unless another sort is picked. */
   ecommLeadsTable: EcommLeadTablePage;
   /** Either side: an edit of its own latest counter, priced before it is saved. */
   editCounterQuote: VenueOfferQuoteResult;
@@ -34406,6 +36605,8 @@ export type Query = {
   failedPaymentEvents: Array<PaymentEvent>;
   /** Short-lived signed link to one private evidence file. Finance and Support only. */
   failedPaymentEvidenceLink: FailedPaymentEvidenceLink;
+  /** What a refund of this case would send right now, from Razorpay's live answer; read-only, nothing is claimed or sent. */
+  failedPaymentRefundPreview: FailedPaymentRefundPreview;
   /** Finance › Failed Payments (DUNCIT TABLE CONTRACT v1). */
   failedPaymentsTable: FailedPaymentTablePage;
   faq?: Maybe<Faq>;
@@ -34437,6 +36638,19 @@ export type Query = {
   giftCardAdminStats: GiftCardAdminStats;
   /** One card by its code, for the claim/redeem page. Holding the code is holding the value, so any signed-in holder may look. */
   giftCardByCode: GiftCard;
+  giftCardDesign: GiftCardDesign;
+  /** Categories already used in the catalogue, for the design form. */
+  giftCardDesignCategories: Array<Scalars['String']['output']>;
+  /** Loyalty > Gift Card Designs. */
+  giftCardDesignsTable: GiftCardDesignTablePage;
+  giftCardOrderAdmin: GiftCardAdminOrderDetail;
+  giftCardOrderStats: GiftCardOrderStats;
+  /** Loyalty > Gift Card Orders. Every order, digital and physical. */
+  giftCardOrdersTable: GiftCardAdminOrderTablePage;
+  /** The courier side of the gift card policy. */
+  giftCardShippingSettings: GiftCardShippingSettings;
+  /** The buy page: the default design, the sales policy, and printed stock. Signed-in only. */
+  giftCardStorefront: GiftCardStorefront;
   /** Loyalty > Virtual Gift Cards > Logs. Every issue and every conversion to coins. */
   giftCardTransactionsTable: GiftCardAdminTransactionTablePage;
   /** Loyalty > Virtual Gift Cards > Cards. Every card ever sold, with buyer and redeemer. */
@@ -34496,6 +36710,7 @@ export type Query = {
   hostInsights: HostInsights;
   hostLead?: Maybe<HostLead>;
   hostLeads: Array<HostLead>;
+  /** With near, only the leads within the radius, nearest first unless another sort is picked. */
   hostLeadsTable: HostLeadTablePage;
   hostPodDeleteImpact: HostPodDeleteImpact;
   /**
@@ -34838,6 +37053,10 @@ export type Query = {
   /** Open follow requests waiting on the signed-in user, newest first. */
   myFollowRequests: Array<FollowRequest>;
   myFreelancerProfile?: Maybe<FreelancerProfile>;
+  /** One of the caller's gift card orders, with its tracking. */
+  myGiftCardOrder: GiftCardOrder;
+  /** The caller's gift card orders, newest first. */
+  myGiftCardOrders: GiftCardOrderPage;
   /** The caller's gift cards — held or redeemed, and gifted away. */
   myGiftCards: MyGiftCards;
   myGigJobs: GigJobPage;
@@ -35023,12 +37242,20 @@ export type Query = {
   /** Full audit of one payment: what it charged, what it created, and what failed. */
   paymentDetail: PaymentDetail;
   paymentInvoicePdfBase64: Scalars['String']['output'];
+  /**
+   * The Payment Logs table as a PDF the reader can print or share: the rows the
+   * query selects (search, filters, sort), capped, with a totals line. Pass shop
+   * for one shop's log. Same read roles as the table.
+   */
+  paymentLogsPdfBase64: Scalars['String']['output'];
   paymentReleaseRequests: Array<PaymentReleaseRequest>;
   paymentReleaseRequestsTable: PaymentReleaseRequestTablePage;
   /** Payments whose bill was rounded up, with filter-wide totals. Accepts a derived 'source' filter (PaymentSource values). */
   paymentRoundOffsTable: PaymentRoundOffTablePage;
   /** Aggregated totals over EVERY payment matching the filter (no row cap), SUCCESS only. */
   paymentTotals: PaymentTotals;
+  /** Finance › Payment Trace: every payment an id (DPAY- ref, invoice no, payment document id, Razorpay pay_/order_/rfnd_) belongs to and every log it appears in. Exact match only. */
+  paymentTrace: PaymentTrace;
   payments: Array<Payment>;
   paymentsTable: PaymentTablePage;
   /** The money-out audit trail, newest first. Withdrawal Logs reads kind WITHDRAWAL. */
@@ -35246,6 +37473,16 @@ export type Query = {
   portalMode: PortalModePublic;
   portalModes: Array<PortalMode>;
   portalModesTable: PortalModeTablePage;
+  /** The Security Verification screen's content. Console sign-ins that owe the screen only. */
+  portalSecurityChallenge: PortalSecurityChallenge;
+  /** Where this person's alternative-verification request stands, if they made one. */
+  portalSecurityException?: Maybe<PortalSecurityExceptionStatus>;
+  /** Alternative-verification requests, newest first. SUPER_ADMIN and TECH_MANAGER only. */
+  portalSecurityExceptionsTable: PortalSecurityExceptionPage;
+  /** One verification in full, with the address and coordinates. Opening it is logged. */
+  portalSecurityLog: PortalSecurityLogDetail;
+  /** The verification log (Tech > Security > Login verifications). SUPER_ADMIN and TECH_MANAGER only. */
+  portalSecurityLogsTable: PortalSecurityLogPage;
   post?: Maybe<Post>;
   posts: Array<Post>;
   potentialPodEarnings: PodEarningsProjection;
@@ -35445,6 +37682,8 @@ export type Query = {
   renderMarketingCampaign: MarketingCampaignRender;
   /** Anyone: upcoming pods a guest can still rent items for, soonest first. */
   rentablePods: Array<RentablePod>;
+  /** Finance (everything), or the rental's venue owner / venues console (its own view): one rental with its guest, pod, venue, Razorpay refunds, proofs and timeline. */
+  rentalBookingDetail: RentalBookingDetail;
   /** Finance: every rental booking. */
   rentalBookingsTable: RentalBookingTablePage;
   /** Finance: the rental settings. */
@@ -35463,6 +37702,8 @@ export type Query = {
   role?: Maybe<Role>;
   roles: Array<Role>;
   rolesTable: RoleTablePage;
+  /** Search existing CRM leads of every type by name, city and quality score, sorted by score. */
+  searchCrmLeads: CrmLeadSearchPage;
   /** Club-centric discovery search grouped by upcoming-pod availability. */
   searchDiscovery: SearchResults;
   /** Find something that was said on this line. */
@@ -35752,6 +37993,8 @@ export type Query = {
   tableChangeLogs: TableChangeLogPage;
   /** Targets console: active employees a target can be assigned to, by name or email (at most 20). */
   targetAssignableEmployees: Array<EmployeeTargetAssignee>;
+  /** Targets console: the dashboard's numbers: this month's employee targets, the review queue and the newest growth plan. */
+  targetsDashboard: TargetsDashboard;
   /** HR console: one structure with all its seats and pay. */
   teamStructure: TeamStructureView;
   /** HR console: share links of a structure. */
@@ -35879,6 +38122,8 @@ export type Query = {
   usernameAvailability: UsernameAvailability;
   users: Array<User>;
   usersTable: UserTablePage;
+  /** Check a scoring model without saving it. Empty when valid. PUBLISH mode needs exactly 100%. */
+  validateCrmLeadQualityConfig: Array<CrmLeadQualityIssue>;
   /**
    * Check a reel against the networks it is going to: length within each
    * network's reel limit, a portrait frame where the network wants one, sound,
@@ -35920,8 +38165,15 @@ export type Query = {
   venueHealth?: Maybe<HealthScore>;
   /** Fees & Minimum Spend of the given APPROVED, active venues, in the order asked (at most 200 ids). Active hosts only — empty for anyone else. */
   venueHostTerms: Array<VenueHostTerms>;
+  /** Venues console: the counts above the table. */
+  venueKitInterestSummary: VenueKitInterestSummary;
+  /** Venues console: every venue that registered interest. */
+  venueKitInterestsTable: VenueKitInterestTablePage;
+  /** Public. The Venue Kit plan the website and the Venues console show. */
+  venueKitOffer: VenueKitOffer;
   venueLead?: Maybe<VenueLead>;
   venueLeads: Array<VenueLead>;
+  /** With near, only the leads within the radius, nearest first unless another sort is picked. */
   venueLeadsTable: VenueLeadTablePage;
   /** Open hours, closed days and busy windows between two dates (YYYY-MM-DD, at most 62 days). */
   venueOfferCalendar: VenueBookingCalendar;
@@ -36207,6 +38459,20 @@ export type QueryAppBuildsTableArgs = {
   app_env?: InputMaybe<AppBuildEnv>;
   platform: AppBuildPlatform;
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryAppInsightsDailyArgs = {
+  dimension?: InputMaybe<AppInsightDimension>;
+  from: Scalars['String']['input'];
+  store: AppInsightStore;
+  to: Scalars['String']['input'];
+};
+
+
+export type QueryAppInsightsSyncLogsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  store?: InputMaybe<AppInsightStore>;
 };
 
 
@@ -36618,6 +38884,12 @@ export type QueryChatPreviewArgs = {
 };
 
 
+export type QueryCheckCrmLeadDuplicatesArgs = {
+  input: CrmLeadCandidateInput;
+  lead_type: CrmEntityType;
+};
+
+
 export type QueryCheckoutQuoteArgs = {
   input: CheckoutQuoteInput;
 };
@@ -36970,6 +39242,7 @@ export type QueryCommunityLeadArgs = {
 
 
 export type QueryCommunityLeadsTableArgs = {
+  near?: InputMaybe<CrmLeadNearInput>;
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -37082,7 +39355,14 @@ export type QueryCreatorLeadArgs = {
 
 
 export type QueryCreatorLeadsTableArgs = {
+  near?: InputMaybe<CrmLeadNearInput>;
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryCrmAssignableUsersArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -37148,6 +39428,27 @@ export type QueryCrmLeadAiThreadArgs = {
 };
 
 
+export type QueryCrmLeadCandidateArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryCrmLeadCandidatesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryCrmLeadDiscoveryJobArgs = {
+  candidate_limit?: InputMaybe<Scalars['Int']['input']>;
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryCrmLeadDiscoveryJobsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryCrmLeadDuplicatesArgs = {
   input: CrmLeadDuplicateCheckInput;
 };
@@ -37156,6 +39457,40 @@ export type QueryCrmLeadDuplicatesArgs = {
 export type QueryCrmLeadMediaArgs = {
   entity_type: CrmEntityType;
   lead_id: Scalars['ID']['input'];
+};
+
+
+export type QueryCrmLeadQualityArgs = {
+  entity_type: CrmEntityType;
+  lead_id: Scalars['ID']['input'];
+};
+
+
+export type QueryCrmLeadQualityAnalyticsArgs = {
+  entity_type?: InputMaybe<CrmEntityType>;
+};
+
+
+export type QueryCrmLeadQualityHistoryArgs = {
+  entity_type: CrmEntityType;
+  lead_id: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryCrmLeadQualitySettingsArgs = {
+  lead_type: CrmEntityType;
+};
+
+
+export type QueryCrmLeadQualitySettingsHistoryArgs = {
+  lead_type: CrmEntityType;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryCrmLeadQualityVersionsArgs = {
+  lead_type: CrmEntityType;
 };
 
 
@@ -37189,6 +39524,11 @@ export type QueryCrmServicesOfferedArgs = {
 
 export type QueryCrmServicesOfferedTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryCrmUsersByIdsArgs = {
+  ids: Array<Scalars['ID']['input']>;
 };
 
 
@@ -37302,6 +39642,7 @@ export type QueryEcommLeadsArgs = {
 
 
 export type QueryEcommLeadsTableArgs = {
+  near?: InputMaybe<CrmLeadNearInput>;
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -37513,6 +39854,11 @@ export type QueryFailedPaymentEvidenceLinkArgs = {
 };
 
 
+export type QueryFailedPaymentRefundPreviewArgs = {
+  case_id: Scalars['ID']['input'];
+};
+
+
 export type QueryFailedPaymentsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
@@ -37592,6 +39938,26 @@ export type QueryGiftCardAdminStatsArgs = {
 
 export type QueryGiftCardByCodeArgs = {
   code: Scalars['String']['input'];
+};
+
+
+export type QueryGiftCardDesignArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGiftCardDesignsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryGiftCardOrderAdminArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGiftCardOrdersTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -37757,6 +40123,7 @@ export type QueryHostLeadsArgs = {
 
 
 export type QueryHostLeadsTableArgs = {
+  near?: InputMaybe<CrmLeadNearInput>;
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -38338,6 +40705,17 @@ export type QueryMyEventTicketForPodArgs = {
 };
 
 
+export type QueryMyGiftCardOrderArgs = {
+  order_no: Scalars['String']['input'];
+};
+
+
+export type QueryMyGiftCardOrdersArgs = {
+  page?: InputMaybe<Scalars['Int']['input']>;
+  page_size?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryMyGigJobsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
@@ -38664,6 +41042,12 @@ export type QueryPaymentInvoicePdfBase64Args = {
 };
 
 
+export type QueryPaymentLogsPdfBase64Args = {
+  query?: InputMaybe<TableQueryInput>;
+  shop?: InputMaybe<PaymentShop>;
+};
+
+
 export type QueryPaymentReleaseRequestsArgs = {
   filter?: InputMaybe<PaymentReleaseFilterInput>;
 };
@@ -38682,6 +41066,11 @@ export type QueryPaymentRoundOffsTableArgs = {
 export type QueryPaymentTotalsArgs = {
   filter?: InputMaybe<PaymentFilterInput>;
   shop?: InputMaybe<PaymentShop>;
+};
+
+
+export type QueryPaymentTraceArgs = {
+  ref: Scalars['String']['input'];
 };
 
 
@@ -39169,6 +41558,21 @@ export type QueryPortalModesTableArgs = {
 };
 
 
+export type QueryPortalSecurityExceptionsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryPortalSecurityLogArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryPortalSecurityLogsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryPostArgs = {
   post_doc_id: Scalars['ID']['input'];
 };
@@ -39188,7 +41592,9 @@ export type QueryPotentialPodEarningsArgs = {
   venue_amount_at_min?: InputMaybe<Scalars['Float']['input']>;
   venue_commission_on_top?: InputMaybe<Scalars['Float']['input']>;
   venue_commission_on_top_at_min?: InputMaybe<Scalars['Float']['input']>;
+  venue_hours?: InputMaybe<Scalars['Float']['input']>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
+  venue_offer_model?: InputMaybe<VenueOfferModel>;
 };
 
 
@@ -39569,6 +41975,11 @@ export type QueryRentablePodsArgs = {
 };
 
 
+export type QueryRentalBookingDetailArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type QueryRentalBookingsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
@@ -39596,6 +42007,11 @@ export type QueryRoleArgs = {
 
 export type QueryRolesTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QuerySearchCrmLeadsArgs = {
+  input: CrmLeadSearchInput;
 };
 
 
@@ -40404,6 +42820,13 @@ export type QueryUsersTableArgs = {
 };
 
 
+export type QueryValidateCrmLeadQualityConfigArgs = {
+  input: CrmLeadQualityConfigInput;
+  lead_type: CrmEntityType;
+  mode: CrmLeadQualityValidationMode;
+};
+
+
 export type QueryValidateReelArgs = {
   platforms: Array<SocialPlatform>;
   project_id: Scalars['ID']['input'];
@@ -40500,6 +42923,11 @@ export type QueryVenueHostTermsArgs = {
 };
 
 
+export type QueryVenueKitInterestsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryVenueLeadArgs = {
   id: Scalars['ID']['input'];
 };
@@ -40511,6 +42939,7 @@ export type QueryVenueLeadsArgs = {
 
 
 export type QueryVenueLeadsTableArgs = {
+  near?: InputMaybe<CrmLeadNearInput>;
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -41073,8 +43502,9 @@ export type RecurringCheckoutQuote = {
   platform_fee_amount: Scalars['Float']['output'];
   round_off: Scalars['Float']['output'];
   subtotal: Scalars['Float']['output'];
-  /** Multi-ticket discount across the dates. */
+  /** @deprecated The multi-ticket discount was removed. Always 0. */
   ticket_discount_amount: Scalars['Float']['output'];
+  /** @deprecated The multi-ticket discount was removed. Always 0. */
   ticket_discount_pct: Scalars['Int']['output'];
   /** Every ticket of every date at list price. */
   ticket_gross: Scalars['Float']['output'];
@@ -41665,6 +44095,21 @@ export type ReferralTopReferrer = {
   user_id: Scalars['ID']['output'];
 };
 
+/**
+ * Send one owed refund back to the payment's own source (the same Razorpay
+ * payment, never anywhere else), with the note Finance wants on record.
+ */
+export type RefundPaymentToSourceInput = {
+  /** Makes a double click answer once. Optional: one is derived from the entry when absent. */
+  client_request_id?: InputMaybe<Scalars['String']['input']>;
+  /** The PaymentRefundEntry.id to send. */
+  entry_id: Scalars['ID']['input'];
+  kind: PaymentRefundKind;
+  /** Why Finance is sending it (3 to 500 characters). Saved on the payment's trail. */
+  note: Scalars['String']['input'];
+  payment_doc_id: Scalars['ID']['input'];
+};
+
 export type RefundStatus =
   | 'NONE'
   | 'NOT_ELIGIBLE'
@@ -42032,8 +44477,10 @@ export type RentalBooking = {
   damage_claim: Scalars['Float']['output'];
   damage_note: Scalars['String']['output'];
   deposit_amount: Scalars['Float']['output'];
-  /** The deposit the venue hands the guest in cash at the venue when the item comes back. */
+  /** Cash the venue handed back at the venue: bookings closed before 2026-11-22 only, 0 since Duncit refunds deposits. */
   deposit_at_venue: Scalars['Float']['output'];
+  /** DUNCIT_REFUND (Duncit refunds the deposit through Razorpay) or VENUE_CASH (older bookings: handed back at the venue). */
+  deposit_policy?: Maybe<Scalars['String']['output']>;
   guest_name: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   image_url: Scalars['String']['output'];
@@ -42045,11 +44492,26 @@ export type RentalBooking = {
   pod_title: Scalars['String']['output'];
   quantity: Scalars['Int']['output'];
   rate: Scalars['Int']['output'];
-  /** Money Duncit owes back to the guest once the booking closed (never a deposit settled at the venue). */
+  /** What the booking was owed back when it closed. Fixed once closed: read refund_outstanding for what is still owed. */
   refund_due: Scalars['Float']['output'];
+  /** What the booking is owed back (0 while the item is out or nothing is owed). */
+  refund_eligible?: Maybe<Scalars['Float']['output']>;
+  /** The Razorpay refund record's own status: QUEUED, SENDING, PROCESSING, SUCCEEDED, FAILED, RECONCILIATION_REQUIRED or NOT_APPLICABLE. */
+  refund_gateway_status?: Maybe<Scalars['String']['output']>;
+  /** Owed and not yet confirmed by Razorpay. */
+  refund_outstanding?: Maybe<Scalars['Float']['output']>;
+  /** Queued or in flight on Razorpay, not yet confirmed. */
+  refund_pending?: Maybe<Scalars['Float']['output']>;
+  /** The Razorpay refund id once Razorpay confirms the refund (older rows: whatever was typed). */
   refund_ref: Scalars['String']['output'];
-  /** NONE, DUE, PAID, or IN_PAYMENT (returned with the payment's cancellation refund). */
+  /** Why the refund waits for Finance (REQUIRES_REVIEW only). */
+  refund_review_reason?: Maybe<Scalars['String']['output']>;
+  /** NOT_ELIGIBLE, AWAITING_RETURN, ELIGIBLE, PROCESSING, REFUNDED, FAILED, REQUIRES_REVIEW or IN_PAYMENT. */
+  refund_state?: Maybe<Scalars['String']['output']>;
+  /** NONE, DUE, PAID (Razorpay confirmed, or a pre-2026-11-22 hand mark: see refund_state), or IN_PAYMENT (returned with the payment's cancellation refund). */
   refund_status: Scalars['String']['output'];
+  /** Confirmed processed by Razorpay. */
+  refunded_amount?: Maybe<Scalars['Float']['output']>;
   refunded_at?: Maybe<Scalars['String']['output']>;
   /** The VENUE_RENTAL payout that carried venue_amount, once raised. */
   release_id?: Maybe<Scalars['String']['output']>;
@@ -42059,9 +44521,25 @@ export type RentalBooking = {
   unit: VenueRentalUnit;
   /** 1 for a SLOT item, the pod's hours for an HOUR item. */
   units: Scalars['Int']['output'];
-  /** What Duncit pays the venue for this booking: rent less commission, plus the deposit it settled at the venue. */
+  /** What Duncit pays the venue for this booking: rent less commission, plus any deposit it kept (damage, or non-refundable). */
   venue_amount: Scalars['Float']['output'];
   venue_id: Scalars['ID']['output'];
+};
+
+/** One rental, whole: as Finance sees it, or as its venue does. */
+export type RentalBookingDetail = {
+  __typename?: 'RentalBookingDetail';
+  booking: RentalBooking;
+  events: Array<RentalEvent>;
+  guest: RentalPerson;
+  /** Finance only; null for the venue. */
+  payment?: Maybe<RentalPaymentInfo>;
+  pod?: Maybe<RentalPodInfo>;
+  proofs: Array<RentalProof>;
+  refunds: Array<RentalRefundAttempt>;
+  venue: RentalVenueContact;
+  /** FINANCE or VENUE: which view this is. */
+  viewer: Scalars['String']['output'];
 };
 
 /** Server-side table page for the shared table engine. */
@@ -42073,9 +44551,89 @@ export type RentalBookingTablePage = {
   total: Scalars['Int']['output'];
 };
 
+/** One step of a rental's life. */
+export type RentalEvent = {
+  __typename?: 'RentalEvent';
+  actor_name: Scalars['String']['output'];
+  /** SYSTEM, FINANCE, VENUE, GUEST or RAZORPAY. */
+  actor_role: Scalars['String']['output'];
+  amount?: Maybe<Scalars['Float']['output']>;
+  at: Scalars['String']['output'];
+  detail: Scalars['String']['output'];
+  type: Scalars['String']['output'];
+};
+
 export type RentalMarkOutcome =
   | 'DAMAGED'
   | 'RETURNED';
+
+/** The payment a rental rode on (Finance only). */
+export type RentalPaymentInfo = {
+  __typename?: 'RentalPaymentInfo';
+  gateway: Scalars['String']['output'];
+  paid_at?: Maybe<Scalars['String']['output']>;
+  payment_doc_id: Scalars['ID']['output'];
+  payment_ref: Scalars['String']['output'];
+  /** The captured Razorpay payment id the refund is sent against. */
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  total: Scalars['Float']['output'];
+};
+
+/** The guest on a rental. Email is Finance's only. */
+export type RentalPerson = {
+  __typename?: 'RentalPerson';
+  email?: Maybe<Scalars['String']['output']>;
+  id?: Maybe<Scalars['ID']['output']>;
+  name: Scalars['String']['output'];
+  phone?: Maybe<Scalars['String']['output']>;
+};
+
+/** The pod a rental was booked for. The pod page is /club/<club_public_id>/pod/<public_id>. */
+export type RentalPodInfo = {
+  __typename?: 'RentalPodInfo';
+  club_public_id: Scalars['String']['output'];
+  ends_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  public_id: Scalars['String']['output'];
+  starts_at?: Maybe<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
+};
+
+/** Optional evidence on a rental. Never the proof of a gateway refund: that is Razorpay's record. */
+export type RentalProof = {
+  __typename?: 'RentalProof';
+  added_at: Scalars['String']['output'];
+  added_by_name: Scalars['String']['output'];
+  /** FINANCE or VENUE. */
+  added_by_role: Scalars['String']['output'];
+  image_urls: Array<Scalars['String']['output']>;
+  note: Scalars['String']['output'];
+};
+
+/** Optional evidence: a note, photos uploaded through Duncit, or both. */
+export type RentalProofInput = {
+  image_urls?: InputMaybe<Array<Scalars['String']['input']>>;
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** One Razorpay refund carrying the rental's money: its own, or the pod cancellation's. */
+export type RentalRefundAttempt = {
+  __typename?: 'RentalRefundAttempt';
+  amount: Scalars['Float']['output'];
+  attempts: Scalars['Int']['output'];
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** Finance only. */
+  last_error: Scalars['String']['output'];
+  processed_at?: Maybe<Scalars['String']['output']>;
+  /** Finance only. */
+  razorpay_refund_id?: Maybe<Scalars['String']['output']>;
+  requested_at?: Maybe<Scalars['String']['output']>;
+  /** RENTAL or POD_CANCELLATION. */
+  source: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+};
 
 /** Finance > Rented Items > Settings — the rules every venue rental runs under. */
 export type RentalSettings = {
@@ -42084,9 +44642,9 @@ export type RentalSettings = {
   booking_cutoff_hours: Scalars['Int']['output'];
   /** Duncit's commission on rent (never on the deposit), percent. */
   commission_pct: Scalars['Float']['output'];
-  /** An unmarked rental is closed as returned automatically this many days after the pod ends. */
+  /** An unmarked rental is closed as returned this many days after the pod ends, and its deposit refunded to the guest through Razorpay. */
   deposit_auto_release_days: Scalars['Int']['output'];
-  /** Whether the venue hands the deposit back at the venue once the item comes back. Either way Duncit pays the deposit to the venue. */
+  /** Whether Duncit refunds the deposit (less any damage) to the guest through Razorpay once the item comes back. Off: the venue keeps it. */
   deposit_refundable: Scalars['Boolean']['output'];
   /** Off hides Pod Rent everywhere and refuses new rentals. */
   enabled: Scalars['Boolean']['output'];
@@ -42105,6 +44663,17 @@ export type RentalSettingsInput = {
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
   rent_refundable_on_backout?: InputMaybe<Scalars['Boolean']['input']>;
   terms_html?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Where the item is returned: the venue and its contact. Email is Finance's only. */
+export type RentalVenueContact = {
+  __typename?: 'RentalVenueContact';
+  address: Scalars['String']['output'];
+  contact_name: Scalars['String']['output'];
+  email?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  phone?: Maybe<Scalars['String']['output']>;
 };
 
 /** A venue's rented items, in numbers. */
@@ -42519,6 +45088,8 @@ export type ReviewPaymentReleaseInput = {
   approval_reason?: InputMaybe<Scalars['String']['input']>;
   approval_type?: InputMaybe<PaymentReleaseApprovalType>;
   approved_amount?: InputMaybe<Scalars['Float']['input']>;
+  /** Who funds the release's funding_shortfall — required to approve one that has a shortfall. */
+  shortfall_funding_note?: InputMaybe<Scalars['String']['input']>;
   status: PaymentReleaseStatus;
 };
 
@@ -44183,6 +46754,14 @@ export type SocialTopPost = {
   platform: SocialPlatform;
   text: Scalars['String']['output'];
 };
+
+/** Who a SOLUTIONS entry is offered to — the sections duncit.com/solutions lists. */
+export type SolutionAudience =
+  | 'CLUB_ADMIN'
+  | 'COMMUNITY'
+  | 'CREATOR'
+  | 'HOST'
+  | 'VENUE';
 
 /**
  * What pressing a card does. Asked rather than inferred: an in-app path and
@@ -47723,6 +50302,38 @@ export type TableSortDir =
   | 'asc'
   | 'desc';
 
+/** Everything the Targets console's dashboard shows, read in one request. */
+export type TargetsDashboard = {
+  __typename?: 'TargetsDashboard';
+  /** Active employees a target can be assigned to, to read current_month.total against. */
+  active_employees: Scalars['Int']['output'];
+  /** Reports waiting for a review, across every month. */
+  awaiting_review: Scalars['Int']['output'];
+  /** Targets set for the current month. */
+  current_month: TargetsMonthCounts;
+  /** The newest saved run. Null while nothing is saved. */
+  latest_calculation?: Maybe<GrowthCalculation>;
+  /** YYYY-MM: the current month in the admin's time zone. */
+  month: Scalars['String']['output'];
+  /** Targets still unreported inside an open month-end reminder window (Targets > Settings). */
+  reminders_due: Scalars['Int']['output'];
+  /** The longest-waiting reports (at most 5), oldest submission first. */
+  review_queue: Array<EmployeeTarget>;
+  /** Saved Growth Calculator runs. */
+  saved_calculations: Scalars['Int']['output'];
+};
+
+/** Live employee targets for one month, counted by status. */
+export type TargetsMonthCounts = {
+  __typename?: 'TargetsMonthCounts';
+  assigned: Scalars['Int']['output'];
+  /** Mean completion percent of the month's reports (submitted or reviewed), to one decimal. Null until someone reports. */
+  average_completion?: Maybe<Scalars['Float']['output']>;
+  reviewed: Scalars['Int']['output'];
+  submitted: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+};
+
 export type TeamEmploymentType =
   | 'ADVISOR'
   | 'AI_AGENT'
@@ -49932,7 +52543,7 @@ export type UpdateAppSettingsInput = {
   pod_reminder_lead_hours?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours before a pod starts its guests get the same-day reminder (0-23, 0 is off). */
   pod_sameday_reminder_hours?: InputMaybe<Scalars['Int']['input']>;
-  /** The biggest discount any multi-ticket tier on a pod may give, in whole % (1-99). */
+  /** @deprecated The multi-ticket discount was removed. Ignored. */
   ticket_discount_max_pct?: InputMaybe<Scalars['Int']['input']>;
   time_format?: InputMaybe<Scalars['String']['input']>;
   time_source?: InputMaybe<TimeSource>;
@@ -50453,6 +53064,15 @@ export type UpdateLocationInput = {
   whatsapp_group_url?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpdateManualLogInput = {
+  body_html: Scalars['String']['input'];
+  body_text?: InputMaybe<Scalars['String']['input']>;
+  entity_id: Scalars['ID']['input'];
+  entity_type: CrmEntityType;
+  log_id: Scalars['ID']['input'];
+  summary?: InputMaybe<Scalars['String']['input']>;
+};
+
 /** Every field is optional: what is left out keeps its saved value. */
 export type UpdateMarketingAgentInput = {
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -50534,8 +53154,9 @@ export type UpdatePodInput = {
   /** Offer a Smart Incentive — omit both fields to leave it alone. Cleared when the pod becomes free or zero-priced. */
   smart_incentive_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   smart_incentive_pct?: InputMaybe<Scalars['Int']['input']>;
-  /** Offer a multi-ticket discount. Cleared when the pod becomes free or zero-priced. */
+  /** @deprecated The multi-ticket discount was removed. Ignored. */
   ticket_discount_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** @deprecated The multi-ticket discount was removed. Ignored. */
   ticket_discount_tiers?: InputMaybe<Array<PodTicketDiscountTierInput>>;
   /** @deprecated Venues are booked with an offer now (venue_offer). Refused with a message to update the app. */
   venue_booking?: InputMaybe<InstantBookingInput>;
@@ -50852,8 +53473,16 @@ export type User = {
   /** Null until the member answers on Edit profile. */
   is_pet_owner?: Maybe<Scalars['Boolean']['output']>;
   is_phone_verified?: Maybe<Scalars['Boolean']['output']>;
-  /** The last calendar day (UTC, yyyy-MM-dd) the app saw this account (staff only); null when never. */
+  /**
+   * The last calendar day (UTC, yyyy-MM-dd) the app saw this account (staff only); null when never.
+   * @deprecated Read last_activity_at: it is a full timestamp, covers every signed-in request and sorts.
+   */
   last_active_on?: Maybe<Scalars['String']['output']>;
+  /**
+   * When this account last used Duncit while signed in, on Android, iOS or the
+   * web (ISO 8601, staff only). Null until its first tracked request.
+   */
+  last_activity_at?: Maybe<Scalars['String']['output']>;
   last_login_at?: Maybe<Scalars['String']['output']>;
   last_login_provider?: Maybe<AuthProvider>;
   last_name: Scalars['String']['output'];
@@ -50864,6 +53493,8 @@ export type User = {
   phone_extension: Scalars['String']['output'];
   phone_number: Scalars['String']['output'];
   pincode?: Maybe<Scalars['String']['output']>;
+  /** Every platform this account has used Duncit from while signed in, in display order (staff only). */
+  platforms_used: Array<UserPlatform>;
   profile_links: Array<ProfileLink>;
   profile_photo?: Maybe<Scalars['String']['output']>;
   profile_visibility?: Maybe<ProfileVisibility>;
@@ -51123,6 +53754,12 @@ export type UserNotification = {
   read_at?: Maybe<Scalars['String']['output']>;
 };
 
+/** Where an account uses Duncit from: the Android or iOS app, or a browser. */
+export type UserPlatform =
+  | 'ANDROID'
+  | 'IOS'
+  | 'WEB';
+
 /**
  * One refund that has already been paid back to a buyer.
  *
@@ -51145,11 +53782,19 @@ export type UserRefund = {
   partial: Scalars['Boolean']['output'];
   payment_id: Scalars['String']['output'];
   platform_fee_amount: Scalars['Float']['output'];
+  /** Razorpay's order id (order_…) the checkout was opened with. Null for other gateways. */
+  razorpay_order_id?: Maybe<Scalars['String']['output']>;
+  /** Razorpay's payment id (pay_…), exactly as the Razorpay dashboard shows it. Null until the buyer paid, and for other gateways. payment_id is Duncit's own reference, not this. */
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  /** Every Razorpay refund id (rfnd_…) sent against this payment, oldest first. Empty when none went through Razorpay. */
+  razorpay_refund_ids?: Maybe<Array<Scalars['String']['output']>>;
   /** Money returned across every release on this booking. Falls back to the total for an admin refund, which returns the whole payment without writing a figure. */
   refund_amount: Scalars['Float']['output'];
   /** Who set the refund off — a pod-cancel initiator or SYSTEM. Null for an admin refund from the console. */
   refund_initiated_by?: Maybe<Scalars['String']['output']>;
   refund_reason?: Maybe<Scalars['String']['output']>;
+  /** Where the refund stands at Razorpay. Null for refunds recorded before refunds were sent through Razorpay. */
+  refund_status?: Maybe<PaymentRefundStatus>;
   refunded_at?: Maybe<Scalars['String']['output']>;
   status: Scalars['String']['output'];
   subtotal: Scalars['Float']['output'];
@@ -52123,12 +54768,169 @@ export type VenueHostTerms = {
   venue_id: Scalars['ID']['output'];
 };
 
+export type VenueKitEmailOtpInput = {
+  captcha_answer?: InputMaybe<Scalars['String']['input']>;
+  /** Human check, required only when nobody is signed in. See the captchaChallenge query. */
+  captcha_token?: InputMaybe<Scalars['String']['input']>;
+  email: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+};
+
+export type VenueKitEmailVerifyInput = {
+  code: Scalars['String']['input'];
+  email: Scalars['String']['input'];
+};
+
+/** A venue that registered interest in the Venue Kit. The email is always verified; the phone may not be. */
+export type VenueKitInterest = {
+  __typename?: 'VenueKitInterest';
+  created_at: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  email_verified_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  last_submitted_at: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  note: Scalars['String']['output'];
+  phone_extension: Scalars['String']['output'];
+  phone_number: Scalars['String']['output'];
+  phone_verified: Scalars['Boolean']['output'];
+  phone_verified_at?: Maybe<Scalars['String']['output']>;
+  source: VenueKitSource;
+  status: VenueKitInterestStatus;
+  /** How many times this mailbox has submitted the form. */
+  submission_count: Scalars['Int']['output'];
+};
+
+export type VenueKitInterestInput = {
+  email_token: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  phone_extension: Scalars['String']['input'];
+  phone_number: Scalars['String']['input'];
+  /** Optional: present only when the phone was verified. */
+  phone_token?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** How far the venues team has taken an interested venue. */
+export type VenueKitInterestStatus =
+  | 'CONTACTED'
+  | 'CONVERTED'
+  | 'NEW'
+  | 'NOT_INTERESTED';
+
+export type VenueKitInterestStatusInput = {
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+  status: VenueKitInterestStatus;
+};
+
+export type VenueKitInterestSummary = {
+  __typename?: 'VenueKitInterestSummary';
+  by_status: Array<VenueKitStatusCount>;
+  phone_verified: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+};
+
+export type VenueKitInterestTablePage = {
+  __typename?: 'VenueKitInterestTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<VenueKitInterest>;
+  total: Scalars['Int']['output'];
+};
+
+/** The Venue Kit's one annual plan, as duncit.com/venue-kit and the Venues console show it. Money is in paise. */
+export type VenueKitOffer = {
+  __typename?: 'VenueKitOffer';
+  annual_price_paise: Scalars['Int']['output'];
+  /** Discount on additional venue collaboration gift cards. */
+  collab_gift_card_discount_pct: Scalars['Float']['output'];
+  /** Price of each label beyond the included ones. */
+  extra_label_price_paise: Scalars['Int']['output'];
+  /** Free Duncit gift cards in the kit, and the value of each. */
+  gift_card_count: Scalars['Int']['output'];
+  gift_card_value_paise: Scalars['Int']['output'];
+  /** Table QR labels included in the kit. */
+  included_table_labels: Scalars['Int']['output'];
+  /** Share of every order Duncit funds back to the venue. */
+  order_benefit_pct: Scalars['Float']['output'];
+  /** How long the Smart POS activation coupon in the kit lasts. */
+  pos_activation_months: Scalars['Int']['output'];
+  /** When an admin last changed the offer; null while the shipped defaults apply. */
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type VenueKitOfferInput = {
+  annual_price_paise: Scalars['Int']['input'];
+  collab_gift_card_discount_pct: Scalars['Float']['input'];
+  extra_label_price_paise: Scalars['Int']['input'];
+  gift_card_count: Scalars['Int']['input'];
+  gift_card_value_paise: Scalars['Int']['input'];
+  included_table_labels: Scalars['Int']['input'];
+  order_benefit_pct: Scalars['Float']['input'];
+  pos_activation_months: Scalars['Int']['input'];
+};
+
+/** The one-shot proof a verified code earns, spent by submitVenueKitInterest. */
+export type VenueKitOtpProof = {
+  __typename?: 'VenueKitOtpProof';
+  token: Scalars['String']['output'];
+};
+
+/** A Venue Kit code that was issued. Named apart from PhoneOtpRequestResult: this flow returns no challenge id. */
+export type VenueKitOtpRequest = {
+  __typename?: 'VenueKitOtpRequest';
+  /** ISO instant the code stops working. */
+  expires_at: Scalars['String']['output'];
+  expires_in_minutes: Scalars['Int']['output'];
+  resend_after_seconds: Scalars['Int']['output'];
+  /** Whether a provider really carried the code. */
+  sent: Scalars['Boolean']['output'];
+  /** The code itself, ONLY while no provider is configured. Null whenever a real send happened. */
+  test_code?: Maybe<Scalars['String']['output']>;
+};
+
+export type VenueKitPhoneOtpInput = {
+  /** The token verifyVenueKitEmailOtp returned — the phone code needs a proved email first. */
+  email_token: Scalars['String']['input'];
+  /** Only +91: the SMS code reaches Indian mobiles. */
+  phone_extension: Scalars['String']['input'];
+  phone_number: Scalars['String']['input'];
+};
+
+export type VenueKitPhoneVerifyInput = {
+  code: Scalars['String']['input'];
+  phone_extension: Scalars['String']['input'];
+  phone_number: Scalars['String']['input'];
+};
+
+/** Where an interested venue came from. */
+export type VenueKitSource =
+  | 'VENUES_PORTAL'
+  | 'WEBSITE';
+
+export type VenueKitStatusCount = {
+  __typename?: 'VenueKitStatusCount';
+  count: Scalars['Int']['output'];
+  status: VenueKitInterestStatus;
+};
+
+export type VenueKitSubmitResult = {
+  __typename?: 'VenueKitSubmitResult';
+  /** True when this mailbox had already registered; the row was refreshed, not duplicated. */
+  already_registered: Scalars['Boolean']['output'];
+  interest: VenueKitInterest;
+  ok: Scalars['Boolean']['output'];
+};
+
 export type VenueLead = {
   __typename?: 'VenueLead';
   activity_log: Array<CrmActivity>;
   amenities: Array<Scalars['String']['output']>;
   area?: Maybe<Scalars['String']['output']>;
+  /** The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here. */
   assigned_to?: Maybe<Scalars['String']['output']>;
+  /** The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name. */
+  assigned_user_id?: Maybe<Scalars['ID']['output']>;
   available_days: Array<Scalars['String']['output']>;
   available_time_slots?: Maybe<Scalars['String']['output']>;
   booking_notice?: Maybe<Scalars['String']['output']>;
@@ -52139,11 +54941,15 @@ export type VenueLead = {
   city: Scalars['String']['output'];
   contacts: Array<CrmContact>;
   created_at?: Maybe<Scalars['String']['output']>;
+  /** Kilometres from the centre of a Nearby leads search. Set only on a table page read with near; null elsewhere. */
+  distance_km?: Maybe<Scalars['Float']['output']>;
   /** Stringified JSON map of dynamic field values. Empty object when none set. */
   dynamic_values_json: Scalars['String']['output'];
   event_suitability: Array<Scalars['String']['output']>;
   expected_charges?: Maybe<Scalars['Float']['output']>;
   full_address: Scalars['String']['output'];
+  /** How exactly the lead sits on the map: PIN (its map link), AREA or CITY (that centre). Null until a Nearby leads search places it, or when it has no known city. */
+  geo_precision?: Maybe<Scalars['String']['output']>;
   gst_applicable: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   instagram_link?: Maybe<Scalars['String']['output']>;
@@ -52162,6 +54968,8 @@ export type VenueLead = {
   photos: Array<Scalars['String']['output']>;
   pricing_models: Array<Scalars['String']['output']>;
   priority: Scalars['String']['output'];
+  /** Lead Quality Score summary (score, classification, qualification); null until the lead is first scored. */
+  quality?: Maybe<CrmLeadQualitySummary>;
   remarks?: Maybe<Scalars['String']['output']>;
   security_deposit?: Maybe<Scalars['Float']['output']>;
   services_offered: Array<CrmServiceOffered>;
@@ -52183,7 +54991,10 @@ export type VenueLead = {
 export type VenueLeadInput = {
   amenities?: InputMaybe<Array<Scalars['String']['input']>>;
   area?: InputMaybe<Scalars['String']['input']>;
+  /** The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here. */
   assigned_to?: InputMaybe<Scalars['String']['input']>;
+  /** The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name. */
+  assigned_user_id?: InputMaybe<Scalars['ID']['input']>;
   available_days?: InputMaybe<Array<Scalars['String']['input']>>;
   available_time_slots?: InputMaybe<Scalars['String']['input']>;
   booking_notice?: InputMaybe<Scalars['String']['input']>;
@@ -52233,6 +55044,8 @@ export type VenueLeadTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<VenueLead>;
   total: Scalars['Int']['output'];
+  /** Leads of this kind with no place on the map (no city, or one the map does not know), so a Nearby leads search cannot include them. Null outside a nearby search. */
+  unplaced?: Maybe<Scalars['Int']['output']>;
 };
 
 /** The least a venue takes from one booking on one pricing basis (rupees). A host's offer below it is refused (BELOW_MIN_BUSINESS). */
@@ -53760,8 +56573,11 @@ export type WalletWithdrawalTablePage = {
 };
 
 export type WebsiteContentInput = {
+  /** Required for SOLUTIONS, must be empty otherwise. */
+  audience?: InputMaybe<SolutionAudience>;
   body?: InputMaybe<Scalars['String']['input']>;
   category?: InputMaybe<Scalars['String']['input']>;
+  coming_soon?: InputMaybe<Scalars['Boolean']['input']>;
   cta_label?: InputMaybe<Scalars['String']['input']>;
   cta_url?: InputMaybe<Scalars['String']['input']>;
   image_url?: InputMaybe<Scalars['String']['input']>;
@@ -53776,8 +56592,14 @@ export type WebsiteContentInput = {
 
 export type WebsiteContentItem = {
   __typename?: 'WebsiteContentItem';
+  /** SOLUTIONS only; null on every other type. */
+  audience?: Maybe<SolutionAudience>;
   body: Scalars['String']['output'];
   category: Scalars['String']['output'];
+  /** The category as a URL segment: a solution lives at /solutions/<category_slug>/<slug>. */
+  category_slug: Scalars['String']['output'];
+  /** SOLUTIONS only: announced, not on sale yet. */
+  coming_soon: Scalars['Boolean']['output'];
   created_at: Scalars['String']['output'];
   cta_label: Scalars['String']['output'];
   cta_url: Scalars['String']['output'];
@@ -53889,7 +56711,9 @@ export type WebsiteNavSite =
 export type WebsitePageType =
   | 'BLOG'
   | 'CAREERS'
-  | 'NEWSROOM';
+  | 'NEWSROOM'
+  /** An offering on duncit.com/solutions, filed under an audience and a category. */
+  | 'SOLUTIONS';
 
 /**
  * One upcoming pod as the public websites' home rail shows it: the card's

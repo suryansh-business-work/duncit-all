@@ -10,6 +10,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import { DuncitButton } from '@duncit/buttons';
 import type { EditForm } from './queries';
 import { useTranslation } from '@duncit/shell';
+import PlatformIcons from '../../components/PlatformIcons';
 
 interface Props {
   user: any;
@@ -49,69 +50,73 @@ export default function UserHeader({
       }
       title={user.full_name || user.email || user.user_id}
       actions={
-        <Stack direction="row" spacing={1}>
-        <DuncitButton size="small" variant="outlined" startIcon={<CallIcon />} onClick={onCallClick} data-testid="admin-user-call">
-          {t('admin.contact.call')}
-        </DuncitButton>
-        <DuncitButton size="small" variant="outlined" startIcon={<EmailIcon />} onClick={onEmailClick} data-testid="admin-user-email">
-          {t('shell.common.email')}
-        </DuncitButton>
-        {status !== 'ACTIVE' && (
-          <DuncitButton
-            size="small"
-            variant="outlined"
-            color="success"
-            startIcon={<CheckCircleIcon />}
-            disabled={busy}
-            onClick={() => setStatus('ACTIVE')}
-          >
-            Activate
-          </DuncitButton>
-        )}
-        {status !== 'INACTIVE' && (
-          <DuncitButton
-            size="small"
-            variant="outlined"
-            startIcon={<PauseCircleIcon />}
-            disabled={busy}
-            onClick={() => setStatus('INACTIVE')}
-          >
-            Deactivate
-          </DuncitButton>
-        )}
-        {status === 'SUSPENDED' ? (
-          <DuncitButton
-            size="small"
-            variant="outlined"
-            color="success"
-            startIcon={<CheckCircleIcon />}
-            disabled={busy}
-            onClick={() => setStatus('ACTIVE')}
-          >
-            Unblock
-          </DuncitButton>
-        ) : (
-          <DuncitButton
-            size="small"
-            variant="outlined"
-            color="error"
-            startIcon={<BlockIcon />}
-            disabled={busy}
-            onClick={() => setStatus('SUSPENDED')}
-          >
-            Block
-          </DuncitButton>
-        )}
-        <DuncitButton
-          size="small"
-          variant="outlined"
-          color="error"
-          startIcon={<DeleteIcon />}
-          disabled={busy}
-          onClick={onDeleteClick}
-        >
-          {t('shell.common.delete')}
-        </DuncitButton>
+        <Stack spacing={1} sx={{ alignItems: 'flex-end' }}>
+          {/* Top-right corner: every platform this person has used Duncit from. */}
+          <PlatformIcons platforms={user.platforms_used ?? []} t={t} />
+          <Stack direction="row" spacing={1}>
+            <DuncitButton size="small" variant="outlined" startIcon={<CallIcon />} onClick={onCallClick} data-testid="admin-user-call">
+              {t('admin.contact.call')}
+            </DuncitButton>
+            <DuncitButton size="small" variant="outlined" startIcon={<EmailIcon />} onClick={onEmailClick} data-testid="admin-user-email">
+              {t('shell.common.email')}
+            </DuncitButton>
+            {status !== 'ACTIVE' && (
+              <DuncitButton
+                size="small"
+                variant="outlined"
+                color="success"
+                startIcon={<CheckCircleIcon />}
+                disabled={busy}
+                onClick={() => setStatus('ACTIVE')}
+              >
+                Activate
+              </DuncitButton>
+            )}
+            {status !== 'INACTIVE' && (
+              <DuncitButton
+                size="small"
+                variant="outlined"
+                startIcon={<PauseCircleIcon />}
+                disabled={busy}
+                onClick={() => setStatus('INACTIVE')}
+              >
+                Deactivate
+              </DuncitButton>
+            )}
+            {status === 'SUSPENDED' ? (
+              <DuncitButton
+                size="small"
+                variant="outlined"
+                color="success"
+                startIcon={<CheckCircleIcon />}
+                disabled={busy}
+                onClick={() => setStatus('ACTIVE')}
+              >
+                Unblock
+              </DuncitButton>
+            ) : (
+              <DuncitButton
+                size="small"
+                variant="outlined"
+                color="error"
+                startIcon={<BlockIcon />}
+                disabled={busy}
+                onClick={() => setStatus('SUSPENDED')}
+              >
+                Block
+              </DuncitButton>
+            )}
+            <DuncitButton
+              size="small"
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+              disabled={busy}
+              onClick={onDeleteClick}
+            >
+              {t('shell.common.delete')}
+            </DuncitButton>
+          </Stack>
         </Stack>
       }
     />

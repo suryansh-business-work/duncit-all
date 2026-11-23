@@ -2,9 +2,11 @@ import type { MockedResponse } from '@apollo/client/testing';
 import type { Payment } from '@duncit/gql-types';
 import {
   INVOICE_PDF,
+  PAYMENT_LOGS_PDF,
   PAYMENT_TOTALS,
   PAYMENTS_TABLE,
   REFUND_PAYMENT,
+  SHOP_PAYMENTS_TABLE,
 } from '../../src/pages/finance/payment-logs-page/queries';
 
 /**
@@ -36,6 +38,8 @@ export type PaymentRowMock = { __typename?: 'Payment' } & Pick<
   | 'status'
   | 'gateway'
   | 'gateway_ref'
+  | 'refund_status'
+  | 'needs_refund'
   | 'paid_at'
   | 'created_at'
 >;
@@ -56,6 +60,8 @@ export const makePayment = (over: Partial<PaymentRowMock> = {}): PaymentRowMock 
   status: 'SUCCESS',
   gateway: 'razorpay',
   gateway_ref: 'gw',
+  refund_status: null,
+  needs_refund: false,
   paid_at: '2024-01-01T00:00:00Z',
   created_at: '2024-01-01T00:00:00Z',
   ...over,
@@ -80,8 +86,7 @@ const totalsOf = (payments: PaymentRowMock[] | null) =>
     gross: payments.reduce((sum, p) => sum + p.total, 0),
     fee: payments.reduce((sum, p) => sum + p.platform_fee_amount, 0),
     gst: payments.reduce((sum, p) => sum + p.gst_amount, 0),
-    // None of these rows reached a multi-ticket tier or carried a Smart Incentive.
-    ticket_discount_total: 0,
+    // None of these rows carried a Smart Incentive.
     smart_incentive_total: 0,
   };
 
@@ -109,6 +114,36 @@ export const paymentsTableMock = (rows: PaymentRowMock[]): MockedResponse => ({
   request: { query: PAYMENTS_TABLE, variables: () => true },
   result: { data: { paymentsTable: { __typename: 'PaymentTablePage', rows, total: rows.length } } },
   maxUsageCount: 50,
+});
+
+/** One shop's log, which reads its own table query (the shop is fixed by the server). */
+export const shopPaymentsTableMock = (rows: PaymentRowMock[]): MockedResponse => ({
+  request: { query: SHOP_PAYMENTS_TABLE, variables: () => true },
+  result: { data: { shopPaymentsTable: { __typename: 'PaymentTablePage', rows, total: rows.length } } },
+  maxUsageCount: 50,
+});
+
+/**
+ * The Export PDF query. `onVariables` sees the variables the page sent, so a
+ * test can prove the export asked for the table's CURRENT search, filters and
+ * sort (and the shop) rather than just that it asked.
+ */
+export const paymentLogsPdfMock = (
+  base64: string | null = 'JVBERi0=',
+  over: { fail?: boolean; delay?: number; onVariables?: (variables: Record<string, unknown>) => void } = {},
+): MockedResponse => ({
+  request: {
+    query: PAYMENT_LOGS_PDF,
+    variables: (variables: Record<string, unknown>) => {
+      over.onVariables?.(variables);
+      return true;
+    },
+  },
+  ...(over.delay ? { delay: over.delay } : {}),
+  ...(over.fail
+    ? { error: new Error('pdf export failed') }
+    : { result: { data: { paymentLogsPdfBase64: base64 } } }),
+  maxUsageCount: 20,
 });
 
 export const invoicePdfMock = (

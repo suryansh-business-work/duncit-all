@@ -157,7 +157,8 @@ describe('payment release and settlement', () => {
     await expect(run(String(mumbaiPod._id))).rejects.toMatchObject(FORBIDDEN);
     expect(approve).not.toHaveBeenCalled();
     await run(String(punePod._id));
-    expect(approve).toHaveBeenCalledWith(String(punePod._id), expect.any(String));
+    // No funding note sent, so none is passed on (only a shortfall needs one).
+    expect(approve).toHaveBeenCalledWith(String(punePod._id), expect.any(String), undefined);
   });
 
   it('approvePodPaymentRelease: a batch spanning a second city is refused whole', async () => {

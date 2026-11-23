@@ -5,14 +5,18 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { podLiveEnd } from '@modules/pods/pod/pod.lifecycle';
 import { managedVenue } from '@modules/venues/venueFood/venueFoodOrder.shared';
 import { rentalSettingsService } from './rentalSettings.service';
-import { RentalBookingModel, type IRentalBooking } from './rentalBooking.model';
+import { RentalBookingModel, rentalEventPush, type IRentalBooking } from './rentalBooking.model';
 import { RentalStockModel } from './rentalStock.model';
 import { settleRentalOutcome, type RentalOutcome } from './rentalOutcome';
+import { queueRentalRefund } from './rentalRefund.service';
+import { notifyRentalReturned, notifyRentalsBooked, notifyRentalsEnded } from './rentalNotify';
 
 /**
  * Everything that closes a rental after capture. Every transition is a
  * conditional update from BOOKED, so two hands (the venue and the sweep, two
- * tabs) can never close the same booking twice or settle it two ways.
+ * tabs) can never close the same booking twice or settle it two ways. A close
+ * that owes the guest money queues its Razorpay refund straight away (the
+ * refund sweep is the backstop), and the guest and venue are told.
  */
 
 const DAY_MS = 86_400_000;
@@ -40,6 +44,7 @@ async function close(
 ): Promise<IRentalBooking | null> {
   const settings = await rentalSettingsService.get();
   const money = settleRentalOutcome(booking, outcome, settings, extra.claim ?? 0);
+  const actorRole = extra.actorId ? 'VENUE' : 'SYSTEM';
   return RentalBookingModel.findOneAndUpdate(
     { _id: booking._id, status: 'BOOKED' },
     {
@@ -56,10 +61,32 @@ async function close(
         marked_by: extra.actorId ? new Types.ObjectId(extra.actorId) : null,
         marked_at: new Date(),
         auto_released: extra.auto === true,
+        deposit_policy: 'DUNCIT_REFUND',
       },
+      $push: rentalEventPush({
+        type: extra.auto && outcome !== 'RELEASED' ? 'AUTO_RELEASED' : outcome,
+        actor_role: actorRole,
+        actor_id: extra.actorId,
+        amount: money.refund_due,
+        detail: (extra.note ?? '').trim() || `Refund due ${money.refund_due}, venue earns ${money.venue_amount}`,
+      }),
     },
     { new: true }
   ).lean<IRentalBooking>();
+}
+
+/** Queue a closed booking's refund on Razorpay. Never throws: the refund sweep retries whatever did not queue. */
+async function queueRefundSafely(booking: IRentalBooking) {
+  if (!(booking.refund_due > 0)) return;
+  await queueRentalRefund(booking._id).catch((error: unknown) =>
+    logs.server.error('rentalBooking', 'queueRefund', { error, booking_id: String(booking._id), msg: 'left for the refund sweep' })
+  );
+}
+
+/** An item that went out was closed: its deposit refund goes to Razorpay and the guest hears the decision. */
+async function afterReturn(booking: IRentalBooking) {
+  await queueRefundSafely(booking);
+  await notifyRentalReturned(booking);
 }
 
 /** The venue (or a venues-console editor) records the item back, or keeps part of the deposit for damage. */
@@ -85,6 +112,7 @@ async function markByVenue(
   }
   const closed = await close(booking, input.outcome, { claim, note: input.note ?? '', actorId: actor.userId });
   if (!closed) return fail('CONFLICT', 'This rental is already closed');
+  await afterReturn(closed);
   logs.server.info('rentalBooking', 'markByVenue', {
     booking_id: bookingId,
     actor_user_id: actor.userId,
@@ -100,14 +128,28 @@ async function markByVenue(
 /** A Backout whose spot was filled ended the guest's booking: their rentals go back to the pod. */
 async function releaseForPayment(paymentDocId: unknown): Promise<number> {
   const open = await RentalBookingModel.find({ payment_doc_id: paymentDocId, status: 'BOOKED' }).lean<IRentalBooking[]>();
-  let released = 0;
+  const released: IRentalBooking[] = [];
   for (const booking of open) {
     const closed = await close(booking, 'RELEASED', { auto: true });
     if (!closed) continue;
     await returnStock(closed);
-    released += 1;
+    await queueRefundSafely(closed);
+    released.push(closed);
   }
-  return released;
+  await notifyRentalsEnded(released, 'GUEST_LEFT');
+  return released.length;
+}
+
+/**
+ * After a payment's capture committed: a line that sold out between checkout
+ * and capture has its refund queued on Razorpay, and the venue and the guest
+ * hear what was booked. Run from the payment's deferred side effects, so a
+ * retried run re-queues nothing (idempotent keys) and messages nobody twice.
+ */
+async function afterCapture(paymentDocId: unknown): Promise<void> {
+  const soldOut = await RentalBookingModel.find({ payment_doc_id: paymentDocId, status: 'UNAVAILABLE' }).lean<IRentalBooking[]>();
+  for (const booking of soldOut) await queueRefundSafely(booking);
+  await notifyRentalsBooked(String(paymentDocId));
 }
 
 /** The rental money a pod cancellation must return with this payment: every item still out. */
@@ -121,12 +163,25 @@ async function cancellableMoney(paymentDocId: unknown): Promise<number> {
 /** The payment's cancellation refund now carries these rentals' money. Stock stays held: a revoke restores them. */
 async function cancelForPayment(paymentDocId: unknown): Promise<void> {
   const open = await RentalBookingModel.find({ payment_doc_id: paymentDocId, status: 'BOOKED' }).lean<IRentalBooking[]>();
+  const cancelled: IRentalBooking[] = [];
   for (const b of open) {
-    await RentalBookingModel.updateOne(
+    const owed = b.rent_amount + b.deposit_amount;
+    const done = await RentalBookingModel.findOneAndUpdate(
       { _id: b._id, status: 'BOOKED' },
-      { $set: { status: 'CANCELLED', refund_due: b.rent_amount + b.deposit_amount, refund_status: 'IN_PAYMENT', marked_at: new Date() } }
-    );
+      {
+        $set: { status: 'CANCELLED', refund_due: owed, refund_status: 'IN_PAYMENT', marked_at: new Date() },
+        $push: rentalEventPush({
+          type: 'CANCELLED',
+          actor_role: 'SYSTEM',
+          amount: owed,
+          detail: 'Pod cancelled: the money returns with the booking cancellation refund',
+        }),
+      },
+      { new: true }
+    ).lean<IRentalBooking>();
+    if (done) cancelled.push(done);
   }
+  await notifyRentalsEnded(cancelled, 'POD_CANCELLED');
 }
 
 /**
@@ -138,15 +193,19 @@ async function restoreForPayments(paymentDocIds: readonly unknown[]): Promise<nu
   if (paymentDocIds.length === 0) return 0;
   const result = await RentalBookingModel.updateMany(
     { payment_doc_id: { $in: paymentDocIds }, status: 'CANCELLED', refund_status: 'IN_PAYMENT' },
-    { $set: { status: 'BOOKED', refund_due: 0, refund_status: 'NONE', marked_at: null } }
+    {
+      $set: { status: 'BOOKED', refund_due: 0, refund_status: 'NONE', marked_at: null },
+      $push: rentalEventPush({ type: 'RESTORED', actor_role: 'SYSTEM', detail: 'Pod cancellation revoked before the refund was paid' }),
+    }
   );
   return result.modifiedCount ?? 0;
 }
 
 /**
  * Close every rental the venue never marked once its pod ended long enough
- * ago, as if the item came back: its deposit was settled at the venue, so it
- * rides the venue's payout. Returns how many it closed.
+ * ago, as if the item came back in good shape: the venue had that long to
+ * report damage, so the deposit is refunded to the guest through Razorpay and
+ * the rent rides the venue's payout. Returns how many it closed.
  */
 async function runDepositAutoRelease(now = Date.now()): Promise<number> {
   const settings = await rentalSettingsService.get();
@@ -162,42 +221,34 @@ async function runDepositAutoRelease(now = Date.now()): Promise<number> {
   for (const podId of due) {
     const open = await RentalBookingModel.find({ pod_id: podId, status: 'BOOKED' }).lean<IRentalBooking[]>();
     for (const booking of open) {
-      if (await close(booking, 'RETURNED', { auto: true })) closed += 1;
+      const done = await close(booking, 'RETURNED', { auto: true });
+      if (!done) continue;
+      closed += 1;
+      await afterReturn(done);
     }
   }
   if (closed > 0) logs.server.info('rentalBooking', 'runDepositAutoRelease', { closed });
   return closed;
 }
 
-/** Finance paid a rental refund back to the guest. */
-async function markRefunded(actorId: string, bookingId: string, reference: string) {
-  if (!Types.ObjectId.isValid(bookingId)) fail('BAD_USER_INPUT', 'That rental could not be found');
-  const ref = reference.trim();
-  if (!ref) fail('BAD_USER_INPUT', 'Enter the refund reference');
-  const updated = await RentalBookingModel.findOneAndUpdate(
-    { _id: bookingId, refund_status: 'DUE' },
-    {
-      $set: {
-        refund_status: 'PAID',
-        refund_ref: ref.slice(0, 120),
-        refunded_at: new Date(),
-        refunded_by: new Types.ObjectId(actorId),
-      },
-    },
-    { new: true }
-  ).lean<IRentalBooking>();
-  if (!updated) return fail('CONFLICT', 'This rental has no refund waiting');
-  logs.server.info('rentalBooking', 'markRefunded', {
-    booking_id: bookingId,
-    actor_user_id: actorId,
-    refund_due: updated.refund_due,
-  });
-  return updated;
+/**
+ * Retired 2026-11-22. A typed reference used to mark a rental refund paid with
+ * nothing proving money moved. Refunds now go out through Razorpay and read
+ * paid only when Razorpay confirms them; the mutation stays in the schema
+ * (deprecated) for old clients and always refuses.
+ */
+async function markRefunded(actorId: string, bookingId: string): Promise<never> {
+  logs.server.warn('rentalBooking', 'markRefunded', { booking_id: bookingId, actor_user_id: actorId, msg: 'retired mutation refused' });
+  return fail(
+    'BAD_REQUEST',
+    'Rental refunds are sent through Razorpay automatically and cannot be marked paid by hand. Open the rental to see its Razorpay refund.'
+  );
 }
 
 export const rentalLifecycleService = {
   markByVenue,
   releaseForPayment,
+  afterCapture,
   cancellableMoney,
   cancelForPayment,
   restoreForPayments,

@@ -199,10 +199,13 @@ describe('ProspectLeadDetailPage', () => {
     expect(screen.getByText('Assigned to Asha')).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /Contacts \(1\)/ })).toBeInTheDocument();
 
-    // The extra social link sits under Online presence, labelled with its name and opening in a new tab.
-    const overview = screen.getByTestId('lead-tabpanel-overview');
-    expect(within(overview).getByText('YouTube')).toBeInTheDocument();
-    const youtube = within(overview).getByRole('link', { name: /youtube\.com\/@riyaruns/ });
+    // Social channels moved off the overview onto the view-only Social tab: labelled with their name, opening in a new tab.
+    expect(within(screen.getByTestId('lead-tabpanel-overview')).queryByText('YouTube')).toBeNull();
+    expect(screen.getByTestId('lead-tab-social')).toHaveTextContent('Social (1)');
+    fireEvent.click(screen.getByTestId('lead-tab-social'));
+    const social = screen.getByTestId('lead-tabpanel-social');
+    expect(within(social).getByText('YouTube')).toBeInTheDocument();
+    const youtube = within(social).getByRole('link', { name: /youtube\.com\/@riyaruns/ });
     expect(youtube).toHaveAttribute('href', 'https://youtube.com/@riyaruns');
     expect(youtube).toHaveAttribute('target', '_blank');
 

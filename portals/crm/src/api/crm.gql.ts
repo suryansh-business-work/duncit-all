@@ -1,9 +1,10 @@
 import { gql } from '@apollo/client';
+import { QUALITY_SUMMARY_FIELDS } from './leadQuality.gql';
 
 export const CONTACT_FIELDS = `name role mobile_number whatsapp_number email`;
 export const SERVICE_FIELDS = `service custom_name description`;
 export const SOCIAL_LINK_FIELDS = `name url`;
-export const ACTIVITY_FIELDS = `type summary status target body_html body_text created_by created_at`;
+export const ACTIVITY_FIELDS = `id type summary status target body_html body_text mention_user_ids created_by created_at updated_by updated_at deleted_by deleted_at is_deleted can_change`;
 export const SUPER_CATEGORY_FIELDS = `id name slug icon`;
 const LINKED_HOST_FIELDS = `id host_name host_type city lead_status priority`;
 
@@ -17,7 +18,7 @@ export const VENUE_LEAD_FIELDS = `
   instagram_link social_links { ${SOCIAL_LINK_FIELDS} }
   linked_host_ids linked_hosts { ${LINKED_HOST_FIELDS} }
   tags logo_url dynamic_values_json
-  lead_source assigned_to lead_status priority
+  lead_source assigned_to assigned_user_id lead_status priority
   next_follow_up_date remarks activity_log { ${ACTIVITY_FIELDS} } created_at updated_at
 `;
 
@@ -30,7 +31,7 @@ export const HOST_LEAD_FIELDS = `
   instagram_link social_links { ${SOCIAL_LINK_FIELDS} } community_link
   community_size previous_events_hosted past_attendees host_intent_scores
   tags profile_photo_url dynamic_values_json
-  lead_source assigned_to lead_status priority next_follow_up_date notes
+  lead_source assigned_to assigned_user_id lead_status priority next_follow_up_date notes
   activity_log { ${ACTIVITY_FIELDS} } created_at updated_at
 `;
 
@@ -41,7 +42,7 @@ export const ECOMM_LEAD_FIELDS = `
   gst_number gst_applicable website instagram_link social_links { ${SOCIAL_LINK_FIELDS} } marketplace_links
   services_offered { ${SERVICE_FIELDS} }
   tags profile_photo_url dynamic_values_json
-  lead_source assigned_to lead_status priority next_follow_up_date notes
+  lead_source assigned_to assigned_user_id lead_status priority next_follow_up_date notes
   activity_log { ${ACTIVITY_FIELDS} } created_at updated_at
 `;
 
@@ -63,7 +64,7 @@ export const VENUE_LEADS = gql`
   query VenueLeads($filter: CrmLeadFilter) { venueLeads(filter: $filter) { ${VENUE_LEAD_FIELDS} } }
 `;
 export const VENUE_LEADS_TABLE = gql`
-  query VenueLeadsTable($query: TableQueryInput) { venueLeadsTable(query: $query) { total rows { ${VENUE_LEAD_FIELDS} is_duplicate } } }
+  query VenueLeadsTable($query: TableQueryInput, $near: CrmLeadNearInput) { venueLeadsTable(query: $query, near: $near) { total unplaced rows { ${VENUE_LEAD_FIELDS} is_duplicate distance_km geo_precision ${QUALITY_SUMMARY_FIELDS} } } }
 `;
 const MATCHED_USER_FIELDS = `matched_user { user_id full_name email phone profile_photo matched_on }`;
 export const VENUE_LEAD = gql`query VenueLead($id: ID!) { venueLead(id: $id) { ${VENUE_LEAD_FIELDS} ${MATCHED_USER_FIELDS} } }`;
@@ -73,7 +74,7 @@ export const DELETE_VENUE_LEAD = gql`mutation DeleteVenueLead($id: ID!) { delete
 
 export const HOST_LEADS = gql`query HostLeads($filter: CrmLeadFilter) { hostLeads(filter: $filter) { ${HOST_LEAD_FIELDS} } }`;
 export const HOST_LEADS_TABLE = gql`
-  query HostLeadsTable($query: TableQueryInput) { hostLeadsTable(query: $query) { total rows { ${HOST_LEAD_FIELDS} is_duplicate } } }
+  query HostLeadsTable($query: TableQueryInput, $near: CrmLeadNearInput) { hostLeadsTable(query: $query, near: $near) { total unplaced rows { ${HOST_LEAD_FIELDS} is_duplicate distance_km geo_precision ${QUALITY_SUMMARY_FIELDS} } } }
 `;
 export const HOST_LEAD = gql`query HostLead($id: ID!) { hostLead(id: $id) { ${HOST_LEAD_FIELDS} ${MATCHED_USER_FIELDS} } }`;
 export const CREATE_HOST_LEAD = gql`mutation CreateHostLead($input: HostLeadInput!) { createHostLead(input: $input) { ${HOST_LEAD_FIELDS} } }`;
@@ -82,7 +83,7 @@ export const DELETE_HOST_LEAD = gql`mutation DeleteHostLead($id: ID!) { deleteHo
 
 export const ECOMM_LEADS = gql`query EcommLeads($filter: CrmLeadFilter) { ecommLeads(filter: $filter) { ${ECOMM_LEAD_FIELDS} } }`;
 export const ECOMM_LEADS_TABLE = gql`
-  query EcommLeadsTable($query: TableQueryInput) { ecommLeadsTable(query: $query) { total rows { ${ECOMM_LEAD_FIELDS} is_duplicate } } }
+  query EcommLeadsTable($query: TableQueryInput, $near: CrmLeadNearInput) { ecommLeadsTable(query: $query, near: $near) { total unplaced rows { ${ECOMM_LEAD_FIELDS} is_duplicate distance_km geo_precision ${QUALITY_SUMMARY_FIELDS} } } }
 `;
 export const ECOMM_LEAD = gql`query EcommLead($id: ID!) { ecommLead(id: $id) { ${ECOMM_LEAD_FIELDS} ${MATCHED_USER_FIELDS} } }`;
 export const CREATE_ECOMM_LEAD = gql`mutation CreateEcommLead($input: EcommLeadInput!) { createEcommLead(input: $input) { ${ECOMM_LEAD_FIELDS} } }`;
@@ -136,6 +137,22 @@ export const CALL_ECOMM_LEAD = gql`
 export const ADD_CRM_MANUAL_LOG = gql`
   mutation AddCrmManualLog($input: ManualLogInput!) {
     addCrmManualLog(input: $input) {
+      ${ACTIVITY_FIELDS}
+    }
+  }
+`;
+
+export const UPDATE_CRM_MANUAL_LOG = gql`
+  mutation UpdateCrmManualLog($input: UpdateManualLogInput!) {
+    updateCrmManualLog(input: $input) {
+      ${ACTIVITY_FIELDS}
+    }
+  }
+`;
+
+export const DELETE_CRM_MANUAL_LOG = gql`
+  mutation DeleteCrmManualLog($entity_type: CrmEntityType!, $entity_id: ID!, $log_id: ID!) {
+    deleteCrmManualLog(entity_type: $entity_type, entity_id: $entity_id, log_id: $log_id) {
       ${ACTIVITY_FIELDS}
     }
   }

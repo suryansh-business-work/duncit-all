@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
+import { ConfirmProvider } from '@duncit/dialogs';
 import MenuPanel from '../MenuPanel';
 
 const mockNavigate = vi.fn();
@@ -35,6 +36,11 @@ vi.mock('../../../../hooks/useAutoPodCounts', () => ({
 // owned by useChatUnreadTotal's own tests.
 vi.mock('../../../chat-state/useChatUnreadTotal', () => ({ useChatUnreadTotal: () => 0 }));
 
+// The role switcher reads whether the email is verified from the user info
+// cache (useStudioEmailGate).
+const userInfo = { me: { is_email_verified: true as boolean | null } };
+vi.mock('../../../../user-info/useUserInfo', () => ({ useUserInfo: () => userInfo }));
+
 // Stub the heavy consumer layout (fires ads/branding queries) — it is covered
 // by its own tests; here we only need a marker to assert it mounts.
 vi.mock('../UserModeContent', () => ({
@@ -64,7 +70,9 @@ function renderPanel(props: Partial<Parameters<typeof MenuPanel>[0]> = {}) {
   };
   render(
     <MemoryRouter>
-      <MenuPanel {...merged} />
+      <ConfirmProvider>
+        <MenuPanel {...merged} />
+      </ConfirmProvider>
     </MemoryRouter>
   );
   return merged;
@@ -79,6 +87,7 @@ describe('MenuPanel', () => {
     colorState.mode = 'light';
     studioState.mode = 'USER';
     flagValue = false;
+    userInfo.me.is_email_verified = true;
   });
 
   it('shows the body skeleton instead of the user content while the account loads', () => {
@@ -149,6 +158,35 @@ describe('MenuPanel', () => {
     // switcher at its top. Leaving the menu pushes over it, so Back returns
     // to the menu.
     expect(mockNavigate).toHaveBeenCalledWith('/venues/options');
+  });
+
+  it('will not switch into Venue on an unverified email, and offers to verify it instead', () => {
+    userInfo.me.is_email_verified = false;
+    studioState.mode = 'USER';
+    renderPanel({ me: { roles: ['VENUE_OWNER'] } });
+    expand('account');
+    fireEvent.click(screen.getByText('Switch role'));
+    fireEvent.click(screen.getByRole('button', { name: 'Venue Studio' }));
+    expect(screen.getByTestId('studio-switch-email-gate')).toHaveTextContent('Verify your email first');
+    expect(screen.queryByRole('button', { name: 'Switch to Venue Studio' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Verify email' }));
+    expect(studioState.setMode).not.toHaveBeenCalled();
+    expect(mockNavigate).toHaveBeenCalledWith('/profile?verifyEmail=1');
+    expect(mockNavigate).not.toHaveBeenCalledWith('/venues/options');
+  });
+
+  it('keeps User mode open on an unverified email: switching back to it is not gated', () => {
+    userInfo.me.is_email_verified = false;
+    studioState.mode = 'HOST';
+    renderPanel({ me: { roles: ['HOST'] } });
+    expand('account');
+    fireEvent.click(screen.getByText('Switch role'));
+    // The remembered Host mode is itself shut, so the dialog says so as it opens.
+    expect(screen.getByTestId('studio-switch-email-gate')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'User' }));
+    expect(screen.queryByTestId('studio-switch-email-gate')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to User' }));
+    expect(studioState.setMode).toHaveBeenCalledWith('USER');
   });
 
   it('falls a persisted mode the user no longer qualifies for back to USER', () => {

@@ -15,6 +15,7 @@ import {
   type ReviewDecision,
   type VerificationStatus,
 } from './failedPayment.types';
+import { aiSummarySchema, type ICaseAiSummary } from './failedPaymentAiSummary.model';
 
 /**
  * One payment that did not end in a booking, as Finance works it: who and what
@@ -130,6 +131,8 @@ export interface IFailedPaymentCase extends Document {
   review: ICaseReview | null;
   refund: ICaseRefund;
   resolution: ICaseResolution;
+  /** The AI's last refund note; null until someone asks for one. */
+  ai_summary: ICaseAiSummary | null;
   revision: number;
   created_at: Date;
   updated_at: Date;
@@ -253,6 +256,7 @@ const failedPaymentCaseSchema = new Schema<IFailedPaymentCase>(
     review: { type: reviewSchema, default: null },
     refund: { type: refundSchema, default: () => ({}) },
     resolution: { type: resolutionSchema, default: () => ({}) },
+    ai_summary: { type: aiSummarySchema, default: null },
     revision: { type: Number, default: 0 },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

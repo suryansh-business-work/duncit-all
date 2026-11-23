@@ -22,6 +22,9 @@ export interface WalletWithdrawal {
   created_at: string;
   reject_reason?: string | null;
   status: string;
+  /** The RazorpayX payout id and the bank's UTR — empty until Razorpay and the bank have them. */
+  razorpay_payout_id?: string | null;
+  payout_utr?: string | null;
 }
 
 export interface WalletTransaction {

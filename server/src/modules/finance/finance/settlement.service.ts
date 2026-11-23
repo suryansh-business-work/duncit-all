@@ -126,6 +126,18 @@ export interface PodSettlement {
   /** True for a free pod: nothing is settled on the platform, every money
    * figure above is 0, and clients hide the statement instead of printing it. */
   is_free: boolean;
+  /** True when `venue_bill` set the venue's money; false when it was recorded as
+   * evidence only (an older client) or there was none — so a bill of 9999 beside
+   * a ₹40 venue amount reads as what it is, not as money owed. */
+  venue_bill_applied: boolean;
+  /**
+   * Money the payouts send out that the pod's own takings do not cover: the
+   * host remainder below zero, which the floored host payout does not take
+   * back. The venue and the club admin are still paid in full, so this much has
+   * to come from somewhere else — it is stated, frozen on the releases, and
+   * Finance names who funds it before approving. 0 when the pod paid its way.
+   */
+  funding_shortfall: number;
 }
 
 /** Engine version stamped on new settlement snapshots — v2 = venue slot price
@@ -143,10 +155,9 @@ export const SETTLEMENT_ENGINE_VERSION_ON_TOP = 3;
  * already refunded back to the buyer (a partial backout leaves the payment
  * SUCCESS and records the returned money in metadata.refunded_amount).
  *
- * `total` is already net of the pod's multi-ticket discount and of the member's
- * Smart Incentive (both frozen on the payment at checkout, taken off the ticket
- * money only), so both are host-funded by construction — never add
- * `ticket_discount_amount` or `smart_incentive_amount` back here.
+ * `total` is already net of the member's Smart Incentive (frozen on the payment
+ * at checkout, taken off the ticket money only), so it is host-funded by
+ * construction — never add `smart_incentive_amount` back here.
  */
 const ticketMoneyOf = (p: { total?: number; round_off?: number; metadata?: any }) => {
   // Products and rented items (rent + deposit) settle outside the pod.
@@ -372,6 +383,10 @@ export interface VenueCharge {
   bill: number;
   /** True when the bill is paid ON TOP of the slot price rather than instead of it. */
   slot_included: boolean;
+  /** True when the bill actually set the venue's money. False when there is no
+   * bill, or when an older client sent one as evidence only and the slot price
+   * stood — the bill is still recorded, but it is not what the venue is paid. */
+  bill_applied: boolean;
   /** The venue's money — what the waterfall takes off the pool. */
   amount: number;
   /**
@@ -519,6 +534,7 @@ export async function venueChargeForPod(
     slot_linked: false,
     bill: 0,
     slot_included: false,
+    bill_applied: false,
     amount: 0,
     commission_on_top: null,
     min_guests: 0,
@@ -579,12 +595,19 @@ export async function venueChargeForPod(
     priced ? round2(slotPart + (paidPart * priced.platform_fee_pct) / 100) : null;
   const slotFee = priced?.platform_fee ?? 0;
   if (bill <= 0 || evidenceOnly) {
-    return { ...base, slot_included: false, amount: round2(slotPrice + extra), commission_on_top: onTop(slotFee, extra) };
+    return {
+      ...base,
+      slot_included: false,
+      bill_applied: false,
+      amount: round2(slotPrice + extra),
+      commission_on_top: onTop(slotFee, extra),
+    };
   }
   const slotIncluded = !!includeSlotPrice && slotPrice > 0;
   return {
     ...base,
     slot_included: slotIncluded,
+    bill_applied: true,
     amount: round2((slotIncluded ? slotPrice + bill : bill) + extra),
     commission_on_top: onTop(slotIncluded ? slotFee : 0, bill + extra),
   };
@@ -619,6 +642,32 @@ export function venueChargeOptions(charge: Pick<VenueCharge, 'commission_on_top'
 export async function venueTermsForPod(pod: VenueChargePod): Promise<{ amount: number; options: BreakdownOptions }> {
   const charge = await venueChargeForPod(pod, 0);
   return { amount: charge.amount, options: venueChargeOptions(charge) };
+}
+
+/** What the venue is paid for one head count, in the shape the viability
+ * guard reads: its amount and any commission charged on top of it. */
+export interface VenueCostAt {
+  amount: number;
+  commissionOnTop: number | null;
+}
+
+/**
+ * What a booked pod's venue costs with every spot filled (host included),
+ * before any bill — priced by venueChargeForPod, so the figure is the one
+ * completion would pay for that many people, a frozen booking's commission on
+ * top included.
+ */
+export async function venueCapacityCostForPod(
+  pod: Pick<VenueChargePod, 'venue_id' | 'venue_slot_id' | 'pod_type' | 'no_of_spots'>
+): Promise<VenueCostAt> {
+  const spots = Math.max(0, Math.floor(Number(pod.no_of_spots) || 0));
+  const charge = await venueChargeForPod(
+    { venue_id: pod.venue_id, venue_slot_id: pod.venue_slot_id, pod_type: pod.pod_type, no_of_spots: spots },
+    0,
+    null,
+    { attended: spots, pax: spots }
+  );
+  return { amount: charge.amount, commissionOnTop: charge.commission_on_top };
 }
 
 /** The venue's money for a pod when only the amount is wanted — the live views
@@ -842,5 +891,7 @@ export async function computePodSettlement(
     // number could not be trusted afterwards.
     host_payout_amount: expired ? 0 : Math.max(0, host.payout_amount),
     is_free: free,
+    venue_bill_applied: charge.bill_applied,
+    funding_shortfall: free ? 0 : round2(Math.max(0, -waterfall.host_receives)),
   };
 }

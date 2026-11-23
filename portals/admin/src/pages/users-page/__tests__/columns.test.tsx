@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { getUsersColumns } from '../columns';
 import type { UserRow } from '../queries';
 
@@ -10,6 +10,7 @@ const ROLE_OPTIONS = [
 
 const formatDate = (s: string) => `D(${s})`;
 const formatDateTime = (s: string) => `DT(${s})`;
+const formatActivityAt = (s: string) => `AT(${s})`;
 
 const makeUser = (over: Partial<UserRow> = {}): UserRow => ({
   user_id: 'u1',
@@ -30,7 +31,8 @@ const makeUser = (over: Partial<UserRow> = {}): UserRow => ({
   ...over,
 });
 
-const buildColumns = () => getUsersColumns({ formatDate, formatDateTime, roleOptions: ROLE_OPTIONS, t: (key: string) => key });
+const buildColumns = () =>
+  getUsersColumns({ formatDate, formatDateTime, formatActivityAt, roleOptions: ROLE_OPTIONS, t: (key: string) => key });
 
 const columnBy = (field: string) => {
   const col = buildColumns().find((c) => c.field === field);
@@ -60,7 +62,8 @@ describe('getUsersColumns / column set', () => {
       'city',
       'zone',
       'last_login_at',
-      'last_active_on',
+      'platforms_used',
+      'last_activity_at',
       'created_at',
     ]);
   });
@@ -78,7 +81,8 @@ describe('getUsersColumns / column set', () => {
       city: 'admin.profile.city',
       zone: 'admin.profile.zone',
       last_login_at: 'admin.users.colLastLogin',
-      last_active_on: 'admin.users.colLastActive',
+      platforms_used: 'admin.users.colPlatforms',
+      last_activity_at: 'admin.users.colLastActivity',
       created_at: 'shell.common.created',
     });
   });
@@ -104,6 +108,25 @@ describe('getUsersColumns / column set', () => {
         { value: 'SUSPENDED', label: 'SUSPENDED' },
       ],
     });
+  });
+
+  it('filters Platforms Used by any of the three platforms but never sorts it', () => {
+    expect(columnBy('platforms_used')).toMatchObject({
+      type: 'enum',
+      sortable: false,
+      options: [
+        { value: 'ANDROID', label: 'admin.users.platformAndroid' },
+        { value: 'IOS', label: 'admin.users.platformIos' },
+        { value: 'WEB', label: 'admin.users.platformWeb' },
+      ],
+    });
+  });
+
+  it('lets Last Activity sort and filter as a date, so the least active accounts can be found', () => {
+    const col = columnBy('last_activity_at');
+    expect(col.type).toBe('date');
+    expect(col.sortable).not.toBe(false);
+    expect(col.filterable).not.toBe(false);
   });
 
   it('offers only the two supported login providers as filter options', () => {
@@ -168,6 +191,22 @@ describe('getUsersColumns / value getters', () => {
       'DT(2026-01-01T09:00:00.000Z)',
     );
     expect(valueOf('created_at', makeUser({ created_at: null }))).toBe('');
+  });
+
+  it('routes Last Activity through the admin-zone formatter and says when there is none yet', () => {
+    expect(valueOf('last_activity_at', makeUser({ last_activity_at: '2026-11-22T05:05:00.000Z' }))).toBe(
+      'AT(2026-11-22T05:05:00.000Z)',
+    );
+    expect(valueOf('last_activity_at', makeUser({ last_activity_at: null }))).toBe('admin.users.noActivity');
+    expect(valueOf('last_activity_at', makeUser())).toBe('admin.users.noActivity');
+  });
+
+  it('spells out the platforms in order for search and export, blank when none', () => {
+    expect(valueOf('platforms_used', makeUser({ platforms_used: ['ANDROID', 'IOS', 'WEB'] }))).toBe(
+      'admin.users.platformAndroid, admin.users.platformIos, admin.users.platformWeb',
+    );
+    expect(valueOf('platforms_used', makeUser({ platforms_used: [] }))).toBe('');
+    expect(valueOf('platforms_used', makeUser({ platforms_used: null }))).toBe('');
   });
 });
 
@@ -242,9 +281,26 @@ describe('getUsersColumns / cell renderers', () => {
     expect(screen.getByText('Not tracked yet')).toBeInTheDocument();
   });
 
+  it('shows one named icon per platform, side by side, kept out of the tab order inside the grid', () => {
+    renderCell('platforms_used', makeUser({ platforms_used: ['IOS', 'WEB'] }));
+    const icons = within(screen.getByRole('group', { name: 'admin.users.colPlatforms' })).getAllByRole('img');
+    expect(icons.map((icon) => icon.getAttribute('aria-label'))).toEqual([
+      'admin.users.platformIos',
+      'admin.users.platformWeb',
+    ]);
+    expect(icons.every((icon) => !icon.hasAttribute('tabindex'))).toBe(true);
+    expect(screen.getByTestId('admin-user-platform-IOS')).toBeInTheDocument();
+  });
+
+  it('says no platform is recorded yet for an account nobody has seen', () => {
+    renderCell('platforms_used', makeUser({ platforms_used: null }));
+    expect(screen.getByText('admin.users.noPlatforms')).toBeInTheDocument();
+    expect(screen.queryByRole('img')).toBeNull();
+  });
+
   it('never calls the date formatters for a user that never signed in', () => {
     const spy = vi.fn((s: string) => `D(${s})`);
-    const col = getUsersColumns({ formatDate: spy, formatDateTime, roleOptions: ROLE_OPTIONS, t: (key: string) => key }).find(
+    const col = getUsersColumns({ formatDate: spy, formatDateTime, formatActivityAt, roleOptions: ROLE_OPTIONS, t: (key: string) => key }).find(
       (c) => c.field === 'last_login_provider',
     );
     render(<>{col?.cellRenderer?.(makeUser({ last_login_at: null }))}</>);

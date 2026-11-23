@@ -39,14 +39,34 @@ export interface SuperCategoryOption {
 }
 
 export interface CrmActivity {
+  /** A manual log's id; null for EMAIL / CALL and audit entries. */
+  id?: string | null;
+  /** EMAIL, CALL, NOTE, or NOTE_CREATED / NOTE_UPDATED / NOTE_DELETED (target = the log's id). */
   type: string;
   summary?: string | null;
   status?: string | null;
   target?: string | null;
   body_html?: string | null;
   body_text?: string | null;
+  mention_user_ids?: string[] | null;
   created_by?: string | null;
   created_at?: string | null;
+  updated_by?: string | null;
+  updated_at?: string | null;
+  deleted_by?: string | null;
+  deleted_at?: string | null;
+  is_deleted?: boolean | null;
+  /** The signed-in user may edit / delete this log (server-decided). */
+  can_change?: boolean | null;
+}
+
+/** A CRM team member (or the name behind a user id); email and roles only for active CRM staff. */
+export interface CrmStaffUser {
+  id: string;
+  name: string;
+  email?: string | null;
+  roles: string[];
+  is_staff: boolean;
 }
 
 export interface CrmLinkedHost {
@@ -143,6 +163,7 @@ export interface VenueLead {
   dynamic_values_json: string;
   lead_source?: string | null;
   assigned_to?: string | null;
+  assigned_user_id?: string | null;
   lead_status: string;
   priority: string;
   next_follow_up_date?: string | null;
@@ -189,6 +210,7 @@ export interface HostLead {
   dynamic_values_json: string;
   lead_source?: string | null;
   assigned_to?: string | null;
+  assigned_user_id?: string | null;
   lead_status: string;
   priority: string;
   next_follow_up_date?: string | null;
@@ -228,6 +250,7 @@ export interface EcommLead {
   dynamic_values_json: string;
   lead_source?: string | null;
   assigned_to?: string | null;
+  assigned_user_id?: string | null;
   lead_status: string;
   priority: string;
   next_follow_up_date?: string | null;

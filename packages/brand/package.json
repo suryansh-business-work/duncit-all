@@ -45,6 +45,7 @@
     "./widgets/faq": "./src/widgets/faq.ts",
     "./widgets/help-center": "./src/widgets/help-center.ts",
     "./widgets/grievance-form": "./src/widgets/grievance-form.ts",
+    "./widgets/venue-kit-interest": "./src/widgets/venue-kit-interest.ts",
     "./widgets/policy-list": "./src/widgets/policy-list.ts",
     "./widgets/policy-reader": "./src/widgets/policy-reader.ts",
     "./widgets/site-nav": "./src/widgets/site-nav.ts",
@@ -68,6 +69,7 @@
   "dependencies": {
     "@duncit/captcha": "workspace:*",
     "@duncit/i18n": "workspace:*",
+    "@duncit/regex": "workspace:*",
     "@duncit/utils": "workspace:*"
   },
   "devDependencies": {

@@ -14,6 +14,7 @@ const stubs = vi.hoisted(() => ({
   VenueEditorPage: () => null,
   VenuesPage: () => null,
   VenueRecordPage: () => null,
+  VenueKitPage: () => null,
 }));
 
 vi.mock('@duncit/entity-consoles', () => ({
@@ -28,6 +29,8 @@ vi.mock('@duncit/logs', () => ({ logs: { portal: { venues: 'venues-logs' } } }))
 vi.mock('@duncit/shell', () => ({ EventRequestsPage: stubs.EventRequestsPage }));
 vi.mock('../../src/config/app-config', () => ({ appConfig: { key: 'venues' } }));
 vi.mock('../../src/VenueRecordPage', () => ({ default: stubs.VenueRecordPage }));
+vi.mock('../../src/pages/venue-kit', () => ({ default: stubs.VenueKitPage }));
+vi.mock('@duncit/app-settings', () => ({ VENUE_KIT_BUNDLE: { venueKit: { name: 'Duncit Venue Kit' } } }));
 
 interface NavEntry {
   label: string;
@@ -36,6 +39,7 @@ interface NavEntry {
   icon: string;
 }
 interface MountOptions {
+  i18nFallback: unknown;
   console: {
     listPath: string;
     nav: NavEntry[];
@@ -60,10 +64,11 @@ beforeAll(async () => {
 });
 
 describe('Venues console mount', () => {
-  it('lists Venues first, then Event Requests, each with a localization key', () => {
+  it('lists Venues, Event Requests, then Venue Kit, each with a localization key', () => {
     expect(options.console.nav).toEqual([
       { label: 'Venues', labelKey: 'shell.nav.venues', to: '/venues', icon: 'storefront' },
       { label: 'Event Requests', labelKey: 'shell.nav.eventRequests', to: '/event-requests', icon: 'calendar' },
+      { label: 'Venue Kit', labelKey: 'shell.nav.venueKit', to: '/venue-kit', icon: 'inventory' },
     ]);
   });
 
@@ -81,11 +86,18 @@ describe('Venues console mount', () => {
     expect(page?.props).toEqual({ targetType: 'VENUE', scope: 'console' });
   });
 
+  it('opens Venue Kit as its own page and ships its venueKit copy as local fallback', () => {
+    const route = routesOf(options).find(([path]) => path === '/venue-kit');
+    expect(route?.[1].guarded.type).toBe(stubs.VenueKitPage);
+    expect(options.i18nFallback).toEqual({ venueKit: { name: 'Duncit Venue Kit' } });
+  });
+
   it('keeps every route behind the sign-in gate', () => {
     const routes = routesOf(options);
     expect(routes.map(([path]) => path)).toEqual([
       '/venues/new',
       '/venues',
+      '/venue-kit',
       '/event-requests',
       '/venues/:venueId',
       '/venues/:venueId/edit',

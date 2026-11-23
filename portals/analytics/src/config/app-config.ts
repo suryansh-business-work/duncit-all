@@ -59,6 +59,15 @@ export const appConfig = {
       ],
     },
     {
+      // What the app stores say: installs, ratings, crashes — Google Play and App Store, synced daily.
+      // One page; its Overview / Google Play / App Store tabs live in the URL.
+      label: 'App Insights', labelKey: 'shell.nav.appInsights',
+      icon: 'installMobile',
+      children: [
+        { label: 'Store Dashboard', labelKey: 'shell.nav.appInsightsDashboard', to: '/app-insights', icon: 'dashboard' },
+      ],
+    },
+    {
       label: 'Growth', labelKey: 'shell.nav.growth',
       icon: 'timeline',
       children: [

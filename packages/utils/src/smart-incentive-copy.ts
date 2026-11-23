@@ -8,7 +8,7 @@ import type { SmartIncentivePctIssue } from './smart-incentive';
  * namespace + a suffix, because `scripts/verify-translation-keys.mjs` greps
  * source for the literal string — a composed key is reported as
  * shipped-but-never-rendered and fails the Shared Gates job. Same shape (and
- * same reason) as pod-ticket-discount-copy.ts.
+ * same reason) as pod-attendance-copy.ts.
  *
  * mWeb and the native app share `mweb.*`; every MUI portal shares `shell.*`.
  * The server stores one row per key path, so the two namespaces cannot

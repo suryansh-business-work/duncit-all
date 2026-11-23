@@ -1,0 +1,2576 @@
+{
+  "$comment": [
+    "THE source of truth for every environment value Duncit reads.",
+    "techPortal: categories + fields the Tech portal manages (envEntry.fields.ts loads this file; labels, hints, descriptions and validation all come from here).",
+    "githubSecrets: the only values that stay in GitHub Actions secrets, and why each cannot move to the Tech portal.",
+    "usedIn lists are GENERATED: run `node scripts/audit-env-registry.mjs --write` after changing code that reads a value, and commit the result.",
+    "alsoReadBy (hand-written, optional): files that build a category's env keys at run time, e.g. SOCIAL_${provider}_${field}, so no literal can be found; they are folded into usedIn.",
+    "validation.type is one of: text, url, hostname, email, phone, number, bool, json, pem, list, fingerprints. validation.required is enforced when an entry is created."
+  ],
+  "groups": [
+    {
+      "key": "MESSAGING",
+      "label": "Messaging & OTP",
+      "description": "Email, WhatsApp, SMS, calls and alerts",
+      "categories": [
+        "EMAIL",
+        "AISENSY",
+        "MSG91",
+        "TWILIO",
+        "SLACK",
+        "TURN"
+      ]
+    },
+    {
+      "key": "IDENTITY",
+      "label": "Sign-in & identity",
+      "description": "Social and phone sign-in providers",
+      "categories": [
+        "GOOGLE_OAUTH",
+        "APPLE_SIGNIN",
+        "TRUECALLER"
+      ]
+    },
+    {
+      "key": "AI",
+      "label": "AI models",
+      "description": "Text, voice and generation models",
+      "categories": [
+        "OPENAI",
+        "GEMINI",
+        "ANTHROPIC",
+        "SERVAM"
+      ]
+    },
+    {
+      "key": "MEDIA",
+      "label": "Media, maps & content",
+      "description": "Uploads, stock media, maps and footage",
+      "categories": [
+        "IMAGEKIT",
+        "PEXELS",
+        "GOOGLE_MAPS",
+        "GOOGLE_DRIVE",
+        "REMOTION"
+      ]
+    },
+    {
+      "key": "MARKETING",
+      "label": "Marketing & social",
+      "description": "One app per social network, and search for research and leads",
+      "categories": [
+        "SOCIAL_INSTAGRAM",
+        "SOCIAL_FACEBOOK",
+        "SOCIAL_THREADS",
+        "SOCIAL_YOUTUBE",
+        "SOCIAL_LINKEDIN",
+        "SOCIAL_X",
+        "SERPER"
+      ]
+    },
+    {
+      "key": "COMMERCE",
+      "label": "Payments & shipping",
+      "description": "Money in and parcels out",
+      "categories": [
+        "RAZORPAY",
+        "SHIPROCKET"
+      ]
+    },
+    {
+      "key": "RELEASES",
+      "label": "Builds & releases",
+      "description": "CI, store releases and code analysis",
+      "categories": [
+        "GITHUB",
+        "GOOGLE_PLAY",
+        "APP_STORE_CONNECT",
+        "SONARQUBE"
+      ]
+    },
+    {
+      "key": "DOMAINS",
+      "label": "Domains & DNS",
+      "description": "Registrar and DNS providers",
+      "categories": [
+        "GODADDY",
+        "CLOUDFLARE"
+      ]
+    }
+  ],
+  "categories": {
+    "EMAIL": {
+      "label": "Email (SMTP)",
+      "description": "The mailbox every product email is sent from",
+      "docUrl": "https://support.google.com/a/answer/176600",
+      "usedIn": [
+        "server/src/config/url-configs.ts",
+        "server/src/services/email/email.provider.ts"
+      ],
+      "fields": [
+        {
+          "name": "host",
+          "label": "SMTP Host",
+          "hint": "e.g. smtp.gmail.com",
+          "envKey": "SMTP_HOST",
+          "description": "The SMTP server every product email (OTP mails, receipts, alerts) is handed to.",
+          "validation": {
+            "type": "hostname"
+          },
+          "usedIn": [
+            "server/src/config/url-configs.ts"
+          ]
+        },
+        {
+          "name": "port",
+          "label": "Port",
+          "hint": "465 (SSL) or 587 (TLS)",
+          "number": true,
+          "envKey": "SMTP_PORT",
+          "description": "Port the SMTP connection opens on; decides SSL (465) versus STARTTLS (587).",
+          "validation": {
+            "type": "number",
+            "min": 1,
+            "max": 65535
+          },
+          "usedIn": [
+            "server/src/config/url-configs.ts"
+          ]
+        },
+        {
+          "name": "user",
+          "label": "Username",
+          "hint": "Full mailbox address",
+          "envKey": "SMTP_USER",
+          "description": "Mailbox the server signs in to SMTP as.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/config/url-configs.ts"
+          ]
+        },
+        {
+          "name": "password",
+          "label": "Password",
+          "hint": "SMTP password or app password",
+          "secret": true,
+          "envKey": "SMTP_PASS",
+          "description": "Password the SMTP sign-in uses; without it no email can be sent.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/config/url-configs.ts"
+          ]
+        },
+        {
+          "name": "secure",
+          "label": "Use TLS",
+          "bool": true,
+          "description": "Opens the connection over TLS from the first byte (port 465) instead of upgrading it.",
+          "validation": {
+            "type": "bool"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "from_address",
+          "label": "From Address",
+          "hint": "no-reply@yourdomain.com",
+          "envKey": "SMTP_FROM",
+          "description": "Sender address recipients see on every email.",
+          "validation": {
+            "type": "email"
+          },
+          "usedIn": [
+            "server/src/config/url-configs.ts"
+          ]
+        },
+        {
+          "name": "from_name",
+          "label": "From Name",
+          "description": "Sender name shown next to the from address.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "reply_to",
+          "label": "Reply-To",
+          "description": "Where a recipient's reply goes when it should not reach the sending mailbox.",
+          "validation": {
+            "type": "email"
+          },
+          "usedIn": []
+        }
+      ]
+    },
+    "IMAGEKIT": {
+      "label": "ImageKit",
+      "description": "Image and video uploads, storage and delivery",
+      "docUrl": "https://imagekit.io/dashboard/developer/api-keys",
+      "usedIn": [
+        "server/src/modules/ai/askDuncit/files/askDuncit.files.ts",
+        "server/src/modules/platform/upload/upload.service.ts"
+      ],
+      "fields": [
+        {
+          "name": "public_key",
+          "label": "Public Key",
+          "hint": "public_xxxxxxxxxxxxxxxx",
+          "envKey": "IMAGEKIT_PUBLIC_KEY",
+          "description": "Identifies the ImageKit account when the browser uploads media directly.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "private_key",
+          "label": "Private Key",
+          "hint": "private_xxxxxxxxxxxxxxxx",
+          "secret": true,
+          "envKey": "IMAGEKIT_PRIVATE_KEY",
+          "description": "Signs upload tokens and server-side uploads; never leaves the server.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": []
+        },
+        {
+          "name": "url_endpoint",
+          "label": "URL Endpoint",
+          "hint": "https://ik.imagekit.io/your_id",
+          "envKey": "IMAGEKIT_URL_ENDPOINT",
+          "description": "Base URL every stored image and video is served from.",
+          "validation": {
+            "type": "url"
+          },
+          "usedIn": [
+            "server/src/modules/ai/askDuncit/files/askDuncit.files.ts"
+          ]
+        }
+      ]
+    },
+    "PEXELS": {
+      "label": "Pexels",
+      "description": "Stock photos and videos for covers",
+      "docUrl": "https://www.pexels.com/api/",
+      "usedIn": [
+        "server/src/modules/platform/upload/upload.service.ts"
+      ],
+      "fields": [
+        {
+          "name": "api_key",
+          "label": "API Key",
+          "hint": "56-char alphanumeric key",
+          "secret": true,
+          "envKey": "PEXELS_API_KEY",
+          "description": "Searches Pexels stock photos and videos for covers and banners.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/modules/platform/upload/upload.service.ts"
+          ]
+        }
+      ]
+    },
+    "GOOGLE_OAUTH": {
+      "label": "Google OAuth",
+      "description": "Continue with Google on web, Android and iOS",
+      "docUrl": "https://console.cloud.google.com/apis/credentials",
+      "usedIn": [
+        "server/src/modules/access/auth/auth.google.ts",
+        "server/src/modules/platform/mailAutomation/gmail.oauth.ts",
+        "server/src/modules/platform/settings/settings.service.ts"
+      ],
+      "fields": [
+        {
+          "name": "client_id",
+          "label": "Web OAuth Client ID",
+          "hint": "xxxxxx.apps.googleusercontent.com — mWeb, portals and the server",
+          "envKey": "GOOGLE_CLIENT_ID",
+          "description": "Web OAuth client that mWeb, every portal and the server use for Continue with Google; served to them through publicClientConfig.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/access/auth/auth.google.ts",
+            "server/src/modules/platform/mailAutomation/gmail.oauth.ts",
+            "server/src/modules/platform/settings/settings.service.ts"
+          ]
+        },
+        {
+          "name": "client_secret",
+          "label": "OAuth Client Secret",
+          "hint": "GOCSPX-xxxxxxxxxxxxxxxx",
+          "secret": true,
+          "envKey": "GOOGLE_CLIENT_SECRET",
+          "description": "Lets the server exchange a Google authorisation code and run the connection test.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/modules/platform/mailAutomation/gmail.oauth.ts"
+          ]
+        },
+        {
+          "name": "android_client_id",
+          "label": "Android OAuth Client ID",
+          "hint": "xxxxxx.apps.googleusercontent.com — Android client for com.duncit.mobile, with \"Enable custom URI scheme\" on under Advanced settings",
+          "envKey": "GOOGLE_ANDROID_CLIENT_ID",
+          "description": "Android OAuth client the native Android app signs in with (Google refuses custom-scheme redirects on a web client).",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/access/auth/auth.google.ts",
+            "server/src/modules/platform/settings/settings.service.ts"
+          ]
+        },
+        {
+          "name": "ios_client_id",
+          "label": "iOS OAuth Client ID",
+          "hint": "xxxxxx.apps.googleusercontent.com — iOS client for bundle ID com.duncit.mobile",
+          "envKey": "GOOGLE_IOS_CLIENT_ID",
+          "description": "iOS OAuth client the native iOS app signs in with.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/access/auth/auth.google.ts",
+            "server/src/modules/platform/settings/settings.service.ts"
+          ]
+        },
+        {
+          "name": "android_package",
+          "label": "Android Package Name (for Test connection)",
+          "hint": "e.g. com.duncit.mobile — the package the Android client was created for",
+          "description": "Package the Android client was created for; read only by Test connection to send Google the exact app redirect.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "ios_bundle_id",
+          "label": "iOS Bundle ID (for Test connection)",
+          "hint": "e.g. com.duncit.mobile — the Bundle ID the iOS client was created for",
+          "description": "Bundle ID the iOS client was created for; read only by Test connection.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        }
+      ]
+    },
+    "GOOGLE_MAPS": {
+      "label": "Google Map",
+      "description": "Maps, places search and geocoding",
+      "docUrl": "https://console.cloud.google.com/google/maps-apis/credentials",
+      "usedIn": [
+        "server/src/modules/platform/location/location.geo.ts",
+        "server/src/modules/platform/settings/settings.service.ts"
+      ],
+      "fields": [
+        {
+          "name": "maps_api_key",
+          "label": "Maps API Key",
+          "hint": "AIzaSy... (39 chars)",
+          "secret": true,
+          "envKey": "GOOGLE_MAP_API",
+          "description": "Maps, places search and geocoding on mWeb, the portals, the ecomm store and the apps; served through publicClientConfig, so rotating it needs no rebuild.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/modules/platform/location/location.geo.ts",
+            "server/src/modules/platform/settings/settings.service.ts"
+          ]
+        }
+      ]
+    },
+    "TWILIO": {
+      "label": "Twilio",
+      "description": "Voice calls and the support line",
+      "docUrl": "https://console.twilio.com/",
+      "usedIn": [
+        "server/src/modules/access/user/user.contact.ts",
+        "server/src/modules/crm/call/call.config.ts",
+        "server/src/modules/crm/call/call.resolver.ts",
+        "server/src/modules/crm/call/twilioWebhookGuard.ts",
+        "server/src/modules/crm/crm/crm.resolver.ts",
+        "server/src/services/comms/comms.service.ts"
+      ],
+      "fields": [
+        {
+          "name": "account_sid",
+          "label": "Account SID",
+          "hint": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "envKey": "TWILIO_ACCOUNT_SID",
+          "description": "Twilio account every CRM and support call is placed under.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/access/user/user.contact.ts",
+            "server/src/modules/crm/call/call.config.ts"
+          ]
+        },
+        {
+          "name": "auth_token",
+          "label": "Auth Token",
+          "hint": "32-char hex token",
+          "secret": true,
+          "envKey": "TWILIO_AUTH_TOKEN",
+          "description": "Authenticates calls to the Twilio API and verifies Twilio webhooks.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/modules/access/user/user.contact.ts",
+            "server/src/modules/crm/call/call.config.ts",
+            "server/src/modules/crm/call/twilioWebhookGuard.ts"
+          ]
+        },
+        {
+          "name": "phone_number",
+          "label": "Phone Number",
+          "hint": "E.164, e.g. +14155552671 — caller ID for outbound calls",
+          "phone": true,
+          "envKey": "TWILIO_PHONE_NUMBER",
+          "description": "Caller ID outbound CRM calls are made from.",
+          "validation": {
+            "type": "phone"
+          },
+          "usedIn": [
+            "server/src/modules/access/user/user.contact.ts",
+            "server/src/modules/crm/call/call.config.ts",
+            "server/src/modules/crm/call/call.resolver.ts",
+            "server/src/modules/crm/crm/crm.resolver.ts"
+          ]
+        },
+        {
+          "name": "agent_phone_number",
+          "label": "Agent Phone Number (optional)",
+          "hint": "E.164 — agent leg dialled for \"Call Through Portal\"; falls back to the logged-in user’s profile phone",
+          "phone": true,
+          "envKey": "TWILIO_AGENT_PHONE_NUMBER",
+          "description": "Agent leg dialled for \"Call Through Portal\" when the signed-in user has no phone on file.",
+          "validation": {
+            "type": "phone"
+          },
+          "usedIn": [
+            "server/src/modules/access/user/user.contact.ts",
+            "server/src/modules/crm/call/call.config.ts"
+          ]
+        },
+        {
+          "name": "record_calls",
+          "label": "Record CRM calls",
+          "hint": "Switch off where call recording is not legally permitted. Unset counts as on.",
+          "bool": true,
+          "envKey": "TWILIO_RECORD_CALLS",
+          "description": "Turns CRM call recording on or off where recording is not legally allowed.",
+          "validation": {
+            "type": "bool"
+          },
+          "usedIn": [
+            "server/src/modules/crm/call/call.config.ts"
+          ]
+        },
+        {
+          "name": "live_transcription",
+          "label": "Live call transcription",
+          "hint": "Speech-to-text while a CRM call is live, split by speaker. Unset counts as on.",
+          "bool": true,
+          "envKey": "TWILIO_LIVE_TRANSCRIPTION",
+          "description": "Live speech-to-text on CRM calls, split by speaker.",
+          "validation": {
+            "type": "bool"
+          },
+          "usedIn": [
+            "server/src/modules/crm/call/call.config.ts"
+          ]
+        },
+        {
+          "name": "transcription_language",
+          "label": "Transcription language (optional)",
+          "hint": "BCP-47 code, e.g. en-IN or hi-IN (default en-IN)",
+          "envKey": "TWILIO_TRANSCRIPTION_LANGUAGE",
+          "description": "Language the live transcription listens for.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/crm/call/call.config.ts"
+          ]
+        },
+        {
+          "name": "recording_notice",
+          "label": "Recording notice (optional)",
+          "hint": "Spoken to the lead before a recorded or transcribed call is connected",
+          "envKey": "TWILIO_RECORDING_NOTICE",
+          "description": "Notice spoken to the lead before a recorded or transcribed call connects.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/crm/call/call.config.ts"
+          ]
+        }
+      ]
+    },
+    "OPENAI": {
+      "label": "OpenAI",
+      "description": "GPT models behind the AI features",
+      "docUrl": "https://platform.openai.com/api-keys",
+      "usedIn": [
+        "scripts/sync-localization.mjs",
+        "server/src/microservices/chat/support/supportChat.ai.ts",
+        "server/src/modules/ai/agent/agent.service.ts",
+        "server/src/modules/ai/askBot/askBot.service.ts",
+        "server/src/services/openai/openai.client.ts"
+      ],
+      "fields": [
+        {
+          "name": "base_url",
+          "label": "Base URL (optional)",
+          "hint": "https://api.openai.com/v1",
+          "envKey": "OPENAI_BASE_URL",
+          "description": "Overrides the OpenAI API address, e.g. for a compatible proxy.",
+          "validation": {
+            "type": "url"
+          },
+          "usedIn": [
+            "scripts/sync-localization.mjs",
+            "server/src/services/openai/openai.client.ts"
+          ]
+        },
+        {
+          "name": "model",
+          "label": "Model (default gpt-4o-mini)",
+          "hint": "e.g. gpt-4o-mini",
+          "envKey": "OPENAI_MODEL",
+          "description": "Default GPT model when an AI Library prompt names none.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "scripts/sync-localization.mjs",
+            "server/src/services/openai/openai.client.ts"
+          ]
+        },
+        {
+          "name": "api_key",
+          "label": "API Key",
+          "hint": "sk-proj-... or sk-...",
+          "secret": true,
+          "envKey": "OPENAI_API_KEY",
+          "description": "Authenticates every GPT request the AI features make.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "scripts/sync-localization.mjs",
+            "server/src/microservices/chat/support/supportChat.ai.ts",
+            "server/src/modules/ai/agent/agent.service.ts",
+            "server/src/modules/ai/askBot/askBot.service.ts",
+            "server/src/services/openai/openai.client.ts"
+          ]
+        }
+      ]
+    },
+    "GEMINI": {
+      "label": "Gemini",
+      "description": "Google Gemini models behind the AI features",
+      "docUrl": "https://aistudio.google.com/app/apikey",
+      "usedIn": [
+        "server/src/services/openai/openai.client.ts"
+      ],
+      "fields": [
+        {
+          "name": "model",
+          "label": "Model (default gemini-1.5-flash)",
+          "hint": "e.g. gemini-2.5-flash — any AI Library prompt whose model starts with gemini- runs on this key",
+          "description": "Default Gemini model; any AI Library prompt whose model starts with gemini- runs here.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "api_key",
+          "label": "API Key",
+          "hint": "AIzaSy... (39 chars)",
+          "secret": true,
+          "envKey": "GEMINI_API_KEY",
+          "description": "Authenticates every Gemini request.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/services/openai/openai.client.ts"
+          ]
+        }
+      ]
+    },
+    "SERVAM": {
+      "label": "Servam AI (Sarvam)",
+      "description": "Indian-language voice and text models",
+      "docUrl": "https://dashboard.sarvam.ai/admin",
+      "usedIn": [
+        "server/src/services/servam/servam.service.ts"
+      ],
+      "fields": [
+        {
+          "name": "api_key",
+          "label": "API Key",
+          "hint": "Sarvam subscription key (sk_...)",
+          "secret": true,
+          "envKey": "SERVAM_AI_API_KEY",
+          "description": "Authenticates Sarvam text-to-speech and Indian-language model calls.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/services/servam/servam.service.ts"
+          ]
+        },
+        {
+          "name": "base_url",
+          "label": "Base URL (optional)",
+          "hint": "https://api.sarvam.ai",
+          "envKey": "SERVAM_AI_BASE_URL",
+          "description": "Overrides the Sarvam API address.",
+          "validation": {
+            "type": "url"
+          },
+          "usedIn": [
+            "server/src/services/servam/servam.service.ts"
+          ]
+        },
+        {
+          "name": "tts_model",
+          "label": "TTS Model (default bulbul:v2)",
+          "hint": "e.g. bulbul:v2",
+          "envKey": "SERVAM_AI_TTS_MODEL",
+          "description": "Text-to-speech model voice features use.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/services/servam/servam.service.ts"
+          ]
+        },
+        {
+          "name": "default_voice",
+          "label": "Default Voice",
+          "hint": "e.g. anushka, manisha, vidya, arya, abhilash, karun, hitesh",
+          "envKey": "SERVAM_AI_VOICE",
+          "description": "Voice used when a feature does not choose one.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/services/servam/servam.service.ts"
+          ]
+        }
+      ]
+    },
+    "RAZORPAY": {
+      "label": "Razorpay",
+      "description": "Payments, refunds and payment webhooks",
+      "docUrl": "https://dashboard.razorpay.com/app/keys",
+      "usedIn": [
+        "server/src/modules/commerce/store/store.admin.merch.service.ts",
+        "server/src/modules/finance/payment/razorpay.gateway.ts",
+        "server/src/modules/finance/payout/razorpayX.gateway.ts"
+      ],
+      "fields": [
+        {
+          "name": "key_id",
+          "label": "Key ID",
+          "hint": "Test: rzp_test_xxxxxxxx · Live: rzp_live_xxxxxxxx (public)",
+          "envKey": "RAZORPAY_KEY_ID",
+          "description": "Public key the checkout opens Razorpay with; also identifies server API calls.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/finance/payment/razorpay.gateway.ts"
+          ]
+        },
+        {
+          "name": "key_secret",
+          "label": "Key Secret",
+          "hint": "Razorpay API key secret (test or live)",
+          "secret": true,
+          "envKey": "RAZORPAY_KEY_SECRET",
+          "description": "Signs server calls for orders, captures and refunds, and verifies payment signatures.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/modules/finance/payment/razorpay.gateway.ts"
+          ]
+        },
+        {
+          "name": "webhook_secret",
+          "label": "Webhook Secret (optional)",
+          "hint": "Used to verify Razorpay webhooks",
+          "secret": true,
+          "envKey": "RAZORPAY_WEBHOOK_SECRET",
+          "description": "Verifies that a payment webhook really came from Razorpay before it changes an order.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/finance/payment/razorpay.gateway.ts",
+            "server/src/modules/finance/payout/razorpayX.gateway.ts"
+          ]
+        },
+        {
+          "name": "x_account_number",
+          "label": "RazorpayX Account Number (payouts)",
+          "hint": "The RazorpayX current-account number withdrawals and Send Money are paid from. Leave empty to keep payouts switched off.",
+          "envKey": "RAZORPAYX_ACCOUNT_NUMBER",
+          "description": "RazorpayX current account withdrawals and Send Money are paid from; blank keeps payouts off.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/finance/payout/razorpayX.gateway.ts"
+          ]
+        }
+      ]
+    },
+    "SHIPROCKET": {
+      "label": "ShipRocket",
+      "description": "Shipping, pickups and delivery tracking",
+      "docUrl": "https://app.shiprocket.in/api-user",
+      "usedIn": [
+        "server/src/modules/commerce/shiprocket/shiprocket.account.ts"
+      ],
+      "fields": [
+        {
+          "name": "email",
+          "label": "Account Email",
+          "hint": "ShipRocket API user email",
+          "envKey": "SHIPROCKET_EMAIL",
+          "description": "ShipRocket API user the store books shipments as.",
+          "validation": {
+            "type": "email"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "password",
+          "label": "Account Password",
+          "hint": "ShipRocket API user password",
+          "secret": true,
+          "envKey": "SHIPROCKET_PASSWORD",
+          "description": "Password of that API user; ShipRocket issues the auth token from it.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": []
+        },
+        {
+          "name": "pickup_location",
+          "label": "Default Pickup Location Nickname",
+          "hint": "Must match a pickup address configured in ShipRocket (Settings → Pickup Addresses)",
+          "envKey": "SHIPROCKET_PICKUP_LOCATION",
+          "description": "Pickup address nickname new shipments are collected from.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "channel_id",
+          "label": "Channel ID (optional)",
+          "hint": "ShipRocket channel id, if any",
+          "number": true,
+          "envKey": "SHIPROCKET_CHANNEL_ID",
+          "description": "ShipRocket sales channel orders are filed under, if the account uses one.",
+          "validation": {
+            "type": "number",
+            "min": 0
+          },
+          "usedIn": []
+        },
+        {
+          "name": "webhook_secret",
+          "label": "Webhook x-api-key (optional)",
+          "hint": "Verifies inbound ShipRocket webhooks",
+          "secret": true,
+          "envKey": "SHIPROCKET_WEBHOOK_SECRET",
+          "description": "Verifies inbound ShipRocket tracking webhooks (x-api-key).",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "token_ttl_hours",
+          "label": "Token TTL hours (optional)",
+          "hint": "Auth token cache lifetime; default 240 (~10 days)",
+          "number": true,
+          "envKey": "SHIPROCKET_TOKEN_TTL_HOURS",
+          "description": "How long the ShipRocket auth token is cached before a fresh login.",
+          "validation": {
+            "type": "number",
+            "min": 1,
+            "max": 240
+          },
+          "usedIn": []
+        },
+        {
+          "name": "sandbox",
+          "label": "Sandbox mode — book test orders only",
+          "hint": "On: every order, rate and pickup call for this account goes to the ShipRocket sandbox (https://api-sandbox.shiprocket.in), so nothing real is booked or charged. Off: production (https://apiv2.shiprocket.in) — live shipments, exactly as before. Enter the sandbox API user from ShipRocket → Settings → Additional Settings → Sandbox (https://app.shiprocket.in/seller/settings/additional-settings/sandbox) in the two sandbox fields below; the production email and password above are kept and not used while this is on.",
+          "bool": true,
+          "description": "Sends every order, rate and pickup call to the ShipRocket sandbox so nothing real is booked.",
+          "validation": {
+            "type": "bool"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "sandbox_email",
+          "label": "Sandbox Account Email",
+          "hint": "ShipRocket sandbox API user email — used only while sandbox mode is on. Left blank, the email and password above are sent to the sandbox.",
+          "description": "Sandbox API user, used only while sandbox mode is on.",
+          "validation": {
+            "type": "email"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "sandbox_password",
+          "label": "Sandbox Account Password",
+          "hint": "ShipRocket sandbox API user password — used only while sandbox mode is on",
+          "secret": true,
+          "description": "Sandbox API user password, used only while sandbox mode is on.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "sandbox_api_url",
+          "label": "Sandbox API URL (optional)",
+          "hint": "Leave blank to use ShipRocket’s standard sandbox, https://api-sandbox.shiprocket.in. Fill it only if ShipRocket moves its sandbox: the address must be https and end in shiprocket.in, and it then applies to every account in sandbox mode, partner brands included. It is never used while sandbox mode is off.",
+          "description": "Overrides the sandbox address if ShipRocket moves it; never used outside sandbox mode.",
+          "validation": {
+            "type": "url"
+          },
+          "usedIn": []
+        }
+      ]
+    },
+    "TURN": {
+      "label": "TURN relay (staff calls)",
+      "description": "Relay that keeps staff calls connected",
+      "docUrl": "https://github.com/coturn/coturn",
+      "usedIn": [
+        "server/src/microservices/chat/staff/staffCallIce.ts"
+      ],
+      "fields": [
+        {
+          "name": "urls",
+          "label": "TURN URLs",
+          "hint": "Comma separated, e.g. turn:turn.example.com:3478,turns:turn.example.com:5349",
+          "envKey": "TURN_URLS",
+          "description": "Relay servers a staff call falls back to when the two browsers cannot connect directly.",
+          "validation": {
+            "type": "list"
+          },
+          "usedIn": [
+            "server/src/microservices/chat/staff/staffCallIce.ts"
+          ]
+        },
+        {
+          "name": "username",
+          "label": "Username",
+          "hint": "TURN user (coturn: the `user` before the colon)",
+          "envKey": "TURN_USERNAME",
+          "description": "User the browsers authenticate to the TURN relay as.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/microservices/chat/staff/staffCallIce.ts"
+          ]
+        },
+        {
+          "name": "credential",
+          "label": "Credential",
+          "hint": "The TURN password",
+          "secret": true,
+          "envKey": "TURN_CREDENTIAL",
+          "description": "Password for that TURN user.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/microservices/chat/staff/staffCallIce.ts"
+          ]
+        }
+      ]
+    },
+    "SLACK": {
+      "label": "Slack",
+      "description": "Team alerts and channel notifications",
+      "docUrl": "https://api.slack.com/apps",
+      "usedIn": [
+        "server/src/modules/platform/appBuild/appBuild.service.ts",
+        "server/src/modules/platform/appBuild/appStoreRelease.service.ts",
+        "server/src/modules/platform/appBuild/playRelease.service.ts",
+        "server/src/modules/platform/e2eRun/e2eRun.service.ts",
+        "server/src/modules/platform/slack/slack.gateway.ts",
+        "server/src/modules/platform/slack/slack.service.ts",
+        "server/src/services/notify/staffAlert.ts"
+      ],
+      "fields": [
+        {
+          "name": "bot_token",
+          "label": "Bot User OAuth Token",
+          "hint": "xoxb-… (Slack app → OAuth & Permissions)",
+          "secret": true,
+          "envKey": "SLACK_BOT_TOKEN",
+          "description": "Posts every Slack alert and build announcement as the Duncit bot.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/modules/platform/slack/slack.gateway.ts"
+          ]
+        },
+        {
+          "name": "signing_secret",
+          "label": "Signing Secret (optional)",
+          "hint": "Verifies inbound Slack events/webhooks",
+          "secret": true,
+          "envKey": "SLACK_SIGNING_SECRET",
+          "description": "Verifies inbound Slack events and interactive callbacks.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "default_channel",
+          "label": "Default Channel (optional)",
+          "hint": "Channel ID (e.g. C0123ABCD) messages default to",
+          "envKey": "SLACK_DEFAULT_CHANNEL",
+          "description": "Channel messages go to when a feature has no channel of its own.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/slack/slack.service.ts",
+            "server/src/services/notify/staffAlert.ts"
+          ]
+        },
+        {
+          "name": "feedback_channel",
+          "label": "Feedback Channel (optional)",
+          "hint": "Channel ID in-app feedback posts to (falls back to Default Channel)",
+          "envKey": "SLACK_FEEDBACK_CHANNEL",
+          "description": "Channel in-app feedback posts to.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/slack/slack.service.ts"
+          ]
+        },
+        {
+          "name": "finance_channel",
+          "label": "Finance Alerts Channel (optional)",
+          "hint": "Channel ID refused refunds and other Finance alerts post to (falls back to Default Channel)",
+          "envKey": "SLACK_FINANCE_CHANNEL",
+          "description": "Channel refused refunds and other Finance alerts post to.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/services/notify/staffAlert.ts"
+          ]
+        },
+        {
+          "name": "legal_channel",
+          "label": "Legal Alerts Channel (optional)",
+          "hint": "Channel ID new grievances and content reports post to (falls back to Default Channel)",
+          "envKey": "SLACK_LEGAL_CHANNEL",
+          "description": "Channel new grievances and content reports post to.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/services/notify/staffAlert.ts"
+          ]
+        },
+        {
+          "name": "android_builds_channel",
+          "label": "Android Builds Channel (optional)",
+          "hint": "Channel ID CI Android builds announce to (Tech → App Builds → Settings)",
+          "envKey": "SLACK_ANDROID_BUILDS_CHANNEL",
+          "description": "Channel production Android builds announce to.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/appBuild/appBuild.service.ts",
+            "server/src/modules/platform/appBuild/playRelease.service.ts"
+          ]
+        },
+        {
+          "name": "ios_builds_channel",
+          "label": "iOS Builds Channel (optional)",
+          "hint": "Channel ID CI iOS builds announce to (Tech → App Builds → Settings)",
+          "envKey": "SLACK_IOS_BUILDS_CHANNEL",
+          "description": "Channel production iOS builds announce to.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/appBuild/appBuild.service.ts",
+            "server/src/modules/platform/appBuild/appStoreRelease.service.ts"
+          ]
+        },
+        {
+          "name": "android_staging_builds_channel",
+          "label": "Android Staging Builds Channel (optional)",
+          "hint": "Channel ID staging Android builds announce to; blank uses the Android builds channel (Tech → App Builds → Settings)",
+          "envKey": "SLACK_ANDROID_STAGING_BUILDS_CHANNEL",
+          "description": "Channel staging Android builds announce to.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/appBuild/appBuild.service.ts"
+          ]
+        },
+        {
+          "name": "ios_staging_builds_channel",
+          "label": "iOS Staging Builds Channel (optional)",
+          "hint": "Channel ID staging iOS builds announce to; blank uses the iOS builds channel (Tech → App Builds → Settings)",
+          "envKey": "SLACK_IOS_STAGING_BUILDS_CHANNEL",
+          "description": "Channel staging iOS builds announce to.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/appBuild/appBuild.service.ts"
+          ]
+        },
+        {
+          "name": "e2e_channel",
+          "label": "E2E Results Channel (optional)",
+          "hint": "Channel ID e2e run results announce to (Tech → E2E Tests → Settings)",
+          "envKey": "SLACK_E2E_CHANNEL",
+          "description": "Channel E2E run results announce to.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/e2eRun/e2eRun.service.ts"
+          ]
+        }
+      ]
+    },
+    "AISENSY": {
+      "label": "AiSensy (WhatsApp)",
+      "description": "WhatsApp messages, campaigns and OTP",
+      "docUrl": "https://app.aisensy.com/",
+      "usedIn": [
+        "server/src/modules/ai/automation/automation.options.ts",
+        "server/src/modules/ai/automation/automation.router.ts",
+        "server/src/modules/platform/aisensy/aisensy.gateway.ts",
+        "server/src/modules/platform/aisensy/aisensy.project.ts"
+      ],
+      "fields": [
+        {
+          "name": "api_key",
+          "label": "Campaign API Key",
+          "hint": "AiSensy → Manage → API Key (a long eyJ… token) — sends messages",
+          "secret": true,
+          "envKey": "AISENSY_API_KEY",
+          "description": "Sends WhatsApp messages, campaigns and one-time codes through AiSensy.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/modules/platform/aisensy/aisensy.gateway.ts"
+          ]
+        },
+        {
+          "name": "campaign_name",
+          "label": "Default Campaign Name (optional)",
+          "hint": "API campaign name sends default to, e.g. duncit_camp_1",
+          "envKey": "AISENSY_CAMPAIGN_NAME",
+          "description": "Campaign a WhatsApp send uses when the caller names none.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/aisensy/aisensy.gateway.ts"
+          ]
+        },
+        {
+          "name": "otp_campaign_name",
+          "label": "OTP Campaign Name (optional)",
+          "hint": "Campaign behind the AUTHENTICATION template that carries one-time codes. Defaults to whatsapp_authentication",
+          "envKey": "AISENSY_OTP_CAMPAIGN_NAME",
+          "description": "Campaign behind the authentication template that carries WhatsApp OTPs.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/aisensy/aisensy.gateway.ts"
+          ]
+        },
+        {
+          "name": "base_url",
+          "label": "Base URL (optional)",
+          "hint": "https://backend.aisensy.com",
+          "envKey": "AISENSY_BASE_URL",
+          "description": "Overrides the AiSensy campaign API address.",
+          "validation": {
+            "type": "url"
+          },
+          "usedIn": [
+            "server/src/modules/platform/aisensy/aisensy.gateway.ts"
+          ]
+        },
+        {
+          "name": "project_id",
+          "label": "Project ID (optional)",
+          "hint": "The 24-character id in your AiSensy dashboard URL (app.aisensy.com/projects/<id>) — not the project name",
+          "envKey": "AISENSY_PROJECT_ID",
+          "description": "Project the read-only Project API lists campaigns and templates from.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/aisensy/aisensy.project.ts"
+          ]
+        },
+        {
+          "name": "project_api_key",
+          "label": "Project API Password (optional)",
+          "hint": "Custom App password — AiSensy dashboard → Manage → Custom Apps → create one (shows key, password, shared secret). Reads campaigns + templates, never sends",
+          "secret": true,
+          "envKey": "AISENSY_PROJECT_API_KEY",
+          "description": "Reads campaigns and templates for the WhatsApp flow builder; cannot send.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/aisensy/aisensy.project.ts"
+          ]
+        },
+        {
+          "name": "project_api_base_url",
+          "label": "Project API Base URL (optional)",
+          "hint": "https://apis.aisensy.com",
+          "envKey": "AISENSY_PROJECT_API_BASE_URL",
+          "description": "Overrides the AiSensy Project API address.",
+          "validation": {
+            "type": "url"
+          },
+          "usedIn": [
+            "server/src/modules/platform/aisensy/aisensy.project.ts"
+          ]
+        },
+        {
+          "name": "webhook_secret",
+          "label": "Webhook Secret (optional)",
+          "hint": "Any long random string. Paste the same value in AiSensy → Webhooks as the secret header; blank keeps the WhatsApp automation webhook closed",
+          "secret": true,
+          "envKey": "AISENSY_WEBHOOK_SECRET",
+          "description": "Shared secret every inbound AiSensy webhook must carry; blank keeps the WhatsApp automation webhook shut (403).",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/ai/automation/automation.options.ts",
+            "server/src/modules/ai/automation/automation.router.ts"
+          ]
+        }
+      ]
+    },
+    "GITHUB": {
+      "label": "GitHub (app builds)",
+      "description": "Triggers and reads the app build workflows",
+      "docUrl": "https://github.com/settings/personal-access-tokens",
+      "usedIn": [
+        "server/src/utils/github-actions.ts"
+      ],
+      "fields": [
+        {
+          "name": "token",
+          "label": "Access Token",
+          "hint": "Fine-grained PAT with Actions: Read and write (classic: repo + workflow)",
+          "secret": true,
+          "envKey": "GITHUB_TOKEN",
+          "description": "Dispatches and reads the app build workflows from Tech → App Builds; the one credential here that can start CI.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/utils/github-actions.ts"
+          ]
+        },
+        {
+          "name": "owner",
+          "label": "Repository Owner",
+          "hint": "The user or org, e.g. suryansh-business-work",
+          "envKey": "GITHUB_OWNER",
+          "description": "Repository owner the build workflows live under.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/utils/github-actions.ts"
+          ]
+        },
+        {
+          "name": "repo",
+          "label": "Repository Name",
+          "hint": "e.g. duncit-all",
+          "envKey": "GITHUB_REPO",
+          "description": "Repository the build workflows live in.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/utils/github-actions.ts"
+          ]
+        }
+      ]
+    },
+    "GOOGLE_PLAY": {
+      "label": "Google Play (store releases)",
+      "description": "Android store releases, listings and App Insights reports",
+      "docUrl": "https://play.google.com/console/developers",
+      "usedIn": [
+        "server/src/modules/platform/analytics/appInsights/appInsights.config.ts",
+        "server/src/modules/platform/appBuild/playRelease.service.ts",
+        "server/src/modules/platform/settings/settings.service.ts"
+      ],
+      "fields": [
+        {
+          "name": "service_account_json",
+          "label": "Service Account Key (JSON)",
+          "hint": "Paste the whole JSON key file of a service account granted release access on the app in Play Console",
+          "secret": true,
+          "envKey": "GOOGLE_PLAY_SERVICE_ACCOUNT_JSON",
+          "description": "Releases stored AABs to Play tracks and reads App Insights reports.",
+          "validation": {
+            "type": "json",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/modules/platform/analytics/appInsights/appInsights.config.ts",
+            "server/src/modules/platform/appBuild/playRelease.service.ts"
+          ]
+        },
+        {
+          "name": "package_name",
+          "label": "Package Name",
+          "hint": "The app id on Google Play, e.g. com.duncit.mobile",
+          "envKey": "GOOGLE_PLAY_PACKAGE_NAME",
+          "description": "App id on Google Play that releases and reports target.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/analytics/appInsights/appInsights.config.ts",
+            "server/src/modules/platform/appBuild/playRelease.service.ts"
+          ]
+        },
+        {
+          "name": "reports_bucket",
+          "label": "Reports Cloud Storage Bucket (App Insights)",
+          "hint": "Play Console → Download reports → Statistics → Copy Cloud Storage URI, e.g. gs://pubsite_prod_rev_01234567890123456789. Also grant the service account \"View app information and download bulk reports\" in Users and permissions",
+          "envKey": "GOOGLE_PLAY_REPORTS_BUCKET",
+          "description": "Cloud Storage bucket Play writes the bulk reports App Insights reads.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/analytics/appInsights/appInsights.config.ts"
+          ]
+        },
+        {
+          "name": "app_links_sha256",
+          "label": "App Links SHA-256 fingerprints",
+          "hint": "Play Console → Test and release → App integrity → App signing: the SHA-256 of the app signing key AND the upload key, comma separated (AA:BB:…). mWeb redeploy after changing it",
+          "envKey": "GOOGLE_PLAY_APP_LINKS_SHA256",
+          "description": "SHA-256 fingerprints of the Play app-signing and upload certificates; mWeb's build writes them into /.well-known/assetlinks.json so Android opens mWeb links in the app. Public by nature, served through publicClientConfig.",
+          "validation": {
+            "type": "fingerprints"
+          },
+          "usedIn": [
+            "server/src/modules/platform/settings/settings.service.ts"
+          ]
+        }
+      ]
+    },
+    "GOOGLE_DRIVE": {
+      "label": "Google Drive (Reel Studio footage)",
+      "description": "Raw footage for Reel Studio",
+      "docUrl": "https://console.cloud.google.com/iam-admin/serviceaccounts",
+      "usedIn": [
+        "server/src/modules/ai/reel/reel.drive.ts"
+      ],
+      "fields": [
+        {
+          "name": "service_account_json",
+          "label": "Service Account Key (JSON)",
+          "hint": "Paste the whole JSON key file of a service account. Enable the Google Drive API on its project, then share each footage folder with its client_email as Viewer",
+          "secret": true,
+          "envKey": "GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON",
+          "description": "Reads raw footage from shared Drive folders for Reel Studio (read-only).",
+          "validation": {
+            "type": "json",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/modules/ai/reel/reel.drive.ts"
+          ]
+        }
+      ]
+    },
+    "MSG91": {
+      "label": "MSG91 (SMS OTP)",
+      "description": "SMS one-time codes",
+      "docUrl": "https://control.msg91.com/app/m/l/settings/security/authkey",
+      "apiDocsUrl": "https://docs.msg91.com/otp-widget",
+      "usedIn": [
+        "server/src/modules/platform/msg91/msg91.gateway.ts"
+      ],
+      "fields": [
+        {
+          "name": "widget_id",
+          "label": "Widget ID",
+          "hint": "MSG91 → OTP → Widgets → your widget, e.g. 36686a6a6a59343937393739. Set the widget OTP length to 6 — the Duncit apps take a 6-digit code",
+          "envKey": "MSG91_WIDGET_ID",
+          "description": "MSG91 OTP widget that creates, sends and checks phone one-time codes.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/msg91/msg91.gateway.ts"
+          ]
+        },
+        {
+          "name": "auth_key",
+          "label": "Auth Key",
+          "hint": "MSG91 → Settings → Security → Auth Key. Also reads the widget logs and analytics",
+          "secret": true,
+          "envKey": "MSG91_AUTH_KEY",
+          "description": "Authenticates the OTP widget calls and reads widget logs.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/modules/platform/msg91/msg91.gateway.ts"
+          ]
+        }
+      ]
+    },
+    "APPLE_SIGNIN": {
+      "label": "Sign in with Apple",
+      "description": "Sign in with Apple on web and iOS",
+      "docUrl": "https://developer.apple.com/account/resources/identifiers/list",
+      "apiDocsUrl": "https://developer.apple.com/documentation/signinwithapple/configuring-your-environment-for-sign-in-with-apple",
+      "usedIn": [
+        "server/src/modules/access/auth/auth.apple.ts",
+        "server/src/modules/platform/settings/settings.service.ts"
+      ],
+      "fields": [
+        {
+          "name": "team_id",
+          "label": "Team ID",
+          "hint": "Apple Developer → Membership details → Team ID (10 characters), e.g. A1B2C3D4E5 — also lets iOS open mWeb links in the app (redeploy mWeb after changing it)",
+          "envKey": "APPLE_TEAM_ID",
+          "description": "Apple team that owns the app; signs the Sign in with Apple client secret and prefixes the app id in apple-app-site-association.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/settings/settings.service.ts"
+          ]
+        },
+        {
+          "name": "bundle_id",
+          "label": "App ID (iOS bundle identifier)",
+          "hint": "Identifiers → App IDs, with Sign in with Apple enabled — e.g. com.duncit.mobile. The iOS app signs in with this",
+          "envKey": "APPLE_BUNDLE_ID",
+          "description": "App ID the iOS app signs in with; Apple tokens with this audience are accepted.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/access/auth/auth.apple.ts",
+            "server/src/modules/platform/settings/settings.service.ts"
+          ]
+        },
+        {
+          "name": "services_id",
+          "label": "Services ID (web client ID)",
+          "hint": "Identifiers → Services IDs, e.g. com.duncit.signin. mWeb and the Android app sign in with this",
+          "envKey": "APPLE_SERVICES_ID",
+          "description": "Services ID mWeb and the Android app sign in with.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/access/auth/auth.apple.ts",
+            "server/src/modules/platform/settings/settings.service.ts"
+          ]
+        },
+        {
+          "name": "web_redirect_uri",
+          "label": "mWeb Return URL",
+          "hint": "e.g. https://mweb.duncit.com/login. Register it under the Services ID → Return URLs, together with <server URL>/apple/callback",
+          "envKey": "APPLE_WEB_REDIRECT_URI",
+          "description": "Return URL mWeb hands Apple's web SDK.",
+          "validation": {
+            "type": "url"
+          },
+          "usedIn": [
+            "server/src/modules/platform/settings/settings.service.ts"
+          ]
+        },
+        {
+          "name": "key_id",
+          "label": "Key ID",
+          "hint": "Keys → your Sign in with Apple key → Key ID (10 characters)",
+          "envKey": "APPLE_KEY_ID",
+          "description": "Key that signs the client secret Apple's token endpoint asks for.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "private_key",
+          "label": "Private Key (.p8)",
+          "hint": "Paste the whole AuthKey_<KeyID>.p8 file, BEGIN and END lines included. Apple lets you download it only once",
+          "secret": true,
+          "envKey": "APPLE_PRIVATE_KEY",
+          "description": "The .p8 key that signs that client secret.",
+          "validation": {
+            "type": "pem",
+            "required": true
+          },
+          "usedIn": []
+        }
+      ]
+    },
+    "APP_STORE_CONNECT": {
+      "label": "App Store Connect (iOS signing)",
+      "description": "iOS signing, App Store releases and App Insights reports",
+      "docUrl": "https://appstoreconnect.apple.com/access/integrations/api",
+      "apiDocsUrl": "https://developer.apple.com/documentation/appstoreconnectapi/creating-api-keys-for-app-store-connect-api",
+      "usedIn": [
+        "server/src/modules/platform/analytics/appInsights/appInsights.config.ts",
+        "server/src/modules/platform/appBuild/iosSigning.service.ts"
+      ],
+      "fields": [
+        {
+          "name": "issuer_id",
+          "label": "Issuer ID",
+          "hint": "App Store Connect → Users and Access → Integrations → App Store Connect API → Team Keys: the Issuer ID shown above the key list (a UUID)",
+          "envKey": "APP_STORE_CONNECT_ISSUER_ID",
+          "description": "Issuer of the App Store Connect API key that generates iOS signing files and uploads builds.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/analytics/appInsights/appInsights.config.ts",
+            "server/src/modules/platform/appBuild/iosSigning.service.ts"
+          ]
+        },
+        {
+          "name": "key_id",
+          "label": "Key ID",
+          "hint": "Generate a Team Key with Access \"Admin\" — only Admin may create certificates — and copy its Key ID (10 characters), e.g. 2X9R4HXF34",
+          "envKey": "APP_STORE_CONNECT_KEY_ID",
+          "description": "App Store Connect API key id.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/analytics/appInsights/appInsights.config.ts",
+            "server/src/modules/platform/appBuild/iosSigning.service.ts"
+          ]
+        },
+        {
+          "name": "private_key",
+          "label": "Private Key (.p8)",
+          "hint": "Paste the whole AuthKey_<KeyID>.p8 file, BEGIN and END lines included. Apple lets you download it only once",
+          "secret": true,
+          "envKey": "APP_STORE_CONNECT_PRIVATE_KEY",
+          "description": "The .p8 key the ios-build workflow fetches to sign and upload to TestFlight.",
+          "validation": {
+            "type": "pem",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/modules/platform/analytics/appInsights/appInsights.config.ts",
+            "server/src/modules/platform/appBuild/iosSigning.service.ts"
+          ]
+        },
+        {
+          "name": "bundle_id",
+          "label": "Bundle ID",
+          "hint": "The iOS app’s bundle identifier (app.json → ios.bundleIdentifier), e.g. com.duncit.mobile. Registered with its capabilities on Generate if Apple has not seen it",
+          "envKey": "APP_STORE_CONNECT_BUNDLE_ID",
+          "description": "iOS bundle id signing files are generated for.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/analytics/appInsights/appInsights.config.ts",
+            "server/src/modules/platform/appBuild/iosSigning.service.ts"
+          ]
+        }
+      ]
+    },
+    "SONARQUBE": {
+      "label": "SonarQube (code analysis)",
+      "description": "Code quality and security analysis",
+      "docUrl": "https://docs.sonarsource.com/sonarqube-community-build/user-guide/managing-tokens/",
+      "usedIn": [
+        "server/src/utils/sonarqube.ts"
+      ],
+      "fields": [
+        {
+          "name": "host_url",
+          "label": "Server URL",
+          "hint": "e.g. https://sonarqube.duncit.com",
+          "envKey": "SONAR_HOST_URL",
+          "description": "SonarQube server the Tests console's Security and Coverage pages read.",
+          "validation": {
+            "type": "url"
+          },
+          "usedIn": [
+            "server/src/utils/sonarqube.ts"
+          ]
+        },
+        {
+          "name": "token",
+          "label": "User Token",
+          "hint": "SonarQube → My Account → Security → Generate a User token (squ_…) for a user with Browse on the project",
+          "secret": true,
+          "envKey": "SONAR_TOKEN",
+          "description": "Read-only user token for those pages (a different token from the CI scan's SONAR_TOKEN secret).",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/utils/sonarqube.ts"
+          ]
+        },
+        {
+          "name": "project_key",
+          "label": "Project Key",
+          "hint": "sonar.projectKey in sonar-project.properties — SonarQube → the project → Project Information",
+          "envKey": "SONAR_PROJECT_KEY",
+          "description": "Project the console reads issues and coverage from.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/utils/sonarqube.ts"
+          ]
+        }
+      ]
+    },
+    "GODADDY": {
+      "label": "GoDaddy (DNS)",
+      "description": "Domain and DNS records at GoDaddy",
+      "docUrl": "https://developer.godaddy.com/keys",
+      "apiDocsUrl": "https://developer.godaddy.com/doc/endpoint/domains",
+      "usedIn": [
+        "server/src/modules/platform/dns/godaddy.gateway.ts"
+      ],
+      "fields": [
+        {
+          "name": "api_key",
+          "label": "API Key",
+          "hint": "developer.godaddy.com → API Keys → Create New API Key, environment \"Production\" (an OTE key only works on the test API)",
+          "secret": true,
+          "envKey": "GODADDY_API_KEY",
+          "description": "Reads and edits the DNS zone from Tech → DNS Config.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/modules/platform/dns/godaddy.gateway.ts"
+          ]
+        },
+        {
+          "name": "api_secret",
+          "label": "API Secret",
+          "hint": "Shown once, beside the key, when it is created",
+          "secret": true,
+          "envKey": "GODADDY_API_SECRET",
+          "description": "Secret half of the GoDaddy API key pair.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/dns/godaddy.gateway.ts"
+          ]
+        },
+        {
+          "name": "domain",
+          "label": "Domain",
+          "hint": "The zone DNS Config manages, e.g. duncit.com — it must be in the account that owns the key",
+          "envKey": "GODADDY_DOMAIN",
+          "description": "Zone DNS Config manages.",
+          "validation": {
+            "type": "hostname"
+          },
+          "usedIn": [
+            "server/src/modules/platform/dns/godaddy.gateway.ts"
+          ]
+        }
+      ]
+    },
+    "CLOUDFLARE": {
+      "label": "Cloudflare (DNS)",
+      "description": "Domain and DNS records at Cloudflare",
+      "docUrl": "https://dash.cloudflare.com/profile/api-tokens",
+      "apiDocsUrl": "https://developers.cloudflare.com/api/resources/dns/subresources/records/",
+      "usedIn": [
+        "server/src/modules/platform/cloudflare/cloudflare.gateway.ts"
+      ],
+      "fields": [
+        {
+          "name": "api_token",
+          "label": "API Token",
+          "hint": "dash.cloudflare.com → My Profile → API Tokens → Create Token with Zone:Read, Zone:Edit and DNS:Edit on this account (not the Global API key)",
+          "secret": true,
+          "envKey": "CLOUDFLARE_API_TOKEN",
+          "description": "Compares zones, copies records and switches nameservers from Tech → Security → Cloudflare.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/modules/platform/cloudflare/cloudflare.gateway.ts"
+          ]
+        },
+        {
+          "name": "account_id",
+          "label": "Account ID",
+          "hint": "dash.cloudflare.com → Account Home → Account ID, in the right-hand column",
+          "envKey": "CLOUDFLARE_ACCOUNT_ID",
+          "description": "Cloudflare account the zone is created in.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/cloudflare/cloudflare.gateway.ts"
+          ]
+        },
+        {
+          "name": "domain",
+          "label": "Domain",
+          "hint": "The zone to move, e.g. duncit.com — the same domain as the GoDaddy entry",
+          "envKey": "CLOUDFLARE_DOMAIN",
+          "description": "Zone being moved; the same domain as the GoDaddy entry.",
+          "validation": {
+            "type": "hostname"
+          },
+          "usedIn": [
+            "server/src/modules/platform/cloudflare/cloudflare.gateway.ts"
+          ]
+        }
+      ]
+    },
+    "SOCIAL_INSTAGRAM": {
+      "label": "Instagram app",
+      "description": "Connect Instagram accounts; read posts and comments; publish posts and reels",
+      "docUrl": "https://developers.facebook.com/apps/",
+      "apiDocsUrl": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/",
+      "usedIn": [
+        "server/src/modules/crm/marketing/social/social.credentials.ts"
+      ],
+      "alsoReadBy": [
+        "server/src/modules/crm/marketing/social/social.credentials.ts"
+      ],
+      "fields": [
+        {
+          "name": "app_id",
+          "label": "Instagram App ID",
+          "hint": "developers.facebook.com/apps → your app → Instagram → API setup with Instagram login → Instagram app ID (not the Facebook App ID)",
+          "envKey": "SOCIAL_INSTAGRAM_APP_ID",
+          "description": "Instagram app Marketing → Social Accounts connects accounts through.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "app_secret",
+          "label": "Instagram App Secret",
+          "hint": "Same page → Instagram app secret",
+          "secret": true,
+          "envKey": "SOCIAL_INSTAGRAM_APP_SECRET",
+          "description": "Exchanges and refreshes Instagram access tokens.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": []
+        },
+        {
+          "name": "graph_version",
+          "label": "Graph API Version (optional)",
+          "hint": "e.g. v23.0; default v23.0",
+          "envKey": "SOCIAL_INSTAGRAM_GRAPH_VERSION",
+          "description": "Instagram Graph API version every call is pinned to.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        }
+      ]
+    },
+    "SOCIAL_FACEBOOK": {
+      "label": "Facebook app",
+      "description": "Connect Facebook Pages; read posts and comments; publish to Pages",
+      "docUrl": "https://developers.facebook.com/apps/",
+      "apiDocsUrl": "https://developers.facebook.com/docs/pages-api/",
+      "usedIn": [
+        "server/src/modules/crm/marketing/social/social.credentials.ts",
+        "server/src/modules/crm/marketing/social/social.migration.ts"
+      ],
+      "alsoReadBy": [
+        "server/src/modules/crm/marketing/social/social.credentials.ts"
+      ],
+      "fields": [
+        {
+          "name": "app_id",
+          "label": "Facebook App ID",
+          "hint": "developers.facebook.com/apps → your Business app → App settings → Basic. Add Facebook Login for Business; posting to Pages needs pages_manage_posts approved",
+          "envKey": "SOCIAL_FACEBOOK_APP_ID",
+          "description": "Facebook app Pages are connected through.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "app_secret",
+          "label": "Facebook App Secret",
+          "hint": "App settings → Basic → App secret",
+          "secret": true,
+          "envKey": "SOCIAL_FACEBOOK_APP_SECRET",
+          "description": "Exchanges and refreshes Facebook Page tokens.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": []
+        },
+        {
+          "name": "graph_version",
+          "label": "Graph API Version (optional)",
+          "hint": "e.g. v23.0; default v23.0",
+          "envKey": "SOCIAL_FACEBOOK_GRAPH_VERSION",
+          "description": "Facebook Graph API version every call is pinned to.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        }
+      ]
+    },
+    "SOCIAL_THREADS": {
+      "label": "Threads app",
+      "description": "Connect Threads accounts; read posts and replies; publish threads",
+      "docUrl": "https://developers.facebook.com/apps/",
+      "apiDocsUrl": "https://developers.facebook.com/docs/threads/",
+      "usedIn": [
+        "server/src/modules/crm/marketing/social/social.credentials.ts"
+      ],
+      "alsoReadBy": [
+        "server/src/modules/crm/marketing/social/social.credentials.ts"
+      ],
+      "fields": [
+        {
+          "name": "app_id",
+          "label": "Threads App ID",
+          "hint": "developers.facebook.com/apps → your app → Threads API → Settings → Threads App ID. Posting needs threads_content_publish",
+          "envKey": "SOCIAL_THREADS_APP_ID",
+          "description": "Threads app accounts are connected through.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "app_secret",
+          "label": "Threads App Secret",
+          "hint": "Same page → Threads App Secret",
+          "secret": true,
+          "envKey": "SOCIAL_THREADS_APP_SECRET",
+          "description": "Exchanges and refreshes Threads tokens.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": []
+        },
+        {
+          "name": "graph_version",
+          "label": "Threads API Version (optional)",
+          "hint": "e.g. v1.0; default v1.0",
+          "envKey": "SOCIAL_THREADS_GRAPH_VERSION",
+          "description": "Threads API version every call is pinned to.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        }
+      ]
+    },
+    "SOCIAL_YOUTUBE": {
+      "label": "YouTube app",
+      "description": "Connect YouTube channels; read videos and comments; upload videos",
+      "docUrl": "https://console.cloud.google.com/apis/credentials",
+      "apiDocsUrl": "https://developers.google.com/youtube/v3/guides/uploading_a_video",
+      "usedIn": [
+        "server/src/modules/crm/marketing/social/social.credentials.ts",
+        "server/src/modules/crm/marketing/social/social.migration.ts"
+      ],
+      "alsoReadBy": [
+        "server/src/modules/crm/marketing/social/social.credentials.ts"
+      ],
+      "fields": [
+        {
+          "name": "client_id",
+          "label": "YouTube (Google) OAuth Client ID",
+          "hint": "console.cloud.google.com → Credentials → OAuth client (Web). Enable the YouTube Data API v3 on the project",
+          "envKey": "SOCIAL_YOUTUBE_CLIENT_ID",
+          "description": "Google OAuth client YouTube channels are connected through.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "client_secret",
+          "label": "YouTube (Google) OAuth Client Secret",
+          "hint": "GOCSPX-…",
+          "secret": true,
+          "envKey": "SOCIAL_YOUTUBE_CLIENT_SECRET",
+          "description": "Exchanges and refreshes YouTube tokens.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": []
+        }
+      ]
+    },
+    "SOCIAL_LINKEDIN": {
+      "label": "LinkedIn app",
+      "description": "Connect LinkedIn Pages; read posts and comments; publish posts",
+      "docUrl": "https://www.linkedin.com/developers/apps",
+      "apiDocsUrl": "https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/posts-api",
+      "usedIn": [
+        "server/src/modules/crm/marketing/social/social.credentials.ts",
+        "server/src/modules/crm/marketing/social/social.migration.ts"
+      ],
+      "alsoReadBy": [
+        "server/src/modules/crm/marketing/social/social.credentials.ts"
+      ],
+      "fields": [
+        {
+          "name": "client_id",
+          "label": "LinkedIn Client ID",
+          "hint": "linkedin.com/developers/apps → your app → Auth. Needs the Community Management API product (read and post as company Pages)",
+          "envKey": "SOCIAL_LINKEDIN_CLIENT_ID",
+          "description": "LinkedIn app company Pages are connected through.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "client_secret",
+          "label": "LinkedIn Client Secret",
+          "hint": "Same Auth tab, beside the Client ID",
+          "secret": true,
+          "envKey": "SOCIAL_LINKEDIN_CLIENT_SECRET",
+          "description": "Exchanges and refreshes LinkedIn tokens.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": []
+        },
+        {
+          "name": "api_version",
+          "label": "LinkedIn API Version (optional)",
+          "hint": "YYYYMM, e.g. 202509 — LinkedIn retires a version after a year; default 202509",
+          "envKey": "SOCIAL_LINKEDIN_API_VERSION",
+          "description": "LinkedIn API version (YYYYMM) every call is pinned to.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        }
+      ]
+    },
+    "SOCIAL_X": {
+      "label": "X app",
+      "description": "Connect X profiles; read posts and replies; publish posts",
+      "docUrl": "https://developer.x.com/en/portal/dashboard",
+      "apiDocsUrl": "https://docs.x.com/x-api/posts/creation-of-a-post",
+      "usedIn": [
+        "server/src/modules/crm/marketing/social/social.credentials.ts",
+        "server/src/modules/crm/marketing/social/social.migration.ts"
+      ],
+      "alsoReadBy": [
+        "server/src/modules/crm/marketing/social/social.credentials.ts"
+      ],
+      "fields": [
+        {
+          "name": "client_id",
+          "label": "X OAuth 2.0 Client ID",
+          "hint": "developer.x.com → your project app → Keys and tokens → OAuth 2.0 Client ID. User authentication: Read and write, Type of App: Web App (confidential client)",
+          "envKey": "SOCIAL_X_CLIENT_ID",
+          "description": "X OAuth 2.0 client profiles are connected through.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "client_secret",
+          "label": "X OAuth 2.0 Client Secret",
+          "hint": "Shown once, beside the Client ID",
+          "secret": true,
+          "envKey": "SOCIAL_X_CLIENT_SECRET",
+          "description": "Exchanges and refreshes X tokens.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": []
+        }
+      ]
+    },
+    "TRUECALLER": {
+      "label": "Truecaller (one-tap phone sign-in)",
+      "description": "One-tap phone sign-in",
+      "docUrl": "https://sdk-console-noneu.truecaller.com/",
+      "apiDocsUrl": "https://docs.truecaller.com/truecaller-sdk/",
+      "usedIn": [
+        "server/src/modules/access/auth-truecaller/truecaller.config.ts",
+        "server/src/modules/platform/settings/settings.service.ts"
+      ],
+      "fields": [
+        {
+          "name": "android_client_id",
+          "label": "Android Client ID (OAuth SDK)",
+          "hint": "Truecaller SDK console → your Android app → Client ID. Register package com.duncit.mobile with the release SHA-1",
+          "envKey": "TRUECALLER_ANDROID_CLIENT_ID",
+          "description": "Truecaller OAuth client the Android app offers one-tap phone sign-in with; served through publicClientConfig.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/access/auth-truecaller/truecaller.config.ts",
+            "server/src/modules/platform/settings/settings.service.ts"
+          ]
+        },
+        {
+          "name": "app_key",
+          "label": "App Key (iOS + mobile web)",
+          "hint": "Truecaller SDK console → your iOS app / web app → App Key (partner key)",
+          "envKey": "TRUECALLER_APP_KEY",
+          "description": "Partner key the iOS app and mobile web use for Truecaller sign-in.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/access/auth-truecaller/truecaller.config.ts",
+            "server/src/modules/platform/settings/settings.service.ts"
+          ]
+        },
+        {
+          "name": "ios_app_link",
+          "label": "iOS App Link",
+          "hint": "The universal link Truecaller gives the iOS app, e.g. https://si1a2b3c4d5e.truecallerdevs.com",
+          "envKey": "TRUECALLER_IOS_APP_LINK",
+          "description": "Universal link Truecaller returns the iOS app on.",
+          "validation": {
+            "type": "url"
+          },
+          "usedIn": [
+            "server/src/modules/platform/settings/settings.service.ts"
+          ]
+        },
+        {
+          "name": "partner_name",
+          "label": "Partner name (mobile web)",
+          "hint": "The name Truecaller shows on the mobile-web consent sheet, e.g. Duncit. Set the web Callback URL to <server URL>/truecaller/callback",
+          "envKey": "TRUECALLER_PARTNER_NAME",
+          "description": "Name the mobile-web Truecaller consent sheet shows.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/access/auth-truecaller/truecaller.config.ts",
+            "server/src/modules/platform/settings/settings.service.ts"
+          ]
+        },
+        {
+          "name": "region",
+          "label": "Region",
+          "hint": "noneu (India and the rest of the world) or eu — blank means noneu",
+          "envKey": "TRUECALLER_REGION",
+          "description": "Truecaller data region the server verifies proofs against (noneu or eu).",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/access/auth-truecaller/truecaller.config.ts"
+          ]
+        }
+      ]
+    },
+    "SERPER": {
+      "label": "Serper (Google search)",
+      "description": "Google search results for Marketing research and lead discovery",
+      "docUrl": "https://serper.dev/api-key",
+      "usedIn": [
+        "server/src/modules/crm/marketing/igLeads/igLead.serper.ts"
+      ],
+      "fields": [
+        {
+          "name": "api_key",
+          "label": "API Key",
+          "hint": "serper.dev → API Key (40 hex characters)",
+          "secret": true,
+          "envKey": "SERPER_API_KEY",
+          "description": "Google search results for Marketing research and Instagram lead discovery.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/modules/crm/marketing/igLeads/igLead.serper.ts"
+          ]
+        }
+      ]
+    },
+    "ANTHROPIC": {
+      "label": "Anthropic (Claude)",
+      "description": "Claude models behind Reel Studio and the marketing agents",
+      "docUrl": "https://console.anthropic.com/settings/keys",
+      "apiDocsUrl": "https://platform.claude.com/docs/en/api/overview",
+      "usedIn": [
+        "server/src/services/anthropic/anthropic.client.ts",
+        "server/src/services/openai/openai.client.ts"
+      ],
+      "fields": [
+        {
+          "name": "api_key",
+          "label": "API Key",
+          "hint": "console.anthropic.com → API keys (sk-ant-…)",
+          "secret": true,
+          "envKey": "ANTHROPIC_API_KEY",
+          "description": "Authenticates the Claude models Reel Studio and the marketing agents reason with.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/services/openai/openai.client.ts"
+          ]
+        },
+        {
+          "name": "model",
+          "label": "Default model (optional)",
+          "hint": "e.g. claude-opus-5-5; a prompt in the AI Library may name its own",
+          "envKey": "ANTHROPIC_MODEL",
+          "description": "Default Claude model when a prompt names none.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/services/anthropic/anthropic.client.ts"
+          ]
+        }
+      ]
+    },
+    "REMOTION": {
+      "label": "Remotion (Reel Studio licence)",
+      "description": "The licence Reel Studio renders videos under",
+      "docUrl": "https://www.remotion.pro",
+      "usedIn": [
+        "server/src/modules/platform/settings/settings.service.ts"
+      ],
+      "fields": [
+        {
+          "name": "license_key",
+          "label": "Company Licence Key",
+          "hint": "remotion.pro → your licence → the key. No entry at all is fine: Reel Studio still previews and exports, and Remotion prints its licence notice instead",
+          "secret": true,
+          "envKey": "REMOTION_LICENSE_KEY",
+          "description": "Reports Marketing → Reel Studio renders against the company licence. Remotion passes it in client code, so it is public by design and is served through publicClientConfig.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/modules/platform/settings/settings.service.ts"
+          ]
+        }
+      ]
+    }
+  },
+  "githubSecrets": {
+    "MONGO_URI": {
+      "label": "Production MongoDB URI",
+      "description": "Written into the production server.env; the staging stack also reads it as the Data Clone source.",
+      "whyNotTechPortal": "The server reads the Tech portal from its database, so a value it needs to reach that database (or to boot at all) cannot live there.",
+      "validation": {
+        "type": "url"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "STAGING_MONGO_URI": {
+      "label": "Staging MongoDB URI",
+      "description": "Written into the staging server.env as its database.",
+      "whyNotTechPortal": "The server reads the Tech portal from its database, so a value it needs to reach that database (or to boot at all) cannot live there.",
+      "validation": {
+        "type": "url"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "JWT_SECRET": {
+      "label": "Production JWT secret",
+      "description": "Signs and verifies every production sign-in token.",
+      "whyNotTechPortal": "The server reads the Tech portal from its database, so a value it needs to reach that database (or to boot at all) cannot live there.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "STAGING_JWT_SECRET": {
+      "label": "Staging JWT secret",
+      "description": "Signs staging sign-in tokens. Unset, staging falls back to JWT_SECRET and a staging token is valid on production, so it must be set.",
+      "whyNotTechPortal": "The server reads the Tech portal from its database, so a value it needs to reach that database (or to boot at all) cannot live there.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "SOCIAL_TOKEN_KEY": {
+      "label": "Social token sealing key",
+      "description": "Encrypts the social-network tokens stored in the database (32 bytes, base64 or hex).",
+      "whyNotTechPortal": "An encryption key must not be stored in the database it protects.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "STAGING_SOCIAL_TOKEN_KEY": {
+      "label": "Staging social token sealing key",
+      "description": "Same as SOCIAL_TOKEN_KEY for the staging stack.",
+      "whyNotTechPortal": "An encryption key must not be stored in the database it protects.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "OPENWA_API_MASTER_KEY": {
+      "label": "OpenWA gateway master key",
+      "description": "Bootstraps the WhatsApp gateway container's API keys; the server uses it to call the gateway.",
+      "whyNotTechPortal": "Read by a container that has no access to the main database at boot.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "STAGING_OPENWA_API_MASTER_KEY": {
+      "label": "Staging OpenWA gateway master key",
+      "description": "Same as OPENWA_API_MASTER_KEY for the staging stack.",
+      "whyNotTechPortal": "Read by a container that has no access to the main database at boot.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "STAGING_SUPER_ADMIN_PASSWORD": {
+      "label": "Staging root admin password",
+      "description": "Password the staging root super admin is created with on a fresh database. Unset, the server falls back to a weak default.",
+      "whyNotTechPortal": "The server reads the Tech portal from its database, so a value it needs to reach that database (or to boot at all) cannot live there.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "LITE_MONGO_URI": {
+      "label": "Duncit Lite MongoDB URI",
+      "description": "Duncit Lite's own database; unset uses the main host with a separate database name.",
+      "whyNotTechPortal": "Read by a container that has no access to the main database at boot.",
+      "validation": {
+        "type": "url"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "STAGING_LITE_MONGO_URI": {
+      "label": "Staging Duncit Lite MongoDB URI",
+      "description": "Same as LITE_MONGO_URI for the staging stack.",
+      "whyNotTechPortal": "Read by a container that has no access to the main database at boot.",
+      "validation": {
+        "type": "url"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "LITE_JWT_SECRET": {
+      "label": "Duncit Lite JWT secret",
+      "description": "Signs Duncit Lite sign-in tokens; unset falls back to the main JWT secret.",
+      "whyNotTechPortal": "Read by a container that has no access to the main database at boot.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "STAGING_LITE_JWT_SECRET": {
+      "label": "Staging Duncit Lite JWT secret",
+      "description": "Same as LITE_JWT_SECRET for the staging stack.",
+      "whyNotTechPortal": "Read by a container that has no access to the main database at boot.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "LITE_MCP_SECRET": {
+      "label": "Duncit Lite MCP secret",
+      "description": "Shared by the API (signs) and Lite (verifies) for the MCP lite connector; unset is derived from the JWT secret.",
+      "whyNotTechPortal": "Read by a container that has no access to the main database at boot.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "STAGING_LITE_MCP_SECRET": {
+      "label": "Staging Duncit Lite MCP secret",
+      "description": "Same as LITE_MCP_SECRET for the staging stack.",
+      "whyNotTechPortal": "Read by a container that has no access to the main database at boot.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "LITE_ADMIN_EMAILS": {
+      "label": "Duncit Lite admin emails",
+      "description": "Comma-separated emails that get the Duncit Lite console on first sign-in.",
+      "whyNotTechPortal": "Read by a container that has no access to the main database at boot.",
+      "validation": {
+        "type": "list"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "DOCKERHUB_USERNAME": {
+      "label": "Docker Hub user",
+      "description": "Namespace every image is pushed to and the VPS pulls from.",
+      "whyNotTechPortal": "Used by CI before or without a running Duncit server; fetching it from the portal would make CI depend on production being up.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "DOCKERHUB_TOKEN": {
+      "label": "Docker Hub token",
+      "description": "Pushes the built images.",
+      "whyNotTechPortal": "Used by CI before or without a running Duncit server; fetching it from the portal would make CI depend on production being up.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "SSH_HOST": {
+      "label": "VPS host",
+      "description": "Server the deploy copies files to and restarts the stack on.",
+      "whyNotTechPortal": "Used by CI before or without a running Duncit server; fetching it from the portal would make CI depend on production being up.",
+      "validation": {
+        "type": "hostname"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "SSH_PORT": {
+      "label": "VPS SSH port",
+      "description": "SSH port of the VPS.",
+      "whyNotTechPortal": "Used by CI before or without a running Duncit server; fetching it from the portal would make CI depend on production being up.",
+      "validation": {
+        "type": "number"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "SSH_USER": {
+      "label": "VPS SSH user",
+      "description": "User the deploy connects as.",
+      "whyNotTechPortal": "Used by CI before or without a running Duncit server; fetching it from the portal would make CI depend on production being up.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "SSH_PRIVATE_KEY": {
+      "label": "VPS SSH private key",
+      "description": "Key the deploy authenticates with.",
+      "whyNotTechPortal": "Used by CI before or without a running Duncit server; fetching it from the portal would make CI depend on production being up.",
+      "validation": {
+        "type": "pem"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    "DUNCIT_RELEASE_TOKEN": {
+      "label": "Production release token",
+      "description": "SUPER_ADMIN/TECH_MANAGER token CI uses to report builds, coverage, Sonar and E2E results to production and to fetch the iOS signing identity.",
+      "whyNotTechPortal": "This is the credential CI uses to talk to the portal; it cannot be fetched from the portal itself.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/android-build.yml",
+        ".github/workflows/coverage.yml",
+        ".github/workflows/e2e.yml",
+        ".github/workflows/ios-build.yml",
+        ".github/workflows/sonar.yml",
+        ".github/workflows/stress-test.yml"
+      ]
+    },
+    "DUNCIT_RELEASE_TOKEN_STAGING": {
+      "label": "Staging release token",
+      "description": "Same as DUNCIT_RELEASE_TOKEN for the staging server (each server signs its own tokens).",
+      "whyNotTechPortal": "This is the credential CI uses to talk to the portal; it cannot be fetched from the portal itself.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/android-build.yml",
+        ".github/workflows/coverage.yml",
+        ".github/workflows/e2e.yml",
+        ".github/workflows/ios-build.yml",
+        ".github/workflows/sonar.yml",
+        ".github/workflows/stress-test.yml"
+      ]
+    },
+    "DUNCIT_RELEASE_EMAIL": {
+      "label": "Release account email (optional)",
+      "description": "Alternative to the release token: CI signs in with this email.",
+      "whyNotTechPortal": "This is the credential CI uses to talk to the portal; it cannot be fetched from the portal itself.",
+      "validation": {
+        "type": "email"
+      },
+      "usedIn": [
+        ".github/workflows/android-build.yml",
+        ".github/workflows/coverage.yml",
+        ".github/workflows/e2e.yml",
+        ".github/workflows/ios-build.yml",
+        ".github/workflows/sonar.yml",
+        ".github/workflows/stress-test.yml"
+      ]
+    },
+    "DUNCIT_RELEASE_PASSWORD": {
+      "label": "Release account password (optional)",
+      "description": "Password for DUNCIT_RELEASE_EMAIL.",
+      "whyNotTechPortal": "This is the credential CI uses to talk to the portal; it cannot be fetched from the portal itself.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/android-build.yml",
+        ".github/workflows/coverage.yml",
+        ".github/workflows/e2e.yml",
+        ".github/workflows/ios-build.yml",
+        ".github/workflows/sonar.yml",
+        ".github/workflows/stress-test.yml"
+      ]
+    },
+    "SONAR_HOST_URL": {
+      "label": "SonarQube URL (CI scan)",
+      "description": "Server the CI scan uploads analysis to.",
+      "whyNotTechPortal": "Used by CI before or without a running Duncit server; fetching it from the portal would make CI depend on production being up.",
+      "validation": {
+        "type": "url"
+      },
+      "usedIn": [
+        ".github/workflows/sonar.yml"
+      ]
+    },
+    "SONAR_TOKEN": {
+      "label": "SonarQube token (CI scan)",
+      "description": "Analysis token the CI scan uploads with (not the read-only token in Tech → SonarQube).",
+      "whyNotTechPortal": "Used by CI before or without a running Duncit server; fetching it from the portal would make CI depend on production being up.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/sonar.yml"
+      ]
+    },
+    "CODECOV_TOKEN": {
+      "label": "Codecov token",
+      "description": "Uploads coverage reports to Codecov.",
+      "whyNotTechPortal": "Used by CI before or without a running Duncit server; fetching it from the portal would make CI depend on production being up.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/coverage.yml"
+      ]
+    },
+    "EXPO_TOKEN": {
+      "label": "Expo token",
+      "description": "Submits an opted-in AAB through EAS to the Play internal track.",
+      "whyNotTechPortal": "Used by CI before or without a running Duncit server; fetching it from the portal would make CI depend on production being up.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/android-build.yml"
+      ]
+    },
+    "ANDROID_UPLOAD_KEYSTORE_BASE64": {
+      "label": "Android upload keystore",
+      "description": "Signs the release APK and AAB on the runner.",
+      "whyNotTechPortal": "Tech portal values are stored unencrypted in MongoDB; a signing keystore stays in GitHub until env entries are encrypted at rest.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/android-build.yml"
+      ]
+    },
+    "ANDROID_UPLOAD_STORE_PASSWORD": {
+      "label": "Android keystore password",
+      "description": "Opens the upload keystore.",
+      "whyNotTechPortal": "Stays with the keystore it opens.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/android-build.yml"
+      ]
+    },
+    "ANDROID_UPLOAD_KEY_ALIAS": {
+      "label": "Android key alias",
+      "description": "Alias of the upload key inside the keystore.",
+      "whyNotTechPortal": "Stays with the keystore it opens.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/android-build.yml"
+      ]
+    },
+    "ANDROID_UPLOAD_KEY_PASSWORD": {
+      "label": "Android key password",
+      "description": "Password of the upload key.",
+      "whyNotTechPortal": "Stays with the keystore it opens.",
+      "validation": {
+        "type": "text"
+      },
+      "usedIn": [
+        ".github/workflows/android-build.yml"
+      ]
+    },
+    "MWEB_ANDROID_CERT_SHA256": {
+      "label": "Android App Links fingerprints (transitional override)",
+      "description": "Overrides Tech → Google Play → App Links SHA-256 fingerprints for mWeb's assetlinks.json. Delete it once the Tech portal entry is filled on both stacks.",
+      "whyNotTechPortal": "Kept only until the Tech portal value is set on production and staging; then remove the build arg and this secret.",
+      "validation": {
+        "type": "fingerprints"
+      },
+      "usedIn": [
+        ".github/workflows/deploy.yml"
+      ]
+    }
+  }
+}

@@ -103,16 +103,6 @@ export interface IPodProductRequest {
   total_cost: number;
 }
 
-/**
- * One multi-ticket discount tier: a single booking of at least `min_tickets`
- * seats gets `discount_pct` off its ticket money. The "1 ticket · full price"
- * row is implied, so stored tiers start at 2 tickets. Rules: pod.ticketDiscount.ts.
- */
-export interface IPodTicketDiscountTier {
-  min_tickets: number;
-  discount_pct: number;
-}
-
 export interface IPodComment {
   _id?: Types.ObjectId;
   author_id: Types.ObjectId;
@@ -222,11 +212,6 @@ export interface IPod extends Document {
   products_enabled: boolean;
   product_requests: IPodProductRequest[];
   product_cost_total: number;
-  /** Whether a booking of several seats gets a tiered discount on its tickets.
-   * Always false (with no tiers) on a FREE or zero-priced pod. */
-  ticket_discount_enabled: boolean;
-  /** Strictly increasing in both tickets and discount; empty when switched off. */
-  ticket_discount_tiers: IPodTicketDiscountTier[];
   /** The host offers members who linger on the pod page without booking a
    * one-time discount (Loyalty > Smart Incentive). Always false (with 0%) on a
    * FREE or zero-priced pod. Rules: engagement/smartIncentive. */
@@ -311,14 +296,6 @@ const productRequestSchema = new Schema<IPodProductRequest>(
     quantity: { type: Number, required: true, min: 1 },
     sold_count: { type: Number, default: 0, min: 0 },
     total_cost: { type: Number, required: true, min: 0 },
-  },
-  { _id: false }
-);
-
-const ticketDiscountTierSchema = new Schema<IPodTicketDiscountTier>(
-  {
-    min_tickets: { type: Number, required: true, min: 2 },
-    discount_pct: { type: Number, required: true, min: 1, max: 99 },
   },
   { _id: false }
 );
@@ -411,8 +388,6 @@ const podSchema = new Schema<IPod>(
     products_enabled: { type: Boolean, default: false },
     product_requests: { type: [productRequestSchema], default: [] },
     product_cost_total: { type: Number, default: 0, min: 0 },
-    ticket_discount_enabled: { type: Boolean, default: false },
-    ticket_discount_tiers: { type: [ticketDiscountTierSchema], default: [] },
     smart_incentive_enabled: { type: Boolean, default: false },
     smart_incentive_pct: { type: Number, default: 0, min: 0, max: 90 },
     liked_user_ids: [{ type: Schema.Types.ObjectId, ref: 'User', default: [] }],

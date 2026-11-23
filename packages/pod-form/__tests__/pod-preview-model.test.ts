@@ -101,7 +101,7 @@ describe('buildPodPreview', () => {
 
   it('shows a free PHYSICAL pod as Free at its venue, never a price', () => {
     const model = buildPodPreview(
-      values({ pod_mode: 'PHYSICAL', venue_id: 'venue-1', pod_type: 'FREE', pod_amount: 0, ticket_discount_enabled: true }),
+      values({ pod_mode: 'PHYSICAL', venue_id: 'venue-1', pod_type: 'FREE', pod_amount: 0 }),
       data(),
     );
 
@@ -109,7 +109,6 @@ describe('buildPodPreview', () => {
     expect(model.isFree).toBe(true);
     expect(model.priceText).toBe('Free');
     expect(model.placeText).toContain('Indiranagar Courts');
-    expect(model.ticketDiscountTiers).toEqual([]);
   });
 
   it('counts the spots, and survives a field that is still empty text', () => {
@@ -215,52 +214,5 @@ describe('buildPodPreview - the edges the card renders around', () => {
       data(),
     );
     expect(empty.priceText).toBe('₹0');
-  });
-});
-
-describe('buildPodPreview - the multi-ticket offer', () => {
-  const discounted = (over: Partial<PodFormValues> = {}) =>
-    values({
-      pod_amount: 250,
-      ticket_discount_enabled: true,
-      ticket_discount_tiers: [
-        { min_tickets: 2, discount_pct: 10 },
-        { min_tickets: 4, discount_pct: 20 },
-      ],
-      ...over,
-    });
-
-  it('lists each tier with what one ticket then costs, leaving the base row out', () => {
-    expect(buildPodPreview(discounted(), data()).ticketDiscountTiers).toEqual([
-      { min_tickets: 2, discount_pct: 10, per_ticket: 225 },
-      { min_tickets: 4, discount_pct: 20, per_ticket: 200 },
-    ]);
-  });
-
-  // A row that does not ask for more tickets than the one above is still being
-  // typed — the form flags it; the preview does not list a tier twice.
-  it('skips a tier that does not ask for more tickets than the row above', () => {
-    const model = buildPodPreview(
-      discounted({
-        ticket_discount_tiers: [
-          { min_tickets: 3, discount_pct: 10 },
-          { min_tickets: 3, discount_pct: 15 },
-          { min_tickets: 5, discount_pct: 20 },
-        ],
-      }),
-      data(),
-    );
-
-    expect(model.ticketDiscountTiers.map((tier) => tier.min_tickets)).toEqual([3, 5]);
-  });
-
-  it('offers nothing while the discount is switched off', () => {
-    expect(buildPodPreview(discounted({ ticket_discount_enabled: false }), data()).ticketDiscountTiers).toEqual([]);
-  });
-
-  it('offers nothing on a free pod, whatever tiers the hidden section still holds', () => {
-    const model = buildPodPreview(discounted({ pod_type: 'FREE', pod_amount: 0 }), data());
-
-    expect(model.ticketDiscountTiers).toEqual([]);
   });
 });

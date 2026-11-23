@@ -159,3 +159,60 @@ describe('WebsiteContentForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 });
+
+describe('WebsiteContentForm · Solutions', () => {
+  const renderSolution = (onSubmit = vi.fn(), entry: ReturnType<typeof makeContentItem> | null = null) =>
+    renderWithProviders(
+      <WebsiteContentForm
+        type="SOLUTIONS"
+        item={entry}
+        submitting={false}
+        errorMessage={null}
+        onSubmit={onSubmit}
+        onCancel={vi.fn()}
+      />,
+    );
+
+  it('asks who the solution is for and for its category before saving', async () => {
+    const onSubmit = vi.fn();
+    renderSolution(onSubmit);
+    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Venue Kit' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(await screen.findByText('Choose who this solution is for')).toBeInTheDocument();
+    expect(screen.getByText('A solution needs a category')).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('saves the audience, the category and the coming-soon flag', async () => {
+    const onSubmit = vi.fn();
+    renderSolution(onSubmit);
+    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Venue Kit' } });
+    fireEvent.change(screen.getByLabelText(/Category/), { target: { value: 'Cafe & Restaurant Automation' } });
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /Who is it for/ }));
+    fireEvent.click(screen.getByRole('option', { name: 'Venues' }));
+    fireEvent.click(screen.getByLabelText('Coming soon'));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({
+      type: 'SOLUTIONS',
+      title: 'Venue Kit',
+      category: 'Cafe & Restaurant Automation',
+      audience: 'VENUE',
+      coming_soon: true,
+    });
+  });
+
+  it('opens a saved solution on its audience', () => {
+    renderSolution(vi.fn(), makeContentItem({ type: 'SOLUTIONS', audience: 'HOST', category: 'Hosting', coming_soon: true }));
+    expect(screen.getByRole('combobox', { name: /Who is it for/ })).toHaveTextContent('Hosts');
+    expect(screen.getByLabelText('Coming soon')).toBeChecked();
+  });
+
+  it('shows no audience field on the other page types', () => {
+    renderWithProviders(
+      <WebsiteContentForm type="BLOG" item={null} submitting={false} errorMessage={null} onSubmit={vi.fn()} onCancel={vi.fn()} />,
+    );
+    expect(screen.queryByRole('combobox', { name: /Who is it for/ })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Coming soon')).not.toBeInTheDocument();
+  });
+});

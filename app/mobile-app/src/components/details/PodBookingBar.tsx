@@ -71,13 +71,13 @@ export function PodBookingBar({
   const canCancelBackout = !!membershipState?.can_cancel_backout;
   const releasedSeats = Number(membershipState?.released_seats_pending ?? 0);
   const isFull = !isMember && !inProcess && membershipState?.can_join === false;
-  // Once the pod has STARTED, booking is closed for non-members — the server
-  // enforces the same rule on joinFree + payment order creation, so we replace
-  // the CTA with a notice (mirrors mWeb's PodActionPanel). A pod that is still
-  // running says so rather than claiming it has already taken place.
+  // Booking stays open while the pod is running and closes once its END time
+  // has passed — the server enforces the same rule on joinFree + payment order
+  // creation (mirrors mWeb's PodActionPanel). `isExpired` (started) only picks
+  // the past tense for the host and a booked member.
   const phase = podPhase(pod.pod_date_time, pod.pod_end_date_time);
   const isExpired = phase !== 'UPCOMING';
-  const showClosedNotice = !isHost && isExpired && !isMember && !inProcess;
+  const showClosedNotice = !isHost && phase === 'PREVIOUS' && !isMember && !inProcess;
   const showBookBar = !isHost && !showClosedNotice && !isMember && !inProcess;
 
   return (
@@ -113,7 +113,7 @@ export function PodBookingBar({
             shadowOffset={SHADOW_OFFSET}
           >
             {isHost ? <HostBar isExpired={isExpired} onGoToDashboard={onGoToDashboard} /> : null}
-            {showClosedNotice ? <ClosedNotice ongoing={phase === 'ONGOING'} /> : null}
+            {showClosedNotice ? <ClosedNotice /> : null}
             {!isHost && inProcess ? (
               <BackoutInProcessBar canCancel={canCancelBackout} onKeepSpot={onKeepSpot} />
             ) : null}
@@ -137,7 +137,6 @@ export function PodBookingBar({
                 isFree={isFree}
                 isFull={isFull}
                 podAmount={pod.pod_amount}
-                ticketDiscount={pod}
                 smartIncentivePct={smartIncentivePct}
                 seats={seats}
                 maxSeats={Number(membershipState?.max_seats_per_booking ?? 1)}
@@ -175,20 +174,16 @@ function HostBar({
   );
 }
 
-/** Started state: booking is closed, no CTA. A pod that is still RUNNING gets
- * its own sentence — telling a member it has "already taken place" while it is
- * happening is the thing the Ongoing rail exists to stop saying. */
-function ClosedNotice({ ongoing }: Readonly<{ ongoing: boolean }>) {
+/** Ended state: the pod's end time has passed, so booking is closed, no CTA. A
+ * pod that is still running keeps its Book bar (with an "already ongoing" ask). */
+function ClosedNotice() {
   const { warning } = useThemeColors();
   const { t } = useTranslation();
-  const message = ongoing
-    ? t('mweb.podDetails.bookingClosedOngoing')
-    : t('mweb.podDetails.bookingClosed');
   return (
     <XStack flex={1} alignItems="center" gap={8} minHeight={48} testID="pod-booking-closed">
       <MaterialIcons name="event-busy" size={20} color={warning} />
       <Text flex={1} fontSize={13.5} fontWeight="600" color="$muted">
-        {message}
+        {t('mweb.podDetails.bookingClosed')}
       </Text>
     </XStack>
   );

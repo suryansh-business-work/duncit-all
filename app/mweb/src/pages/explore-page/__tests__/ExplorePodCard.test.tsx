@@ -154,7 +154,31 @@ describe('ExplorePodCard', () => {
     expect(screen.getByText('Free spot')).toBeInTheDocument();
   });
 
-  it('renders the expired notice and hides the Go button when the pod has started', () => {
+  it('shows a running pod as ongoing and keeps the Go button and the spots count', () => {
+    setup({
+      pod: {
+        pod_date_time: new Date(Date.now() - 3_600_000).toISOString(),
+        pod_end_date_time: new Date(Date.now() + 3_600_000).toISOString(),
+      },
+    });
+    expect(screen.getByTestId('explore-join-ongoing')).toHaveTextContent('Pod ongoing₹200 · Confirm with UPI');
+    expect(screen.queryByText('This pod is expired')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('btn-join')).toHaveTextContent('join:2/10');
+    expect(screen.getByRole('button', { name: 'Open pod details' })).toBeInTheDocument();
+  });
+
+  it('shows expired once a recently started pod has passed its end time', () => {
+    setup({
+      pod: {
+        pod_date_time: new Date(Date.now() - 2 * 3_600_000).toISOString(),
+        pod_end_date_time: new Date(Date.now() - 60_000).toISOString(),
+      },
+    });
+    expect(screen.getByText('This pod is expired')).toBeInTheDocument();
+    expect(screen.queryByTestId('explore-join-ongoing')).not.toBeInTheDocument();
+  });
+
+  it('renders the expired notice and hides the Go button when the pod is over', () => {
     setup({ pod: { pod_date_time: PAST } });
     expect(screen.getByLabelText('btn-join')).toHaveTextContent('join:Expired');
     expect(screen.getByText('This pod is expired')).toBeInTheDocument();

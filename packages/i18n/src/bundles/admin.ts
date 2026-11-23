@@ -44,8 +44,15 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       colLoginMethod: 'Login Method',
       colLastLogin: 'Last Login',
       colIssues: 'Data Issues',
-      colLastActive: 'Last Active',
-      neverActive: 'Never',
+      // Platforms Used / Last Activity: read from every signed-in request, on
+      // the Users table and the top of User Details.
+      colPlatforms: 'Platforms Used',
+      colLastActivity: 'Last Activity',
+      platformAndroid: 'Android',
+      platformIos: 'iOS',
+      platformWeb: 'Web',
+      noPlatforms: 'None recorded yet',
+      noActivity: 'Not recorded yet',
       noIssues: 'None',
       issueMissingName: 'No name',
       issueMissingEmail: 'No email',
@@ -157,9 +164,15 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       refundsEmpty: 'Nothing has been refunded to this user.',
       coinsTitle: 'Duncit Coin',
       coinsEmpty: 'No coin activity for this user.',
-      search: 'Search by payment ID or invoice',
+      search: 'Search by Razorpay id, Duncit ref or invoice',
       coinSearch: 'Search by payment ID or reason',
       colPaymentId: 'Payment ID',
+      colIds: 'IDs',
+      idRazorpayPayment: 'Razorpay payment',
+      idRazorpayOrder: 'Razorpay order',
+      idRazorpayRefund: 'Razorpay refund',
+      idDuncitRef: 'Duncit ref',
+      idInvoice: 'Invoice',
       colDescription: 'For',
       colTotal: 'Amount',
       colCoinsRedeemed: 'Coins used',
@@ -839,13 +852,6 @@ changeRequests: {
       minAdvanceDaysLabel: 'Days in advance',
       minAdvanceDaysMin: 'A whole number from 1 to 30. Default 2.',
       minAdvanceDaysInvalid: 'Enter a whole number from 1 to 30.',
-
-      // The cap on every pod's multi-ticket discount tiers (1–99, default 50).
-      ticketDiscountMaxPctLabel: 'Max multi-ticket discount (%)',
-      ticketDiscountMaxPctHint:
-        'The biggest discount any multi-ticket tier on a pod may give (1–99). Pods already above it keep their tiers until they are edited.',
-      ticketDiscountMaxPctMin: 'Between 1 and 99 percent. Default 50.',
-      ticketDiscountMaxPctInvalid: 'Enter a whole number between 1 and 99.',
     },
 
     completePod: {

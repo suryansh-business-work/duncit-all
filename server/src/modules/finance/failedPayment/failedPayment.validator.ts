@@ -111,3 +111,7 @@ export const markNotRefundableSchema = z.object({
 export type MarkNotRefundableInput = z.infer<typeof markNotRefundableSchema>;
 
 export const refundSchema = z.object({ case_id: id('Case'), client_request_id: requestId });
+
+export const caseIdSchema = z.object({ case_id: id('Case') });
+
+export const summarizeSchema = z.object({ case_id: id('Case'), force: z.boolean().nullish() });

@@ -21,4 +21,13 @@ while read -r _local_ref _local_sha remote_ref _remote_sha; do
   esac
 done
 
+# env-registry.json must match the code and the workflows before anything is
+# pushed (CLAUDE.md rule 85): a key code started or stopped reading, a new
+# GitHub secret, or a field with no description fails here instead of in CI.
+if ! node scripts/audit-env-registry.mjs; then
+  echo "✗ pre-push: env-registry.json is out of date."
+  echo "  Run: node scripts/audit-env-registry.mjs --write — then describe any new key and commit the JSON."
+  exit 1
+fi
+
 exit 0

@@ -1,10 +1,13 @@
 import { Types } from 'mongoose';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
-import { PaymentModel } from '@modules/finance/payment/payment.model';
+import { PaymentModel, type IPayment } from '@modules/finance/payment/payment.model';
+import { paymentSourceOf, type PaymentSource } from '@modules/finance/payment/payment.source';
 import { ticketService } from '@modules/support/ticket/ticket.service';
 import { FailedPaymentCaseModel, type IFailedPaymentCase } from './failedPaymentCase.model';
 import { bookingFor } from './failedPayment.booking';
+import { refundBasis } from './failedPayment.refund';
 import { listPaymentEvents } from './paymentEvent.service';
+import type { IPaymentEvent } from './paymentEvent.model';
 import type { Highlight } from './failedPayment.types';
 
 /** Finance's reads: the table, one case in full, and its timeline. */
@@ -13,29 +16,54 @@ const iso = (date: Date | null | undefined) => (date ? new Date(date).toISOStrin
 const orNull = (value: string | null | undefined) => value || null;
 const rupees = (paise: number) => Math.round(paise) / 100;
 
-/** The flags behind a row's colour and its action buttons. Pure, for tests. */
+/**
+ * The flags behind a row's colour and its action buttons. Pure, for tests.
+ * Green stays "verified and refundable"; a case nobody sent evidence for can be
+ * refunded too, but stays uncoloured, since only Razorpay's live answer in the
+ * Refund dialog says whether there is money to send back.
+ */
 export function caseFlags(kase: Pick<IFailedPaymentCase, 'resolution' | 'refund' | 'verification' | 'review' | 'claims'>) {
   const open = kase.resolution.state === 'OPEN';
   const idle = kase.refund.status === '' || kase.refund.status === 'FAILED';
-  const approved = kase.review?.decision === 'APPROVED';
-  const can_refund = open && idle && (kase.verification.status === 'MATCHED' || approved);
+  const basis = refundBasis(kase);
+  const can_refund = open && idle && basis !== null;
   const needs_review =
     open &&
     idle &&
-    !can_refund &&
+    basis === null &&
     (kase.claims?.length ?? 0) > 0 &&
     (kase.verification.status === 'UNMATCHED' || kase.verification.status === 'ERROR');
   const can_mark_not_refundable = open && kase.refund.status === '' && kase.verification.status === 'NOT_CAPTURED';
   let highlight: Highlight = 'NONE';
-  if (can_refund) highlight = 'GREEN';
+  if (can_refund && basis === 'VERIFIED') highlight = 'GREEN';
   else if (needs_review) highlight = 'YELLOW';
   return { can_refund, needs_review, can_mark_not_refundable, highlight };
+}
+
+type SourceFacts = Pick<IPayment, 'target_type' | 'metadata'>;
+
+/** Which checkout each case's payment came from, in one read for a whole page. */
+async function sourcesByPayment(docIds: readonly Types.ObjectId[]): Promise<Map<string, PaymentSource>> {
+  if (docIds.length === 0) return new Map();
+  const docs = await PaymentModel.find({ _id: { $in: docIds } })
+    .select('target_type metadata.store.channel')
+    .lean<(SourceFacts & { _id: Types.ObjectId })[]>();
+  return new Map(docs.map((doc) => [String(doc._id), paymentSourceOf(doc)]));
 }
 
 const refundStatusOut = (status: string) => status || 'NONE';
 
 const TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['user_name', 'user_phone', 'user_email', 'razorpay_payment_id', 'razorpay_order_id', 'ticket_no', 'payment_id'],
+  searchFields: [
+    'user_name',
+    'user_phone',
+    'user_email',
+    'razorpay_payment_id',
+    'razorpay_order_id',
+    'refund.razorpay_refund_id',
+    'ticket_no',
+    'payment_id',
+  ],
   sortFields: {
     created_at: 'created_at',
     updated_at: 'updated_at',
@@ -61,9 +89,11 @@ function refundStatusFilter(input: TableQueryInput | null | undefined): Record<s
   return filter.op === 'ne' ? { 'refund.status': { $nin: values } } : { 'refund.status': { $in: values } };
 }
 
-export function toRow(kase: IFailedPaymentCase) {
+/** One table row. `source` is the checkout the payment came from, null when the payment is gone. */
+export function toRow(kase: IFailedPaymentCase, source: PaymentSource | null = null) {
   return {
     id: String(kase._id),
+    payment_source: source,
     payment_doc_id: String(kase.payment_doc_id),
     payment_id: kase.payment_id,
     user_id: kase.user_id ? String(kase.user_id) : null,
@@ -87,6 +117,7 @@ export function toRow(kase: IFailedPaymentCase) {
     review_decision: kase.review?.decision ?? null,
     refund_status: refundStatusOut(kase.refund.status),
     refund_amount: kase.refund.amount_paise > 0 ? rupees(kase.refund.amount_paise) : null,
+    razorpay_refund_id: orNull(kase.refund.razorpay_refund_id),
     resolution_state: kase.resolution.state,
     ...caseFlags(kase),
     created_at: kase.created_at.toISOString(),
@@ -99,24 +130,44 @@ export async function failedPaymentsTable(input: TableQueryInput | null | undefi
   const page = await runTableQuery<IFailedPaymentCase>(FailedPaymentCaseModel, refundStatusFilter(input), query, TABLE_CONFIG, {
     projection: { 'claims.files': 0 },
   });
-  return { rows: page.docs.map(toRow), total: page.total, page: page.page, page_size: page.page_size };
+  const sources = await sourcesByPayment(page.docs.map((kase) => kase.payment_doc_id));
+  const rows = page.docs.map((kase) => toRow(kase, sources.get(String(kase.payment_doc_id)) ?? null));
+  return { rows, total: page.total, page: page.page, page_size: page.page_size };
 }
 
-async function bookingSection(kase: IFailedPaymentCase) {
+/** The payment behind the case: whether it booked anything, and which checkout it came from. */
+async function paymentSection(kase: IFailedPaymentCase) {
   const payment = await PaymentModel.findById(kase.payment_doc_id);
   if (!payment) {
-    return { exists: false, booked_razorpay_payment_id: null, payment_status: 'UNKNOWN', finalize_state: 'UNKNOWN', needs_refund: false, paid_at: null };
+    const booking = { exists: false, booked_razorpay_payment_id: null, payment_status: 'UNKNOWN', finalize_state: 'UNKNOWN', needs_refund: false, paid_at: null };
+    return { booking, source: null };
   }
-  const booking = await bookingFor(payment);
-  return {
-    exists: booking.exists,
-    booked_razorpay_payment_id: booking.bookedRazorpayPaymentId,
+  const found = await bookingFor(payment);
+  const booking = {
+    exists: found.exists,
+    booked_razorpay_payment_id: found.bookedRazorpayPaymentId,
     payment_status: payment.status,
     finalize_state: payment.finalize_state ?? 'NOT_STARTED',
     needs_refund: payment.needs_refund === true,
     paid_at: iso(payment.paid_at),
   };
+  return { booking, source: paymentSourceOf(payment) };
 }
+
+/** The AI's refund note, marked stale once the case moved on after it was written. */
+const aiSummaryOut = (kase: IFailedPaymentCase) => {
+  const note = kase.ai_summary;
+  if (!note) return null;
+  return {
+    recommendation: note.recommendation || null,
+    summary: note.summary,
+    reasons: note.reasons ?? [],
+    generated_at: iso(note.generated_at),
+    generated_by_name: orNull(note.generated_by_name),
+    error: orNull(note.error),
+    stale: note.case_revision !== kase.revision,
+  };
+};
 
 /** One case in full; null when there is no such case. */
 async function loadCase(kaseOrId: IFailedPaymentCase | string | null): Promise<IFailedPaymentCase | null> {
@@ -140,8 +191,8 @@ const errorOut = (error: IFailedPaymentCase['latest_error']) =>
 export async function failedPaymentDetail(kaseOrId: IFailedPaymentCase | string | null) {
   const kase = await loadCase(kaseOrId);
   if (!kase) return null;
-  const [booking, ticket] = await Promise.all([
-    bookingSection(kase),
+  const [{ booking, source }, ticket] = await Promise.all([
+    paymentSection(kase),
     kase.ticket_id ? ticketService.statusOf(String(kase.ticket_id)) : null,
   ]);
   const v = kase.verification;
@@ -149,7 +200,7 @@ export async function failedPaymentDetail(kaseOrId: IFailedPaymentCase | string 
   // refund itself re-reads the live figure from Razorpay.
   const remaining = v.status === 'MATCHED' && v.razorpay_amount && kase.refund.status !== 'PROCESSED' ? rupees(v.razorpay_amount) : null;
   return {
-    ...toRow(kase),
+    ...toRow(kase, source),
     user: { id: kase.user_id ? String(kase.user_id) : null, name: kase.user_name, email: orNull(kase.user_email), phone: orNull(kase.user_phone) },
     booking,
     latest_error: errorOut(kase.latest_error),
@@ -190,6 +241,7 @@ export async function failedPaymentDetail(kaseOrId: IFailedPaymentCase | string 
       note: orNull(kase.resolution.note),
     },
     refundable_amount: remaining,
+    ai_summary: aiSummaryOut(kase),
     revision: kase.revision,
   };
 }
@@ -200,7 +252,12 @@ export async function failedPaymentEvents(caseId: string) {
   const kase = await FailedPaymentCaseModel.findById(caseId).select('payment_doc_id').lean();
   if (!kase) return [];
   const events = await listPaymentEvents(kase.payment_doc_id);
-  return events.map((e) => ({
+  return events.map(toEventOut);
+}
+
+/** One payment event as GraphQL shows it: its data as key/value details, empty values left out. */
+export function toEventOut(e: Pick<IPaymentEvent, '_id' | 'type' | 'source' | 'actor' | 'data' | 'created_at'>) {
+  return {
     id: String(e._id),
     type: e.type,
     source: e.source,
@@ -209,5 +266,5 @@ export async function failedPaymentEvents(caseId: string) {
       .filter(([, value]) => value !== null && value !== '')
       .map(([key, value]) => ({ key, value: String(value) })),
     created_at: new Date(e.created_at).toISOString(),
-  }));
+  };
 }

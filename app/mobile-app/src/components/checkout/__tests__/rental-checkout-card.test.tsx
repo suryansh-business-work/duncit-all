@@ -35,13 +35,15 @@ describe('RentalCheckoutCard', () => {
     expect(screen.queryByTestId('checkout-rentals')).toBeNull();
   });
 
-  it('lists each rented item with its rent, and its deposit as refundable at the venue', () => {
+  it('lists each rented item with its rent, and its deposit as refunded by Duncit after return', () => {
     renderWithProviders(<RentalCheckoutCard rentals={rentals()} />);
     const line = screen.getByTestId('checkout-rental-line');
     expect(within(line).getByTestId('checkout-rental-line-racket')).toHaveTextContent(
       /Racket × 2.*₹\s?300/,
     );
-    expect(within(line).getByText(/Deposit ₹\s?400, refundable at the venue/)).toBeOnTheScreen();
+    expect(
+      within(line).getByText(/Deposit ₹\s?400, refunded by Duncit after return/),
+    ).toBeOnTheScreen();
   });
 
   it('adds the rent and the refundable deposit, and says coupons and coins are for the ticket only', () => {
@@ -55,12 +57,14 @@ describe('RentalCheckoutCard', () => {
     expect(screen.getByText('Coupons and coins apply to the ticket only.')).toBeOnTheScreen();
   });
 
-  it('says the items are collected at the venue and the deposit is returned there, not online', () => {
+  it('says the items are collected at the venue and Duncit refunds the deposit once the venue marks them returned', () => {
     renderWithProviders(<RentalCheckoutCard rentals={rentals()} />);
     const notice = screen.getByTestId('rental-collect-notice');
     expect(within(notice).getByText('Collected at the venue')).toBeOnTheScreen();
-    expect(notice).toHaveTextContent(/returned by the venue when you bring the item back/);
-    expect(notice).toHaveTextContent(/Duncit does not refund deposits online/);
+    expect(notice).toHaveTextContent(/Once the venue marks the item returned/);
+    expect(notice).toHaveTextContent(
+      /Duncit refunds your deposit, less any damage, to your original payment method/,
+    );
   });
 
   it('names the deposit as kept by the venue when Finance made deposits non-refundable', () => {
@@ -88,7 +92,7 @@ describe('RentalCheckoutCard', () => {
       />,
     );
     expect(screen.queryByTestId('checkout-rental-deposit')).toBeNull();
-    expect(screen.queryByText(/refundable at the venue/)).toBeNull();
+    expect(screen.queryByText(/refunded by Duncit after return/)).toBeNull();
   });
 
   it('reads the deposit as refundable before Finance’s rules have loaded', () => {

@@ -20,7 +20,7 @@ export const MCP_CATEGORIES = [
   { key: 'localization', label: 'Localization', description: 'Locales and every user-facing string.' },
   { key: 'pods', label: 'Pods', description: 'Pods end to end: create, edit, join, members, attendance, tickets, change requests, auto pods, drafts, ideas, history and search.' },
   { key: 'clubs', label: 'Clubs', description: 'Clubs, regions, club admins and their slot and event requests, and each club’s hosts with their monthly performance and engagement status.' },
-  { key: 'venues', label: 'Venues', description: 'Venues, slots, offers, rentals, food menus, partner requests and venue chats.' },
+  { key: 'venues', label: 'Venues', description: 'Venues, slots, offers, rentals, food menus, partner requests, venue chats, and the Venue Kit plan and its interested venues.' },
   { key: 'hosts', label: 'Hosts', description: 'Hosts and host applications.' },
   { key: 'finance', label: 'Finance', description: 'Payments, failed payments and their refunds, payouts, settlements, coupons, expenses, wallets and the pod calculator.' },
   { key: 'loyalty', label: 'Loyalty', description: 'Duncit Coin, Refer & Earn referrals, Smart Incentive, virtual gift cards and printed (physical) gift cards.' },
@@ -40,8 +40,8 @@ export const MCP_CATEGORIES = [
   { key: 'onboarding', label: 'Onboarding', description: 'Onboarding meetings, intros and lead surveys.' },
   { key: 'communications', label: 'Communications', description: 'Email templates and logs, mail automation, WhatsApp templates and campaigns, SMS and Slack.' },
   { key: 'marketing', label: 'Marketing', description: 'Marketing, short links, social publishing, Reel Studio and Instagram lead search and outreach.' },
-  { key: 'analytics', label: 'Analytics', description: 'Product and entity analytics, analytics mails, alerts and Google Analytics.' },
-  { key: 'targets', label: 'Targets', description: 'The Growth Calculator (preview, save, edit, duplicate and delete growth and revenue target calculations) and monthly employee targets: assign goals, track and review submissions, and the month-end reminder settings.' },
+  { key: 'analytics', label: 'Analytics', description: 'Product and entity analytics, App Insights (Google Play and App Store statistics), analytics mails, alerts and Google Analytics.' },
+  { key: 'targets', label: 'Targets', description: 'The Growth Calculator (preview, save, edit, duplicate and delete growth and revenue target calculations) and monthly employee targets: assign goals, track and review submissions, and the month-end reminder settings, plus the dashboard summary (the current month targets by status, the review queue and the newest growth plan).' },
   { key: 'logs', label: 'Logs & monitoring', description: 'Telemetry, status reports and the GraphQL monitor.' },
   { key: 'tech', label: 'Tech & infrastructure', description: 'Server info, packages, backups, DNS, SSL, ports, Cloudflare, app builds and releases and rate limits.' },
   { key: 'tests', label: 'Testing & quality', description: 'The confidence dashboard, unit, E2E, stress and regression runs, E2E flows and the manual test board.' },
@@ -148,6 +148,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   venueSlotTypeDefs: 'venues',
   venuePricingTypeDefs: 'venues',
   venueOfferTypeDefs: 'venues',
+  venueKitTypeDefs: 'venues',
   podVenueOfferTypeDefs: 'venues',
   podPartnerRequestTypeDefs: 'venues',
   slotTemplateTypeDefs: 'venues',
@@ -162,6 +163,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   financeTypeDefs: 'finance',
   paymentTypeDefs: 'finance',
   failedPaymentTypeDefs: 'finance',
+  paymentTraceTypeDefs: 'finance',
   couponTypeDefs: 'finance',
   expenseTypeDefs: 'finance',
   expenseOptionTypeDefs: 'finance',
@@ -175,6 +177,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   coinTypeDefs: 'loyalty',
   giftCardTypeDefs: 'loyalty',
   physicalGiftCardTypeDefs: 'loyalty',
+  giftCardOrderTypeDefs: 'loyalty',
 
   employeeExpenseTypeDefs: 'employee',
   myEmployeeTargetTypeDefs: 'employee',
@@ -269,6 +272,8 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   leadAiTypeDefs: 'crm',
   waLeadsTypeDefs: 'crm',
   prospectLeadTypeDefs: 'crm',
+  leadQualityTypeDefs: 'crm',
+  leadResearchTypeDefs: 'crm',
   leadMediaTypeDefs: 'crm',
   surveyTypeDefs: 'crm',
 
@@ -313,6 +318,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   productAnalyticsTypeDefs: 'analytics',
   analyticsMailTypeDefs: 'analytics',
   analyticsAlertTypeDefs: 'analytics',
+  appInsightsTypeDefs: 'analytics',
   googleAnalyticsTypeDefs: 'analytics',
 
   telemetryTypeDefs: 'logs',
@@ -325,6 +331,10 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   dbBackupTypeDefs: 'tech',
   dnsTypeDefs: 'tech',
   sslTypeDefs: 'tech',
+  // Tech > Security > Login verifications. Only the masked log tables reach an
+  // AI client; the opened record, the decision and the sign-in screen's own
+  // operations are person-only (see denylist.ts).
+  portalSecurityTypeDefs: 'tech',
   portMapTypeDefs: 'tech',
   cloudflareTypeDefs: 'tech',
   appReleaseTypeDefs: 'tech',
@@ -344,6 +354,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
 
   growthCalculationTypeDefs: 'targets',
   employeeTargetTypeDefs: 'targets',
+  targetsDashboardTypeDefs: 'targets',
 
   chatTypeDefs: 'chat',
   staffChatTypeDefs: 'chat',

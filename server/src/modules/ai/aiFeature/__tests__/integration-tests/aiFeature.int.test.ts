@@ -315,7 +315,11 @@ describe('aiFeatureService.dashboard', () => {
     });
     expect(dashboard.features).toHaveLength(OPENAI_TASK_KEYS.length);
     expect(dashboard.by_area[0]).toMatchObject({ module: 'Moderation', calls: 2, failed_calls: 1, cost_usd: 0.5 });
-    expect(dashboard.by_area.find((area) => area.module === 'CRM')).toMatchObject({ enabled: 4, calls: 1 });
+    // Every CRM feature but the one switched off above; the catalogue grows, the rule does not.
+    const crm = dashboard.by_area.find((area) => area.module === 'CRM');
+    expect(crm).toMatchObject({ calls: 1 });
+    expect(crm?.enabled).toBe((crm?.features ?? 0) - 1);
+    expect(crm?.features).toBeGreaterThan(1);
 
     // 7 days back to today spans 8 calendar dates, each listed once, oldest first.
     expect(dashboard.series).toHaveLength(8);

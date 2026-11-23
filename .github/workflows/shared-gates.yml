@@ -87,6 +87,12 @@ jobs:
       - name: Targets growth formulas match the server
         run: node scripts/generate-growth-formula.mjs --check
 
+      # Same direction for the CRM: the Lead Quality Score settings form totals
+      # and validates with a GENERATED copy of the server's rules. A stale copy
+      # could accept a scoring model the server refuses.
+      - name: CRM lead quality rules match the server
+        run: node scripts/generate-lead-quality-rules.mjs --check
+
       # Every shared package ships a runnable demo the Tech portal renders under
       # Package Documentation. The registry indexing them is generated, so a demo
       # added without regenerating is a file nothing loads — an empty Live demos
@@ -117,6 +123,15 @@ jobs:
       # the push that adds the package.
       - name: Every workspace declares an honest e2e script
         run: node scripts/verify-e2e-scripts.mjs
+
+      # env-registry.json is the source of truth for every environment value:
+      # the Tech portal's fields, labels, descriptions and validation load from
+      # it, and it lists the only GitHub secrets that may stay. This fails when
+      # code starts or stops reading a key, a workflow references a secret the
+      # registry does not justify (or drops one it still lists), or a field has
+      # no description. Fix: `node scripts/audit-env-registry.mjs --write`.
+      - name: Env registry matches the code and workflows
+        run: node scripts/audit-env-registry.mjs
 
   # ---------------------------------------------------------------------------
   # The shared packages hold the code every surface depends on, and until now no

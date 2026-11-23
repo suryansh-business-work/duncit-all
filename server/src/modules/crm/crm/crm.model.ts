@@ -25,6 +25,53 @@ export const socialLinkSchema = new Schema(
   { _id: false }
 );
 
+const geoPointSchema = new Schema(
+  {
+    type: { type: String, enum: ['Point'], required: true },
+    // GeoJSON order: longitude, latitude.
+    coordinates: { type: [Number], required: true },
+  },
+  { _id: false }
+);
+
+/**
+ * Where a lead sits on the map, for the Nearby leads search. Never typed by
+ * anyone: leadGeo places the lead from its map link, area or city the first
+ * time a search needs it, and an edit to those fields clears it again.
+ * Absent on existing rows, so no migration is needed.
+ */
+export const leadGeoFields = {
+  geo: { type: geoPointSchema, default: undefined },
+  geo_precision: { type: String, enum: ['PIN', 'AREA', 'CITY'], default: undefined },
+  geo_checked_at: { type: Date, default: undefined },
+};
+
+/**
+ * The lead's Lead Quality Score, as the listings sort and filter on it. Written
+ * only by leadQuality.service (the breakdown and evidence live in
+ * CrmLeadQuality); absent until a lead is first scored, so no migration.
+ */
+const qualitySummarySchema = new Schema(
+  {
+    score: { type: Number, required: true },
+    classification: { type: String, default: '' },
+    classification_label: { type: String, default: '' },
+    tone: { type: String, default: 'error' },
+    qualification: { type: String, default: 'PENDING_VERIFICATION' },
+    verification: { type: String, default: 'PENDING' },
+    failed_gates: { type: Number, default: 0 },
+    pending_gates: { type: Number, default: 0 },
+    pending_items: { type: Number, default: 0 },
+    config_version: { type: Number, default: null },
+    scored_at: { type: Date, default: null },
+  },
+  { _id: false }
+);
+
+export const leadQualityFields = {
+  quality: { type: qualitySummarySchema, default: undefined },
+};
+
 export const serviceOfferedSchema = new Schema(
   {
     // Catalogue value or "Other". When "Other", `custom_name` carries the
@@ -49,8 +96,18 @@ export const activitySchema = new Schema(
     // stay backward-compatible.
     body_html: { type: String, default: '' },
     body_text: { type: String, default: '' },
+    // Manual logs only. log_id addresses a log for edit/delete (logs written
+    // before it existed are addressed by position, see manualLog.view.ts);
+    // mention_user_ids are the CRM users its HTML @mentions. A deleted log
+    // keeps its row (deleted_at/by) so the history shows it was deleted.
+    log_id: { type: String, default: undefined },
+    mention_user_ids: { type: [String], default: undefined },
     created_by: { type: String, default: null },
     created_at: { type: Date, default: Date.now },
+    updated_by: { type: String, default: undefined },
+    updated_at: { type: Date, default: undefined },
+    deleted_by: { type: String, default: undefined },
+    deleted_at: { type: Date, default: undefined },
   },
   { _id: false }
 );
@@ -114,11 +171,15 @@ const venueLeadSchema = new Schema(
 
     lead_source: { type: String, default: '' },
     assigned_to: { type: String, trim: true, default: '' },
+    // The CRM team member (users._id) behind assigned_to; null for unassigned or legacy free text.
+    assigned_user_id: { type: String, default: null, index: true },
     lead_status: { type: String, enum: VENUE_LEAD_STATUSES, default: 'New', index: true },
     priority: { type: String, enum: PRIORITIES, default: 'Medium', index: true },
     next_follow_up_date: { type: Date, default: null },
     remarks: { type: String, trim: true, default: '' },
     activity_log: { type: [activitySchema], default: [] },
+    ...leadGeoFields,
+    ...leadQualityFields,
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
@@ -166,11 +227,15 @@ const hostLeadSchema = new Schema(
 
     lead_source: { type: String, default: '' },
     assigned_to: { type: String, trim: true, default: '' },
+    // The CRM team member (users._id) behind assigned_to; null for unassigned or legacy free text.
+    assigned_user_id: { type: String, default: null, index: true },
     lead_status: { type: String, enum: HOST_LEAD_STATUSES, default: 'New', index: true },
     priority: { type: String, enum: PRIORITIES, default: 'Medium', index: true },
     next_follow_up_date: { type: Date, default: null },
     notes: { type: String, trim: true, default: '' },
     activity_log: { type: [activitySchema], default: [] },
+    ...leadGeoFields,
+    ...leadQualityFields,
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
@@ -212,11 +277,15 @@ const ecommLeadSchema = new Schema(
 
     lead_source: { type: String, default: '' },
     assigned_to: { type: String, trim: true, default: '' },
+    // The CRM team member (users._id) behind assigned_to; null for unassigned or legacy free text.
+    assigned_user_id: { type: String, default: null, index: true },
     lead_status: { type: String, enum: HOST_LEAD_STATUSES, default: 'New', index: true },
     priority: { type: String, enum: PRIORITIES, default: 'Medium', index: true },
     next_follow_up_date: { type: Date, default: null },
     notes: { type: String, trim: true, default: '' },
     activity_log: { type: [activitySchema], default: [] },
+    ...leadGeoFields,
+    ...leadQualityFields,
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
@@ -288,6 +357,11 @@ export type HostLeadDoc = InferSchemaType<typeof hostLeadSchema> & { _id: any };
 export type EcommLeadDoc = InferSchemaType<typeof ecommLeadSchema> & { _id: any };
 export type CrmServiceCatalogDoc = InferSchemaType<typeof crmServiceCatalogSchema> & { _id: Types.ObjectId };
 export type CrmDynamicFieldDoc = InferSchemaType<typeof crmDynamicFieldSchema> & { _id: Types.ObjectId };
+// Nearby leads: $geoNear reads the lead point through this index.
+for (const schema of [venueLeadSchema, hostLeadSchema, ecommLeadSchema]) schema.index({ geo: '2dsphere' });
+// Lead Quality Score: the listings sort by score across the whole collection.
+for (const schema of [venueLeadSchema, hostLeadSchema, ecommLeadSchema]) schema.index({ 'quality.score': -1 });
+
 export const VenueLeadModel = model('VenueLead', venueLeadSchema);
 export const HostLeadModel = model('HostLead', hostLeadSchema);
 export const EcommLeadModel = model('EcommLead', ecommLeadSchema);

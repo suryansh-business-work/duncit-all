@@ -11,6 +11,8 @@ import { giftCardSettingsService } from './giftcard.settings.service';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { CoinTransactionModel, type ICoinTransaction } from '@modules/finance/coin/coin.model';
 import { PaymentModel, type IPayment, type PaymentStepKey } from '@modules/finance/payment/payment.model';
+import { razorpayIdsOf } from '@modules/finance/payment/payment.gatewayIds';
+import { razorpaySearchAlso } from '@modules/finance/payment/payment.razorpaySearch';
 import {
   loadUserMap,
   monthKeys,
@@ -154,6 +156,8 @@ const paymentSummary = (payment: IPayment) => {
     status: payment.status,
     gateway: payment.gateway ?? '',
     gateway_ref: payment.gateway_ref ?? null,
+    razorpay_payment_id: razorpayIdsOf(payment).razorpay_payment_id,
+    razorpay_order_id: razorpayIdsOf(payment).razorpay_order_id,
     subtotal: payment.subtotal ?? 0,
     platform_fee_amount: payment.platform_fee_amount ?? 0,
     gst_amount: payment.gst_amount ?? 0,
@@ -255,7 +259,8 @@ export const giftCardAdminService = {
       GiftCardModel,
       {},
       input,
-      GIFT_CARD_TABLE_CONFIG
+      GIFT_CARD_TABLE_CONFIG,
+      { searchAlso: await razorpaySearchAlso(input?.search, 'payment_id', 'ref') }
     );
     const users = await loadUserMap(
       docs.flatMap((d) => [
@@ -272,7 +277,8 @@ export const giftCardAdminService = {
       GiftCardTransactionModel,
       {},
       input,
-      GIFT_CARD_TXN_TABLE_CONFIG
+      GIFT_CARD_TXN_TABLE_CONFIG,
+      { searchAlso: await razorpaySearchAlso(input?.search, 'payment_id', 'ref') }
     );
     const users = await loadUserMap(docs.map((d) => String(d.user_id)));
     return { rows: docs.map((d) => toTxnRow(d, users)), total, page, page_size };

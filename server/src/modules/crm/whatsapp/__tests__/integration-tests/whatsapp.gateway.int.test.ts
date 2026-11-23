@@ -1,4 +1,4 @@
-import { whatsappService } from '../../whatsapp.service';
+import { waTimings, whatsappService } from '../../whatsapp.service';
 import { mapSessionStatus } from '../../whatsapp.client';
 import { apiKeyCandidates, deriveGatewayMasterKey, masterKeyCandidates } from '../../whatsapp.keys';
 import { WaConnectionModel } from '../../whatsapp.model';
@@ -8,7 +8,8 @@ import { WaConnectionModel } from '../../whatsapp.model';
  * stuck-session restart, engineLoaded-aware status and paged lists.
  */
 type Call = { method: string; url: string; key?: string; body?: unknown };
-type Handler = (call: Call) => { status: number; body: unknown };
+type Reply = { status: number; body: unknown };
+type Handler = (call: Call) => Reply | Promise<Reply>;
 
 const calls: Call[] = [];
 function setFetch(handler: Handler) {
@@ -22,7 +23,7 @@ function setFetch(handler: Handler) {
       body: i.body ? JSON.parse(i.body) : undefined,
     };
     calls.push(call);
-    const { status, body } = handler(call);
+    const { status, body } = await handler(call);
     return {
       ok: status >= 200 && status < 300,
       status,
@@ -175,6 +176,54 @@ describe('session lifecycle', () => {
       return { status: 200, body: {} };
     });
     await expect(whatsappService.connect()).rejects.toThrow(/Maximum concurrent sessions/);
+  });
+
+  describe('a start still booting WhatsApp Web when connect() answers', () => {
+    const prevAnswerMs = waTimings.startAnswerMs;
+    let finishStart: (reply: Reply) => void = () => undefined;
+    const storedStatus = async () => (await WaConnectionModel.findOne({ key: 'default' }))?.status;
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 50));
+
+    beforeEach(() => {
+      waTimings.startAnswerMs = 10;
+      setFetch(({ url }) => {
+        if (url.endsWith('/sessions')) return { status: 200, body: [{ id: 'uuid-1', name: 'duncit-crm' }] };
+        if (url.endsWith('/start')) {
+          return new Promise<Reply>((resolve) => {
+            finishStart = resolve;
+          });
+        }
+        return { status: 200, body: {} };
+      });
+    });
+    afterEach(() => {
+      waTimings.startAnswerMs = prevAnswerMs;
+    });
+
+    it('answers CONNECTING without waiting for the boot, then records a late failure', async () => {
+      const conn = await whatsappService.connect();
+      expect(conn.status).toBe('CONNECTING');
+      finishStart({ status: 504, body: { message: 'WhatsApp Web authentication timed out.' } });
+      await settle();
+      const stored = await WaConnectionModel.findOne({ key: 'default' });
+      expect(stored?.status).toBe('ERROR');
+      expect(stored?.last_error).toMatch(/authentication timed out/);
+    });
+
+    it('stays CONNECTING when the slow start succeeds', async () => {
+      await whatsappService.connect();
+      finishStart({ status: 200, body: {} });
+      await settle();
+      expect(await storedStatus()).toBe('CONNECTING');
+    });
+
+    it('leaves a newer state alone when the late failure arrives after it', async () => {
+      await whatsappService.connect();
+      await WaConnectionModel.updateOne({ key: 'default' }, { status: 'CONNECTED' });
+      finishStart({ status: 504, body: { message: 'auth timeout' } });
+      await settle();
+      expect(await storedStatus()).toBe('CONNECTED');
+    });
   });
 
   it('refreshStatus() reports a stored "ready" with no engine loaded as DISCONNECTED', async () => {

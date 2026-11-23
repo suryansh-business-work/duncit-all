@@ -74,6 +74,23 @@ export interface IFinanceSettings extends Document {
   updated_at: Date;
 }
 
+/** The refund window quoted to customers when nothing else was saved — the
+ * value every cancellation message has always used. */
+export const DEFAULT_REFUND_PROCESSING_DAYS = 7;
+export const REFUND_PROCESSING_DAYS_RANGE = { min: 1, max: 60 } as const;
+
+/**
+ * The saved refund window, or the shipped one when the row holds none.
+ *
+ * A mongoose read fills a MISSING path from its default but leaves a stored
+ * `null` alone, and the GraphQL field is non-nullable — so the reader states
+ * the fallback rather than trusting the row.
+ */
+export function refundProcessingDaysOf(doc: { refund_processing_days?: number | null } | null | undefined): number {
+  const days = doc?.refund_processing_days;
+  return typeof days === 'number' && Number.isFinite(days) ? days : DEFAULT_REFUND_PROCESSING_DAYS;
+}
+
 /** The four capacities someone can withdraw earnings in. */
 export type WithdrawerRole = 'HOST' | 'VENUE_OWNER' | 'ECOMM_MANAGER' | 'CLUB_ADMIN';
 
@@ -199,7 +216,12 @@ const financeSettingsSchema = new Schema<IFinanceSettings>(
     host_payout_mode: { type: String, enum: ['IMMEDIATE', 'WEEKLY', 'MONTH_END'], default: 'IMMEDIATE' },
     payout_day_of_week: { type: Number, default: 1, min: 0, max: 6 },
     payout_time: { type: String, default: '18:00' },
-    refund_processing_days: { type: Number, default: 7, min: 1, max: 60 },
+    refund_processing_days: {
+      type: Number,
+      default: DEFAULT_REFUND_PROCESSING_DAYS,
+      min: REFUND_PROCESSING_DAYS_RANGE.min,
+      max: REFUND_PROCESSING_DAYS_RANGE.max,
+    },
     currency_symbol: { type: String, default: '₹' },
     invoice_prefix: { type: String, default: 'DUN' },
     invoice_counter: { type: Number, default: 0 },

@@ -6,7 +6,6 @@ import {
   makeVenueOfferAskSchema,
 } from '@duncit/forms/schemas';
 import {
-  DEFAULT_TICKET_DISCOUNT_MAX_PCT,
   isFreeVenueOfferModel,
   isHostOfferModel,
   isVideoUrl,
@@ -16,7 +15,6 @@ import type { PodFormConfig, PodFormValues } from './types';
 import type { Translate } from './i18n/useTranslation';
 import { keepsExistingBooking } from './kept-booking';
 import { isFreePodType } from './pod-type';
-import { refineTicketDiscount, ticketDiscountTierSchema } from './ticket-discount';
 
 /** Returns true when the string parses as an http(s) URL. */
 const isHttpUrl = (value: string) => {
@@ -265,16 +263,8 @@ function refineAutoPod(values: PodFormValues, ctx: z.RefinementCtx, t: Translate
  *
  * In Auto Pod mode the club/venue/host/date rules are replaced wholesale by
  * `refineAutoPod`: none of those things exist when the template is written.
- *
- * `ticketDiscountMaxPct` is the admin's `publicAppSettings.ticket_discount_max_pct`
- * — the ceiling on every multi-ticket tier. `PodForm` reads it; the default only
- * stands in for a caller outside the React tree (a demo, a test).
  */
-export function makePodSchema(
-  config: PodFormConfig,
-  t: Translate,
-  ticketDiscountMaxPct: number = DEFAULT_TICKET_DISCOUNT_MAX_PCT,
-) {
+export function makePodSchema(config: PodFormConfig, t: Translate) {
   return z
     .object({
       pod_id: z.string().optional(),
@@ -347,8 +337,6 @@ export function makePodSchema(
       place_charges: z.array(placeChargeSchema(t)).max(10).default([]),
       products_enabled: z.boolean().default(false),
       product_requests: z.array(productRequestSchema(t)).default([]),
-      ticket_discount_enabled: z.boolean().default(false),
-      ticket_discount_tiers: z.array(ticketDiscountTierSchema).default([]),
       is_active: z.boolean().default(true),
       // Shape only — whether they are needed is refineFreeJustification's.
       free_reason: freeJustificationFields.free_reason.default(freeJustificationDefaults.free_reason),
@@ -366,7 +354,6 @@ export function makePodSchema(
       refineDates(values, ctx, t);
       refinePricingAndMedia(values, ctx, t);
       refineFreeJustification(values, ctx, config, t);
-      refineTicketDiscount(values, ctx, t, ticketDiscountMaxPct);
       refineReel(values, ctx, config, t);
       refineProducts(values, ctx, config, t);
     });

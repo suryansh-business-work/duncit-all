@@ -34,6 +34,13 @@ export const appConfig = {
         { label: 'Ecomm Leads', labelKey: 'shell.nav.ecommLeads', to: '/ecomm-leads', icon: 'inventory' },
         { label: 'Creators Leads', labelKey: 'shell.nav.creatorLeads', to: '/creator-leads', icon: 'campaign' },
         { label: 'Community Leads', labelKey: 'shell.nav.communityLeads', to: '/community-leads', icon: 'community' },
+        { label: 'Lead Research', labelKey: 'shell.nav.leadResearch', to: '/lead-research', icon: 'personSearch' },
+        { label: 'Quality Analytics', labelKey: 'shell.nav.leadQualityAnalytics', to: '/lead-quality/analytics', icon: 'insights' },
+        {
+          label: 'Settings', labelKey: 'shell.nav.leadsSettings',
+          icon: 'settings',
+          children: [{ label: 'Lead Quality Score', labelKey: 'shell.nav.leadQualityScore', to: '/settings/lead-quality', icon: 'tune' }],
+        },
         {
           label: 'User Leads', labelKey: 'shell.nav.userLeads',
           icon: 'user-search',

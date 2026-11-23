@@ -17,14 +17,11 @@ import { mwebSpotsLabels, shellSpotsLabels, type SpotsStepperLabels } from '@dun
 import {
   POD_SCAN_LEAD_MINUTES,
   mwebSmartIncentiveLabels,
-  mwebTicketDiscountLabels,
   mwebVenueBillLabels,
   shellSmartIncentiveLabels,
-  shellTicketDiscountLabels,
   shellVenueBillLabels,
   venueOfferTermsLine,
   type SmartIncentiveLabels,
-  type TicketDiscountLabels,
   type VenueBillLabels,
 } from '@duncit/utils';
 
@@ -137,8 +134,6 @@ export interface HostPodActionLabels {
   spotsFreeHint: (min: number, taken: number) => string;
   /** Why the control will not go below where it starts, for a host. */
   spotsIncreaseOnly: string;
-  /** The multi-ticket discount editor in the edit dialog — @duncit/utils' own words. */
-  ticketDiscount: TicketDiscountLabels;
   /** The Smart Incentive editor and its explainer in the edit dialog — @duncit/utils' own words. */
   smartIncentive: SmartIncentiveLabels;
   /** The pod-row menu and the dialogs it opens. */
@@ -344,7 +339,6 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
       t('mweb.hostPodEdit.spotsVenueHint', { vars: { capacity, taken } }),
     spotsFreeHint: (min, taken) => t('mweb.hostPodEdit.spotsFreeHint', { vars: { min, taken } }),
     spotsIncreaseOnly: t('mweb.hostPodEdit.spotsIncreaseOnly'),
-    ticketDiscount: mwebTicketDiscountLabels(t),
     smartIncentive: mwebSmartIncentiveLabels(t),
     menuTooltip: t('mweb.hostPodActions.menuTooltip'),
     scanTickets: t('mweb.hostPodActions.scanTickets'),
@@ -495,7 +489,6 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
       t('shell.hostPodEdit.spotsVenueHint', { vars: { capacity, taken } }),
     spotsFreeHint: (min, taken) => t('shell.hostPodEdit.spotsFreeHint', { vars: { min, taken } }),
     spotsIncreaseOnly: t('shell.hostPodEdit.spotsIncreaseOnly'),
-    ticketDiscount: shellTicketDiscountLabels(t),
     smartIncentive: shellSmartIncentiveLabels(t),
     menuTooltip: t('shell.hostPodActions.menuTooltip'),
     scanTickets: t('shell.hostPodActions.scanTickets'),

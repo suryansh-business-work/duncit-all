@@ -66,6 +66,14 @@ export {
 } from './two-factor';
 
 export {
+  makeSecurityExceptionSchema,
+  securityExceptionDefaults,
+  SECURITY_EXCEPTION_REASON_MAX,
+  SECURITY_EXCEPTION_REASON_MIN,
+  type SecurityExceptionValues,
+} from './security-exception';
+
+export {
   cleanProfileLinks,
   makeProfileBioSchema,
   makeProfileLinksSchema,
@@ -183,6 +191,7 @@ export {
 } from './food-tax';
 export { makeRentalItemsSchema, type RentalItemsOutput } from './rental-items';
 export { makeMarkRentalSchema, type MarkRentalOutput, type MarkRentalValues } from './mark-rental';
+export { makeRentalProofSchema, type RentalProofFormValues, type RentalProofOutput } from './rental-proof';
 export { makeQuickAccessSchema, type QuickAccessValues } from './quick-access';
 export { makeTutorialCommentSchema, type TutorialCommentValues } from './tutorial-comment';
 export {
@@ -309,6 +318,20 @@ export {
   type PhysicalGiftCardRefusal,
   type PhysicalGiftCardValues,
 } from './physical-gift-card';
+
+export {
+  GIFT_CARD_TEXT_LIMITS,
+  canOrderPhysical,
+  giftCardPurchaseDefaults,
+  giftCardPurchaseRecipient,
+  giftCardPurchaseTotals,
+  makeGiftCardPurchaseSchema,
+  maxQuantityFor,
+  type GiftCardDeliveryMode,
+  type GiftCardPurchasePolicy,
+  type GiftCardPurchaseTotals,
+  type GiftCardPurchaseValues,
+} from './gift-card-purchase';
 
 export {
   BANNER_KIT_LIMITS,

@@ -24,10 +24,10 @@ describe('RentalSuccessCard', () => {
     expect(within(card).getByTestId('checkout-success-rental-chess')).toHaveTextContent(
       /Chess Set × 2.*₹\s?120/,
     );
-    // Only the item that took a deposit says where it comes back.
-    expect(within(card).getAllByText(/refundable at the venue/)).toHaveLength(1);
+    // Only the item that took a deposit says how it comes back.
+    expect(within(card).getAllByText(/refunded by Duncit after return/)).toHaveLength(1);
     expect(within(card).getByTestId('rental-collect-notice')).toHaveTextContent(
-      /Duncit does not refund deposits online/,
+      /Duncit refunds your deposit, less any damage, to your original payment method/,
     );
   });
 

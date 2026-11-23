@@ -10,10 +10,7 @@ import {
   SUGGESTED_PRICES_EMPTY,
   SUGGESTED_PRICES_NOTE,
   VENUE_SHORTFALL_MESSAGE,
-  ZERO_EARNINGS_BODY,
-  ZERO_EARNINGS_TITLE,
 } from '../price-panel/pricingCopy';
-import ZeroEarningsNotice from '../price-panel/ZeroEarningsNotice';
 
 // Structurally identical to usePricing's private document so Apollo matches it.
 const PUBLIC_FINANCE = gql`
@@ -72,15 +69,26 @@ function previewWith(overrides: Partial<EarningsPreview>): EarningsPreview {
     venueId: 'v1',
     isPhysical: true,
     isFree: false,
-    projection: { total_spots: 3, payable_spots: 2, waterfall: shortfallWaterfall },
+    projection: {
+      total_spots: 3,
+      payable_spots: 2,
+      viable: false,
+      viability_reason: 'NO_EARNINGS',
+      minimum_viable_ticket_price: 420,
+      venue_min_business: 0,
+      waterfall: shortfallWaterfall,
+    },
     loading: false,
     stale: false,
+    failed: false,
     hasVenue: true,
     ready: true,
     priceMissing: false,
-    zeroEarnings: false,
     venueShortfall: false,
-    blocked: false,
+    fresh: true,
+    notViable: true,
+    blocked: true,
+    retry: () => undefined,
     ...overrides,
   };
 }
@@ -109,7 +117,7 @@ describe('Step-4 pricing guards', () => {
   it('states the venue rule on the Venue Take row', async () => {
     render(
       <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[financeMock]}>
-        <PricePanel preview={previewWith({ venueShortfall: true, blocked: true })} />
+        <PricePanel preview={previewWith({ venueShortfall: true })} />
       </MockedProvider>,
     );
     expect(await screen.findByTestId('earnings-split-venue')).toHaveTextContent(
@@ -125,13 +133,6 @@ describe('Step-4 pricing guards', () => {
     );
     await screen.findByTestId('earnings-split');
     expect(screen.queryByText(VENUE_SHORTFALL_MESSAGE)).not.toBeInTheDocument();
-  });
-
-  it('renders the zero-earnings notice copy', () => {
-    render(<ZeroEarningsNotice />);
-    const box = screen.getByTestId('create-pod-zero-earnings');
-    expect(box).toHaveTextContent(ZERO_EARNINGS_TITLE);
-    expect(box).toHaveTextContent(ZERO_EARNINGS_BODY);
   });
 });
 

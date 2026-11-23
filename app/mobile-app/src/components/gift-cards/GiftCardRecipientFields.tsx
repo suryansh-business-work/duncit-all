@@ -18,6 +18,8 @@ interface Props {
   onEmail: (value: string) => void;
   onName: (value: string) => void;
   onMessage: (value: string) => void;
+  /** A printed card: who it is for and the note on it — no inbox, no self/gift choice. */
+  printed?: boolean;
 }
 
 /** The self/gift toggle and the recipient fields of the buy page (rule 27 twin). */
@@ -31,6 +33,7 @@ export function GiftCardRecipientFields({
   onEmail,
   onName,
   onMessage,
+  printed = false,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const options: readonly SegmentOption<boolean>[] = [
@@ -43,28 +46,32 @@ export function GiftCardRecipientFields({
 
   return (
     <SurfaceCard gap={12}>
-      <SectionHeader title={t('mweb.giftCards.forHeading')} />
-      <GiftCardSegmented options={options} value={forGift} onChange={onToggle} />
-      {forGift ? (
+      <SectionHeader
+        title={printed ? t('mweb.giftCards.printedForHeading') : t('mweb.giftCards.forHeading')}
+      />
+      {printed ? null : <GiftCardSegmented options={options} value={forGift} onChange={onToggle} />}
+      {forGift || printed ? (
         <YStack gap={10}>
-          <Field
-            label={emailLabel}
-            required
-            hint={t('mweb.giftCards.recipientEmailHint')}
-            error={emailError ?? undefined}
-            testID="gift-card-recipient-email"
-          >
-            <Input
-              testID="gift-card-recipient-email-input"
-              value={email}
-              onChangeText={onEmail}
-              placeholder={emailLabel}
-              placeholderTextColor="$muted"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              aria-label={emailLabel}
-            />
-          </Field>
+          {printed ? null : (
+            <Field
+              label={emailLabel}
+              required
+              hint={t('mweb.giftCards.recipientEmailHint')}
+              error={emailError ?? undefined}
+              testID="gift-card-recipient-email"
+            >
+              <Input
+                testID="gift-card-recipient-email-input"
+                value={email}
+                onChangeText={onEmail}
+                placeholder={emailLabel}
+                placeholderTextColor="$muted"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                aria-label={emailLabel}
+              />
+            </Field>
+          )}
           <Field label={nameLabel} testID="gift-card-recipient-name">
             <Input
               testID="gift-card-recipient-name-input"

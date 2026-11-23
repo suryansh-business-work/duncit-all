@@ -7,7 +7,6 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { MoreOptionsSection } from '../MoreOptionsSection';
 import { PlaceChargesField } from '../PlaceChargesField';
 import { PodSmartIncentiveCard } from '../PodSmartIncentiveCard';
-import { PodTicketDiscountCard } from '../PodTicketDiscountCard';
 import { PodProductsField } from '../product-picker';
 import type { CreatePodForm, CreatePodProduct } from '../create-pod.types';
 
@@ -48,7 +47,6 @@ export function MoneyMoreOptions({
       defaultOpen={filled}
       forceOpen={failed}
     >
-      {paid ? <PodTicketDiscountCard form={form} currency={currencySymbol} /> : null}
       {/* Renders nothing while Loyalty has the programme switched off. */}
       {paid ? <PodSmartIncentiveCard form={form} currency={currencySymbol} /> : null}
       {/* Payment terms describe refunds and charges a free pod does not have. */}

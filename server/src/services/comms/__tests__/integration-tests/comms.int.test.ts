@@ -24,7 +24,7 @@ describe('commsService integration — SMTP email + Twilio call from Tech-portal
   });
 
   it('sends through the EMAIL entry an operator configured, and names it', async () => {
-    const entry = await envEntryService.create({ name: 'Broken SMTP', category: 'EMAIL', is_default: true, config: { from_address: 'x@y.com' } });
+    const entry = await envEntryService.create({ name: 'Broken SMTP', category: 'EMAIL', is_default: true, config: { password: 'p', from_address: 'x@y.com' } });
     const res = await commsService.sendEmail({ to: 'a@b.com', subject: 's', body: 'b' });
     expect(res.provider).toBe('smtp');
     expect(res.provider_id).toBe(entry!.id);
@@ -56,8 +56,8 @@ describe('commsService integration — SMTP email + Twilio call from Tech-portal
 
   it('honours an explicitly selected TWILIO entry', async () => {
     (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({ sid: 'CA2' }) });
-    await envEntryService.create({ name: 'Default', category: 'TWILIO', is_default: true, config: { account_sid: 'ACd', auth_token: 'd', phone_number: '+1' } });
-    const chosen = await envEntryService.create({ name: 'City Line', category: 'TWILIO', config: { account_sid: 'ACc', auth_token: 'c', phone_number: '+2' } });
+    await envEntryService.create({ name: 'Default', category: 'TWILIO', is_default: true, config: { account_sid: 'ACd', auth_token: 'd', phone_number: '+14155550101' } });
+    const chosen = await envEntryService.create({ name: 'City Line', category: 'TWILIO', config: { account_sid: 'ACc', auth_token: 'c', phone_number: '+14155550102' } });
 
     const res = await commsService.call({ to: '+14155551234', provider_id: chosen!.id });
     expect(res.provider_id).toBe(chosen!.id);

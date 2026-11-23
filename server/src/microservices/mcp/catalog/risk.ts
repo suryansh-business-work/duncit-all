@@ -79,6 +79,13 @@ const CONFIRM_WORDS = new Set([
  */
 const CONFIRM_FIELDS = new Set([
   'generatePhysicalGiftCards',
+  // Gift card orders: booking spends the ShipRocket wallet and sends a courier;
+  // stock and the default design change what every member can buy; "printed"
+  // releases an order for shipping.
+  'bookGiftCardOrderShipment',
+  'adjustGiftCardDesignStock',
+  'setDefaultGiftCardDesign',
+  'markGiftCardOrderPrinted',
   'controlCrmCall',
   'enableAiPromptPublicShare',
   // Approving makes a failed payment refundable; rejecting or closing one as not
@@ -90,6 +97,8 @@ const CONFIRM_FIELDS = new Set([
   'decideWithdrawal',
   'reviewWithdrawal',
   'sendMoney',
+  // Rescores every CRM lead of a type with the new scoring model.
+  'publishCrmLeadQualityConfig',
 ]);
 
 /** Words that mean a mutation reaches people or systems outside Duncit. */

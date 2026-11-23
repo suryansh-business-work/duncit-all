@@ -62,6 +62,7 @@ export const portalAccessService = {
       url: portal.url,
       has_access: hasPortalAccess(portal.key, roleKeys),
       can_request: canRequest(portal.key),
+      required_roles: [...(PORTAL_ROLE_REQUIREMENTS[portal.key] ?? [])],
       request_status: latest.get(portal.key) ?? null,
     }));
   },
@@ -116,6 +117,7 @@ export const portalAccessService = {
       url: portal.url,
       has_access: false,
       can_request: true,
+      required_roles: [...(PORTAL_ROLE_REQUIREMENTS[portal.key] ?? [])],
       request_status: 'PENDING',
     };
   },

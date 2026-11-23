@@ -113,12 +113,12 @@ describe('envEntryService integration', () => {
   });
 
   it('serves the envEntriesTable page with search, filters, sort and paging', async () => {
-    await envEntryService.create({ name: 'Primary SMTP', category: 'EMAIL', config: cfg({ host: 'smtp.a' }) });
+    await envEntryService.create({ name: 'Primary SMTP', category: 'EMAIL', config: cfg({ host: 'smtp.a', password: 'p' }) });
     await envEntryService.create({
       name: 'Backup SMTP',
       category: 'EMAIL',
       description: 'fallback sender',
-      config: cfg({ host: 'smtp.b' }),
+      config: cfg({ host: 'smtp.b', password: 'p' }),
     });
     const ik = await envEntryService.create({
       name: 'IK Main',

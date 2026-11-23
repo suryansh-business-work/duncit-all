@@ -1,5 +1,12 @@
 import { Schema, model, type InferSchemaType, type SchemaDefinition } from 'mongoose';
-import { activitySchema, contactSchema, serviceOfferedSchema, socialLinkSchema } from '@modules/crm/crm/crm.model';
+import {
+  activitySchema,
+  contactSchema,
+  leadGeoFields,
+  leadQualityFields,
+  serviceOfferedSchema,
+  socialLinkSchema,
+} from '@modules/crm/crm/crm.model';
 import { HOST_LEAD_STATUSES, PRIORITIES } from '@modules/crm/crm/crm.constants';
 
 /**
@@ -23,11 +30,15 @@ const leadBackbone: SchemaDefinition = {
   dynamic_values: { type: Schema.Types.Mixed, default: () => ({}) },
   lead_source: { type: String, default: '' },
   assigned_to: { type: String, trim: true, default: '' },
+  // The CRM team member (users._id) behind assigned_to; null for unassigned or legacy free text.
+  assigned_user_id: { type: String, default: null, index: true },
   lead_status: { type: String, enum: HOST_LEAD_STATUSES, default: 'New', index: true },
   priority: { type: String, enum: PRIORITIES, default: 'Medium', index: true },
   next_follow_up_date: { type: Date, default: null },
   notes: { type: String, trim: true, default: '' },
   activity_log: { type: [activitySchema], default: [] },
+  ...leadGeoFields,
+  ...leadQualityFields,
 };
 
 const timestamps = { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } } as const;
@@ -62,6 +73,13 @@ const communityLeadSchema = new Schema(
   },
   timestamps
 );
+
+// Nearby leads: $geoNear reads the lead point through this index.
+for (const schema of [creatorLeadSchema, communityLeadSchema]) {
+  schema.index({ geo: '2dsphere' });
+  // Lead Quality Score: the listings sort by score across the whole collection.
+  schema.index({ 'quality.score': -1 });
+}
 
 export type CreatorLeadDoc = InferSchemaType<typeof creatorLeadSchema> & { _id: unknown };
 export type CommunityLeadDoc = InferSchemaType<typeof communityLeadSchema> & { _id: unknown };

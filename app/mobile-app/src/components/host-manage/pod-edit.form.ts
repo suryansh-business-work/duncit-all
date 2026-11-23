@@ -4,9 +4,7 @@ import {
   podModerationImageUrls,
   smartIncentiveFormValues,
   smartIncentiveInput,
-  ticketDiscountInput,
   type PodSpotLimits,
-  type TicketDiscountTier,
 } from '@duncit/utils';
 
 import { CategoryMediaType } from '@/generated/graphql/graphql';
@@ -16,18 +14,11 @@ import {
   smartIncentiveSchemaShape,
   type SmartIncentiveValues,
 } from '@/components/create-pod/smart-incentive.form';
-import {
-  blankTicketDiscountValues,
-  hydrateTicketDiscount,
-  refineTicketDiscount,
-  ticketDiscountSchemaShape,
-  type TicketDiscountValues,
-} from '@/components/create-pod/ticket-discount.form';
 import type { Translate } from '@/i18n/fallback';
 
-/** Shapes for the host's pod edit (title, images, description, capacity, the
- * multi-ticket discount — 2A — and the Smart Incentive). */
-export interface PodEditValues extends TicketDiscountValues, SmartIncentiveValues {
+/** Shapes for the host's pod edit (title, images, description, capacity and
+ * the Smart Incentive). */
+export interface PodEditValues extends SmartIncentiveValues {
   pod_title: string;
   pod_description: string;
   media_text: string;
@@ -44,14 +35,12 @@ export interface HostPodSummary {
   no_of_spots?: number | null;
   pod_type?: string | null;
   pod_amount?: number | null;
-  ticket_discount_enabled?: boolean | null;
-  ticket_discount_tiers?: readonly TicketDiscountTier[] | null;
   smart_incentive_enabled?: boolean | null;
   smart_incentive_pct?: number | null;
 }
 
-/** A FREE pod, or one priced at ₹0, never carries a multi-ticket discount or a
- * Smart Incentive — the sheet hides both fields for it. mWeb twin:
+/** A FREE pod, or one priced at ₹0, never carries a Smart Incentive — the
+ * sheet hides the field for it. mWeb twin:
  * @duncit/host-pod-actions. */
 export const podEditIsFree = (pod: HostPodSummary | null): boolean =>
   !pod || (pod.pod_type ?? '').includes('FREE') || (Number(pod.pod_amount) || 0) <= 0;
@@ -69,7 +58,6 @@ export const blankPodEditValues: PodEditValues = {
   pod_description: '',
   media_text: '',
   no_of_spots_text: '',
-  ...blankTicketDiscountValues,
   ...blankSmartIncentiveValues,
 };
 
@@ -92,18 +80,15 @@ export const podEditSchema = z.object({
   no_of_spots_text: z.string(),
 });
 
-/** The base fields plus both pod discounts' values, shape only. */
+/** The base fields plus the Smart Incentive's values, shape only. */
 const podEditValuesSchema = podEditSchema.extend({
-  ...ticketDiscountSchemaShape,
   ...smartIncentiveSchemaShape,
 });
 
 /**
- * The sheet's full schema: the base fields plus the multi-ticket discount,
- * validated against the spots the host is choosing (the tiers must fit them),
- * and the Smart Incentive against Loyalty's maximum while the sheet shows it —
- * `smartIncentiveMaxPct` is null whenever it does not. Both are skipped for a
- * free pod.
+ * The sheet's full schema: the base fields plus the Smart Incentive, checked
+ * against Loyalty's maximum while the sheet shows it — `smartIncentiveMaxPct`
+ * is null whenever it does not. Skipped for a free pod.
  */
 export function makePodEditSchema(
   t: Translate,
@@ -111,16 +96,6 @@ export function makePodEditSchema(
   smartIncentiveMaxPct: number | null = null,
 ) {
   return podEditValuesSchema.superRefine((values, ctx) => {
-    refineTicketDiscount(
-      {
-        ticket_discount_enabled: values.ticket_discount_enabled,
-        ticket_discount_tiers: values.ticket_discount_tiers,
-        noOfSpots: Number.parseInt(values.no_of_spots_text, 10) || 0,
-        free,
-      },
-      ctx,
-      t,
-    );
     refineSmartIncentive(
       {
         smart_incentive_enabled: values.smart_incentive_enabled,
@@ -139,11 +114,9 @@ export function makePodEditSchema(
  *
  * no_of_spots is omitted until the limits load: without them the form has no
  * range to have picked inside, and sending the seeded 0 would ask the server to
- * empty the pod. The discount always travels (off with no tiers for a free
- * pod), so unchanged tiers are simply re-sent as stored. The Smart Incentive
- * travels only while the sheet shows it (`smartIncentive`); omitted, the
- * server leaves the pod's offer as it is. mWeb twin: buildHostUpdateInput in
- * @duncit/host-pod-actions.
+ * empty the pod. The Smart Incentive travels only while the sheet shows it
+ * (`smartIncentive`); omitted, the server leaves the pod's offer as it is.
+ * mWeb twin: buildHostUpdateInput in @duncit/host-pod-actions.
  */
 export function buildHostUpdateInput(
   values: PodEditValues,
@@ -160,7 +133,6 @@ export function buildHostUpdateInput(
     ...(options?.includeSpots
       ? { no_of_spots: Number.parseInt(values.no_of_spots_text, 10) || 0 }
       : {}),
-    ...ticketDiscountInput(values, free),
     ...(options?.smartIncentive ? smartIncentiveInput(values, free) : {}),
   };
 }
@@ -206,7 +178,6 @@ export function podEditInitialValues(pod: HostPodSummary | null): PodEditValues 
     pod_description: pod.pod_description ?? '',
     no_of_spots_text: String(pod.no_of_spots ?? ''),
     media_text: (pod.pod_images_and_videos ?? []).map((m) => m.url).join('\n'),
-    ...hydrateTicketDiscount(pod),
     ...smartIncentiveFormValues(pod),
   };
 }

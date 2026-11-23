@@ -7,8 +7,8 @@ import type { PodSettingsSectionProps } from './queries';
 /**
  * The platform defaults behind an ordinary pod's life: how long a draft is
  * kept, how often somebody may back out, what a venue cancellation costs,
- * whether a by-hand attendance mark needs a code, the auto-cancel sweep, and
- * the ceiling on every pod's multi-ticket discount tiers.
+ * whether a by-hand attendance mark needs a code, the auto-cancel sweep and how
+ * far ahead "happening nearby" looks.
  *
  * Split out of the page when it passed the 200-line ceiling (rule 9). Every
  * card is unchanged from where it sat before.
@@ -164,19 +164,6 @@ export default function PodLifecycleSettings({
         loading={loading}
         value={settings?.pod_cancel_risk_alert_hours ?? null}
         onSave={(next) => onSave({ pod_cancel_risk_alert_hours: next })}
-      />
-      <NumberSettingCard
-        title={t('admin.podSettings.ticketDiscountMaxPctLabel')}
-        testId="pod-setting-ticket-discount-max"
-        description={t('admin.podSettings.ticketDiscountMaxPctHint')}
-        label={t('admin.podSettings.ticketDiscountMaxPctLabel')}
-        helperText={t('admin.podSettings.ticketDiscountMaxPctMin')}
-        invalidText={t('admin.podSettings.ticketDiscountMaxPctInvalid')}
-        min={1}
-        max={99}
-        loading={loading}
-        value={settings?.ticket_discount_max_pct ?? null}
-        onSave={(next) => onSave({ ticket_discount_max_pct: next })}
       />
       <NumberSettingCard
         title={t('admin.podSettings.happeningNearbyTitle')}

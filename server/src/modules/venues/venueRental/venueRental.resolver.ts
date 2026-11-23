@@ -1,5 +1,7 @@
+import { GraphQLError } from 'graphql';
 import type { GraphQLContext } from '@context';
 import { FINANCE_READER, hasRole, requireAuth, requireRole } from '@middleware/rbac';
+import { VenueModel } from '@modules/venues/venue/venue.model';
 import { consoleEditors } from '@modules/portals/console-access';
 import type { TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
@@ -9,11 +11,42 @@ import { rentalCatalogueService } from './rentalCatalogue.service';
 import { hydrateRentalBookings, rentalBookingTableService } from './rentalBookingTable.service';
 import { rentalLifecycleService } from './rentalLifecycle.service';
 import { setVenueRentalDepositGst } from './rentalVenueSettings';
+import { managedVenue } from '@modules/venues/venueFood/venueFoodOrder.shared';
+import { addRentalProof, loadRentalBooking, rentalBookingDetail, type RentalProofInput, type RentalViewer } from './rentalDetail.service';
+import { sendRentalRefundByFinance } from './rentalRefund.service';
+import type { IRentalBooking } from './rentalBooking.model';
 
 // The same seats that read and write Finance's own settings.
 const FINANCE_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
 const FINANCE_READ = [...FINANCE_WRITE, FINANCE_READER];
+// Sending money through the gateway: the same two seats that refund a failed payment.
+const REFUND_SENDERS = ['SUPER_ADMIN', 'FINANCE_MANAGER'];
 const VENUE_EDIT = consoleEditors('VENUE');
+
+/**
+ * Which view of a rental the caller gets, decided here and nowhere else:
+ * Finance (read seats, or write seats for a write), else the rental's own
+ * venue — its owner, or a Venues console editor. Anyone else is refused by
+ * managedVenue (FORBIDDEN), so a partner never reaches another venue's rental.
+ */
+async function rentalViewer(ctx: GraphQLContext, booking: IRentalBooking, financeSeats: readonly string[]): Promise<RentalViewer> {
+  const user = requireAuth(ctx);
+  if (hasRole(user, [...financeSeats])) return 'FINANCE';
+  await managedVenue(user.id, hasRole(user, VENUE_EDIT), String(booking.venue_id));
+  return 'VENUE';
+}
+
+/**
+ * The door, before any rental is read: Finance, a Venues console editor, or
+ * someone who owns a venue. Anyone else is refused FORBIDDEN without learning
+ * whether the id exists.
+ */
+async function assertRentalDesk(ctx: GraphQLContext, financeSeats: readonly string[]): Promise<void> {
+  const user = requireAuth(ctx);
+  if (hasRole(user, [...financeSeats, ...VENUE_EDIT])) return;
+  if (await VenueModel.exists({ owner_user_id: user.id })) return;
+  throw new GraphQLError('Access Denied', { extensions: { code: 'FORBIDDEN' } });
+}
 
 /** The signed-in venue operator, and whether the venues console lets them act on any venue. */
 function operator(ctx: GraphQLContext) {
@@ -60,6 +93,11 @@ export const venueRentalResolvers = {
     ) => rentalBookingTableService.venueTable(operator(ctx), args.venue_id, args.query),
     venueRentalStats: (_p: unknown, args: { venue_id: string }, ctx: GraphQLContext) =>
       rentalBookingTableService.venueStats(operator(ctx), args.venue_id),
+    rentalBookingDetail: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      await assertRentalDesk(ctx, FINANCE_READ);
+      const booking = await loadRentalBooking(args.id);
+      return rentalBookingDetail(booking, await rentalViewer(ctx, booking, FINANCE_READ));
+    },
   },
   Mutation: {
     updateRentalSettings: async (_p: unknown, args: { input: RentalSettingsInput }, ctx: GraphQLContext) => {
@@ -83,9 +121,23 @@ export const venueRentalResolvers = {
       const user = requireRole(ctx, VENUE_EDIT);
       return setVenueRentalDepositGst(user.id, args.venue_id, args.charge_gst);
     },
+    // Retired: always refuses (see rentalLifecycleService.markRefunded).
     markRentalRefunded: async (_p: unknown, args: { id: string; reference: string }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, FINANCE_WRITE);
-      return one(await rentalLifecycleService.markRefunded(user.id, args.id, args.reference));
+      return rentalLifecycleService.markRefunded(user.id, args.id);
+    },
+    sendRentalRefund: async (_p: unknown, args: { id: string; note: string }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, REFUND_SENDERS);
+      const sent = await sendRentalRefundByFinance(user.id, args.id, args.note);
+      return rentalBookingDetail(sent ?? (await loadRentalBooking(args.id)), 'FINANCE');
+    },
+    addRentalBookingProof: async (_p: unknown, args: { id: string; input: RentalProofInput }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      await assertRentalDesk(ctx, FINANCE_WRITE);
+      const booking = await loadRentalBooking(args.id);
+      const viewer = await rentalViewer(ctx, booking, FINANCE_WRITE);
+      const updated = await addRentalProof({ userId: user.id, viewer }, booking, args.input);
+      return rentalBookingDetail(updated, viewer);
     },
   },
 };

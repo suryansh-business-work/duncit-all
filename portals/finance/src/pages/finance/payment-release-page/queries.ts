@@ -73,6 +73,7 @@ const RELEASE_ROW_FIELDS = gql`
     approved_amount
     approval_reason
     reviewed_at
+    shortfall_funding_note
     breakdown {
       version
       collected_total
@@ -101,6 +102,8 @@ const RELEASE_ROW_FIELDS = gql`
       venue_pax
       venue_agreed_model
       venue_agreed_rate
+      venue_bill_applied
+      funding_shortfall
     }
   }
 `;
@@ -157,10 +160,12 @@ export const POD_PAYMENT_RELEASE = gql`
   ${POD_RELEASE_DETAIL_FIELDS}
 `;
 
-/** Approve every payout still pending on the request, in full. */
+/** Approve every payout still pending on the request, in full. When they send
+ * out more than the pod took (a funding shortfall) the server refuses unless
+ * `shortfall_funding_note` says who funds that amount. */
 export const APPROVE_POD_PAYMENT_RELEASE = gql`
-  mutation ApprovePodPaymentRelease($id: ID!) {
-    approvePodPaymentRelease(id: $id) {
+  mutation ApprovePodPaymentRelease($id: ID!, $shortfall_funding_note: String) {
+    approvePodPaymentRelease(id: $id, shortfall_funding_note: $shortfall_funding_note) {
       ...PodPaymentReleaseDetailFields
     }
   }
@@ -223,6 +228,12 @@ export interface ReleaseBreakdown {
   /** The agreed offer's pricing model (VenueOfferModel) and rate; null before offers. */
   venue_agreed_model: string | null;
   venue_agreed_rate: number | null;
+  /** True when the typed venue bill set the venue's money; false when it was
+   * recorded as evidence only and the booked price was paid; null on releases
+   * written before this was recorded. */
+  venue_bill_applied: boolean | null;
+  /** What the completion's payouts send out beyond what its pod collected (0 when it paid its way). */
+  funding_shortfall: number;
 }
 
 /** One request with every payout on it. */
@@ -251,20 +262,21 @@ export interface PaymentReleaseRow {
   notes: string | null;
   requested_at: string;
   approved_amount?: number | null;
+  /** Who funds the snapshot's shortfall, as the approving reviewer stated it ('' when there was none). */
+  shortfall_funding_note: string;
   breakdown?: ReleaseBreakdown | null;
 }
-/** The pod's coin movement, multi-ticket and Smart Incentive discounts, for the
- * release review's explanatory lines. Live rather than from the frozen
- * settlement snapshot: none was ever part of that record and back-filling one
- * would rewrite money history. Each discount total is itself a sum of
- * per-payment snapshots, so it does not move when the pod's offers are edited. */
+/** The pod's coin movement and Smart Incentive discounts, for the release
+ * review's explanatory lines. Live rather than from the frozen settlement
+ * snapshot: neither was ever part of that record and back-filling one would
+ * rewrite money history. The discount total is itself a sum of per-payment
+ * snapshots, so it does not move when the pod's offers are edited. */
 export const POD_COIN_TOTALS = gql`
   query PodCoinTotals($podId: ID!) {
     podFinanceBreakdown(pod_id: $podId) {
       pod_id
       coins_redeemed_total
       coins_earned_total
-      ticket_discount_total
       smart_incentive_total
     }
   }

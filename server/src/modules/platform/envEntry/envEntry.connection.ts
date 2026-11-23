@@ -14,6 +14,7 @@ import {
 } from '@modules/platform/appBuild/googlePlay.gateway';
 import { ascToken, assertCertificateAccess, findApp } from '@modules/platform/appBuild/appStoreConnect.gateway';
 import { probeDriveAccount } from '@modules/ai/reel/reel.drive';
+import { probePlayReportsBucket } from '@modules/platform/analytics/appInsights/googlePlay.probe';
 import { parseServiceAccount } from '@utils/googleServiceAccount';
 import { msg91WidgetAnalytics } from '@modules/platform/msg91/msg91.gateway';
 import { APPLE_TOKEN_URL, appleClientSecret } from '@modules/access/auth/auth.apple';
@@ -517,14 +518,14 @@ export async function googlePlayConnection(str: EnvConfigReader): Promise<EnvCon
       ],
     };
   }
-  return {
-    ok: true,
-    message: `Connected to ${packageName}`,
-    details: [
-      `Signed in as ${account.client_email}.`,
-      'The account can open a release edit on this app, which is what pushing a build needs.',
-    ],
-  };
+  const details = [
+    `Signed in as ${account.client_email}.`,
+    'The account can open a release edit on this app, which is what pushing a build needs.',
+  ];
+  const bucket = await probePlayReportsBucket(account, str('reports_bucket'));
+  if (bucket) details.push(bucket.detail);
+  if (bucket && !bucket.ok) return { ok: false, message: 'Releases work, but the App Insights reports bucket cannot be read', details };
+  return { ok: true, message: `Connected to ${packageName}`, details };
 }
 
 // --- MSG91 ------------------------------------------------------------------

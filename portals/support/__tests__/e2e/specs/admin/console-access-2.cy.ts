@@ -77,6 +77,7 @@ describe('Admin · Console access (run account, password CHANGED)', () => {
       cy.interceptOperation('AdminLogin');
       cy.byTestId('login-submit').click();
       cy.wait('@AdminLogin').its('response.body.errors').should('be.undefined');
+      cy.completeSecurityVerification();
       cy.location('pathname').should('eq', '/hub');
       cy.byTestId('shell-user-menu-button').should('be.visible');
       cy.window().its('localStorage').invoke('getItem', portalTokenKey('admin')).should('be.a', 'string');

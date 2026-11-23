@@ -107,32 +107,36 @@ describe('MarkRentalSheet', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('tells the venue to hand the whole deposit back for an item returned fine', () => {
+  it('tells the venue Duncit refunds the whole deposit through Razorpay for an item returned fine', () => {
     open(booking());
     expect(screen.getByTestId('mark-rental-hand-back')).toHaveTextContent(
-      /Hand ₹\s?500 back to the guest now\. Duncit adds the full deposit to your next rental payout\./,
+      /Duncit refunds ₹\s?500 to the guest through Razorpay when you save\. Do not hand any cash back\./,
     );
   });
 
-  it('takes the damage claim off what the venue hands back, as it is typed', () => {
+  it('takes the damage claim off what Duncit refunds, as it is typed', () => {
     open(booking());
     fireEvent.press(screen.getByTestId('mark-rental-outcome-DAMAGED'));
     fireEvent.changeText(screen.getByTestId('field-damage_claim'), '200');
-    expect(screen.getByTestId('mark-rental-hand-back')).toHaveTextContent(/Hand ₹\s?300 back/);
+    expect(screen.getByTestId('mark-rental-hand-back')).toHaveTextContent(
+      /Duncit refunds ₹\s?300 to the guest/,
+    );
 
-    // The whole deposit kept: nothing goes back, the payout still carries it.
+    // The whole deposit kept: nothing goes back, the venue's payout carries it.
     fireEvent.changeText(screen.getByTestId('field-damage_claim'), '500');
     expect(screen.getByTestId('mark-rental-hand-back')).toHaveTextContent(
-      'Nothing to hand back. Duncit adds the full deposit to your next rental payout.',
+      'Nothing goes back to the guest. The deposit kept is added to your next rental payout.',
     );
   });
 
-  it('hands nothing back when Finance made deposits non-refundable', () => {
+  it('refunds nothing when Finance made deposits non-refundable', () => {
     open(booking(), undefined, undefined, false);
-    expect(screen.getByTestId('mark-rental-hand-back')).toHaveTextContent(/^Nothing to hand back/);
+    expect(screen.getByTestId('mark-rental-hand-back')).toHaveTextContent(
+      /^Nothing goes back to the guest/,
+    );
   });
 
-  it('says nothing about a hand-back when no deposit was taken', () => {
+  it('says nothing about a refund when no deposit was taken', () => {
     open(booking({ deposit_amount: 0 }));
     expect(screen.queryByTestId('mark-rental-hand-back')).toBeNull();
   });

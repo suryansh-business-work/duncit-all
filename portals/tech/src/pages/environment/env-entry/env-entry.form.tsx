@@ -24,6 +24,8 @@ import {
   type EnvEntryFormValues,
 } from './env-entry.types';
 import ConfigField from './ConfigField';
+import { isRequiredOnCreate } from './env-validation';
+import { useEnvEntryMessages } from './useEnvEntryMessages';
 import { useTranslation } from '@duncit/app-settings';
 
 interface Props {
@@ -40,10 +42,11 @@ interface Props {
 export default function EnvEntryForm({ open, def, initial, busy, testing, onClose, onSubmit, onTest }: Readonly<Props>) {
   const { t } = useTranslation();
   const isEdit = !!initial;
+  const messages = useEnvEntryMessages();
   const defaults = initial ? valuesFromEntry(initial) : emptyValues();
   const { control, handleSubmit, reset } = useForm<EnvEntryFormValues, any, EnvEntryFormValues>({
     defaultValues: defaults,
-    resolver: zodResolver(envEntrySchema(def, isEdit)) as unknown as Resolver<EnvEntryFormValues, any, EnvEntryFormValues>,
+    resolver: zodResolver(envEntrySchema(def, isEdit, messages)) as unknown as Resolver<EnvEntryFormValues, any, EnvEntryFormValues>,
     mode: 'all',
   });
 
@@ -64,9 +67,6 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
     if (field.secret) return secretHelper(field.name);
     return ' ';
   };
-
-  // The first secret field is the only one enforced as required, and only on create.
-  const firstSecretField = def.fields.find((f) => f.secret);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
@@ -157,7 +157,8 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
                     value={rhfField.value}
                     error={fieldState.error?.message ?? false}
                     helperText={fieldHelper(field)}
-                    required={!isEdit && field === firstSecretField}
+                    required={!isEdit && isRequiredOnCreate(field, def.fields)}
+                    categoryUsedIn={def.usedIn}
                     onChange={(e) => rhfField.onChange(e.target.value)}
                     onBlur={rhfField.onBlur}
                     onToggleBool={(_name, checked) => rhfField.onChange(checked ? 'true' : 'false')}

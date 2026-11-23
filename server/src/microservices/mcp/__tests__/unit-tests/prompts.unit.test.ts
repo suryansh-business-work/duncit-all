@@ -47,9 +47,9 @@ describe('MCP_PROMPTS', () => {
     expect(toolsNamedIn(text).filter((tool) => !each.tools.includes(tool))).toEqual([]);
   });
 
-  it('marks only the find_tool task as a required argument', () => {
+  it('marks as required only what a prompt cannot run without', () => {
     const required = MCP_PROMPTS.flatMap((each) => each.arguments.filter((argument) => argument.required).map((argument) => `${each.name}.${argument.name}`));
-    expect(required).toEqual(['find_tool.task']);
+    expect(required).toEqual(['find_crm_leads.lead_type', 'find_crm_leads.city', 'recalculate_lead_scores.lead_type', 'find_tool.task']);
   });
 
   it('finds a prompt by name and nothing for an unknown one', () => {

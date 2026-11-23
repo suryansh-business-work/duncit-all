@@ -82,6 +82,38 @@ describe('useJobSettlement', () => {
     expect(notify).toHaveBeenCalledWith('leads.csv: 9 checked, 3 could not be checked.', 'warning');
   });
 
+  it('announces a lead quality rescore in leads, whole or partial', () => {
+    const rescore = (overrides: Partial<BackgroundJob>) =>
+      makeJob({ kind: 'LEAD_QUALITY_RECALC', table: '', label: 'Venue lead quality scores', ...overrides });
+
+    const { rerender } = renderSettlement([rescore({ id: 'r1' }), rescore({ id: 'r2' })]);
+    rerender({
+      jobs: [
+        rescore({ id: 'r1', status: 'COMPLETED', succeeded: 120, total: 120 }),
+        rescore({ id: 'r2', status: 'COMPLETED', succeeded: 118, failed: 2, total: 120 }),
+      ],
+    });
+
+    expect(notifySuccess).toHaveBeenCalledWith('Venue lead quality scores: 120 leads rescored.');
+    expect(notify).toHaveBeenCalledWith('Venue lead quality scores: 118 rescored, 2 could not be scored.', 'warning');
+  });
+
+  it('points a finished lead discovery at the Lead Research queue, and says why one stopped', () => {
+    const discovery = (overrides: Partial<BackgroundJob>) =>
+      makeJob({ kind: 'LEAD_DISCOVERY', table: '', label: 'Discover 20 venue leads in Lucknow', ...overrides });
+
+    const { rerender } = renderSettlement([discovery({ id: 'd1' }), discovery({ id: 'd2' })]);
+    rerender({
+      jobs: [
+        discovery({ id: 'd1', status: 'COMPLETED', succeeded: 1, total: 20 }),
+        discovery({ id: 'd2', status: 'FAILED', error_message: 'Serper quota exhausted' }),
+      ],
+    });
+
+    expect(notifySuccess).toHaveBeenCalledWith('Discover 20 venue leads in Lucknow: 1 new lead is waiting in Lead Research.');
+    expect(notifyError).toHaveBeenCalledWith('Discover 20 venue leads in Lucknow: discovery stopped — Serper quota exhausted');
+  });
+
   it('reports why a job stopped', () => {
     const { rerender } = renderSettlement([makeJob()]);
     rerender({ jobs: [makeJob({ status: 'FAILED', error_message: 'Access to Coupons was revoked' })] });

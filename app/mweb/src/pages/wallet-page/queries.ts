@@ -30,6 +30,8 @@ export const MY_WALLET = gql`
       scheduled_for
       reject_reason
       created_at
+      razorpay_payout_id
+      payout_utr
     }
   }
 `;

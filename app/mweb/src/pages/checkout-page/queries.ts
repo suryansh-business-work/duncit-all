@@ -66,15 +66,8 @@ export const CHECKOUT_POD = gql`
       # Rented items: only a paid pod at a venue rents things out.
       pod_mode
       venue_id
-      # The multi-ticket tier comes off the ticket money before the coupon and
-      # coins — the server prices the charge from the same two fields.
-      ticket_discount_enabled
-      ticket_discount_tiers {
-        min_tickets
-        discount_pct
-      }
-      # The member's Smart Incentive comes off next — read only for a pod that
-      # offers it, so every other checkout skips that request.
+      # The member's Smart Incentive comes off the ticket money first — read only
+      # for a pod that offers it, so every other checkout skips that request.
       smart_incentive_enabled
       place_charges {
         label
@@ -114,8 +107,6 @@ export const DUMMY_CHECKOUT = gql`
       payment_id
       invoice_no
       total
-      ticket_discount_amount
-      ticket_discount_pct
       smart_incentive_amount
       smart_incentive_pct
       currency_symbol
@@ -184,8 +175,6 @@ export const CREATE_RAZORPAY_ORDER = gql`
         payment_id
         invoice_no
         total
-        ticket_discount_amount
-        ticket_discount_pct
         smart_incentive_amount
         smart_incentive_pct
         currency_symbol
@@ -204,8 +193,6 @@ export const VERIFY_RAZORPAY_PAYMENT = gql`
       payment_id
       invoice_no
       total
-      ticket_discount_amount
-      ticket_discount_pct
       smart_incentive_amount
       smart_incentive_pct
       currency_symbol
@@ -232,8 +219,6 @@ export const MY_PAYMENT = gql`
       payment_id
       invoice_no
       total
-      ticket_discount_amount
-      ticket_discount_pct
       smart_incentive_amount
       smart_incentive_pct
       currency_symbol
@@ -252,9 +237,6 @@ export interface CheckoutPaymentRow {
   payment_id: string;
   invoice_no: string | null;
   total: number;
-  /** The multi-ticket discount frozen on this payment (0 when none applied). */
-  ticket_discount_amount: number;
-  ticket_discount_pct: number;
   /** The member's Smart Incentive frozen on this payment (0 when none applied). */
   smart_incentive_amount: number;
   smart_incentive_pct: number;
@@ -275,8 +257,6 @@ export const DUMMY_PRODUCT_CHECKOUT = gql`
       payment_id
       invoice_no
       total
-      ticket_discount_amount
-      ticket_discount_pct
       smart_incentive_amount
       smart_incentive_pct
       currency_symbol
@@ -309,8 +289,6 @@ export const CREATE_RAZORPAY_PRODUCT_ORDER = gql`
         payment_id
         invoice_no
         total
-        ticket_discount_amount
-        ticket_discount_pct
         smart_incentive_amount
         smart_incentive_pct
         currency_symbol

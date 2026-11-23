@@ -70,13 +70,6 @@ export const POD_DETAILS = gql`
         amount
         note
       }
-      # The multi-ticket offer: its accordion, and the booking bar's price for
-      # the seats picked (native selects the same, rule 27).
-      ticket_discount_enabled
-      ticket_discount_tiers {
-        min_tickets
-        discount_pct
-      }
       # Whether to ask for the viewer's Smart Incentive at all — the offer
       # itself (its %, delay and lock) is podSmartIncentive's, per member.
       smart_incentive_enabled

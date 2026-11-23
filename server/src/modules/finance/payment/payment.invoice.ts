@@ -65,16 +65,13 @@ const paidSeats = (meta: Record<string, unknown>) => normalizeSeats(Number(meta.
 
 /**
  * What the booking's tickets actually sold for: every seat at list price, less
- * the multi-ticket discount and the Smart Incentive frozen on the payment.
- * `ticket_gross` exists only on payments priced after the discount shipped;
- * older rows had no discount, so one seat's price times the seats is exact for
- * them.
+ * the Smart Incentive frozen on the payment. Older rows carry no `ticket_gross`,
+ * so one seat's price times the seats stands in for it.
  */
 function soldTicketGross(doc: IPayment, meta: Record<string, unknown>, seats: number): number {
   const frozen = Number(meta.ticket_gross ?? Number.NaN);
   const listGross = Number.isFinite(frozen) ? frozen : Number(meta.ticket_amount ?? 0) * seats;
-  const discounts = (doc.ticket_discount_amount ?? 0) + (doc.smart_incentive_amount ?? 0);
-  return round2(Math.max(0, listGross - discounts));
+  return round2(Math.max(0, listGross - (doc.smart_incentive_amount ?? 0)));
 }
 
 export function buildInvoiceItems(doc: IPayment, photos: InvoiceLinePhotos = NO_LINE_PHOTOS): InvoiceLineItem[] {
@@ -171,12 +168,7 @@ export async function invoiceDataForPayment(
     // invoice must keep saying what actually happened.
     coins_redeemed: doc.coins_redeemed ?? 0,
     coins_earned: doc.coins_earned ?? 0,
-    // The multi-ticket discount as frozen on the payment, never re-derived from
-    // the pod — its tiers can be edited after this booking was priced.
-    ticket_discount_pct: doc.ticket_discount_pct ?? 0,
-    ticket_discount_amount: doc.ticket_discount_amount ?? 0,
-    ticket_discount_tickets: paidSeats(doc.metadata ?? {}),
-    // Frozen the same way: the offer's % and what it took off.
+    // Frozen on the payment, never re-derived: the offer's % and what it took off.
     smart_incentive_pct: doc.smart_incentive_pct ?? 0,
     smart_incentive_amount: doc.smart_incentive_amount ?? 0,
     invoice_label: fs.invoice_label,

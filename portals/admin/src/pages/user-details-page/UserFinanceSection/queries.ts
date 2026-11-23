@@ -44,6 +44,10 @@ export interface UserPaymentRow {
   currency_symbol: string;
   status: string;
   gateway: string;
+  /** Razorpay's own ids, as its dashboard shows them (null/empty for other gateways). */
+  razorpay_payment_id?: string | null;
+  razorpay_order_id?: string | null;
+  razorpay_refund_ids?: string[];
   paid_at: string | null;
   created_at: string;
 }
@@ -63,6 +67,9 @@ export const USER_PAYMENTS_TABLE = gql`
         currency_symbol
         status
         gateway
+        razorpay_payment_id
+        razorpay_order_id
+        razorpay_refund_ids
         paid_at
         created_at
       }
@@ -82,6 +89,10 @@ export interface UserRefundRow {
   refund_reason: string | null;
   refund_initiated_by: string | null;
   refunded_at: string | null;
+  /** Razorpay's own ids, as its dashboard shows them (null/empty for other gateways). */
+  razorpay_payment_id?: string | null;
+  razorpay_order_id?: string | null;
+  razorpay_refund_ids?: string[];
   partial: boolean;
 }
 
@@ -101,6 +112,9 @@ export const USER_REFUNDS_TABLE = gql`
         refund_reason
         refund_initiated_by
         refunded_at
+        razorpay_payment_id
+        razorpay_order_id
+        razorpay_refund_ids
         partial
       }
     }

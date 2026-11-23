@@ -3,7 +3,8 @@
  * reads), the row tint and the role gate behind every decision button.
  */
 import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { createTheme } from '@mui/material/styles';
 import { fallbackT } from '@duncit/shell';
 import { buildFailedPaymentColumns } from '../../src/pages/finance/failed-payments-page/failedPaymentColumns';
@@ -19,6 +20,24 @@ const column = (field: string) => {
 };
 
 describe('buildFailedPaymentColumns', () => {
+  it('shows which checkout the money came from, and a dash when the payment is gone', () => {
+    const shop = makeFailedPaymentRow({ payment_source: 'POD_SHOP' });
+    expect(column('payment_source').valueGetter?.(shop)).toBe('Pod Shop cart');
+    expect(column('payment_source').valueGetter?.(makeFailedPaymentRow({ payment_source: 'ECOMM' }))).toBe('Ecomm (pet store)');
+    expect(column('payment_source').valueGetter?.(makeFailedPaymentRow({ payment_source: null }))).toBe('—');
+    render(<>{column('payment_source').cellRenderer?.(shop)}</>);
+    expect(screen.getByText('Pod Shop cart')).toBeInTheDocument();
+  });
+
+  it('turns every id in the ids cell into a Payment Trace link, the Duncit ref too', () => {
+    const row = makeFailedPaymentRow({ razorpay_refund_id: 'rfnd_9' });
+    const { container } = render(<>{column('razorpay_payment_id').cellRenderer?.(row)}</>, { wrapper: MemoryRouter });
+    const cell = within(container);
+    for (const id of ['pay_RZP123', 'order_RZP9', 'rfnd_9', 'DUN-PAY-9001']) {
+      expect(cell.getByRole('link', { name: `Trace ${id}` })).toHaveAttribute('href', `/payment-trace?ref=${id}`);
+    }
+  });
+
   it('lets only the server-allowlisted fields sort, and filters the four status enums', () => {
     const sortable = columns().filter((c) => c.type !== 'actions' && c.sortable !== false).map((c) => c.field);
     expect(sortable.sort()).toEqual(['amount', 'attempts', 'created_at', 'updated_at', 'user_name'].sort());
@@ -37,7 +56,8 @@ describe('buildFailedPaymentColumns', () => {
   it('reads money, ids, errors and the refund amount off the row', () => {
     const row = makeFailedPaymentRow({ refund_status: 'PROCESSED', refund_amount: 499, review_decision: 'APPROVED' });
     expect(column('amount').valueGetter?.(row)).toBe('₹499.00');
-    expect(column('razorpay_payment_id').valueGetter?.(row)).toBe('pay_RZP123 order_RZP9');
+    expect(column('razorpay_payment_id').valueGetter?.(row)).toBe('pay_RZP123 order_RZP9 DUN-PAY-9001');
+    expect(column('payment_source').valueGetter?.(row)).toBe('Pod booking');
     expect(column('error_code').valueGetter?.(row)).toBe('BAD_REQUEST_ERROR Payment failed at the bank');
     expect(column('review_decision').valueGetter?.(row)).toBe('Approved');
     expect(column('refund_status').valueGetter?.(row)).toBe('Processed');
@@ -53,6 +73,8 @@ describe('buildFailedPaymentColumns', () => {
       user_phone: null,
       razorpay_payment_id: null,
       razorpay_order_id: null,
+      // The Duncit ref is an id too: with it present the cell shows a trace link, not a dash.
+      payment_id: '',
       error_code: null,
       error_description: null,
       ticket_no: null,
@@ -69,9 +91,11 @@ describe('buildFailedPaymentColumns', () => {
         {column('user_name').cellRenderer?.(row)}
         {column('razorpay_payment_id').cellRenderer?.(row)}
       </>,
+      { wrapper: MemoryRouter },
     );
     expect(screen.getByText('riya@duncit.com')).toBeInTheDocument();
     expect(screen.getAllByText('—').length).toBeGreaterThan(0);
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 
   it('renders status chips and the caller-provided actions', () => {
@@ -84,6 +108,7 @@ describe('buildFailedPaymentColumns', () => {
         {column('razorpay_payment_id').cellRenderer?.(row)}
         {column('error_code').cellRenderer?.(row)}
       </>,
+      { wrapper: MemoryRouter },
     );
     expect(screen.getByText('Matched')).toBeInTheDocument();
     expect(screen.getByText('Open')).toBeInTheDocument();

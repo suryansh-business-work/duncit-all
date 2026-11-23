@@ -40,8 +40,6 @@ const pod = (over: Record<string, unknown> = {}) => ({
   meeting_url: null,
   pod_type: 'PUBLIC',
   pod_amount: 250,
-  ticket_discount_enabled: true,
-  ticket_discount_tiers: [{ __typename: 'PodTicketDiscountTier', min_tickets: 4, discount_pct: 20 }],
   pod_occurrence: 'ONE_TIME',
   no_of_spots: 8,
   seats_taken: 3,

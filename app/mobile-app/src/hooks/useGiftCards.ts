@@ -2,20 +2,15 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { MobilePublicFinanceDocument } from '@/graphql/checkout';
-import {
-  MobileGiftCardCategoriesDocument,
-  MobileGiftCardSettingsDocument,
-  MobileMyGiftCardsDocument,
-} from '@/graphql/gift-cards';
+import { MobileGiftCardStorefrontDocument, MobileMyGiftCardsDocument } from '@/graphql/gift-cards';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
 
-export type GiftCardSettings = ResultOf<
-  typeof MobileGiftCardSettingsDocument
->['publicGiftCardSettings'];
-export type GiftCardCategory = ResultOf<
-  typeof MobileGiftCardCategoriesDocument
->['categories'][number];
+export type GiftCardStorefront = ResultOf<
+  typeof MobileGiftCardStorefrontDocument
+>['giftCardStorefront'];
+export type GiftCardSettings = GiftCardStorefront['settings'];
+export type GiftCardDesign = NonNullable<GiftCardStorefront['design']>;
 export type MyGiftCards = ResultOf<typeof MobileMyGiftCardsDocument>['myGiftCards'];
 export type GiftCard = MyGiftCards['owned'][number];
 
@@ -36,15 +31,14 @@ export function useFinanceCurrency(): string {
 }
 
 /**
- * Data layer of the Gift Cards screen — the sales policy (amount chips +
- * bounds), the category tree the themes are built from, and the caller's own
- * cards. The buy context loads once; `refreshCards` re-reads the cards
- * whenever the "My cards" tab is opened, so a purchase shows without a
- * cold restart. RN twin of mWeb's gift-cards data layer (rule 27).
+ * Data layer of the Gift Cards screen — the storefront (the default design,
+ * the sales policy and printed stock) and the caller's own cards. The buy
+ * context loads once; `refreshCards` re-reads the cards whenever the "My
+ * cards" tab is opened, so a purchase shows without a cold restart. RN twin of
+ * mWeb's gift-cards data layer (rule 27).
  */
 export function useGiftCards() {
-  const [settings, setSettings] = useState<GiftCardSettings | null>(null);
-  const [categories, setCategories] = useState<GiftCardCategory[]>([]);
+  const [storefront, setStorefront] = useState<GiftCardStorefront | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
@@ -54,14 +48,8 @@ export function useGiftCards() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([
-      graphqlRequest(MobileGiftCardSettingsDocument, undefined, { auth: true }).then(
-        (d) => active && setSettings(d.publicGiftCardSettings),
-      ),
-      graphqlRequest(MobileGiftCardCategoriesDocument, undefined, { auth: true }).then(
-        (d) => active && setCategories(d.categories),
-      ),
-    ])
+    graphqlRequest(MobileGiftCardStorefrontDocument, undefined, { auth: true })
+      .then((d) => active && setStorefront(d.giftCardStorefront))
       .catch(() => active && setHasError(true))
       .finally(() => active && setIsLoading(false));
     return () => {
@@ -85,8 +73,7 @@ export function useGiftCards() {
   useRefreshRegistration(refreshCards);
 
   return {
-    settings,
-    categories,
+    storefront,
     isLoading,
     hasError,
     cards,

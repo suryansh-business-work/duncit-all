@@ -1,6 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter } from 'react-router';
+import { ConfirmProvider } from '@duncit/dialogs';
 import { QUICK_ACCESS_STORAGE_KEY, type ProfileMenuFlags } from '@duncit/utils';
 import UserModeContent from '../UserModeContent';
 import { ACTIVE_ADS } from '../../../ads/useActiveAds';
@@ -10,6 +12,16 @@ const mockBranding = vi.fn();
 vi.mock('../../../../hooks/useBrandingAssets', () => ({
   useBrandingAssets: () => mockBranding(),
 }));
+
+const mockNavigate = vi.fn();
+vi.mock('react-router', async () => {
+  const actual = await vi.importActual<typeof import('react-router')>('react-router');
+  return { ...actual, useNavigate: () => mockNavigate };
+});
+
+// Whether the email is verified comes from the user info cache (useStudioEmailGate).
+const userInfo = { me: { is_email_verified: true as boolean | null } };
+vi.mock('../../../../user-info/useUserInfo', () => ({ useUserInfo: () => userInfo }));
 
 const adsMock = {
   request: { query: ACTIVE_ADS, variables: { position: 'SIDEBAR' } },
@@ -29,14 +41,18 @@ interface RenderProps {
 function content(props: RenderProps) {
   return (
     <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[adsMock]}>
-      <UserModeContent
-        me={props.me ?? null}
-        roles={props.roles ?? []}
-        mode={props.mode ?? 'USER'}
-        flags={props.flags ?? {}}
-        badgeCounts={props.badgeCounts}
-        onNavigate={props.onNavigate ?? vi.fn()}
-      />
+      <MemoryRouter>
+        <ConfirmProvider>
+          <UserModeContent
+            me={props.me ?? null}
+            roles={props.roles ?? []}
+            mode={props.mode ?? 'USER'}
+            flags={props.flags ?? {}}
+            badgeCounts={props.badgeCounts}
+            onNavigate={props.onNavigate ?? vi.fn()}
+          />
+        </ConfirmProvider>
+      </MemoryRouter>
     </MockedProvider>
   );
 }
@@ -199,6 +215,41 @@ describe('UserModeContent — Studio and Duncit Coin cards', () => {
   beforeEach(() => {
     mockBranding.mockReturnValue({ venuesCardVideoUrl: '' });
     localStorage.clear();
+    mockNavigate.mockReset();
+    userInfo.me.is_email_verified = true;
+  });
+
+  it('explains instead of opening the Host studio while the email is unverified', async () => {
+    userInfo.me.is_email_verified = false;
+    const onNavigate = vi.fn();
+    renderContent({ me: FULL_ME, roles: ['HOST'], onNavigate });
+    fireEvent.click(screen.getByRole('button', { name: 'Studio' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Verify your email first' });
+    expect(onNavigate).not.toHaveBeenCalled();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Verify email' }));
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/profile?verifyEmail=1'));
+    expect(onNavigate).not.toHaveBeenCalled();
+  });
+
+  it('leaves everything as it was when the unverified user picks "Not now"', async () => {
+    userInfo.me.is_email_verified = false;
+    const onNavigate = vi.fn();
+    renderContent({ me: FULL_ME, roles: ['CLUB_ADMIN'], mode: 'CLUB', onNavigate });
+    fireEvent.click(screen.getByRole('button', { name: 'Studio' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Verify your email first' });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Not now' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(onNavigate).not.toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('still opens the Brand studio on an unverified email — it is not gated', () => {
+    userInfo.me.is_email_verified = false;
+    const onNavigate = vi.fn();
+    renderContent({ me: FULL_ME, roles: ['ECOMM_MANAGER'], flags: { products: true }, onNavigate });
+    fireEvent.click(screen.getByRole('button', { name: 'Studio' }));
+    expect(onNavigate).toHaveBeenCalledWith('/products/options');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('gives a partner ONE "Studio" entry in any mode, and a consumer none', () => {

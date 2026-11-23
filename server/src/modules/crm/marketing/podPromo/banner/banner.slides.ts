@@ -82,9 +82,6 @@ export function bookSlide(ctx: SlideContext): SlidePlan {
   y = canvas.text({ text: copy.book_heading, role: family.title_font, size: 84, minSize: 56, x: M, y, width: inner, maxLines: 2, fill: palette.ink, align: 'center', upper: family.upper_title });
   y = canvas.text({ text: copy.entry_label, role: family.body_font, size: 34, x: M, y: y + 24, width: inner, maxLines: 1, fill: palette.muted, align: 'center', upper: true });
   y = canvas.text({ text: copy.price, role: family.title_font, size: 150, minSize: 80, x: M, y: y + 8, width: inner, maxLines: 1, fill: palette.accent, align: 'center' });
-  if (copy.price_detail !== copy.price) {
-    y = canvas.text({ text: copy.price_detail, role: family.body_font, size: 32, x: M, y: y + 6, width: inner, maxLines: 2, fill: palette.ink, align: 'center' });
-  }
   // What is left under the price for the code, its labels (about 150 px) and the pill (about 70 px).
   const qr = qrSize(H - M - 70 - 150 - (y + 36) - 40);
   const tile = qr + 40;

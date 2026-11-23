@@ -1,4 +1,7 @@
+import { logs } from '@observability/log';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
+import { adoptRazorpayCapture } from '@modules/finance/payment/payment.capture';
+import { applyRazorpayRefund, gatewayRefundForRazorpay } from '@modules/finance/payment/payment.gatewayRefund';
 import { FailedPaymentCaseModel } from './failedPaymentCase.model';
 import { isCaseEligible, upsertCaseForPayment } from './failedPaymentCase.service';
 import { completeRefund, failRefund } from './failedPayment.refundOutcome';
@@ -7,9 +10,11 @@ import { receiptPrefix } from './failedPayment.refund';
 
 /**
  * What each Razorpay webhook event does. Every handler is idempotent (a
- * redelivery or a race with the client/poller changes nothing twice) and none
- * books anything: `payment.captured` is only recorded — adopting a capture is
- * the reconciler's job, which runs the finalizer with all its guards.
+ * redelivery or a race with the client/poller changes nothing twice).
+ * `payment.captured` hands the payment to `adoptRazorpayCapture` — the same
+ * path the reconciler takes, which asks Razorpay again rather than trusting the
+ * body and runs the finalizer with all its guards — so a buyer whose app lost
+ * the success callback is booked in seconds instead of on the next sweep.
  */
 
 export type WebhookOutcome = 'APPLIED' | 'IGNORED';
@@ -92,6 +97,11 @@ async function onPaymentCaptured(body: Entity, eventId: string): Promise<Webhook
     data: { razorpay_payment_id: text(entity.id), amount_paise: Number(entity.amount ?? 0) || 0 },
     dedupeKey: `webhook:${eventId}`,
   });
+  // Not awaited: Razorpay times a delivery out after a few seconds and the
+  // finalizer can take longer. A run that dies is the reconciler's to finish.
+  adoptRazorpayCapture(payment, 'WEBHOOK').catch((error: unknown) =>
+    logs.server.error('razorpay', 'webhook', { error, event_id: eventId, msg: 'capture adoption failed' })
+  );
   return 'APPLIED';
 }
 
@@ -107,12 +117,35 @@ async function caseForRefund(refund: Entity) {
 async function onRefund(body: Entity, processed: boolean): Promise<WebhookOutcome> {
   const refund = entityOf(body, 'refund');
   const kase = await caseForRefund(refund);
-  if (!kase) return 'IGNORED';
+  if (!kase) return onPodPaymentRefund(refund, processed);
   const refundId = text(refund.id);
   // A failure report for an older attempt must not fail the newer one.
   if (!processed && kase.refund.razorpay_refund_id && kase.refund.razorpay_refund_id !== refundId) return 'IGNORED';
   if (processed) await completeRefund(String(kase._id), refundId, 'WEBHOOK');
   else await failRefund(String(kase._id), 'Razorpay reported the refund as failed.', 'WEBHOOK');
+  return 'APPLIED';
+}
+
+/**
+ * A refund of a pod payment (cancellation, Finance refund, Backout) reported by
+ * Razorpay — found by our `dr_` receipt or its refund id. A failure report for
+ * an older attempt never fails the attempt that replaced it.
+ */
+async function onPodPaymentRefund(refund: Entity, processed: boolean): Promise<WebhookOutcome> {
+  const refundId = text(refund.id);
+  const record = await gatewayRefundForRazorpay({ id: refundId, receipt: text(refund.receipt) });
+  if (!record) return 'IGNORED';
+  if (!processed && record.razorpay_refund_id && record.razorpay_refund_id !== refundId) return 'IGNORED';
+  await applyRazorpayRefund(
+    record._id,
+    {
+      id: refundId,
+      status: processed ? 'processed' : 'failed',
+      amount: Number(refund.amount ?? 0) || 0,
+      receipt: text(refund.receipt),
+    },
+    'WEBHOOK'
+  );
   return 'APPLIED';
 }
 

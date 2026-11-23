@@ -114,7 +114,11 @@ describe('a refused signature on a payment Razorpay captured', () => {
 
     await ageCheckout(sheet.payment_doc_id);
     mockCaptured.mockResolvedValue({ id: 'pay_REAL1', amount: 50000 });
+    // Adoption hands phase 2 off without awaiting it; caught so it cannot outlive the test.
+    const followUp = jest.spyOn(paymentFinalizer, 'runSideEffects');
     await sweep();
+    await Promise.allSettled(followUp.mock.results.map((result) => result.value));
+    followUp.mockRestore();
 
     const paid = await PaymentModel.findById(sheet.payment_doc_id).lean();
     expect(paid).toMatchObject({ status: 'SUCCESS', gateway_ref: 'pay_REAL1', finalize_attempts: 1 });
@@ -280,5 +284,91 @@ describe('a repeat verify of a payment that already settled', () => {
     followUp.mockRestore();
     expect(await PodMemberModel.countDocuments({ pod_id: pod._id })).toBe(1);
     expect((await PaymentModel.findById(sheet.payment_doc_id).lean())?.finalize_attempts).toBe(1);
+  });
+});
+
+describe('a verify that races the payment.captured webhook', () => {
+  /** A checkout exactly as the capture adopter leaves it the moment its
+   * conditional write lands: the payment id in gateway_ref, booking not yet written. */
+  async function adoptedCheckout(paymentId: string, over: Record<string, unknown> = {}) {
+    const opened = await openPodCheckout();
+    await PaymentModel.updateOne(
+      { _id: opened.sheet.payment_doc_id },
+      {
+        $set: {
+          gateway_ref: paymentId,
+          'metadata.razorpay_order_id': 'order_FORGED1',
+          'metadata.razorpay_payment_id': paymentId,
+          'metadata.adopted_by': 'WEBHOOK',
+          ...over,
+        },
+      }
+    );
+    return opened;
+  }
+
+  const verifyFor = (paymentDocId: string, paymentId: string, signature = 'sig') => ({
+    payment_doc_id: paymentDocId,
+    razorpay_order_id: 'order_FORGED1',
+    razorpay_payment_id: paymentId,
+    razorpay_signature: signature,
+  });
+
+  it('answers the buyer with their booking instead of "Payment/order mismatch", booking once', async () => {
+    const { user, pod, sheet } = await adoptedCheckout('pay_RACE1');
+    mockVerify.mockResolvedValue(true);
+    const followUp = jest.spyOn(paymentFinalizer, 'runSideEffects');
+
+    const out = await paymentService.verifyRazorpayCheckout(verifyFor(sheet.payment_doc_id, 'pay_RACE1'), String(user._id));
+    await Promise.allSettled(followUp.mock.results.map((result) => result.value));
+    followUp.mockRestore();
+
+    expect(out).toMatchObject({ id: sheet.payment_doc_id, status: 'SUCCESS', gateway_ref: 'pay_RACE1' });
+    expect(await PodMemberModel.countDocuments({ pod_id: pod._id })).toBe(1);
+    expect((await PaymentModel.findById(sheet.payment_doc_id).lean())?.finalize_attempts).toBe(1);
+  });
+
+  it('refuses a bad signature even though the ids match the adopted capture', async () => {
+    const { user, pod, sheet } = await adoptedCheckout('pay_RACE2');
+    mockVerify.mockResolvedValue(false);
+
+    await expect(
+      paymentService.verifyRazorpayCheckout(verifyFor(sheet.payment_doc_id, 'pay_RACE2', 'forged'), String(user._id))
+    ).rejects.toThrow('Payment signature verification failed');
+    expect(await PodMemberModel.countDocuments({ pod_id: pod._id })).toBe(0);
+    expect((await PaymentModel.findById(sheet.payment_doc_id).lean())?.finalize_state).toBe('NOT_STARTED');
+  });
+
+  it('tells the buyer why when the adopted capture could not be booked, and never re-runs it', async () => {
+    const { user, pod, sheet } = await adoptedCheckout('pay_RACE3', {
+      finalize_state: 'FAILED',
+      finalize_error: 'Pod is full',
+      needs_refund: true,
+      finalize_attempts: 1,
+    });
+    mockVerify.mockResolvedValue(true);
+
+    const attempt = paymentService.verifyRazorpayCheckout(verifyFor(sheet.payment_doc_id, 'pay_RACE3'), String(user._id));
+    await expect(attempt).rejects.toThrow('Pod is full');
+    await expect(
+      paymentService.verifyRazorpayCheckout(verifyFor(sheet.payment_doc_id, 'pay_RACE3'), String(user._id))
+    ).rejects.toMatchObject({ extensions: { code: 'PAYMENT_NOT_COMPLETED' } });
+
+    expect(await PodMemberModel.countDocuments({ pod_id: pod._id })).toBe(0);
+    // The money is the automatic refund's now: the core was not tried again.
+    expect(await PaymentModel.findById(sheet.payment_doc_id).lean()).toMatchObject({
+      status: 'PENDING',
+      finalize_state: 'FAILED',
+      finalize_attempts: 1,
+      needs_refund: true,
+    });
+  });
+
+  it('still refuses a different Razorpay payment id than the one adopted', async () => {
+    const { user, sheet } = await adoptedCheckout('pay_RACE4');
+    mockVerify.mockResolvedValue(true);
+    await expect(
+      paymentService.verifyRazorpayCheckout(verifyFor(sheet.payment_doc_id, 'pay_SOMEONE_ELSE'), String(user._id))
+    ).rejects.toThrow('Payment/order mismatch');
   });
 });

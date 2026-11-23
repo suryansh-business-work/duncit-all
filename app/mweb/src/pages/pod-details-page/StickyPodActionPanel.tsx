@@ -1,12 +1,27 @@
+import { useState } from 'react';
 import { Box } from '@mui/material';
 import { alpha } from '@mui/material/styles';
+import { podPhase } from '@duncit/utils';
 import { APP_SHELL_MAX_WIDTH } from '../../app/appLayout';
+import ConfirmDialog from '../../components/ConfirmDialog';
+import { useTranslation } from '../../i18n/useTranslation';
 import PodActionPanel, { type PodActionPanelProps } from './PodActionPanel';
 
 /** The booking bar: a floating 24px surface card above the bottom nav, price
- * or state on the left and the one green action on the right.
- * Native twin: details/PodBookingBar. */
+ * or state on the left and the one green action on the right. A pod that has
+ * already started asks "still want to join?" before Join / Book goes ahead.
+ * Native twin: details/PodBookingBar (+ PodDetailsOverlays for the ask). */
 export default function StickyPodActionPanel(props: Readonly<PodActionPanelProps>) {
+  const { t } = useTranslation();
+  const [pendingBook, setPendingBook] = useState<(() => void) | null>(null);
+  const ongoing = podPhase(props.pod?.pod_date_time, props.pod?.pod_end_date_time) === 'ONGOING';
+  // The setter takes an updater, so the handler is wrapped to be stored as-is.
+  const askFirst = (book: () => void) => (ongoing ? () => setPendingBook(() => book) : book);
+  const confirmBook = () => {
+    const book = pendingBook;
+    setPendingBook(null);
+    book?.();
+  };
   return (
     <Box
       data-testid="sticky-pod-action-panel"
@@ -37,8 +52,21 @@ export default function StickyPodActionPanel(props: Readonly<PodActionPanelProps
           pointerEvents: 'auto',
         }}
       >
-        <PodActionPanel {...props} />
+        <PodActionPanel
+          {...props}
+          onJoinFree={askFirst(props.onJoinFree)}
+          onPaidCheckout={askFirst(props.onPaidCheckout)}
+        />
       </Box>
+      <ConfirmDialog
+        open={pendingBook !== null}
+        title={t('mweb.podDetails.ongoingJoinTitle')}
+        message={t('mweb.podDetails.ongoingJoinBody')}
+        confirmLabel={t('mweb.podDetails.ongoingJoinConfirm')}
+        onConfirm={confirmBook}
+        onClose={() => setPendingBook(null)}
+        testId="ongoing-join-dialog"
+      />
     </Box>
   );
 }

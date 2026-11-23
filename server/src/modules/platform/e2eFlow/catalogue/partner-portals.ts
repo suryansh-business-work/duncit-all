@@ -1479,7 +1479,7 @@ export const PARTNER_PORTAL_FLOWS: readonly CatalogueFlow[] = [
         steps: [
           ['Scan a random or tampered QR', 'A red alert reads "Invalid or tampered QR code"'],
           ['Scan a valid ticket belonging to a different pod', 'Red alert "This ticket is for another pod — <other pod title>"'],
-          ['Scan a cancelled ticket', 'Red alert "Ticket cancelled"'],
+          ['Scan the ticket of a guest who cancelled their spot', 'Red alert "<name> has already cancelled their spot, so they can\'t join this pod. Attendance can\'t be marked for this ticket." and nobody is marked'],
           ['Open "Complete pod" on an already completed pod with unmarked guests, click "Scan Attendee Event Tickets" and scan a ticket', 'Red alert "Attendance is closed for this pod"'],
         ],
       },
@@ -2085,7 +2085,6 @@ export const PARTNER_PORTAL_FLOWS: readonly CatalogueFlow[] = [
           ['Click "Save" on an empty /pods/new form', 'Errors "Title is too short", "Add a longer description", "Select a venue", "Start date/time required" and "At least one image is required"'],
           ['Pick a start date in the past', '"Start date/time must be after current date/time"'],
           ['Enter a reel URL that is not http(s)', '"Reel video must be a valid http(s) URL"'],
-          ['Enable the multi-ticket discount with no tier', '"Add at least one discount tier"'],
         ],
       },
       {
@@ -4599,17 +4598,6 @@ export const PARTNER_PORTAL_FLOWS: readonly CatalogueFlow[] = [
         ],
       },
       {
-        name: 'Multi-ticket discount tiers',
-        description: 'Tier rules capped by the admin setting.',
-        steps: [
-          ['On a paid pod open Multi-ticket discount and turn on "Offer a discount when one person books multiple tickets"', 'The base row "1 ticket · 0% (full price)" and "Add tier" appear'],
-          ['Save with no tiers', '"Add at least one discount tier"'],
-          ['Add a tier with 1 ticket', '"Tickets must be a whole number of at least 2"'],
-          ['Add a second tier with fewer tickets than the first', '"Needs more tickets than the row above"'],
-          ['Set a discount above the configured maximum', '"Discount can’t be more than <max>%"'],
-        ],
-      },
-      {
         name: 'AI fill the pod form',
         description: 'AI fill proposes content from the approved lists.',
         steps: [
@@ -4966,7 +4954,6 @@ export const PARTNER_PORTAL_FLOWS: readonly CatalogueFlow[] = [
           ['Change it to 5 and click Save', 'The button reads "Saving…", then "Pod settings saved" and the value persists after reload'],
           ['Enter 0', 'Warning "Enter a whole number of 1 or more." and Save disabled'],
           ['Clear the Account Health Penalty box', 'Warning "Enter a whole number of 0 or more." and Save disabled'],
-          ['Enter 200 in "Max multi-ticket discount (%)"', 'Warning "Enter a whole number between 1 and 99."'],
           ['Enter 9000 in "Cancellation Risk Window (Hours)"', 'Warning "Enter a whole number between 1 and 8760."'],
         ],
       },

@@ -36,11 +36,11 @@ describe('runSelfTest', () => {
   it('passes every check on a well-formed catalog', () => {
     const results = runSelfTest(catalog, catalog.tools);
     expect(results.map((result) => [result.id, result.ok, result.checked])).toEqual([
-      ['names', true, 22],
-      ['descriptions', true, 22],
-      ['parameters', true, 22],
+      ['names', true, 35],
+      ['descriptions', true, 35],
+      ['parameters', true, 35],
       ['operations', true, 13],
-      ['served', true, 22],
+      ['served', true, 35],
     ]);
     expect(results.every((result) => result.failures.length === 0)).toBe(true);
   });
@@ -108,7 +108,7 @@ describe('mcp_self_test', () => {
 
   it('passes all seven checks on a healthy server', async () => {
     const report = await selfTest();
-    expect(report).toMatchObject({ ok: true, passed: 7, failed: 0, tools_tested: 22 });
+    expect(report).toMatchObject({ ok: true, passed: 7, failed: 0, tools_tested: 35 });
     expect(report.checks.map((check) => check.id)).toEqual(['names', 'descriptions', 'parameters', 'operations', 'served', 'settings', 'database']);
   });
 

@@ -32,7 +32,7 @@ export const clubAdminDemo = defineDemo<ClubAdminMock>({
   id: 'club-admin',
   title: 'The Club Admin editor — one config and one set of documents for two surfaces',
   note:
-    'The Partners console and mWeb both mount PodEditorPage over useClubAdminPodEditor, which pins every save to the club and searches hosts through clubAdminHostSearch. CLUB_ADMIN_POD_CONFIG is the native-parity form with products on. Edit meetup_venues_id and watch which venues the club may book; the operation names are what the network tab shows on either surface. The pod also offers a multi-ticket discount: make the second tier 10% and the schema refuses it (every tier must give more than the one above), set a tier to 8 tickets and it is past the 7 payable seats, switch pod_type to FREE (allowed on this physical pod) and it goes out at pod_amount 0 with the discount cleared.',
+    'The Partners console and mWeb both mount PodEditorPage over useClubAdminPodEditor, which pins every save to the club and searches hosts through clubAdminHostSearch. CLUB_ADMIN_POD_CONFIG is the native-parity form with products on. Edit meetup_venues_id and watch which venues the club may book; the operation names are what the network tab shows on either surface. Switch pod_type to FREE (allowed on this physical pod) and it goes out at pod_amount 0.',
   mock: {
     club: {
       id: '66f1a2b3c4d5e6f708192a3b',
@@ -56,14 +56,12 @@ export const clubAdminDemo = defineDemo<ClubAdminMock>({
       pod_occurrence: 'WEEKLY',
       no_of_spots: 8,
       media_text: 'https://ik.imagekit.io/duncit/pods/badminton-hero.jpg',
-      ticket_discount_enabled: true,
-      ticket_discount_tiers: [{ min_tickets: 2, discount_pct: 10 }, { min_tickets: 4, discount_pct: 20 }],
     },
   },
   compute: (mock) => {
     const linked = new Set(getClubVenueIds(mock.club));
     const parsed = makePodSchema(CLUB_ADMIN_POD_CONFIG, fallbackT).safeParse(mock.values);
-    const { pod_type, pod_amount, ticket_discount_enabled, ticket_discount_tiers } = buildPodInput(mock.values, {
+    const { pod_type, pod_amount } = buildPodInput(mock.values, {
       config: CLUB_ADMIN_POD_CONFIG,
     });
     return {
@@ -74,7 +72,6 @@ export const clubAdminDemo = defineDemo<ClubAdminMock>({
       'This pod is valid for a Club Admin': parsed.success,
       'What is still missing': issueLines(parsed),
       'Type and price it sends': { pod_type, pod_amount },
-      'Multi-ticket discount it sends': { ticket_discount_enabled, ticket_discount_tiers },
       'Documents the editor sends': [
         CLUB_ADMIN_POD_LOOKUPS,
         CLUB_ADMIN_POD_FOR_EDIT,

@@ -31,6 +31,8 @@ import DnsStagingPage from './pages/domain/staging';
 import PortMappingPage from './pages/domain/port-mapping';
 import SslPage from './pages/ssl';
 import CloudflarePage from './pages/cloudflare';
+import LoginVerificationsPage from './pages/security/login-verifications';
+import VerificationRequestsPage from './pages/security/verification-requests';
 import GoogleAnalyticsPage from './pages/google-analytics';
 import Msg91SettingsPage from './pages/msg91-settings';
 // The Communications console's own pages, mounted here as they are — one
@@ -93,6 +95,11 @@ export default function App() {
         <Route path="/security/ssl" element={authed(<SslPage />)} />
         <Route path="/ssl" element={<Navigate to="/security/ssl" replace />} />
         <Route path="/security/cloudflare" element={authed(<CloudflarePage />)} />
+        {/* The Security Verification every console asks for after sign-in: what
+            people answered, and the requests of those who could not or would not
+            share a location. Both are read by Super Admin and Tech Manager only. */}
+        <Route path="/security/login-verifications" element={authed(<LoginVerificationsPage />)} />
+        <Route path="/security/verification-requests" element={authed(<VerificationRequestsPage />)} />
         {/* The GA4 tag each Duncit website loads, one per website. */}
         <Route path="/google-analytics" element={authed(<GoogleAnalyticsPage />)} />
         {/* MSG91 OTP Logs: the widget's records, read live from MSG91, beside

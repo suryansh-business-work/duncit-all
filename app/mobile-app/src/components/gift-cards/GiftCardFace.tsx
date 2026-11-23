@@ -63,7 +63,8 @@ export function GiftCardFace({
   const [iconFailed, setIconFailed] = useState(false);
   const [start, end] = giftCardGradient(theme);
   const isShop = theme.scope_type === GiftCardScopeType.Shop;
-  const title = isShop ? t('mweb.giftCards.shopTheme') : theme.scope_name;
+  const themeTitle = isShop ? t('mweb.giftCards.shopTheme') : theme.scope_name;
+  const title = theme.design_name || themeTitle;
   const showArtwork = !!artworkUrl && !artworkFailed;
   const showIcon = !showArtwork && !!imageUrl && !iconFailed;
   const isFront = side === 'FRONT';

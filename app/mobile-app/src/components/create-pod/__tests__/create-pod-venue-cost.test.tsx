@@ -122,6 +122,9 @@ describe('useVenueCost', () => {
     expect(result.current.offerEarnings).toEqual({
       venue_amount: 6000,
       venue_commission_on_top: 300,
+      // The offer's model and its two-hour window pick the venue's minimum business.
+      venue_offer_model: 'PER_GUEST',
+      venue_hours: 2,
       min_spots: 6,
       venue_amount_at_min: 1800,
       venue_commission_on_top_at_min: 90,
@@ -134,6 +137,8 @@ describe('useVenueCost', () => {
     expect(result.current.offerEarnings).toEqual({
       venue_amount: 6000,
       venue_commission_on_top: 300,
+      venue_offer_model: 'PER_GUEST',
+      venue_hours: 2,
     });
   });
 
@@ -144,6 +149,20 @@ describe('useVenueCost', () => {
     expect(result.current.offerEarnings).toEqual({
       venue_amount: 6000,
       venue_commission_on_top: 300,
+      venue_offer_model: 'PER_GUEST',
+      venue_hours: 2,
+    });
+  });
+
+  it('names a free ask FREE, so the venue holds it to no minimum business', () => {
+    mockQuote.mockReturnValue({ ...idle, quote: breakdown(20, 0, 0), quoteMin: null });
+    const { result } = renderHook(() =>
+      useHarness({ ...offerValues, venue_offer_model: 'FREE', venue_offer_rate: '' }),
+    );
+    expect(result.current.offerEarnings).toMatchObject({
+      venue_amount: 0,
+      venue_offer_model: 'FREE',
+      venue_hours: 2,
     });
   });
 

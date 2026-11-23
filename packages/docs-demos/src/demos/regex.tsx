@@ -1,4 +1,5 @@
 import {
+  isAppleTeamId,
   isBankAccountNumber,
   isEmail,
   isGstin,
@@ -134,6 +135,14 @@ export default defineDemos('regex', [
       'isPaymentTransactionId(razorpay_payment_id)': isPaymentTransactionId(mock.razorpay_payment_id),
       'isPaymentTransactionId(bank_utr)': isPaymentTransactionId(mock.bank_utr),
     }),
+  }),
+
+  defineDemo<{ team_id: string }>({
+    id: 'apple-team-id',
+    title: 'The Team ID mWeb writes into apple-app-site-association',
+    note: 'Read from Tech → Environment → Sign in with Apple when mWeb is built. Lower-case it or drop a character and the row turns false — the build then leaves the file out rather than ship one iOS rejects.',
+    mock: { team_id: 'A1B2C3D4E5' },
+    compute: (mock) => ({ 'isAppleTeamId(team_id)': isAppleTeamId(mock.team_id) }),
   }),
 
   defineDemo<PrintedCardMock>({

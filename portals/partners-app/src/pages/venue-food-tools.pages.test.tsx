@@ -44,8 +44,12 @@ vi.mock(import('@duncit/venue-food'), async (importOriginal) => ({
 
 vi.mock(import('@duncit/venue-rentals'), async (importOriginal) => ({
   ...(await importOriginal()),
-  VenueRentalDesk: ((props: { venueId: string; surface: string; mode: string }) => (
-    <section data-testid="stub-rentals">{`rentals:${props.venueId}:${props.surface}:${props.mode}`}</section>
+  VenueRentalDesk: ((props: { venueId: string; surface: string; mode: string; links?: { mwebUrl?: string; profileUrl?: unknown } }) => (
+    <section
+      data-testid="stub-rentals"
+      data-mweb={props.links?.mwebUrl}
+      data-profile-link={props.links?.profileUrl ? 'yes' : 'no'}
+    >{`rentals:${props.venueId}:${props.surface}:${props.mode}`}</section>
   )) as never,
 }));
 
@@ -141,6 +145,9 @@ describe('Rented Items page', () => {
   it('mounts the rental desk for the selected venue, food or not', async () => {
     mount(<VenueRentedItemsPage />, [venue('v1', 'Blue Kettle', false)]);
     expect((await screen.findByTestId('stub-rentals')).textContent).toBe('rentals:v1:partners-app:owner');
+    // A rental's pod opens on mWeb; a venue gets no guest profile link (that view is Finance's).
+    expect(screen.getByTestId('stub-rentals').getAttribute('data-mweb')).toMatch(/^https?:\/\//);
+    expect(screen.getByTestId('stub-rentals').getAttribute('data-profile-link')).toBe('no');
     // The title and hint come from the server catalogue; with none loaded the key itself shows.
     expect(screen.getByTestId('venue-rented-items-page').textContent).toContain('venueRentals.items.pageTitle');
   });

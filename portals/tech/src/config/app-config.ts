@@ -86,11 +86,22 @@ export const appConfig = {
       // Beside Domain. SSL: the certificates every host the zone points here
       // answers HTTPS with. Cloudflare: where the zone moves when DNS leaves
       // GoDaddy, and the nameserver switch that decides which of the two answers.
+      // Login verifications: what people answered on the Security Verification
+      // screen every console shows after sign-in. Verification requests: those
+      // who could not or would not share a location, waiting on a second reviewer.
       label: 'Security', labelKey: 'shell.nav.security',
       icon: 'shield',
       children: [
         { label: 'SSL', labelKey: 'shell.nav.ssl', to: '/security/ssl', icon: 'lock' },
         { label: 'Cloudflare', labelKey: 'shell.nav.cloudflare', to: '/security/cloudflare', icon: 'dns' },
+        {
+          label: 'Login verifications', labelKey: 'shell.nav.loginVerifications',
+          to: '/security/login-verifications', icon: 'verified-user',
+        },
+        {
+          label: 'Verification requests', labelKey: 'shell.nav.verificationRequests',
+          to: '/security/verification-requests', icon: 'host-request',
+        },
       ],
     },
     // Beside DNS Config: both decide something about every public website —

@@ -37,8 +37,6 @@ const TRACKED_FIELDS = [
   'pod_hashtag',
   'pod_images_and_videos',
   'pod_hosts_id',
-  'ticket_discount_enabled',
-  'ticket_discount_tiers',
   'smart_incentive_enabled',
   'smart_incentive_pct',
   'free_justification',
@@ -66,9 +64,6 @@ const ARRAY_FIELD_SUMMARY: Record<string, (items: any[]) => string> = {
   // a re-saved identical gallery is not.
   pod_images_and_videos: (items) => items.map((m) => String(m?.url ?? '')).join(', '),
   pod_hosts_id: (items) => items.map(String).join(', '),
-  // "2+ @ 10%, 4+ @ 20%" — a tier is a price move, so each one must read plainly.
-  ticket_discount_tiers: (items) =>
-    items.map((tier) => `${tier?.min_tickets}+ @ ${tier?.discount_pct}%`).join(', '),
 };
 
 export type PodAuditSnapshot = Record<string, string>;

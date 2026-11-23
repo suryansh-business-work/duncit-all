@@ -24,7 +24,6 @@ import {
   themeTokensToPub,
   type ThemeTokensInput,
 } from "./theme-tokens";
-import { DEFAULT_TICKET_DISCOUNT_MAX_PCT } from "@modules/pods/pod/pod.ticketDiscount";
 import { launchMediaOf } from "@modules/platform/location/location.model";
 import { launchMediaSchema, type LaunchMediaInput } from "@modules/platform/location/location.validator";
 import { validate } from "@utils/validate";
@@ -159,11 +158,6 @@ const cleanPodCancelRiskAlertHours = (value: unknown) =>
 const cleanPodCompleteTimeoutHours = (value: unknown) =>
   Math.min(8760, Math.max(1, Math.floor(Number(value)) || DEFAULT_POD_COMPLETE_TIMEOUT_HOURS));
 
-/** The biggest multi-ticket tier discount, clamped to 1–99% — a tier can never
- * take a ticket to nothing, and 0 would forbid every tier outright. */
-export const cleanTicketDiscountMaxPct = (value: unknown) =>
-  Math.min(99, Math.max(1, Math.floor(Number(value)) || DEFAULT_TICKET_DISCOUNT_MAX_PCT));
-
 /** When the complete-pod reminder goes out, clamped to 1 hour – 1 year. */
 const cleanPodCompleteReminderHours = (value: unknown) =>
   Math.min(8760, Math.max(1, Math.floor(Number(value)) || DEFAULT_POD_COMPLETE_REMINDER_HOURS));
@@ -294,7 +288,6 @@ const toAppPub = (d: any) => ({
   // otherwise.
   attendance_otp_required: d?.attendance_otp_required ?? DEFAULT_ATTENDANCE_OTP_REQUIRED,
   pod_complete_timeout_hours: cleanPodCompleteTimeoutHours(d?.pod_complete_timeout_hours),
-  ticket_discount_max_pct: cleanTicketDiscountMaxPct(d?.ticket_discount_max_pct),
   pod_complete_reminder_hours: cleanPodCompleteReminderHours(d?.pod_complete_reminder_hours),
   pod_reminder_lead_hours: cleanPodReminderLeadHours(d?.pod_reminder_lead_hours),
   venue_slot_reminder_lead_hours: cleanVenueSlotReminderLeadHours(
@@ -729,7 +722,6 @@ type AppSettingsUpdateInput = {
   attendance_otp_required?: boolean;
   pod_cancel_refund_hold?: boolean;
   pod_complete_timeout_hours?: number;
-  ticket_discount_max_pct?: number;
   pod_complete_reminder_hours?: number;
   pod_reminder_lead_hours?: number;
   venue_slot_reminder_lead_hours?: number;
@@ -796,7 +788,6 @@ const APP_SETTING_CLEANED_FIELDS: ReadonlyArray<
   ["max_free_spot_cancellations", cleanMaxFreeSpotCancellations],
   ["venue_cancel_health_penalty", cleanVenueCancelHealthPenalty],
   ["pod_complete_timeout_hours", cleanPodCompleteTimeoutHours],
-  ["ticket_discount_max_pct", cleanTicketDiscountMaxPct],
   ["pod_complete_reminder_hours", cleanPodCompleteReminderHours],
   ["pod_reminder_lead_hours", cleanPodReminderLeadHours],
   ["venue_slot_reminder_lead_hours", cleanVenueSlotReminderLeadHours],
@@ -863,7 +854,6 @@ export const settingsService = {
       attendance_otp_required:
         doc.attendance_otp_required ?? DEFAULT_ATTENDANCE_OTP_REQUIRED,
       pod_complete_timeout_hours: cleanPodCompleteTimeoutHours(doc.pod_complete_timeout_hours),
-      ticket_discount_max_pct: cleanTicketDiscountMaxPct(doc.ticket_discount_max_pct),
       happening_nearby_days: cleanHappeningNearbyDays(doc.happening_nearby_days),
     };
   },
@@ -962,13 +952,6 @@ export const settingsService = {
     return cleanMinSignupAge(doc?.min_signup_age);
   },
 
-  /** Clamped biggest multi-ticket tier discount (1–99%, default 50) — what a
-   * pod's changed tiers are validated against on every write. */
-  async getTicketDiscountMaxPct(): Promise<number> {
-    const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
-    return cleanTicketDiscountMaxPct(doc?.ticket_discount_max_pct);
-  },
-
   /** Clamped max-backout-attempts setting for the backout flow (min 1, default 3). */
   async getMaxBackoutAttempts(): Promise<number> {
     const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
@@ -1060,10 +1043,13 @@ export const settingsService = {
       appleBundleId,
       appleServicesId,
       appleWebRedirectUri,
+      appleTeamId,
       truecallerAndroidClientId,
       truecallerAppKey,
       truecallerIosAppLink,
       truecallerPartnerName,
+      appLinksSha256,
+      remotionLicenseKey,
       { serverUrl },
     ] = await Promise.all([
       getRuntimeEnvValue("GOOGLE_CLIENT_ID"),
@@ -1073,10 +1059,13 @@ export const settingsService = {
       getRuntimeEnvValue("APPLE_BUNDLE_ID"),
       getRuntimeEnvValue("APPLE_SERVICES_ID"),
       getRuntimeEnvValue("APPLE_WEB_REDIRECT_URI"),
+      getRuntimeEnvValue("APPLE_TEAM_ID"),
       getRuntimeEnvValue("TRUECALLER_ANDROID_CLIENT_ID"),
       getRuntimeEnvValue("TRUECALLER_APP_KEY"),
       getRuntimeEnvValue("TRUECALLER_IOS_APP_LINK"),
       getRuntimeEnvValue("TRUECALLER_PARTNER_NAME"),
+      getRuntimeEnvValue("GOOGLE_PLAY_APP_LINKS_SHA256"),
+      getRuntimeEnvValue("REMOTION_LICENSE_KEY"),
       getUrlConfigs(),
     ]);
     return {
@@ -1089,10 +1078,16 @@ export const settingsService = {
       apple_services_id: appleServicesId.trim(),
       apple_web_redirect_uri: appleWebRedirectUri.trim(),
       apple_relay_url: `${trimTrailingSlash(serverUrl)}/apple/callback`,
+      // Public by nature: it prefixes the app id in apple-app-site-association.
+      apple_team_id: appleTeamId.trim(),
       truecaller_android_client_id: truecallerAndroidClientId.trim(),
       truecaller_app_key: truecallerAppKey.trim(),
       truecaller_ios_app_link: truecallerIosAppLink.trim(),
       truecaller_partner_name: truecallerPartnerName.trim(),
+      // Public by nature: mWeb serves them in /.well-known/assetlinks.json.
+      android_app_links_sha256: appLinksSha256.trim(),
+      // Public by design: Remotion takes the licence key in client code.
+      remotion_license_key: remotionLicenseKey.trim(),
     };
   },
 

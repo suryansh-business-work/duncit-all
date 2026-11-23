@@ -4,6 +4,10 @@ import { Avatar, Box, ButtonBase, ListItemIcon, Menu, MenuItem, Tooltip, Typogra
 import { useTranslation } from '../i18n/useTranslation';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { DuncitIconButton } from '@duncit/buttons';
+import { UserRolesDialog } from './user-roles/UserRolesDialog';
+import { roleSummary } from './user-roles/roles-for-portals';
 import { accountEmail, accountName, initials, type ShellUser } from './user-display';
 
 export interface UserMenuProps {
@@ -20,6 +24,8 @@ export function UserMenu({ user, fallbackName, profileTo, onLogout }: Readonly<U
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [rolesOpen, setRolesOpen] = useState(false);
+  const roles = user?.roles ?? [];
   const email = accountEmail(user);
 
   const handleProfile = () => {
@@ -66,6 +72,15 @@ export function UserMenu({ user, fallbackName, profileTo, onLogout }: Readonly<U
                 {email}
               </Typography>
             )}
+            {roles.length > 0 && (
+              <Typography
+                variant="caption"
+                noWrap
+                data-testid="shell-user-menu-role"
+                sx={{ color: 'primary.main', fontWeight: 600, display: 'block', lineHeight: 1.2 }}>
+                {roleSummary(roles)}
+              </Typography>
+            )}
           </Box>
           <Avatar
             src={user?.profile_photo || undefined}
@@ -77,6 +92,12 @@ export function UserMenu({ user, fallbackName, profileTo, onLogout }: Readonly<U
           </Avatar>
         </ButtonBase>
       </Tooltip>
+      <Tooltip title={t('shell.userRoles.open')}>
+        <DuncitIconButton size="small" onClick={() => setRolesOpen(true)} aria-label={t('shell.userRoles.open')} data-testid="shell-user-roles-info">
+          <InfoOutlinedIcon fontSize="small" />
+        </DuncitIconButton>
+      </Tooltip>
+      {rolesOpen && <UserRolesDialog open onClose={() => setRolesOpen(false)} roles={roles} />}
       <Menu
         anchorEl={anchorEl}
         open={!!anchorEl}

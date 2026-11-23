@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { Server, Socket } from 'socket.io';
 import { isAllowedOrigin } from '../config/cors';
 import { isAccountLocked } from '../modules/access/accountDeletion/accountDeletion.lock';
+import { isPortalSessionPending } from '../modules/portals/portalSecurity/portalSecurity.claims';
 import { socketAllowed } from '../modules/platform/rateLimit/rateLimit.guard';
 
 export interface AuthedSocket extends Socket {
@@ -55,7 +56,11 @@ export function initSocketServer(httpServer: http.Server): Server {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret') as {
         id: string;
         roles?: string[];
+        psv?: unknown;
       };
+      // A console sign-in that still owes the Security Verification screen is
+      // not a session — the GraphQL context refuses it, and so does a socket.
+      if (isPortalSessionPending(decoded)) return next(new Error('UNAUTHENTICATED'));
       // Same rule as the GraphQL context: an account whose owner has asked for
       // it to be deleted holds no session, and a socket is a session that
       // outlives the request that opened it. Without this the chat and presence

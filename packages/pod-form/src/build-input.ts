@@ -1,8 +1,7 @@
-import { freeJustificationInput, mediaTypeForUrl, ticketDiscountInput, venueOfferInput } from '@duncit/utils';
+import { freeJustificationInput, mediaTypeForUrl, venueOfferInput } from '@duncit/utils';
 
 import { isFreePodType, normalizePodType } from './pod-type';
 import { bookingKeyOf, keepsExistingBooking } from './kept-booking';
-import { podHasTicketPrice } from './ticket-discount';
 import {
   AUTO_POD_TYPE,
   blankAutoPodFormValues,
@@ -104,9 +103,6 @@ export function buildPodInput(values: PodFormValues, { draft, config }: BuildPod
     place_charges: isPhysical && config.showPlaceCharges ? placeChargesOf(values) : [],
     products_enabled: productsOn,
     product_requests: productsOn ? productRequestsOf(values) : [],
-    // A free or unpriced pod always sends the discount cleared, whatever the
-    // (hidden) switch still holds.
-    ...ticketDiscountInput(values, !podHasTicketPrice(values)),
     is_active: !draft,
   };
 
@@ -315,11 +311,6 @@ export function podToFormValues(pod: any): PodFormValues {
           product_id: item.product_id ?? '',
           quantity: Number(item.quantity ?? 1),
         })),
-    ticket_discount_enabled: !!pod.ticket_discount_enabled,
-    ticket_discount_tiers: (pod.ticket_discount_tiers ?? []).map((tier: any) => ({
-      min_tickets: Number(tier.min_tickets),
-      discount_pct: Number(tier.discount_pct),
-    })),
     is_active: pod.is_active ?? true,
   };
 }

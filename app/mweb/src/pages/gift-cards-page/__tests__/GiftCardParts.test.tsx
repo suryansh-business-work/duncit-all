@@ -2,10 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import MyCardTile from '../MyCardTile';
-import ThemePicker from '../ThemePicker';
 import GiftRecipientFields from '../GiftRecipientFields';
 import { fallbackT } from '../../../i18n/fallback';
-import type { GiftCard, GiftCardCategory } from '../queries';
+import type { GiftCard } from '../queries';
 
 const h = vi.hoisted(() => ({ shareUrl: vi.fn(), success: vi.fn() }));
 
@@ -38,6 +37,7 @@ const card = (over: Partial<GiftCard> = {}): GiftCard => ({
   scope_image_url: '',
   scope_image_front_url: '',
   scope_image_back_url: '',
+  design_name: '',
   initial_amount: 500,
   balance: 500,
   status: 'ACTIVE',
@@ -143,70 +143,6 @@ describe('MyCardTile', () => {
   });
 });
 
-describe('ThemePicker', () => {
-  const cat = (id: string, level: GiftCardCategory['level'], over: Partial<GiftCardCategory> = {}): GiftCardCategory => ({
-    id,
-    name: `Cat ${id}`,
-    slug: id,
-    icon: 'https://img/i.png',
-    level,
-    parent_id: null,
-    gift_card_image_front: 'https://img/f.png',
-    gift_card_image_back: 'https://img/b.png',
-    ...over,
-  });
-  const categories = [cat('s1', 'SUPER'), cat('c1', 'CATEGORY', { icon: null }), cat('c2', 'CATEGORY')];
-
-  const picker = (scopeType: 'SHOP' | 'SUPER' | 'CATEGORY' | 'SUB', scopeCategoryId: string | null = null) => {
-    const onGroup = vi.fn();
-    const onPick = vi.fn();
-    render(
-      <ThemePicker
-        categories={categories}
-        scopeType={scopeType}
-        scopeCategoryId={scopeCategoryId}
-        amount={750}
-        currencySymbol="₹"
-        onGroup={onGroup}
-        onPick={onPick}
-      />
-    );
-    return { onGroup, onPick };
-  };
-
-  it('shows the single fixed Pod Shop card with its caption', () => {
-    picker('SHOP');
-    expect(screen.getByTestId('theme-picker-shop')).toHaveTextContent(fallbackT('mweb.giftCards.shopThemeCaption'));
-    expect(screen.getByTestId('visual')).toHaveAttribute('data-scope', 'SHOP');
-    expect(screen.getByTestId('gift-card-group-SHOP')).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByTestId('gift-card-group-SUPER')).toHaveAttribute('aria-pressed', 'false');
-  });
-
-  it('switches group on press', () => {
-    const { onGroup } = picker('SHOP');
-    fireEvent.click(screen.getByTestId('gift-card-group-CATEGORY'));
-    expect(onGroup).toHaveBeenCalledWith('CATEGORY');
-  });
-
-  it('fans out only the options of the active level, marking the selected one, and picks', () => {
-    const { onPick } = picker('CATEGORY', 'c2');
-    expect(screen.queryByTestId('gift-card-theme-s1')).not.toBeInTheDocument();
-    expect(screen.getByTestId('gift-card-theme-c1')).toHaveAttribute('aria-pressed', 'false');
-    expect(screen.getByTestId('gift-card-theme-c2')).toHaveAttribute('aria-pressed', 'true');
-    const visuals = screen.getAllByTestId('visual');
-    expect(visuals[0]).toHaveAttribute('data-icon', '');
-    expect(visuals[1]).toHaveAttribute('data-front', 'https://img/f.png');
-    expect(visuals[0]).toHaveAttribute('data-compact', 'true');
-    fireEvent.click(screen.getByTestId('gift-card-theme-c1'));
-    expect(onPick).toHaveBeenCalledWith(categories[1]);
-  });
-
-  it('renders an empty rail for a level with no categories', () => {
-    picker('SUB');
-    expect(screen.queryByTestId('visual')).not.toBeInTheDocument();
-  });
-});
-
 describe('GiftRecipientFields', () => {
   const fields = (over: Partial<Parameters<typeof GiftRecipientFields>[0]> = {}) => {
     const props = {
@@ -252,6 +188,15 @@ describe('GiftRecipientFields', () => {
   it('shows the hint normally and the validation message on an invalid email', () => {
     fields();
     expect(screen.getByText(fallbackT('mweb.giftCards.recipientEmailHint'))).toBeInTheDocument();
+  });
+
+  it('asks a printed card only who it is for and its note — no inbox, no self/gift choice', () => {
+    const props = fields({ printed: true, gift: false });
+    expect(screen.getByText(fallbackT('mweb.giftCards.printedForHeading'))).toBeInTheDocument();
+    expect(screen.queryByTestId('gift-card-for-myself')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('gift-card-recipient-email')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByTestId('gift-card-recipient-name-input'), { target: { value: 'Priya' } });
+    expect(props.onName).toHaveBeenCalledWith('Priya');
   });
 
   it('flags an invalid email', () => {

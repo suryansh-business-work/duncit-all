@@ -1,6 +1,5 @@
-import { formatMoney, ticketDiscountRows, type TicketDiscountRow } from '@duncit/utils';
+import { formatMoney } from '@duncit/utils';
 import { linesToMedia } from '../build-input';
-import { podHasTicketPrice } from '../ticket-discount';
 import { fallbackT, type Translate } from '../i18n/useTranslation';
 import type { PodFormData, PodFormValues } from '../types';
 
@@ -32,8 +31,6 @@ export interface PodPreviewModel {
   perks: string[];
   hashtags: string[];
   charges: { label: string; amount: number; note: string }[];
-  /** The multi-ticket offer's tiers (base row excluded); empty when there is no offer. */
-  ticketDiscountTiers: TicketDiscountRow[];
   paymentTerms: string;
 }
 
@@ -81,22 +78,6 @@ function spotsLine(total: number): string {
   return 'Spots not set';
 }
 
-/**
- * The offer as the pod page lists it: ascending tiers only. A row that does not
- * ask for more tickets than the one before it is still being typed (the form
- * flags it), so the preview leaves it out rather than list a tier twice.
- */
-function ticketDiscountOffer(values: PodFormValues): TicketDiscountRow[] {
-  if (!podHasTicketPrice(values)) return [];
-  const [, ...tiers] = ticketDiscountRows(Number(values.pod_amount), values);
-  let floor = 1;
-  return tiers.filter((tier) => {
-    if (tier.min_tickets <= floor) return false;
-    floor = tier.min_tickets;
-    return true;
-  });
-}
-
 const hashtagsOf = (text: string): string[] =>
   text
     .split(/[\s,]+/)
@@ -138,7 +119,6 @@ export function buildPodPreview(
     perks: values.available_perks.filter(Boolean),
     hashtags: hashtagsOf(values.pod_hashtag_text),
     charges: values.place_charges.filter((charge) => charge.label.trim()),
-    ticketDiscountTiers: ticketDiscountOffer(values),
     // Never shown for a free pod — it has no money terms to state.
     paymentTerms: isFree ? '' : values.payment_terms.trim(),
   };

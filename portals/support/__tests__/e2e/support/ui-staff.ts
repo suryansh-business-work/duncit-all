@@ -6,7 +6,13 @@ import {
   type E2eStaffRole,
 } from '@duncit/utils';
 import { openLogin } from './login-page';
-import { LOGIN_MUTATION } from './operations';
+import {
+  LOGIN_MUTATION,
+  PORTAL_SECURITY_CHALLENGE_QUERY,
+  PORTAL_SECURITY_VERIFY_MUTATION,
+  isPendingConsoleToken,
+  securityVerificationInput,
+} from './operations';
 import { portalTokenKey, type StaffPortal } from './portals';
 import { grantStaffRoles, runAccount, type RunAccount } from './run-account';
 
@@ -83,8 +89,51 @@ export function restoreStaffRoles(account: RunAccount, extra: readonly E2eStaffR
   grantStaffRoles(account);
 }
 
-/** POST one operation as `portal` and yield the body, errors included. */
+/**
+ * POST one operation as `portal` and yield the body, errors included.
+ *
+ * A console sign-in answers with a token that is not a session until Security
+ * Verification is completed, so a token handed back by any sign-in door is
+ * completed here the way the screen does it (the wording's version, the
+ * acknowledgements, a fixed location) and the body carries the working one — every
+ * helper that signs in through the API keeps getting a token that works. Pass
+ * `{ verify: false }` to see the sign-in exactly as the server answered it.
+ */
 export function gqlRaw<T = Record<string, unknown>>(
+  portal: StaffPortal,
+  query: string,
+  variables: Record<string, unknown>,
+  token: string | null,
+  options: { verify?: boolean } = {},
+): Cypress.Chainable<GqlBody<T>> {
+  return postRaw<T>(portal, query, variables, token).then((body) =>
+    options.verify === false ? cy.wrap(body, { log: false }) : completePendingSessions(portal, body),
+  );
+}
+
+function completePendingSessions<T>(portal: StaffPortal, body: GqlBody<T>): Cypress.Chainable<GqlBody<T>> {
+  const fields = Object.entries((body.data ?? {}) as Record<string, unknown>).filter(
+    ([, value]) => isPendingConsoleToken((value as { token?: unknown } | null)?.token),
+  );
+  if (fields.length === 0) return cy.wrap(body, { log: false });
+  const [field, value] = fields[0] as [string, { token: string }];
+  const pending = value.token;
+  return postRaw<{ portalSecurityChallenge: { policy_version: string } }>(portal, PORTAL_SECURITY_CHALLENGE_QUERY, {}, pending).then(
+    (challenge) =>
+      postRaw<{ submitPortalSecurityVerification: { token: string } }>(
+        portal,
+        PORTAL_SECURITY_VERIFY_MUTATION,
+        { input: securityVerificationInput(challenge.data?.portalSecurityChallenge.policy_version ?? '') },
+        pending,
+      ).then((done) => {
+        const token = done.data?.submitPortalSecurityVerification.token;
+        if (!token) throw new Error(`Security Verification was refused: ${done.errors?.[0]?.message ?? 'no token'}`);
+        return { ...body, data: { ...body.data, [field]: { ...value, token } } } as GqlBody<T>;
+      }),
+  );
+}
+
+function postRaw<T = Record<string, unknown>>(
   portal: StaffPortal,
   query: string,
   variables: Record<string, unknown>,

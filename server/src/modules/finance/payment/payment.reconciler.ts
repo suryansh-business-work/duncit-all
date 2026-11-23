@@ -19,17 +19,29 @@
  */
 import type { HydratedDocument } from 'mongoose';
 import { PaymentModel, type IPayment } from './payment.model';
-import { findCapturedPaymentForOrder } from './razorpay.gateway';
+import { adoptRazorpayCapture } from './payment.capture';
 import { logs } from '@observability/log';
 import { startClusterJob } from '@utils/clusterJob';
 
 const MINUTE_MS = 60_000;
-const SWEEP_INTERVAL_MS = 5 * MINUTE_MS;
+const SWEEP_INTERVAL_MS = 2 * MINUTE_MS;
 const FIRST_SWEEP_DELAY_MS = MINUTE_MS;
-/** A checkout younger than this is probably still on screen, mid-verify. */
-const CAPTURE_GRACE_MS = 5 * MINUTE_MS;
+/**
+ * A checkout younger than this is probably still on screen, mid-verify. The
+ * `payment.captured` webhook adopts a capture within seconds; this sweep is the
+ * net under it, so it waits only as long as a verify can reasonably take.
+ */
+const CAPTURE_GRACE_MS = 2 * MINUTE_MS;
 /** Older than this and Razorpay's own auto-refund has taken the decision. */
 const CAPTURE_WINDOW_MS = 24 * 60 * MINUTE_MS;
+/**
+ * A checkout this young is re-asked about on every sweep; an older one only this
+ * often. Almost every PENDING row is an abandoned sheet, and asking Razorpay
+ * about each one every two minutes for a whole day would be thousands of calls
+ * for nothing — a capture shows up minutes after the sheet opens, not hours.
+ */
+const FRESH_CHECKOUT_MS = 30 * MINUTE_MS;
+const STALE_RECHECK_MS = 15 * MINUTE_MS;
 /** A payment that reached CORE_DONE this recently may still be in phase 2. */
 const SIDE_EFFECT_GRACE_MS = 2 * MINUTE_MS;
 /**
@@ -39,10 +51,13 @@ const SIDE_EFFECT_GRACE_MS = 2 * MINUTE_MS;
  * credential, an address the mail server refuses — and retrying them every five
  * minutes forever both hammers that third party and, because the batch is
  * bounded, keeps newer payments whose receipts are still waiting behind them.
- * Six passes is roughly half an hour of trying, after which one warning names
- * the payment and a human takes over.
+ * Six passes, one per SIDE_EFFECT_RECHECK_MS, is roughly half an hour of
+ * trying, after which one warning names the payment and a human takes over.
  */
 const MAX_SIDE_EFFECT_ATTEMPTS = 6;
+/** How often one stalled payment's phase 2 is retried — slower than the sweep:
+ * a receipt that bounced is not urgent the way an unbooked capture is. */
+const SIDE_EFFECT_RECHECK_MS = 5 * MINUTE_MS;
 const BATCH_LIMIT = 50;
 
 /** The finalizer pulls in the whole booking stack (seats, memberships, tickets,
@@ -55,39 +70,6 @@ async function loadFinalizer() {
 
 type Finalizer = Awaited<ReturnType<typeof loadFinalizer>>;
 
-/** Adopt one capture Razorpay made but nobody claimed. */
-async function recoverOneCapture(doc: HydratedDocument<IPayment>): Promise<void> {
-  // While a payment is PENDING its gateway_ref still holds the ORDER id — the
-  // handle Razorpay files its captures under.
-  const orderId = doc.gateway_ref;
-  if (!orderId) return;
-  const captured = await findCapturedPaymentForOrder(orderId, doc.metadata?.razorpay_account);
-  if (!captured) return;
-
-  // From here on the payment id is what Finance (and any refund) needs, so it
-  // replaces the order id exactly as a successful verify would have done.
-  doc.gateway_ref = captured.id;
-  doc.metadata = {
-    ...doc.metadata,
-    razorpay_order_id: orderId,
-    razorpay_payment_id: captured.id,
-    reconciled_at: new Date().toISOString(),
-  };
-  await doc.save();
-
-  const paymentFinalizer = await loadFinalizer();
-  await paymentFinalizer.finalizePayment(String(doc._id), 'Razorpay (reconciled)');
-  // A failed-payment case the buyer opened for this checkout is answered: they have their booking.
-  const { markCaseBooked } = await import('@modules/finance/failedPayment/failedPaymentCase.service');
-  await markCaseBooked(String(doc._id));
-  logs.server.info('payment-reconciler', 'capture', {
-    payment_id: doc.payment_id,
-    razorpay_payment_id: captured.id,
-    amount_paise: captured.amount,
-    msg: 'Adopted a Razorpay capture the client never verified',
-  });
-}
-
 /** Look at one payment, then record that we did — whether or not a capture was
  * found, and whether or not the attempt threw. An abandoned checkout stays
  * PENDING forever, so an unstamped failure would sit at the head of the queue
@@ -95,7 +77,7 @@ async function recoverOneCapture(doc: HydratedDocument<IPayment>): Promise<void>
  * the document because the finalizer may have rewritten it in the meantime. */
 async function inspectOneStuckCapture(doc: HydratedDocument<IPayment>): Promise<void> {
   try {
-    await recoverOneCapture(doc);
+    await adoptRazorpayCapture(doc, 'RECONCILER');
   } catch (err) {
     logs.server.error('payment-reconciler', 'capture', {
       error: err,
@@ -129,13 +111,20 @@ async function recoverStuckCaptures(): Promise<void> {
       $lt: new Date(now - CAPTURE_GRACE_MS),
       $gt: new Date(now - CAPTURE_WINDOW_MS),
     },
-    // Never examined, or not since the last sweep. Abandoned checkouts stay
-    // PENDING indefinitely, so without this cursor a day with more than
-    // BATCH_LIMIT of them keeps re-reading the same rows while a real captured
-    // payment behind them is never looked at before the 24h window closes.
+    // A FAILED finalize already adopted its capture (its gateway_ref is the
+    // payment id, not an order) — what it is owed is a refund, not a booking.
+    finalize_state: { $ne: 'FAILED' },
+    // Never examined, or not recently. Abandoned checkouts stay PENDING
+    // indefinitely, so without this cursor a day with more than BATCH_LIMIT of
+    // them keeps re-reading the same rows while a real captured payment behind
+    // them is never looked at before the 24h window closes.
     $or: [
       { reconcile_checked_at: null },
-      { reconcile_checked_at: { $lt: new Date(now - SWEEP_INTERVAL_MS) } },
+      {
+        created_at: { $gt: new Date(now - FRESH_CHECKOUT_MS) },
+        reconcile_checked_at: { $lt: new Date(now - SWEEP_INTERVAL_MS) },
+      },
+      { reconcile_checked_at: { $lt: new Date(now - STALE_RECHECK_MS) } },
     ],
     // Finance is sending this capture back (Failed Payments): never book it as well.
     'metadata.failed_payment_refund_case': { $exists: false },
@@ -214,7 +203,7 @@ async function resumeSideEffects(): Promise<void> {
     // has already spent unclaimed.
     $or: [
       { reconcile_checked_at: null },
-      { reconcile_checked_at: { $lt: new Date(now - SWEEP_INTERVAL_MS) } },
+      { reconcile_checked_at: { $lt: new Date(now - SIDE_EFFECT_RECHECK_MS) } },
     ],
   })
     // Oldest first: the buyer who has been waiting longest for their receipt.
@@ -228,20 +217,23 @@ async function resumeSideEffects(): Promise<void> {
   }
 }
 
-/** Count what the reconciler deliberately will not touch. A FAILED finalize or a
- * capture with no booking behind it is a refund decision, and only a human in
- * Finance makes those — but an unseen one is a customer who paid for nothing,
- * so every sweep says out loud that they are waiting. */
+/** A capture with no booking behind it is a customer who paid for nothing. Every
+ * such payment becomes a Failed Payments case and is refunded automatically
+ * (failedPayment.autoRefund); what is still waiting after that is counted out
+ * loud on every sweep, so a refund that keeps failing reaches a human. */
 async function reportNeedsHuman(): Promise<void> {
   const [failed, refundable] = await Promise.all([
-    PaymentModel.countDocuments({ finalize_state: 'FAILED' }),
+    // A FAILED payment whose money already went back has nothing left to decide.
+    PaymentModel.countDocuments({ finalize_state: 'FAILED', status: { $ne: 'REFUNDED' } }),
     PaymentModel.countDocuments({ needs_refund: true }),
   ]);
   if (failed === 0 && refundable === 0) return;
-  // Every captured-but-unbooked pod payment becomes a Failed Payments case, so
+  // Every captured-but-unbooked payment becomes a Failed Payments case, so
   // Finance works it from one queue instead of only reading this count.
   const { openCasesForNeedsRefund } = await import('@modules/finance/failedPayment/failedPaymentCase.service');
   await openCasesForNeedsRefund();
+  const { sweepAutoRefunds } = await import('@modules/finance/failedPayment/failedPayment.autoRefund');
+  await sweepAutoRefunds();
   logs.server.warn('payment-reconciler', 'needs-human', {
     failed,
     needs_refund: refundable,

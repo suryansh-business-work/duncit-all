@@ -31,6 +31,7 @@ describe('Analytics console app config', () => {
     expect(appConfig.nav.map((group) => group.label)).toEqual([
       'Business',
       'Product',
+      'App Insights',
       'Growth',
       'Support',
       'Tech',
@@ -74,11 +75,20 @@ describe('Analytics console app config', () => {
   it('lists every dashboard route exactly once', async () => {
     const appConfig = await loadConfig();
     const routes = appConfig.nav.flatMap((group) => group.children.map((item) => item.to));
-    expect(routes).toHaveLength(39);
+    expect(routes).toHaveLength(41);
     expect(new Set(routes).size).toBe(routes.length);
     expect(routes).toEqual(
-      expect.arrayContaining(['/product/overview', '/growth/funnel', '/support/legal', '/tech/logs', '/settings/alerts']),
+      expect.arrayContaining(['/product/overview', '/app-insights', '/growth/funnel', '/support/legal', '/tech/logs', '/settings/alerts']),
     );
+  });
+
+  it('files App Insights as its own section after Product, one page whose tabs live in the URL', async () => {
+    const appConfig = await loadConfig();
+    const insights = appConfig.nav.find((group) => group.label === 'App Insights');
+    expect(insights).toMatchObject({ labelKey: 'shell.nav.appInsights', icon: 'installMobile' });
+    expect(insights?.children).toEqual([
+      { label: 'Store Dashboard', labelKey: 'shell.nav.appInsightsDashboard', to: '/app-insights', icon: 'dashboard' },
+    ]);
   });
 
   it('files Contacts under Growth, between Marketing and Communications', async () => {
@@ -89,6 +99,7 @@ describe('Analytics console app config', () => {
       '/growth/marketing',
       '/growth/contacts',
       '/growth/communications',
+      '/growth/email-validations',
     ]);
     expect(growth?.children[2]).toMatchObject({ label: 'Contacts', labelKey: 'shell.nav.contacts', icon: 'contacts' });
   });

@@ -158,8 +158,6 @@ describe('listSavedPods', () => {
       pod_images_and_videos: [{ url: 'https://img.example.com/1.jpg' }],
       place_charges: [{ label: 'Court', amount: 50 }],
       product_requests: [{ product_id: productId, product_name: 'Water', unit_cost: 20, quantity: 3, total_cost: 60 }],
-      ticket_discount_enabled: true,
-      ticket_discount_tiers: [{ min_tickets: 3, discount_pct: 10 }],
       liked_user_ids: [attendee],
       comments: [{ text: 'hi' }, { text: 'yo' }],
     });
@@ -181,8 +179,6 @@ describe('listSavedPods', () => {
       product_requests: [
         { product_id: String(productId), product_name: 'Water', unit_cost: 20, quantity: 3, total_cost: 60 },
       ],
-      ticket_discount_enabled: true,
-      ticket_discount_tiers: [{ min_tickets: 3, discount_pct: 10 }],
       like_count: 1,
       comment_count: 2,
       liked_user_ids: [String(attendee)],

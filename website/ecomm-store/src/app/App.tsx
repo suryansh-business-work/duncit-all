@@ -1,12 +1,10 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { ApolloClient } from '@apollo/client';
 import { ApolloProvider } from '@apollo/client/react';
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import { LocaleProvider } from '@duncit/app-settings';
 import { ConfirmProvider, NotifyProvider } from '@duncit/dialogs';
 import { RequestProgressBar } from '@duncit/ui';
 
-import { GOOGLE_CLIENT_ID } from '../config/env';
 import { STORE_FALLBACK } from '../i18n';
 import { StoreClosedPage } from '../pages/closed/StoreClosedPage';
 import { endHydration, startsFromServer } from '../lib/hydration';
@@ -39,11 +37,6 @@ function StoreGate({ children }: Readonly<{ children: ReactNode }>) {
   );
 }
 
-function WithGoogle({ children }: Readonly<{ children: ReactNode }>) {
-  if (!GOOGLE_CLIENT_ID) return <>{children}</>;
-  return <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>{children}</GoogleOAuthProvider>;
-}
-
 interface AppProps {
   /** One per page view in the browser, one per request on the server. */
   client: ApolloClient;
@@ -63,26 +56,26 @@ export function App({ client, children, onCopyKey }: Readonly<AppProps>) {
   }, [client, fromServer]);
   return (
     <ApolloProvider client={client}>
-      <WithGoogle>
-        <SessionProvider>
-          <StoreLocale onKeyRead={onCopyKey}>
-            <ColorModeProvider>
-              {/* The floor under every wait on the server (the settings load,
-                  a shelf, a checkout) before any page draws its own loader. */}
-              <RequestProgressBar />
-              <ConfirmProvider>
-                <NotifyProvider>
-                  <StoreSettingsProvider>
-                    <OccasionThemeProvider>
-                      <StoreGate>{children}</StoreGate>
-                    </OccasionThemeProvider>
-                  </StoreSettingsProvider>
-                </NotifyProvider>
-              </ConfirmProvider>
-            </ColorModeProvider>
-          </StoreLocale>
-        </SessionProvider>
-      </WithGoogle>
+      {/* Google's provider lives in the sign-in dialog, around the one button
+          that needs it, with the client id the server hands out at runtime. */}
+      <SessionProvider>
+        <StoreLocale onKeyRead={onCopyKey}>
+          <ColorModeProvider>
+            {/* The floor under every wait on the server (the settings load,
+                a shelf, a checkout) before any page draws its own loader. */}
+            <RequestProgressBar />
+            <ConfirmProvider>
+              <NotifyProvider>
+                <StoreSettingsProvider>
+                  <OccasionThemeProvider>
+                    <StoreGate>{children}</StoreGate>
+                  </OccasionThemeProvider>
+                </StoreSettingsProvider>
+              </NotifyProvider>
+            </ConfirmProvider>
+          </ColorModeProvider>
+        </StoreLocale>
+      </SessionProvider>
     </ApolloProvider>
   );
 }

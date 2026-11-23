@@ -28,6 +28,12 @@ const razorpayWebhookEventSchema = new Schema<IRazorpayWebhookEvent>({
   outcome: { type: String, default: '' },
 });
 
+// Finance › Payment Trace lists the deliveries that mention a payment's
+// Razorpay ids; without these every trace would read the whole log.
+razorpayWebhookEventSchema.index({ 'summary.payment_id': 1 }, { name: 'summary_payment_id_trace' });
+razorpayWebhookEventSchema.index({ 'summary.order_id': 1 }, { name: 'summary_order_id_trace' });
+razorpayWebhookEventSchema.index({ 'summary.refund_id': 1 }, { name: 'summary_refund_id_trace' });
+
 export const RazorpayWebhookEventModel = model<IRazorpayWebhookEvent>(
   'RazorpayWebhookEvent',
   razorpayWebhookEventSchema

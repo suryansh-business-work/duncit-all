@@ -6,6 +6,7 @@ import {
   CareersPage,
   NewsroomPage,
   BlogPage,
+  SolutionsPage,
   NewsletterPage,
   ContactSubmissionsPage,
   JobApplicationsPage,
@@ -29,6 +30,7 @@ export default function App() {
       <Route path="/careers" element={authed(<CareersPage />)} />
       <Route path="/newsroom" element={authed(<NewsroomPage />)} />
       <Route path="/blog" element={authed(<BlogPage />)} />
+      <Route path="/solutions" element={authed(<SolutionsPage />)} />
       <Route path="/newsletter" element={authed(<NewsletterPage />)} />
       <Route path="/contact-submissions" element={authed(<ContactSubmissionsPage />)} />
       <Route path="/job-applications" element={authed(<JobApplicationsPage />)} />

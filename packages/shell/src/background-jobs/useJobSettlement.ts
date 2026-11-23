@@ -27,6 +27,16 @@ const NOTICE_COPY: Readonly<Record<BackgroundJobKind, { stopped: string; partial
     partial: 'shell.jobs.verifyPartialNotice',
     done: 'shell.jobs.verifyDoneNotice',
   },
+  LEAD_QUALITY_RECALC: {
+    stopped: 'shell.jobs.rescoreStoppedNotice',
+    partial: 'shell.jobs.rescorePartialNotice',
+    done: 'shell.jobs.rescoreDoneNotice',
+  },
+  LEAD_DISCOVERY: {
+    stopped: 'shell.jobs.discoverStoppedNotice',
+    partial: 'shell.jobs.discoverPartialNotice',
+    done: 'shell.jobs.discoverDoneNotice',
+  },
 };
 
 /** Say how a job ended. A cancel was the person's own doing, so it passes quietly. */
@@ -42,6 +52,8 @@ function announce(job: BackgroundJob, t: Translate): void {
       translated: job.succeeded,
       moved: job.succeeded,
       checked: job.succeeded,
+      scored: job.succeeded,
+      found: job.succeeded,
       failed: job.failed,
     };
     notify(t(copy.partial, { vars: { ...vars, ...counts } }), 'warning');

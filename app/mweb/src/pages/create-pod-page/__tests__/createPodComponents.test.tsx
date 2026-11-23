@@ -234,17 +234,17 @@ describe('PodTypeCards', () => {
         {(form) => (
           <>
             <PodTypeCards form={form} />
-            <output data-testid="state">{JSON.stringify({ type: form.watch('pod_type'), amount: form.watch('pod_amount'), enabled: form.watch('ticket_discount_enabled'), tiers: form.watch('ticket_discount_tiers') })}</output>
+            <output data-testid="state">{JSON.stringify({ type: form.watch('pod_type'), amount: form.watch('pod_amount'), enabled: form.watch('smart_incentive_enabled'), pct: form.watch('smart_incentive_pct') })}</output>
           </>
         )}
       </FormHarness>
     );
   const state = () => JSON.parse(screen.getByTestId('state').textContent ?? '{}');
 
-  it('switching to free clears the price and the ticket discount; switching back blanks the price', async () => {
-    cards({ pod_type: 'PAID', pod_amount: 300, ticket_discount_enabled: true, ticket_discount_tiers: [{ min_tickets: 2, discount_pct: 10 }] });
+  it('switching to free clears the price and the Smart Incentive; switching back blanks the price', async () => {
+    cards({ pod_type: 'PAID', pod_amount: 300, smart_incentive_enabled: true, smart_incentive_pct: '10' });
     fireEvent.click(within(screen.getByTestId('create-pod-free')).getByRole('button'));
-    await waitFor(() => expect(state()).toEqual({ type: 'FREE', amount: 0, enabled: false, tiers: [] }));
+    await waitFor(() => expect(state()).toEqual({ type: 'FREE', amount: 0, enabled: false, pct: '' }));
     fireEvent.click(within(screen.getByTestId('create-pod-paid')).getByRole('button'));
     await waitFor(() => expect(state().type).toBe('PAID'));
     expect(state().amount).toBeNull();

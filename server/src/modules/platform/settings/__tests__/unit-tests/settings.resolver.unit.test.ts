@@ -94,3 +94,13 @@ describe('festive app icons', () => {
     await expect(M.updateBranding({}, { input: {} }, marketing)).rejects.toThrow(/access denied/i);
   });
 });
+
+describe('retired multi-ticket discount cap', () => {
+  it('answers 50 on both settings types whatever the stored document says', () => {
+    const stored = { ticket_discount_max_pct: 10 };
+    const admin = settingsResolvers.AppSettings as unknown as Record<string, (p: unknown) => number>;
+    const pub = settingsResolvers.PublicAppSettings as unknown as Record<string, (p: unknown) => number>;
+    expect(admin.ticket_discount_max_pct(stored)).toBe(50);
+    expect(pub.ticket_discount_max_pct(stored)).toBe(50);
+  });
+});

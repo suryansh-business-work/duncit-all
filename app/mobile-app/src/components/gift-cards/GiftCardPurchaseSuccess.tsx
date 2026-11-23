@@ -21,6 +21,8 @@ interface Props {
   onDownloadInvoice: () => Promise<void>;
   onHome: () => void;
   onMyCards: () => void;
+  /** Printed cards: printed and sent by courier, followed in Orders. */
+  printed?: boolean;
 }
 
 /** Purchase success — the card is created and emailed by the server, so this
@@ -32,15 +34,17 @@ export function GiftCardPurchaseSuccess({
   onDownloadInvoice,
   onHome,
   onMyCards,
+  printed = false,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { color: ink, accent } = useThemeColors();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const invoiceLabel = t('mweb.checkout.downloadInvoice');
-  const body = recipientEmail
+  const emailBody = recipientEmail
     ? t('mweb.giftCards.successGiftBody', { vars: { email: recipientEmail } })
     : t('mweb.giftCards.successSelfBody');
+  const body = printed ? t('mweb.giftCards.successPrintedBody') : emailBody;
 
   const download = async () => {
     setBusy(true);
@@ -92,7 +96,7 @@ export function GiftCardPurchaseSuccess({
       <YStack alignSelf="stretch" gap={10}>
         <PrimaryButton
           testID="gift-card-success-my-cards"
-          label={t('mweb.giftCards.viewMyCards')}
+          label={printed ? t('mweb.giftCards.viewMyOrders') : t('mweb.giftCards.viewMyCards')}
           onPress={onMyCards}
         />
         <XStack

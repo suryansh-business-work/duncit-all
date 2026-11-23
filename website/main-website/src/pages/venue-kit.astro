@@ -1,0 +1,33 @@
+---
+// The Venue Kit's first address. It lives under Solutions now
+// (/solutions/<category>/venue-kit); this stays so every link already shared —
+// a WhatsApp forward, a printed QR, another site — still lands on the page.
+// The target is read from the same Solutions list the new page is built from,
+// so a category renamed in the Website portal is followed here too.
+import { VENUE_KIT_FALLBACK_PATH, VENUE_KIT_SOLUTION_SLUG, solutionPath } from '@duncit/utils';
+import { fetchSolutions } from '../lib/site-data';
+import { getTranslator } from '../lib/i18n';
+
+const { t } = await getTranslator();
+const solutions = await fetchSolutions();
+const venueKit = solutions.find((item) => item.slug === VENUE_KIT_SOLUTION_SLUG && item.category_slug);
+const target = venueKit ? solutionPath(venueKit) : VENUE_KIT_FALLBACK_PATH;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{t('website.main.solutions.redirecting')}</title>
+    <!-- Tell a crawler this address moved rather than that it has content. -->
+    <meta name="robots" content="noindex" />
+    <link rel="canonical" href={target} />
+    <meta http-equiv="refresh" content={`0; url=${target}`} />
+    <script is:inline define:vars={{ target }}>
+      window.location.replace(target);
+    </script>
+  </head>
+  <body>
+    <p>{t('website.main.solutions.moved')} <a href={target}>{t('website.main.solutions.movedLink')}</a>.</p>
+  </body>
+</html>

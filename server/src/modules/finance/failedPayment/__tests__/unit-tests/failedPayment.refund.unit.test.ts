@@ -30,10 +30,16 @@ import {
 } from '@modules/finance/payment/razorpay.gateway';
 import { bookingFor } from '../../failedPayment.booking';
 import { completeRefund, failRefund } from '../../failedPayment.refundOutcome';
+import { recordPaymentEvent } from '../../paymentEvent.service';
+import { SYSTEM_ACTOR } from '../../failedPayment.types';
 import {
+  claimAndSend,
   initiateFailedPaymentRefund,
+  liveRefundCheck,
+  refundBasis,
   refundEligibility,
   refundGuard,
+  RefundRefusal,
 } from '../../failedPayment.refund';
 
 const m = (fn: unknown) => fn as jest.Mock;
@@ -88,14 +94,68 @@ describe('refundEligibility', () => {
     expect(refundEligibility(kase())).toBeNull();
   });
 
-  it('allows a yellow case only after it was approved', () => {
-    expect(refundEligibility(kase({ verification: { status: 'UNMATCHED' } }))).toMatch(/Approve/);
-    expect(refundEligibility(kase({ verification: { status: 'UNMATCHED' }, review: { decision: 'APPROVED' } }))).toBeNull();
+  it('allows a yellow case (evidence sent, not matched) only after it was approved', () => {
+    const claims = [{ evidence_type: 'SCREENSHOT' }];
+    expect(refundEligibility(kase({ verification: { status: 'UNMATCHED' }, claims }))).toBe('Approve the evidence in Review before refunding.');
+    expect(refundEligibility(kase({ verification: { status: 'UNMATCHED' }, review: { decision: 'APPROVED' }, claims }))).toBeNull();
+  });
+
+  it("allows a case nobody sent evidence for: Razorpay's live check decides", () => {
+    expect(refundEligibility(kase({ verification: { status: 'PENDING' }, claims: [] }))).toBeNull();
+    expect(refundEligibility(kase({ verification: { status: 'UNMATCHED' }, claims: undefined }))).toBeNull();
   });
 
   it('refuses a refunded or closed case', () => {
     expect(refundEligibility(kase({ refund: { status: 'PROCESSED' } }))).toMatch(/already been refunded/);
     expect(refundEligibility(kase({ resolution: { state: 'REJECTED' } }))).toMatch(/closed/);
+  });
+});
+
+describe('refundBasis', () => {
+  it('is VERIFIED for matched or approved evidence', () => {
+    expect(refundBasis(kase({ claims: [{}] }))).toBe('VERIFIED');
+    expect(refundBasis(kase({ verification: { status: 'UNMATCHED' }, review: { decision: 'APPROVED' }, claims: [{}] }))).toBe('VERIFIED');
+  });
+
+  it('is LIVE_CHECK when no evidence was ever sent', () => {
+    expect(refundBasis(kase({ verification: { status: 'PENDING' }, claims: [] }))).toBe('LIVE_CHECK');
+    expect(refundBasis(kase({ verification: { status: 'NOT_CAPTURED' }, claims: [] }))).toBe('LIVE_CHECK');
+  });
+
+  it('is null while sent evidence waits for Review (unmatched, errored or still being checked)', () => {
+    for (const status of ['UNMATCHED', 'ERROR', 'PENDING']) {
+      expect(refundBasis(kase({ verification: { status }, claims: [{}] }))).toBeNull();
+    }
+  });
+});
+
+describe('liveRefundCheck', () => {
+  const noEvidence = (over: Record<string, unknown> = {}) =>
+    kase({ verification: { status: 'PENDING', matched_payment_id: '' }, claims: [], ...over });
+
+  it("finds the order's one unbooked capture for a case without evidence and answers what is left", async () => {
+    m(fetchRazorpayOrderPayments).mockResolvedValue([live({ id: 'pay_9', status: 'captured' }), live({ id: 'pay_f', status: 'failed' })]);
+    m(fetchRazorpayPayment).mockResolvedValue(live({ id: 'pay_9', amount_refunded: 900 }));
+    const out = await liveRefundCheck(noEvidence());
+    expect(fetchRazorpayOrderPayments).toHaveBeenCalledWith('order_1', 'acct_1');
+    expect(out).toMatchObject({ razorpayPaymentId: 'pay_9', amountPaise: 49000 });
+  });
+
+  it('refuses a payment that never had a Razorpay order, without asking Razorpay', async () => {
+    await expect(liveRefundCheck(noEvidence({ razorpay_order_id: '' }))).rejects.toThrow(
+      'This payment never had a Razorpay order, so there is nothing to refund through Razorpay.'
+    );
+    expect(fetchRazorpayOrderPayments).not.toHaveBeenCalled();
+  });
+
+  it('refuses when Razorpay shows no capture on the order', async () => {
+    m(fetchRazorpayOrderPayments).mockResolvedValue([live({ status: 'failed' })]);
+    await expect(liveRefundCheck(noEvidence())).rejects.toBeInstanceOf(RefundRefusal);
+  });
+
+  it('refuses when the payment document is gone', async () => {
+    m(PaymentModel.findById).mockResolvedValue(null);
+    await expect(liveRefundCheck(noEvidence())).rejects.toThrow('The payment behind this case was not found.');
   });
 });
 
@@ -148,6 +208,21 @@ describe('initiateFailedPaymentRefund', () => {
     expect(completeRefund).toHaveBeenCalledWith(CASE_ID, 'rfnd_1', 'SERVER');
   });
 
+  it('files an automatic refund\'s trail under SYSTEM, through the very same claim and send', async () => {
+    await claimAndSend(kase(), `auto_${CASE_ID}_1`, SYSTEM_ACTOR);
+
+    expect(FailedPaymentCaseModel.findOneAndUpdate).toHaveBeenCalledTimes(1);
+    expect(createRazorpayRefund).toHaveBeenCalledWith(expect.objectContaining({ receipt: `fpc_${CASE_ID}_1` }));
+    const sources = m(recordPaymentEvent).mock.calls.map(([event]) => [event.type, event.source]);
+    expect(sources).toEqual(
+      expect.arrayContaining([
+        ['REFUND_REQUESTED', 'SYSTEM'],
+        ['REFUND_INITIATED', 'SYSTEM'],
+      ]),
+    );
+    expect(sources.some(([, source]) => source === 'FINANCE')).toBe(false);
+  });
+
   it('claims with one conditional write that only an idle or stale refund can win', async () => {
     await initiateFailedPaymentRefund(CASE_ID, 'req-12345678', actor);
     const [filter, update] = m(FailedPaymentCaseModel.findOneAndUpdate).mock.calls[0];
@@ -175,7 +250,10 @@ describe('initiateFailedPaymentRefund', () => {
   });
 
   it('refuses an ineligible case before claiming anything', async () => {
-    m(FailedPaymentCaseModel.findById).mockResolvedValue(kase({ verification: { status: 'UNMATCHED' } }));
+    // Evidence was sent and did not match: it waits for Review, so no refund yet.
+    m(FailedPaymentCaseModel.findById).mockResolvedValue(
+      kase({ verification: { status: 'UNMATCHED' }, claims: [{ evidence_type: 'SCREENSHOT' }] })
+    );
     await expect(initiateFailedPaymentRefund(CASE_ID, 'req-12345678', actor)).rejects.toMatchObject({
       extensions: { code: 'BAD_USER_INPUT' },
     });

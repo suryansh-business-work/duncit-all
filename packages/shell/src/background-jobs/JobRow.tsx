@@ -48,6 +48,18 @@ const TITLE_COPY: Readonly<Record<BackgroundJobKind, Readonly<Record<BackgroundJ
     FAILED: 'shell.jobs.verifyStopped',
     CANCELLED: 'shell.jobs.verifyCancelled',
   },
+  LEAD_QUALITY_RECALC: {
+    RUNNING: 'shell.jobs.rescoring',
+    COMPLETED: 'shell.jobs.rescored',
+    FAILED: 'shell.jobs.rescoreStopped',
+    CANCELLED: 'shell.jobs.rescoreCancelled',
+  },
+  LEAD_DISCOVERY: {
+    RUNNING: 'shell.jobs.discovering',
+    COMPLETED: 'shell.jobs.discovered',
+    FAILED: 'shell.jobs.discoverStopped',
+    CANCELLED: 'shell.jobs.discoverCancelled',
+  },
 };
 
 /** The line under the bar when some of the work did not land. */
@@ -56,6 +68,8 @@ const FAILED_COPY: Readonly<Record<BackgroundJobKind, string>> = {
   AI_TRANSLATE: 'shell.jobs.unusableKeys',
   MEDIA_ORGANIZE: 'shell.jobs.unmovedFiles',
   EMAIL_VERIFY: 'shell.jobs.uncheckedEmails',
+  LEAD_QUALITY_RECALC: 'shell.jobs.unscoredLeads',
+  LEAD_DISCOVERY: 'shell.jobs.refusedFinds',
 };
 
 const BAR_COLOR: Readonly<Record<BackgroundJobStatus, 'info' | 'success' | 'error' | 'inherit'>> = {

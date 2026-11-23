@@ -52,9 +52,7 @@ export default function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>
     if (free) {
       setValue('pod_type', 'FREE', { shouldDirty: true, shouldValidate: true });
       setValue('pod_amount', 0, { shouldDirty: true, shouldValidate: true });
-      // A free pod has no ticket price to discount, so its offers go with it.
-      setValue('ticket_discount_enabled', false, { shouldDirty: true, shouldValidate: true });
-      setValue('ticket_discount_tiers', [], { shouldDirty: true, shouldValidate: true });
+      // A free pod has no ticket price to discount, so its Smart Incentive goes with it.
       setValue('smart_incentive_enabled', false, { shouldDirty: true, shouldValidate: true });
       setValue('smart_incentive_pct', '', { shouldDirty: true, shouldValidate: true });
     } else {

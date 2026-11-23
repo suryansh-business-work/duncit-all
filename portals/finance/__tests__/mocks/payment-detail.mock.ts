@@ -2,7 +2,10 @@ import type { MockedResponse } from '@apollo/client/testing';
 import { GraphQLError } from 'graphql';
 import {
   PAYMENT_DETAIL,
+  REFUND_PAYMENT_TO_SOURCE,
   RETRY_PAYMENT_STEPS,
+  type PaymentRefundEntry,
+  type PaymentRefundSection,
   type DetailPayment,
   type PaymentArtifact,
   type PaymentBilling,
@@ -34,7 +37,25 @@ export type PodBookingMock = Typed<PaymentPodBooking, 'PaymentPodBooking'>;
 export type ProductOrderMock = Typed<PaymentProductOrderLine, 'PaymentProductOrderLine'>;
 export type GiftCardMock = Typed<PaymentGiftCardInfo, 'PaymentGiftCard'>;
 
-type DetailNodes = 'payment' | 'steps' | 'artifacts' | 'coins' | 'coupon' | 'pod_booking' | 'product_orders' | 'gift_card';
+export type RefundEntryMock = Typed<PaymentRefundEntry, 'PaymentRefundEntry'>;
+export type RefundEventMock = Typed<Omit<PaymentRefundSection['events'][number], 'details'>, 'PaymentEvent'> & {
+  details: Typed<{ key: string; value: string }, 'PaymentEventDetail'>[];
+};
+export type RefundSectionMock = Typed<Omit<PaymentRefundSection, 'entries' | 'events'>, 'PaymentRefundSection'> & {
+  entries: RefundEntryMock[];
+  events: RefundEventMock[];
+};
+
+type DetailNodes =
+  | 'payment'
+  | 'steps'
+  | 'artifacts'
+  | 'coins'
+  | 'coupon'
+  | 'pod_booking'
+  | 'product_orders'
+  | 'gift_card'
+  | 'refunds';
 
 export type PaymentDetailMock = Typed<Omit<PaymentDetail, DetailNodes>, 'PaymentDetail'> & {
   payment: DetailPaymentMock;
@@ -45,6 +66,7 @@ export type PaymentDetailMock = Typed<Omit<PaymentDetail, DetailNodes>, 'Payment
   pod_booking: PodBookingMock | null;
   product_orders: ProductOrderMock[];
   gift_card: GiftCardMock | null;
+  refunds: RefundSectionMock[];
 };
 
 export const PAID_AT = '2026-09-01T10:00:00.000Z';
@@ -86,14 +108,15 @@ export const makeDetailPayment = (over: Partial<DetailPaymentMock> = {}): Detail
   currency_symbol: '₹',
   coupon_code: 'YOGA10',
   coupon_discount: 100,
-  ticket_discount_amount: 50,
-  ticket_discount_pct: 5,
   // This buyer had not unlocked a Smart Incentive.
   smart_incentive_amount: 0,
   smart_incentive_pct: 0,
   status: 'SUCCESS',
   gateway: 'razorpay',
   gateway_ref: 'pay_Nx12Razor',
+  razorpay_payment_id: 'pay_Nx12Razor',
+  razorpay_order_id: 'order_Nx12Razor',
+  razorpay_refund_ids: [],
   rental_lines: [],
   paid_at: PAID_AT,
   created_at: '2026-09-01T09:59:00.000Z',
@@ -242,11 +265,99 @@ export const makePaymentDetail = (over: Partial<PaymentDetailMock> = {}): Paymen
   pod_booking: makePodBooking(),
   product_orders: [],
   gift_card: null,
-  original_total: 1200,
+  original_total: 1150,
   coins_redeemed: 50,
   coins_earned: 20,
+  // Nothing refunded: the Refund area is hidden. Every fixture carries the
+  // field, because the page's one query selects it.
+  refunds: [],
   ...over,
 });
+
+export const REFUND_PAID_AT = '2026-09-03T08:15:00.000Z';
+
+/** One refund of a pod payment queued to Razorpay and still owed (the yellow state). */
+export const makeRefundEntry = (over: Partial<RefundEntryMock> = {}): RefundEntryMock => ({
+  __typename: 'PaymentRefundEntry',
+  id: 'gr1',
+  ref: 'DUN-PAY-4821',
+  source: 'FINANCE_REFUND',
+  status: 'FAILED',
+  state: 'PENDING',
+  amount: 1000,
+  coins: 0,
+  razorpay_refund_id: 'rfnd_Aa11',
+  razorpay_refund_ids: ['rfnd_Aa11'],
+  razorpay_payment_id: 'pay_Nx12Razor',
+  initiated_by: 'Meera Finance',
+  reason: 'Pod cancelled by the host',
+  error: null,
+  attempts: 2,
+  requested_at: REFUND_PAID_AT,
+  processed_at: null,
+  due_at: null,
+  can_refund: true,
+  ...over,
+});
+
+export const makeRefundEvent = (over: Partial<RefundEventMock> = {}): RefundEventMock => ({
+  __typename: 'PaymentEvent',
+  id: 'ev1',
+  type: 'REFUND_REQUESTED',
+  source: 'FINANCE',
+  actor_name: 'Meera Finance',
+  details: [{ __typename: 'PaymentEventDetail', key: 'note', value: 'Customer waited three days' }],
+  created_at: REFUND_PAID_AT,
+  ...over,
+});
+
+export const makeRefundSection = (over: Partial<RefundSectionMock> = {}): RefundSectionMock => ({
+  __typename: 'PaymentRefundSection',
+  kind: 'POD_PAYMENT',
+  state: 'PENDING',
+  amount: 1000,
+  coins: 0,
+  entries: [makeRefundEntry()],
+  events: [],
+  ...over,
+});
+
+/** A refund already back with the buyer (the folded, uncoloured state). */
+export const completedRefundSection = (over: Partial<RefundSectionMock> = {}): RefundSectionMock =>
+  makeRefundSection({
+    kind: 'POD_SHOP',
+    state: 'COMPLETED',
+    amount: 250,
+    entries: [
+      makeRefundEntry({
+        id: 'po1',
+        ref: 'DUN-ORD-1001',
+        source: 'CANCELLATION',
+        status: 'PROCESSED',
+        state: 'COMPLETED',
+        amount: 250,
+        razorpay_refund_id: 'rfnd_Bb22',
+        razorpay_refund_ids: ['rfnd_Bb22'],
+        attempts: 0,
+        processed_at: REFUND_PAID_AT,
+        can_refund: false,
+      }),
+    ],
+    ...over,
+  });
+
+/** The same payment once the owed refund was sent: the section is now complete. */
+export const makeRefundedDetail = (): PaymentDetailMock =>
+  makePaymentDetail({
+    payment: makeDetailPayment({ status: 'REFUNDED', razorpay_refund_ids: ['rfnd_Aa11'] }),
+    refunds: [
+      makeRefundSection({
+        state: 'COMPLETED',
+        entries: [makeRefundEntry({ status: 'SUCCEEDED', state: 'COMPLETED', can_refund: false, processed_at: REFUND_PAID_AT })],
+        events: [makeRefundEvent()],
+      }),
+    ],
+  });
 
 /** The same payment once the receipt re-run landed: nothing left to retry. */
 export const makeRepairedDetail = (): PaymentDetailMock => {
@@ -290,4 +401,25 @@ export const retryPaymentStepsMock = (
   result: over.fail
     ? { errors: [new GraphQLError(RETRY_REFUSED)] }
     : { data: { retryPaymentSteps: over.detail ?? makeRepairedDetail() } },
+});
+
+export const REFUND_REFUSED = 'Razorpay refused the refund: payment already fully refunded';
+
+/** The mutation answering with the refreshed audit, or with a refusal. `variables` sees the input the page sent. */
+export const refundPaymentToSourceMock = (
+  over: {
+    detail?: PaymentDetailMock;
+    fail?: boolean;
+    delay?: number;
+    variables?: (input: Record<string, unknown>) => boolean;
+  } = {},
+): MockedResponse => ({
+  request: {
+    query: REFUND_PAYMENT_TO_SOURCE,
+    variables: ({ input }: { input: Record<string, unknown> }) => (over.variables ? over.variables(input) : true),
+  },
+  ...(over.delay ? { delay: over.delay } : {}),
+  result: over.fail
+    ? { errors: [new GraphQLError(REFUND_REFUSED)] }
+    : { data: { refundPaymentToSource: over.detail ?? makeRefundedDetail() } },
 });

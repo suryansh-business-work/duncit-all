@@ -4,6 +4,8 @@ import { StatusChip } from '@duncit/ui';
 import { useTranslation, type DateFormatter } from '@duncit/app-settings';
 import { parseApiError } from '@duncit/utils';
 import DetailCard from './DetailCard';
+import TraceLink from '../../../../components/TraceLink';
+import { isTraceableId } from '../../../../lib/paymentTrace';
 import { labelOf, sourceLabels } from '../labels';
 import { FAILED_PAYMENT_EVENTS, type FailedPaymentEventsData, type PaymentEvent } from '../queries';
 
@@ -12,8 +14,8 @@ interface Props {
   formatDateTime: DateFormatter['formatDateTime'];
 }
 
-/** One timeline entry, hoisted so a re-render does not remount every row. */
-function EventRow({ event, source, formatDateTime }: Readonly<{ event: PaymentEvent; source: string; formatDateTime: Props['formatDateTime'] }>) {
+/** One timeline entry, hoisted so a re-render does not remount every row. Shared with Payment Logs' Refund area. */
+export function EventRow({ event, source, formatDateTime }: Readonly<{ event: PaymentEvent; source: string; formatDateTime: Props['formatDateTime'] }>) {
   return (
     <Stack spacing={0.5} data-testid="failed-payment-event">
       <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
@@ -26,7 +28,7 @@ function EventRow({ event, source, formatDateTime }: Readonly<{ event: PaymentEv
       </Stack>
       {event.details.map((detail) => (
         <Typography key={detail.key} variant="caption" sx={{ color: 'text.secondary', wordBreak: 'break-word' }}>
-          {detail.key}: {detail.value}
+          {detail.key}: {isTraceableId(detail.value) ? <TraceLink value={detail.value} /> : detail.value}
         </Typography>
       ))}
     </Stack>

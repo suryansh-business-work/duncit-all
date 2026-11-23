@@ -13,6 +13,12 @@
  * An applied entry matches nothing on the next boot, so entries never need pruning.
  */
 export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
+  // Gift cards became one design (no category themes), with quantity and printed delivery.
+  "mweb.giftCards.sidebarBuyCaption": ["For a category or the Pod Shop"],
+  "mweb.giftCards.howStep1": ["Pick a theme — any category, or the Pod Shop — choose an amount, and pay."],
+  "mweb.giftCards.howStep2": [
+    "The card and its code go out by email, and you can share the link too. Keeping it for yourself works the same way.",
+  ],
   // Booking offers moved into Fees & Minimum Spend and took the minimum spend in.
   "venueSettings.offers.title": ["Booking offers"],
   "venueSettings.offers.intro": [
@@ -435,4 +441,41 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   // CRM WhatsApp Lead Generator: the API key is generated server-side now, so
   // the help panel explains the automatic flow instead of fetching a key.
   "crm.tools.howDoIGetTheApi": ["How do I get the API key?"],
+  // The connect card no longer has a Generate API key button, and a failed start
+  // now retries by itself, so the help steps stop pointing at either.
+  "crm.tools.helpStepAutoKey": [
+    "Opening this page starts WhatsApp and creates the gateway API key automatically. Use Generate API key to replace it at any time.",
+  ],
+  "crm.tools.helpStepStuck": [
+    "No QR after a minute? The session restarts once by itself; you can also press Restart connection.",
+  ],
+  // Payment and refund tables now also search the Razorpay payment, order and
+  // refund ids (and Duncit's own reference), so the placeholders say so.
+  "finance.payment.logsSearch": ["Search txn id, invoice, name or email"],
+  "finance.refundLogs.search": ["Search txn id, invoice, name or email"],
+  "finance.orderRefunds.search": ["Search order no, return no, name or email"],
+  "admin.userFinance.search": ["Search by payment ID or invoice"],
+  // Rented-item deposits are refunded by Duncit through Razorpay (2026-11-22),
+  // no longer handed back in cash at the venue.
+  "venueRentals.desk.depositNotice": [
+    "Hand each guest’s refundable deposit back at the venue once you have checked the returned item. Duncit does not refund deposits online: it pays every deposit to you in your rental payout.",
+  ],
+  "venueRentals.finance.depositNote": [
+    "Deposits are handed back by the venue when the item is returned, not refunded through the gateway. Duncit pays them to the venue in its rental payout.",
+  ],
+  "venueRentals.mark.handBack": [
+    "Hand {amount} back to the guest now. Duncit adds the full deposit to your next rental payout.",
+  ],
+  "venueRentals.mark.handBackNone": ["Nothing to hand back. Duncit adds the full deposit to your next rental payout."],
+  "venueRentals.guest.depositAtVenue": ["Deposit {amount}, refundable at the venue"],
+  "venueRentals.guest.collectNote": [
+    "You receive rented items at the venue. Your refundable deposit is returned by the venue when you bring the item back; Duncit does not refund deposits online.",
+  ],
+  "venueRentals.guest.depositBack": ["Deposit back at the venue {amount}"],
+  // A running pod can be joined now (until its end time).
+  "mweb.home.ongoingPodsSubtitle": ["Happening right now — joining is closed"],
+  // Pet store Payment logs now show and search Razorpay's own ids beside the
+  // Duncit ref, so the placeholder and the IDs column header say so.
+  "ecommPortal.paymentLogs.search": ["Search payment ID, invoice, buyer or email"],
+  "ecommPortal.paymentLogs.ids": ["Payment / invoice"],
 };

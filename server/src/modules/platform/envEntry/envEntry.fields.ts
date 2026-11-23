@@ -1,4 +1,40 @@
-import type { EnvCategory } from './envEntry.model';
+import { ENV_CATEGORIES, type EnvCategory } from './envEntry.model';
+import registry from './env-registry.json';
+
+/**
+ * The Tech portal's environment catalogue, loaded from `env-registry.json`.
+ *
+ * That JSON file is the single source of truth for every environment value
+ * Duncit reads: each category, each field's label, hint, description (why it is
+ * used), validation and the files that read it, plus the few GitHub secrets
+ * that cannot move here. This module only parses it once at load — failing
+ * fast on a malformed entry — and keeps the exports every caller already uses.
+ * Edit the JSON, not this file; `node scripts/audit-env-registry.mjs` keeps
+ * its `usedIn` lists honest.
+ */
+
+export const ENV_VALIDATION_TYPES = [
+  'text',
+  'url',
+  'hostname',
+  'email',
+  'phone',
+  'number',
+  'bool',
+  'json',
+  'pem',
+  'list',
+  'fingerprints',
+] as const;
+export type EnvValidationType = (typeof ENV_VALIDATION_TYPES)[number];
+
+/** How a field's value is checked when it is saved. `required` applies when an entry is created. */
+export interface EnvFieldValidation {
+  type: EnvValidationType;
+  required?: boolean;
+  min?: number;
+  max?: number;
+}
 
 /**
  * A config field for a category. `secret` fields are rendered as masked inputs
@@ -13,602 +49,197 @@ export interface EnvFieldDef {
   bool?: boolean;
   hint?: string;
   phone?: boolean;
+  /** The legacy env key `getRuntimeEnvValue` resolves to this field, if any. */
+  envKey?: string;
+  /** Why the value is used — what breaks without it. */
+  description: string;
+  validation: EnvFieldValidation;
+  /** Files that read this field through its env key (generated). */
+  usedIn: string[];
+}
+
+interface EnvCategoryEntry {
+  label: string;
+  description: string;
+  docUrl: string;
+  apiDocsUrl?: string;
+  /** Files that read the category directly (generated). */
+  usedIn: string[];
+  fields: EnvFieldDef[];
+}
+
+export interface EnvCategoryGroup {
+  key: string;
+  label: string;
+  description: string;
+  categories: readonly EnvCategory[];
+}
+
+type Json = Record<string, unknown>;
+
+function fail(where: string, problem: string): never {
+  throw new Error(`env-registry.json: ${where} ${problem}`);
+}
+
+const isRecord = (value: unknown): value is Json => typeof value === 'object' && value !== null && !Array.isArray(value);
+
+export const isEnvCategory = (value: unknown): value is EnvCategory =>
+  typeof value === 'string' && (ENV_CATEGORIES as readonly string[]).includes(value);
+
+const isValidationType = (value: unknown): value is EnvValidationType =>
+  typeof value === 'string' && (ENV_VALIDATION_TYPES as readonly string[]).includes(value);
+
+function text(obj: Json, key: string, where: string): string {
+  const value = obj[key];
+  if (typeof value !== 'string' || value.trim() === '') fail(where, `needs a non-empty "${key}"`);
+  return value;
+}
+
+function optionalText(obj: Json, key: string, where: string): string | undefined {
+  if (obj[key] === undefined) return undefined;
+  return text(obj, key, where);
+}
+
+function optionalNumber(obj: Json, key: string, where: string): number | undefined {
+  const value = obj[key];
+  if (value === undefined) return undefined;
+  if (typeof value !== 'number' || !Number.isFinite(value)) fail(where, `"${key}" must be a number`);
+  return value;
+}
+
+function textList(obj: Json, key: string, where: string): string[] {
+  const value = obj[key];
+  if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) fail(where, `"${key}" must be a list of strings`);
+  return value.map(String);
+}
+
+type FieldFlags = Pick<EnvFieldDef, 'secret' | 'number' | 'bool' | 'phone'>;
+
+/** The input-kind switches a field turns on; absent means off. */
+function flags(obj: Json): FieldFlags {
+  const out: FieldFlags = {};
+  if (obj.secret === true) out.secret = true;
+  if (obj.number === true) out.number = true;
+  if (obj.bool === true) out.bool = true;
+  if (obj.phone === true) out.phone = true;
+  return out;
+}
+
+function readValidation(raw: unknown, where: string): EnvFieldValidation {
+  if (!isRecord(raw) || !isValidationType(raw.type)) fail(where, `needs validation.type (one of ${ENV_VALIDATION_TYPES.join(', ')})`);
+  const min = optionalNumber(raw, 'min', where);
+  const max = optionalNumber(raw, 'max', where);
+  return {
+    type: raw.type,
+    ...(raw.required === true ? { required: true } : {}),
+    ...(min === undefined ? {} : { min }),
+    ...(max === undefined ? {} : { max }),
+  };
+}
+
+function readField(raw: unknown, where: string): EnvFieldDef {
+  if (!isRecord(raw)) fail(where, 'must be an object');
+  const name = text(raw, 'name', where);
+  const at = `${where}.${name}`;
+  const hint = optionalText(raw, 'hint', at);
+  const envKey = optionalText(raw, 'envKey', at);
+  return {
+    name,
+    label: text(raw, 'label', at),
+    ...(hint === undefined ? {} : { hint }),
+    ...flags(raw),
+    ...(envKey === undefined ? {} : { envKey }),
+    description: text(raw, 'description', at),
+    validation: readValidation(raw.validation, at),
+    usedIn: textList(raw, 'usedIn', at),
+  };
+}
+
+function readCategory(raw: unknown, category: string): EnvCategoryEntry {
+  if (!isRecord(raw)) fail(category, 'is missing');
+  const fields = raw.fields;
+  if (!Array.isArray(fields) || fields.length === 0) fail(category, 'needs at least one field');
+  const apiDocsUrl = optionalText(raw, 'apiDocsUrl', category);
+  return {
+    label: text(raw, 'label', category),
+    description: text(raw, 'description', category),
+    docUrl: text(raw, 'docUrl', category),
+    ...(apiDocsUrl === undefined ? {} : { apiDocsUrl }),
+    usedIn: textList(raw, 'usedIn', category),
+    fields: fields.map((field) => readField(field, category)),
+  };
+}
+
+function readGroup(raw: unknown, index: number): EnvCategoryGroup {
+  const where = `groups[${index}]`;
+  if (!isRecord(raw)) fail(where, 'must be an object');
+  const categories = textList(raw, 'categories', where);
+  const unknown = categories.filter((category) => !isEnvCategory(category));
+  if (unknown.length > 0) fail(where, `names unknown categories: ${unknown.join(', ')}`);
+  return {
+    key: text(raw, 'key', where),
+    label: text(raw, 'label', where),
+    description: text(raw, 'description', where),
+    categories: categories.filter(isEnvCategory),
+  };
+}
+
+/** Parse and check a registry document. Exported for tests; the module parses the real file once. */
+export function parseEnvRegistry(raw: unknown): { categories: ReadonlyMap<EnvCategory, EnvCategoryEntry>; groups: EnvCategoryGroup[] } {
+  if (!isRecord(raw) || !isRecord(raw.categories) || !Array.isArray(raw.groups)) fail('root', 'needs "categories" and "groups"');
+  const rawCategories = raw.categories;
+  const extra = Object.keys(rawCategories).filter((category) => !isEnvCategory(category));
+  if (extra.length > 0) fail('categories', `not in ENV_CATEGORIES: ${extra.join(', ')}`);
+  const categories = new Map(ENV_CATEGORIES.map((category) => [category, readCategory(rawCategories[category], category)] as const));
+  const envKeys = [...categories.values()].flatMap((entry) => entry.fields.flatMap((field) => (field.envKey ? [field.envKey] : [])));
+  const duplicate = envKeys.find((key, index) => envKeys.indexOf(key) !== index);
+  if (duplicate) fail('categories', `map env key ${duplicate} twice`);
+  return { categories, groups: raw.groups.map((group, index) => readGroup(group, index)) };
+}
+
+const REGISTRY = parseEnvRegistry(registry);
+
+/** The parsed entry of a category; total, because the parser requires one per ENV_CATEGORIES member. */
+function entryOf(category: EnvCategory): EnvCategoryEntry {
+  const entry = REGISTRY.categories.get(category);
+  if (!entry) throw new Error(`No registry entry for ${category}`);
+  return entry;
+}
+
+function byCategory<T>(pick: (entry: EnvCategoryEntry) => T): Record<EnvCategory, T> {
+  const out: Partial<Record<EnvCategory, T>> = {};
+  for (const category of ENV_CATEGORIES) out[category] = pick(entryOf(category));
+  return out as Record<EnvCategory, T>;
 }
 
 /** Field layout per category. Keys match the stored `config`. */
-export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
-  EMAIL: [
-    { name: 'host', label: 'SMTP Host', hint: 'e.g. smtp.gmail.com' },
-    { name: 'port', label: 'Port', number: true, hint: '465 (SSL) or 587 (TLS)' },
-    { name: 'user', label: 'Username', hint: 'Full mailbox address' },
-    { name: 'password', label: 'Password', secret: true, hint: 'SMTP password or app password' },
-    { name: 'secure', label: 'Use TLS', bool: true },
-    { name: 'from_address', label: 'From Address', hint: 'no-reply@yourdomain.com' },
-    { name: 'from_name', label: 'From Name' },
-    { name: 'reply_to', label: 'Reply-To' },
-  ],
-  IMAGEKIT: [
-    { name: 'public_key', label: 'Public Key', hint: 'public_xxxxxxxxxxxxxxxx' },
-    { name: 'private_key', label: 'Private Key', secret: true, hint: 'private_xxxxxxxxxxxxxxxx' },
-    { name: 'url_endpoint', label: 'URL Endpoint', hint: 'https://ik.imagekit.io/your_id' },
-  ],
-  PEXELS: [{ name: 'api_key', label: 'API Key', secret: true, hint: '56-char alphanumeric key' }],
-  // Google refuses an app's custom-scheme redirect on a Web client ("Custom
-  // scheme URIs are not allowed for 'WEB' client type"), so the native apps
-  // sign in with their own Android / iOS clients. Blank: that app falls back to
-  // the web client. The server accepts a token minted for any of the three.
-  GOOGLE_OAUTH: [
-    { name: 'client_id', label: 'Web OAuth Client ID', hint: 'xxxxxx.apps.googleusercontent.com — mWeb, portals and the server' },
-    { name: 'client_secret', label: 'OAuth Client Secret', secret: true, hint: 'GOCSPX-xxxxxxxxxxxxxxxx' },
-    {
-      name: 'android_client_id',
-      label: 'Android OAuth Client ID',
-      hint: 'xxxxxx.apps.googleusercontent.com — Android client for com.duncit.mobile, with "Enable custom URI scheme" on under Advanced settings',
-    },
-    {
-      name: 'ios_client_id',
-      label: 'iOS OAuth Client ID',
-      hint: 'xxxxxx.apps.googleusercontent.com — iOS client for bundle ID com.duncit.mobile',
-    },
-    // Read only by Test connection: the apps sign in with `<app id>:/oauthredirect`,
-    // and only with these can the test send Google that exact redirect.
-    {
-      name: 'android_package',
-      label: 'Android Package Name (for Test connection)',
-      hint: 'e.g. com.duncit.mobile — the package the Android client was created for',
-    },
-    {
-      name: 'ios_bundle_id',
-      label: 'iOS Bundle ID (for Test connection)',
-      hint: 'e.g. com.duncit.mobile — the Bundle ID the iOS client was created for',
-    },
-  ],
-  GOOGLE_MAPS: [{ name: 'maps_api_key', label: 'Maps API Key', secret: true, hint: 'AIzaSy... (39 chars)' }],
-  TWILIO: [
-    { name: 'account_sid', label: 'Account SID', hint: 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' },
-    { name: 'auth_token', label: 'Auth Token', secret: true, hint: '32-char hex token' },
-    { name: 'phone_number', label: 'Phone Number', phone: true, hint: 'E.164, e.g. +14155552671 — caller ID for outbound calls' },
-    {
-      name: 'agent_phone_number',
-      label: 'Agent Phone Number (optional)',
-      phone: true,
-      hint: 'E.164 — agent leg dialled for "Call Through Portal"; falls back to the logged-in user’s profile phone',
-    },
-    {
-      name: 'record_calls',
-      label: 'Record CRM calls',
-      bool: true,
-      hint: 'Switch off where call recording is not legally permitted. Unset counts as on.',
-    },
-    {
-      name: 'live_transcription',
-      label: 'Live call transcription',
-      bool: true,
-      hint: 'Speech-to-text while a CRM call is live, split by speaker. Unset counts as on.',
-    },
-    {
-      name: 'transcription_language',
-      label: 'Transcription language (optional)',
-      hint: 'BCP-47 code, e.g. en-IN or hi-IN (default en-IN)',
-    },
-    {
-      name: 'recording_notice',
-      label: 'Recording notice (optional)',
-      hint: 'Spoken to the lead before a recorded or transcribed call is connected',
-    },
-  ],
-  OPENAI: [
-    { name: 'base_url', label: 'Base URL (optional)', hint: 'https://api.openai.com/v1' },
-    { name: 'model', label: 'Model (default gpt-4o-mini)', hint: 'e.g. gpt-4o-mini' },
-    { name: 'api_key', label: 'API Key', secret: true, hint: 'sk-proj-... or sk-...' },
-  ],
-  GEMINI: [
-    { name: 'model', label: 'Model (default gemini-1.5-flash)', hint: 'e.g. gemini-2.5-flash — any AI Library prompt whose model starts with gemini- runs on this key' },
-    { name: 'api_key', label: 'API Key', secret: true, hint: 'AIzaSy... (39 chars)' },
-  ],
-  SERVAM: [
-    { name: 'api_key', label: 'API Key', secret: true, hint: 'Sarvam subscription key (sk_...)' },
-    { name: 'base_url', label: 'Base URL (optional)', hint: 'https://api.sarvam.ai' },
-    { name: 'tts_model', label: 'TTS Model (default bulbul:v2)', hint: 'e.g. bulbul:v2' },
-    { name: 'default_voice', label: 'Default Voice', hint: 'e.g. anushka, manisha, vidya, arya, abhilash, karun, hitesh' },
-  ],
-  RAZORPAY: [
-    { name: 'key_id', label: 'Key ID', hint: 'Test: rzp_test_xxxxxxxx · Live: rzp_live_xxxxxxxx (public)' },
-    { name: 'key_secret', label: 'Key Secret', secret: true, hint: 'Razorpay API key secret (test or live)' },
-    {
-      name: 'webhook_secret',
-      label: 'Webhook Secret (optional)',
-      secret: true,
-      hint: 'Used to verify Razorpay webhooks',
-    },
-    {
-      name: 'x_account_number',
-      label: 'RazorpayX Account Number (payouts)',
-      hint: 'The RazorpayX current-account number withdrawals and Send Money are paid from. Leave empty to keep payouts switched off.',
-    },
-  ],
-  SHIPROCKET: [
-    { name: 'email', label: 'Account Email', hint: 'ShipRocket API user email' },
-    { name: 'password', label: 'Account Password', secret: true, hint: 'ShipRocket API user password' },
-    {
-      name: 'pickup_location',
-      label: 'Default Pickup Location Nickname',
-      hint: 'Must match a pickup address configured in ShipRocket (Settings → Pickup Addresses)',
-    },
-    { name: 'channel_id', label: 'Channel ID (optional)', number: true, hint: 'ShipRocket channel id, if any' },
-    { name: 'webhook_secret', label: 'Webhook x-api-key (optional)', secret: true, hint: 'Verifies inbound ShipRocket webhooks' },
-    { name: 'token_ttl_hours', label: 'Token TTL hours (optional)', number: true, hint: 'Auth token cache lifetime; default 240 (~10 days)' },
-    {
-      name: 'sandbox',
-      label: 'Sandbox mode — book test orders only',
-      bool: true,
-      hint: 'On: every order, rate and pickup call for this account goes to the ShipRocket sandbox (https://api-sandbox.shiprocket.in), so nothing real is booked or charged. Off: production (https://apiv2.shiprocket.in) — live shipments, exactly as before. Enter the sandbox API user from ShipRocket → Settings → Additional Settings → Sandbox (https://app.shiprocket.in/seller/settings/additional-settings/sandbox) in the two sandbox fields below; the production email and password above are kept and not used while this is on.',
-    },
-    {
-      name: 'sandbox_email',
-      label: 'Sandbox Account Email',
-      hint: 'ShipRocket sandbox API user email — used only while sandbox mode is on. Left blank, the email and password above are sent to the sandbox.',
-    },
-    {
-      name: 'sandbox_password',
-      label: 'Sandbox Account Password',
-      secret: true,
-      hint: 'ShipRocket sandbox API user password — used only while sandbox mode is on',
-    },
-    {
-      name: 'sandbox_api_url',
-      label: 'Sandbox API URL (optional)',
-      hint: 'Leave blank to use ShipRocket’s standard sandbox, https://api-sandbox.shiprocket.in. Fill it only if ShipRocket moves its sandbox: the address must be https and end in shiprocket.in, and it then applies to every account in sandbox mode, partner brands included. It is never used while sandbox mode is off.',
-    },
-  ],
-  // What carries a staff call when the two browsers cannot reach each other
-  // directly — which is most of the time once the people on it are on different
-  // networks. Without one, calls connect on a shared LAN and nowhere else.
-  TURN: [
-    {
-      name: 'urls',
-      label: 'TURN URLs',
-      hint: 'Comma separated, e.g. turn:turn.example.com:3478,turns:turn.example.com:5349',
-    },
-    { name: 'username', label: 'Username', hint: 'TURN user (coturn: the `user` before the colon)' },
-    { name: 'credential', label: 'Credential', secret: true, hint: 'The TURN password' },
-  ],
-  SLACK: [
-    { name: 'bot_token', label: 'Bot User OAuth Token', secret: true, hint: 'xoxb-… (Slack app → OAuth & Permissions)' },
-    { name: 'signing_secret', label: 'Signing Secret (optional)', secret: true, hint: 'Verifies inbound Slack events/webhooks' },
-    { name: 'default_channel', label: 'Default Channel (optional)', hint: 'Channel ID (e.g. C0123ABCD) messages default to' },
-    { name: 'feedback_channel', label: 'Feedback Channel (optional)', hint: 'Channel ID in-app feedback posts to (falls back to Default Channel)' },
-    { name: 'finance_channel', label: 'Finance Alerts Channel (optional)', hint: 'Channel ID refused refunds and other Finance alerts post to (falls back to Default Channel)' },
-    { name: 'legal_channel', label: 'Legal Alerts Channel (optional)', hint: 'Channel ID new grievances and content reports post to (falls back to Default Channel)' },
-    { name: 'android_builds_channel', label: 'Android Builds Channel (optional)', hint: 'Channel ID CI Android builds announce to (Tech → App Builds → Settings)' },
-    { name: 'ios_builds_channel', label: 'iOS Builds Channel (optional)', hint: 'Channel ID CI iOS builds announce to (Tech → App Builds → Settings)' },
-    { name: 'android_staging_builds_channel', label: 'Android Staging Builds Channel (optional)', hint: 'Channel ID staging Android builds announce to; blank uses the Android builds channel (Tech → App Builds → Settings)' },
-    { name: 'ios_staging_builds_channel', label: 'iOS Staging Builds Channel (optional)', hint: 'Channel ID staging iOS builds announce to; blank uses the iOS builds channel (Tech → App Builds → Settings)' },
-    { name: 'e2e_channel', label: 'E2E Results Channel (optional)', hint: 'Channel ID e2e run results announce to (Tech → E2E Tests → Settings)' },
-  ],
-  // Two different AiSensy credentials, on purpose. The campaign API key SENDS
-  // (backend.aisensy.com/campaign/t1/api/v2) and can do nothing else — it
-  // cannot read a campaign or a template back. Reading needs the Project API,
-  // which is a separate key scoped to a project id.
-  AISENSY: [
-    { name: 'api_key', label: 'Campaign API Key', secret: true, hint: 'AiSensy → Manage → API Key (a long eyJ… token) — sends messages' },
-    {
-      name: 'campaign_name',
-      label: 'Default Campaign Name (optional)',
-      hint: 'API campaign name sends default to, e.g. duncit_camp_1',
-    },
-    {
-      name: 'otp_campaign_name',
-      label: 'OTP Campaign Name (optional)',
-      hint: 'Campaign behind the AUTHENTICATION template that carries one-time codes. Defaults to whatsapp_authentication',
-    },
-    { name: 'base_url', label: 'Base URL (optional)', hint: 'https://backend.aisensy.com' },
-    {
-      name: 'project_id',
-      label: 'Project ID (optional)',
-      hint: 'The 24-character id in your AiSensy dashboard URL (app.aisensy.com/projects/<id>) — not the project name',
-    },
-    {
-      name: 'project_api_key',
-      label: 'Project API Password (optional)',
-      secret: true,
-      hint: 'Custom App password — AiSensy dashboard → Manage → Custom Apps → create one (shows key, password, shared secret). Reads campaigns + templates, never sends',
-    },
-    {
-      name: 'project_api_base_url',
-      label: 'Project API Base URL (optional)',
-      hint: 'https://apis.aisensy.com',
-    },
-  ],
-  // Lets the Tech portal start a build instead of only recording one CI already
-  // started. Dispatching a workflow is a WRITE on Actions, so this token is the
-  // one credential here that can change what runs in the repo — keep it on a
-  // machine account with access to this repository and nothing else.
-  GITHUB: [
-    {
-      name: 'token',
-      label: 'Access Token',
-      secret: true,
-      hint: 'Fine-grained PAT with Actions: Read and write (classic: repo + workflow)',
-    },
-    { name: 'owner', label: 'Repository Owner', hint: 'The user or org, e.g. suryansh-business-work' },
-    { name: 'repo', label: 'Repository Name', hint: 'e.g. duncit-all' },
-  ],
-  // Releases a stored AAB from Tech → App Builds to a Play track. The service
-  // account is created in Google Cloud and then INVITED on the app in Play
-  // Console (Users and permissions) with release rights — the key alone is
-  // not enough, and the connection test says which half is missing.
-  GOOGLE_PLAY: [
-    {
-      name: 'service_account_json',
-      label: 'Service Account Key (JSON)',
-      secret: true,
-      hint: 'Paste the whole JSON key file of a service account granted release access on the app in Play Console',
-    },
-    { name: 'package_name', label: 'Package Name', hint: 'The app id on Google Play, e.g. com.duncit.mobile' },
-  ],
-  // Reads the footage AI → Reel Studio edits. Read-only: the studio never
-  // writes to anyone's Drive. A folder is readable once it is shared with the
-  // service account's email (Viewer) or set to "Anyone with the link" — the
-  // key alone opens nothing, and the connection test says so.
-  GOOGLE_DRIVE: [
-    {
-      name: 'service_account_json',
-      label: 'Service Account Key (JSON)',
-      secret: true,
-      hint: 'Paste the whole JSON key file of a service account. Enable the Google Drive API on its project, then share each footage folder with its client_email as Viewer',
-    },
-  ],
-  // The SMS carrier for every phone one-time code. MSG91's OTP widget makes,
-  // sends and checks the code itself; the server only holds the request id.
-  // Both values stay on the server — the apps never talk to MSG91 directly.
-  MSG91: [
-    {
-      name: 'widget_id',
-      label: 'Widget ID',
-      hint: 'MSG91 → OTP → Widgets → your widget, e.g. 36686a6a6a59343937393739. Set the widget OTP length to 6 — the Duncit apps take a 6-digit code',
-    },
-    {
-      name: 'auth_key',
-      label: 'Auth Key',
-      secret: true,
-      hint: 'MSG91 → Settings → Security → Auth Key. Also reads the widget logs and analytics',
-    },
-  ],
-  // Sign in with Apple, on every door that offers it. The iOS app signs in as
-  // the App ID; mWeb and the Android app sign in as the Services ID, so an
-  // Apple token is accepted when its audience is either. The key signs the
-  // client secret Apple's token endpoint asks for — the connection test uses
-  // it today, and revoking a deleted account's Apple tokens will.
-  APPLE_SIGNIN: [
-    { name: 'team_id', label: 'Team ID', hint: 'Apple Developer → Membership details → Team ID (10 characters), e.g. A1B2C3D4E5' },
-    {
-      name: 'bundle_id',
-      label: 'App ID (iOS bundle identifier)',
-      hint: 'Identifiers → App IDs, with Sign in with Apple enabled — e.g. com.duncit.mobile. The iOS app signs in with this',
-    },
-    {
-      name: 'services_id',
-      label: 'Services ID (web client ID)',
-      hint: 'Identifiers → Services IDs, e.g. com.duncit.signin. mWeb and the Android app sign in with this',
-    },
-    {
-      name: 'web_redirect_uri',
-      label: 'mWeb Return URL',
-      hint: 'e.g. https://mweb.duncit.com/login. Register it under the Services ID → Return URLs, together with <server URL>/apple/callback',
-    },
-    { name: 'key_id', label: 'Key ID', hint: 'Keys → your Sign in with Apple key → Key ID (10 characters)' },
-    {
-      name: 'private_key',
-      label: 'Private Key (.p8)',
-      secret: true,
-      hint: 'Paste the whole AuthKey_<KeyID>.p8 file, BEGIN and END lines included. Apple lets you download it only once',
-    },
-  ],
-  // Signs the iOS app with no Mac. This API key is the one thing Apple makes
-  // only by hand; with it, Tech → App Builds → Settings generates the Apple
-  // Distribution certificate and App Store profile, and the ios-build workflow
-  // signs and uploads with them. A different key from Sign in with Apple's.
-  APP_STORE_CONNECT: [
-    {
-      name: 'issuer_id',
-      label: 'Issuer ID',
-      hint: 'App Store Connect → Users and Access → Integrations → App Store Connect API → Team Keys: the Issuer ID shown above the key list (a UUID)',
-    },
-    {
-      name: 'key_id',
-      label: 'Key ID',
-      hint: 'Generate a Team Key with Access "Admin" — only Admin may create certificates — and copy its Key ID (10 characters), e.g. 2X9R4HXF34',
-    },
-    {
-      name: 'private_key',
-      label: 'Private Key (.p8)',
-      secret: true,
-      hint: 'Paste the whole AuthKey_<KeyID>.p8 file, BEGIN and END lines included. Apple lets you download it only once',
-    },
-    {
-      name: 'bundle_id',
-      label: 'Bundle ID',
-      hint: 'The iOS app’s bundle identifier (app.json → ios.bundleIdentifier), e.g. com.duncit.mobile. Registered with its capabilities on Generate if Apple has not seen it',
-    },
-  ],
-  // What the Analytics console's Security and Unit Test Coverage pages read.
-  // Read-only: a user token with Browse on the project is all it needs, and it
-  // is a different token from the CI scan's SONAR_TOKEN secret.
-  SONARQUBE: [
-    { name: 'host_url', label: 'Server URL', hint: 'e.g. https://sonarqube.duncit.com' },
-    {
-      name: 'token',
-      label: 'User Token',
-      secret: true,
-      hint: 'SonarQube → My Account → Security → Generate a User token (squ_…) for a user with Browse on the project',
-    },
-    {
-      name: 'project_key',
-      label: 'Project Key',
-      hint: 'sonar.projectKey in sonar-project.properties — SonarQube → the project → Project Information',
-    },
-  ],
-  // The DNS zone behind every *.duncit.com host. Tech → DNS Config reads and
-  // edits its records with this key, so a new portal's A record no longer
-  // needs someone logged in to GoDaddy.
-  GODADDY: [
-    {
-      name: 'api_key',
-      label: 'API Key',
-      secret: true,
-      hint: 'developer.godaddy.com → API Keys → Create New API Key, environment "Production" (an OTE key only works on the test API)',
-    },
-    { name: 'api_secret', label: 'API Secret', secret: true, hint: 'Shown once, beside the key, when it is created' },
-    { name: 'domain', label: 'Domain', hint: 'The zone DNS Config manages, e.g. duncit.com — it must be in the account that owns the key' },
-  ],
-  // Where the zone moves when DNS leaves GoDaddy. Tech → Security → Cloudflare
-  // compares the two zones, copies records across and switches the
-  // nameservers at GoDaddy — so the domain here must be GoDaddy's domain.
-  CLOUDFLARE: [
-    {
-      name: 'api_token',
-      label: 'API Token',
-      secret: true,
-      hint: 'dash.cloudflare.com → My Profile → API Tokens → Create Token with Zone:Read, Zone:Edit and DNS:Edit on this account (not the Global API key)',
-    },
-    { name: 'account_id', label: 'Account ID', hint: 'dash.cloudflare.com → Account Home → Account ID, in the right-hand column' },
-    { name: 'domain', label: 'Domain', hint: 'The zone to move, e.g. duncit.com — the same domain as the GoDaddy entry' },
-  ],
-  // The apps Marketing → Social Accounts connects through — ONE ENTRY PER
-  // NETWORK, edited from Marketing → Settings → Integrations. Instagram,
-  // Facebook and Threads are three apps with three entries, never one shared
-  // Meta app, so each network is set up, tested and rotated on its own. Every
-  // app registers the SAME redirect URL: <server URL>/social/callback.
-  SOCIAL_INSTAGRAM: [
-    {
-      name: 'app_id',
-      label: 'Instagram App ID',
-      hint: 'developers.facebook.com/apps → your app → Instagram → API setup with Instagram login → Instagram app ID (not the Facebook App ID)',
-    },
-    { name: 'app_secret', label: 'Instagram App Secret', secret: true, hint: 'Same page → Instagram app secret' },
-    { name: 'graph_version', label: 'Graph API Version (optional)', hint: 'e.g. v23.0; default v23.0' },
-  ],
-  SOCIAL_FACEBOOK: [
-    {
-      name: 'app_id',
-      label: 'Facebook App ID',
-      hint: 'developers.facebook.com/apps → your Business app → App settings → Basic. Add Facebook Login for Business; posting to Pages needs pages_manage_posts approved',
-    },
-    { name: 'app_secret', label: 'Facebook App Secret', secret: true, hint: 'App settings → Basic → App secret' },
-    { name: 'graph_version', label: 'Graph API Version (optional)', hint: 'e.g. v23.0; default v23.0' },
-  ],
-  SOCIAL_THREADS: [
-    {
-      name: 'app_id',
-      label: 'Threads App ID',
-      hint: 'developers.facebook.com/apps → your app → Threads API → Settings → Threads App ID. Posting needs threads_content_publish',
-    },
-    { name: 'app_secret', label: 'Threads App Secret', secret: true, hint: 'Same page → Threads App Secret' },
-    { name: 'graph_version', label: 'Threads API Version (optional)', hint: 'e.g. v1.0; default v1.0' },
-  ],
-  SOCIAL_YOUTUBE: [
-    {
-      name: 'client_id',
-      label: 'YouTube (Google) OAuth Client ID',
-      hint: 'console.cloud.google.com → Credentials → OAuth client (Web). Enable the YouTube Data API v3 on the project',
-    },
-    { name: 'client_secret', label: 'YouTube (Google) OAuth Client Secret', secret: true, hint: 'GOCSPX-…' },
-  ],
-  SOCIAL_LINKEDIN: [
-    {
-      name: 'client_id',
-      label: 'LinkedIn Client ID',
-      hint: 'linkedin.com/developers/apps → your app → Auth. Needs the Community Management API product (read and post as company Pages)',
-    },
-    { name: 'client_secret', label: 'LinkedIn Client Secret', secret: true, hint: 'Same Auth tab, beside the Client ID' },
-    {
-      name: 'api_version',
-      label: 'LinkedIn API Version (optional)',
-      hint: 'YYYYMM, e.g. 202509 — LinkedIn retires a version after a year; default 202509',
-    },
-  ],
-  SOCIAL_X: [
-    {
-      name: 'client_id',
-      label: 'X OAuth 2.0 Client ID',
-      hint: 'developer.x.com → your project app → Keys and tokens → OAuth 2.0 Client ID. User authentication: Read and write, Type of App: Web App (confidential client)',
-    },
-    { name: 'client_secret', label: 'X OAuth 2.0 Client Secret', secret: true, hint: 'Shown once, beside the Client ID' },
-  ],
-  // One-tap phone sign-in. Truecaller proves the SIM the person is holding, so
-  // a verified number stands in for the WhatsApp code on login and signup.
-  // Nothing here is a secret: the client ID ships inside the APK and the app
-  // key inside the iOS app, which is why the app builds read them from the
-  // public client config. The server re-checks every proof with Truecaller.
-  TRUECALLER: [
-    {
-      name: 'android_client_id',
-      label: 'Android Client ID (OAuth SDK)',
-      hint: 'Truecaller SDK console → your Android app → Client ID. Register package com.duncit.mobile with the release SHA-1',
-    },
-    {
-      name: 'app_key',
-      label: 'App Key (iOS + mobile web)',
-      hint: 'Truecaller SDK console → your iOS app / web app → App Key (partner key)',
-    },
-    {
-      name: 'ios_app_link',
-      label: 'iOS App Link',
-      hint: 'The universal link Truecaller gives the iOS app, e.g. https://si1a2b3c4d5e.truecallerdevs.com',
-    },
-    {
-      name: 'partner_name',
-      label: 'Partner name (mobile web)',
-      hint: 'The name Truecaller shows on the mobile-web consent sheet, e.g. Duncit. Set the web Callback URL to <server URL>/truecaller/callback',
-    },
-    { name: 'region', label: 'Region', hint: 'noneu (India and the rest of the world) or eu — blank means noneu' },
-  ],
-  // Google results through serper.dev, for Marketing → Instagram Leads'
-  // profile discovery. Its free credit is a one-off allowance, not monthly.
-  SERPER: [{ name: 'api_key', label: 'API Key', secret: true, hint: 'serper.dev → API Key (40 hex characters)' }],
-  // Claude models: the Reel Studio director and the marketing agents reason on
-  // them. Any AI Library prompt whose model starts with `claude-` is routed here.
-  ANTHROPIC: [
-    { name: 'api_key', label: 'API Key', secret: true, hint: 'console.anthropic.com → API keys (sk-ant-…)' },
-    { name: 'model', label: 'Default model (optional)', hint: 'e.g. claude-opus-5-5; a prompt in the AI Library may name its own' },
-  ],
-};
+export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = byCategory((entry) => entry.fields);
 
 /** How each category is named in the Tech portal and on the Analytics console. */
-export const CATEGORY_LABELS: Record<EnvCategory, string> = {
-  EMAIL: 'Email (SMTP)',
-  IMAGEKIT: 'ImageKit',
-  PEXELS: 'Pexels',
-  GOOGLE_OAUTH: 'Google OAuth',
-  GOOGLE_MAPS: 'Google Map',
-  TWILIO: 'Twilio',
-  OPENAI: 'OpenAI',
-  GEMINI: 'Gemini',
-  SERVAM: 'Servam AI (Sarvam)',
-  RAZORPAY: 'Razorpay',
-  SHIPROCKET: 'ShipRocket',
-  SLACK: 'Slack',
-  AISENSY: 'AiSensy (WhatsApp)',
-  TURN: 'TURN relay (staff calls)',
-  GITHUB: 'GitHub (app builds)',
-  GOOGLE_PLAY: 'Google Play (store releases)',
-  GOOGLE_DRIVE: 'Google Drive (Reel Studio footage)',
-  MSG91: 'MSG91 (SMS OTP)',
-  APPLE_SIGNIN: 'Sign in with Apple',
-  APP_STORE_CONNECT: 'App Store Connect (iOS signing)',
-  SONARQUBE: 'SonarQube (code analysis)',
-  GODADDY: 'GoDaddy (DNS)',
-  CLOUDFLARE: 'Cloudflare (DNS)',
-  SOCIAL_INSTAGRAM: 'Instagram app',
-  SOCIAL_FACEBOOK: 'Facebook app',
-  SOCIAL_THREADS: 'Threads app',
-  SOCIAL_YOUTUBE: 'YouTube app',
-  SOCIAL_LINKEDIN: 'LinkedIn app',
-  SOCIAL_X: 'X app',
-  TRUECALLER: 'Truecaller (one-tap phone sign-in)',
-  SERPER: 'Serper (Google search)',
-  ANTHROPIC: 'Anthropic (Claude)',
-};
+export const CATEGORY_LABELS: Record<EnvCategory, string> = byCategory((entry) => entry.label);
 
 /** One line under each category's title in the Tech portal: what the keys power. */
-export const CATEGORY_DESCRIPTIONS: Record<EnvCategory, string> = {
-  EMAIL: 'The mailbox every product email is sent from',
-  IMAGEKIT: 'Image and video uploads, storage and delivery',
-  PEXELS: 'Stock photos and videos for covers',
-  GOOGLE_OAUTH: 'Continue with Google on web, Android and iOS',
-  GOOGLE_MAPS: 'Maps, places search and geocoding',
-  TWILIO: 'Voice calls and the support line',
-  OPENAI: 'GPT models behind the AI features',
-  GEMINI: 'Google Gemini models behind the AI features',
-  SERVAM: 'Indian-language voice and text models',
-  RAZORPAY: 'Payments, refunds and payment webhooks',
-  SHIPROCKET: 'Shipping, pickups and delivery tracking',
-  SLACK: 'Team alerts and channel notifications',
-  AISENSY: 'WhatsApp messages, campaigns and OTP',
-  TURN: 'Relay that keeps staff calls connected',
-  GITHUB: 'Triggers and reads the app build workflows',
-  GOOGLE_PLAY: 'Android store releases and listings',
-  GOOGLE_DRIVE: 'Raw footage for Reel Studio',
-  MSG91: 'SMS one-time codes',
-  APPLE_SIGNIN: 'Sign in with Apple on web and iOS',
-  APP_STORE_CONNECT: 'iOS signing and App Store releases',
-  SONARQUBE: 'Code quality and security analysis',
-  GODADDY: 'Domain and DNS records at GoDaddy',
-  CLOUDFLARE: 'Domain and DNS records at Cloudflare',
-  SOCIAL_INSTAGRAM: 'Connect Instagram accounts; read posts and comments; publish posts and reels',
-  SOCIAL_FACEBOOK: 'Connect Facebook Pages; read posts and comments; publish to Pages',
-  SOCIAL_THREADS: 'Connect Threads accounts; read posts and replies; publish threads',
-  SOCIAL_YOUTUBE: 'Connect YouTube channels; read videos and comments; upload videos',
-  SOCIAL_LINKEDIN: 'Connect LinkedIn Pages; read posts and comments; publish posts',
-  SOCIAL_X: 'Connect X profiles; read posts and replies; publish posts',
-  TRUECALLER: 'One-tap phone sign-in',
-  SERPER: 'Google search results for Marketing research and lead discovery',
-  ANTHROPIC: 'Claude models behind Reel Studio and the marketing agents',
-};
+export const CATEGORY_DESCRIPTIONS: Record<EnvCategory, string> = byCategory((entry) => entry.description);
+
+/** Where an operator obtains each category's credentials (shown in the Add dialog). */
+export const CATEGORY_DOCS: Record<EnvCategory, string> = byCategory((entry) => entry.docUrl);
+
+/** Where each category's API reference lives, for the ones worth reading. */
+export const CATEGORY_API_DOCS: Partial<Record<EnvCategory, string>> = Object.fromEntries(
+  ENV_CATEGORIES.flatMap((category) => {
+    const url = entryOf(category).apiDocsUrl;
+    return url ? [[category, url]] : [];
+  })
+);
+
+/** Files that read each category directly (generated into the registry). */
+export const CATEGORY_USED_IN: Record<EnvCategory, string[]> = byCategory((entry) => entry.usedIn);
 
 /**
  * How the Tech portal's sidebar groups the categories, in display order. Every
  * category belongs to exactly one group — the guard below throws on a miss.
  */
-export const CATEGORY_GROUPS: readonly {
-  key: string;
-  label: string;
-  description: string;
-  categories: readonly EnvCategory[];
-}[] = [
-  {
-    key: 'MESSAGING',
-    label: 'Messaging & OTP',
-    description: 'Email, WhatsApp, SMS, calls and alerts',
-    categories: ['EMAIL', 'AISENSY', 'MSG91', 'TWILIO', 'SLACK', 'TURN'],
-  },
-  {
-    key: 'IDENTITY',
-    label: 'Sign-in & identity',
-    description: 'Social and phone sign-in providers',
-    categories: ['GOOGLE_OAUTH', 'APPLE_SIGNIN', 'TRUECALLER'],
-  },
-  {
-    key: 'AI',
-    label: 'AI models',
-    description: 'Text, voice and generation models',
-    categories: ['OPENAI', 'GEMINI', 'ANTHROPIC', 'SERVAM'],
-  },
-  {
-    key: 'MEDIA',
-    label: 'Media, maps & content',
-    description: 'Uploads, stock media, maps and footage',
-    categories: ['IMAGEKIT', 'PEXELS', 'GOOGLE_MAPS', 'GOOGLE_DRIVE'],
-  },
-  {
-    // The Marketing console's own keys: edited from Marketing → Settings →
-    // Integrations (a marketing manager reaches only these), listed here too so
-    // Tech sees the whole picture.
-    key: 'MARKETING',
-    label: 'Marketing & social',
-    description: 'One app per social network, and search for research and leads',
-    categories: ['SOCIAL_INSTAGRAM', 'SOCIAL_FACEBOOK', 'SOCIAL_THREADS', 'SOCIAL_YOUTUBE', 'SOCIAL_LINKEDIN', 'SOCIAL_X', 'SERPER'],
-  },
-  {
-    key: 'COMMERCE',
-    label: 'Payments & shipping',
-    description: 'Money in and parcels out',
-    categories: ['RAZORPAY', 'SHIPROCKET'],
-  },
-  {
-    key: 'RELEASES',
-    label: 'Builds & releases',
-    description: 'CI, store releases and code analysis',
-    categories: ['GITHUB', 'GOOGLE_PLAY', 'APP_STORE_CONNECT', 'SONARQUBE'],
-  },
-  {
-    key: 'DOMAINS',
-    label: 'Domains & DNS',
-    description: 'Registrar and DNS providers',
-    categories: ['GODADDY', 'CLOUDFLARE'],
-  },
-];
+export const CATEGORY_GROUPS: readonly EnvCategoryGroup[] = REGISTRY.groups;
 
 /** The group a category sits in — total, because every category is placed exactly once. */
 export const CATEGORY_GROUP_OF = new Map(
@@ -630,194 +261,23 @@ export function assertEveryCategoryGrouped(categories: readonly string[], isGrou
   }
 }
 
-assertEveryCategoryGrouped(Object.keys(CATEGORY_LABELS), (category) => CATEGORY_GROUP_OF.has(category as EnvCategory));
+assertEveryCategoryGrouped(ENV_CATEGORIES, (category) => isEnvCategory(category) && CATEGORY_GROUP_OF.has(category));
 
-/** Where an operator obtains each category's credentials (shown in the Add dialog). */
-export const CATEGORY_DOCS: Record<EnvCategory, string> = {
-  EMAIL: 'https://support.google.com/a/answer/176600',
-  IMAGEKIT: 'https://imagekit.io/dashboard/developer/api-keys',
-  PEXELS: 'https://www.pexels.com/api/',
-  GOOGLE_OAUTH: 'https://console.cloud.google.com/apis/credentials',
-  GOOGLE_MAPS: 'https://console.cloud.google.com/google/maps-apis/credentials',
-  TWILIO: 'https://console.twilio.com/',
-  OPENAI: 'https://platform.openai.com/api-keys',
-  GEMINI: 'https://aistudio.google.com/app/apikey',
-  SERVAM: 'https://dashboard.sarvam.ai/admin',
-  RAZORPAY: 'https://dashboard.razorpay.com/app/keys',
-  SHIPROCKET: 'https://app.shiprocket.in/api-user',
-  SLACK: 'https://api.slack.com/apps',
-  AISENSY: 'https://app.aisensy.com/',
-  TURN: 'https://github.com/coturn/coturn',
-  GITHUB: 'https://github.com/settings/personal-access-tokens',
-  GOOGLE_PLAY: 'https://play.google.com/console/developers',
-  GOOGLE_DRIVE: 'https://console.cloud.google.com/iam-admin/serviceaccounts',
-  MSG91: 'https://control.msg91.com/app/m/l/settings/security/authkey',
-  APPLE_SIGNIN: 'https://developer.apple.com/account/resources/identifiers/list',
-  APP_STORE_CONNECT: 'https://appstoreconnect.apple.com/access/integrations/api',
-  SONARQUBE: 'https://docs.sonarsource.com/sonarqube-community-build/user-guide/managing-tokens/',
-  GODADDY: 'https://developer.godaddy.com/keys',
-  CLOUDFLARE: 'https://dash.cloudflare.com/profile/api-tokens',
-  SOCIAL_INSTAGRAM: 'https://developers.facebook.com/apps/',
-  SOCIAL_FACEBOOK: 'https://developers.facebook.com/apps/',
-  SOCIAL_THREADS: 'https://developers.facebook.com/apps/',
-  SOCIAL_YOUTUBE: 'https://console.cloud.google.com/apis/credentials',
-  SOCIAL_LINKEDIN: 'https://www.linkedin.com/developers/apps',
-  SOCIAL_X: 'https://developer.x.com/en/portal/dashboard',
-  TRUECALLER: 'https://sdk-console-noneu.truecaller.com/',
-  SERPER: 'https://serper.dev/api-key',
-  ANTHROPIC: 'https://console.anthropic.com/settings/keys',
-};
-
-/**
- * The provider's API documentation, for the categories whose integration an
- * operator is likely to need to read up on. Shown beside the dashboard link.
- */
-export const CATEGORY_API_DOCS: Partial<Record<EnvCategory, string>> = {
-  MSG91: 'https://docs.msg91.com/otp-widget',
-  APPLE_SIGNIN: 'https://developer.apple.com/documentation/signinwithapple/configuring-your-environment-for-sign-in-with-apple',
-  APP_STORE_CONNECT:
-    'https://developer.apple.com/documentation/appstoreconnectapi/creating-api-keys-for-app-store-connect-api',
-  GODADDY: 'https://developer.godaddy.com/doc/endpoint/domains',
-  CLOUDFLARE: 'https://developers.cloudflare.com/api/resources/dns/subresources/records/',
-  TRUECALLER: 'https://docs.truecaller.com/truecaller-sdk/',
-  SOCIAL_INSTAGRAM: 'https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/',
-  SOCIAL_FACEBOOK: 'https://developers.facebook.com/docs/pages-api/',
-  SOCIAL_THREADS: 'https://developers.facebook.com/docs/threads/',
-  SOCIAL_YOUTUBE: 'https://developers.google.com/youtube/v3/guides/uploading_a_video',
-  SOCIAL_LINKEDIN: 'https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/posts-api',
-  SOCIAL_X: 'https://docs.x.com/x-api/posts/creation-of-a-post',
-  ANTHROPIC: 'https://platform.claude.com/docs/en/api/overview',
-};
-
-const secretSet = new Set<string>();
-for (const fields of Object.values(CATEGORY_FIELDS)) {
-  for (const f of fields) if (f.secret) secretSet.add(f.name);
-}
 /** Union of all secret field names across categories. */
-export const SECRET_FIELDS: string[] = Array.from(secretSet);
+export const SECRET_FIELDS: string[] = Array.from(
+  new Set(Object.values(CATEGORY_FIELDS).flatMap((fields) => fields.filter((f) => f.secret).map((f) => f.name)))
+);
 
 /**
- * Maps a legacy server env key (used by upload/twilio/vobiz/servam/url-configs)
- * to the category + config field it now resolves from. Anything not listed
+ * Maps a legacy server env key to the category + config field it now resolves
+ * from (every field with an `envKey` in the registry). Anything not listed
  * falls through to process.env unchanged.
  */
-export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string }> = {
-  IMAGEKIT_PUBLIC_KEY: { category: 'IMAGEKIT', field: 'public_key' },
-  IMAGEKIT_PRIVATE_KEY: { category: 'IMAGEKIT', field: 'private_key' },
-  IMAGEKIT_URL_ENDPOINT: { category: 'IMAGEKIT', field: 'url_endpoint' },
-  PEXELS_API_KEY: { category: 'PEXELS', field: 'api_key' },
-  SMTP_HOST: { category: 'EMAIL', field: 'host' },
-  SMTP_PORT: { category: 'EMAIL', field: 'port' },
-  SMTP_USER: { category: 'EMAIL', field: 'user' },
-  SMTP_PASS: { category: 'EMAIL', field: 'password' },
-  SMTP_FROM: { category: 'EMAIL', field: 'from_address' },
-  GOOGLE_CLIENT_ID: { category: 'GOOGLE_OAUTH', field: 'client_id' },
-  GOOGLE_CLIENT_SECRET: { category: 'GOOGLE_OAUTH', field: 'client_secret' },
-  GOOGLE_ANDROID_CLIENT_ID: { category: 'GOOGLE_OAUTH', field: 'android_client_id' },
-  GOOGLE_IOS_CLIENT_ID: { category: 'GOOGLE_OAUTH', field: 'ios_client_id' },
-  GOOGLE_MAP_API: { category: 'GOOGLE_MAPS', field: 'maps_api_key' },
-  TWILIO_ACCOUNT_SID: { category: 'TWILIO', field: 'account_sid' },
-  TWILIO_AUTH_TOKEN: { category: 'TWILIO', field: 'auth_token' },
-  TWILIO_PHONE_NUMBER: { category: 'TWILIO', field: 'phone_number' },
-  TWILIO_AGENT_PHONE_NUMBER: { category: 'TWILIO', field: 'agent_phone_number' },
-  TWILIO_RECORD_CALLS: { category: 'TWILIO', field: 'record_calls' },
-  TWILIO_LIVE_TRANSCRIPTION: { category: 'TWILIO', field: 'live_transcription' },
-  TWILIO_TRANSCRIPTION_LANGUAGE: { category: 'TWILIO', field: 'transcription_language' },
-  TWILIO_RECORDING_NOTICE: { category: 'TWILIO', field: 'recording_notice' },
-  OPENAI_API_KEY: { category: 'OPENAI', field: 'api_key' },
-  OPENAI_BASE_URL: { category: 'OPENAI', field: 'base_url' },
-  OPENAI_MODEL: { category: 'OPENAI', field: 'model' },
-  GEMINI_API_KEY: { category: 'GEMINI', field: 'api_key' },
-  SERVAM_AI_API_KEY: { category: 'SERVAM', field: 'api_key' },
-  SERVAM_AI_BASE_URL: { category: 'SERVAM', field: 'base_url' },
-  SERVAM_AI_TTS_MODEL: { category: 'SERVAM', field: 'tts_model' },
-  SERVAM_AI_VOICE: { category: 'SERVAM', field: 'default_voice' },
-  RAZORPAY_KEY_ID: { category: 'RAZORPAY', field: 'key_id' },
-  RAZORPAY_KEY_SECRET: { category: 'RAZORPAY', field: 'key_secret' },
-  RAZORPAY_WEBHOOK_SECRET: { category: 'RAZORPAY', field: 'webhook_secret' },
-  RAZORPAYX_ACCOUNT_NUMBER: { category: 'RAZORPAY', field: 'x_account_number' },
-  SHIPROCKET_EMAIL: { category: 'SHIPROCKET', field: 'email' },
-  SHIPROCKET_PASSWORD: { category: 'SHIPROCKET', field: 'password' },
-  SHIPROCKET_PICKUP_LOCATION: { category: 'SHIPROCKET', field: 'pickup_location' },
-  SHIPROCKET_CHANNEL_ID: { category: 'SHIPROCKET', field: 'channel_id' },
-  SHIPROCKET_WEBHOOK_SECRET: { category: 'SHIPROCKET', field: 'webhook_secret' },
-  SHIPROCKET_TOKEN_TTL_HOURS: { category: 'SHIPROCKET', field: 'token_ttl_hours' },
-  SLACK_BOT_TOKEN: { category: 'SLACK', field: 'bot_token' },
-  SLACK_SIGNING_SECRET: { category: 'SLACK', field: 'signing_secret' },
-  SLACK_DEFAULT_CHANNEL: { category: 'SLACK', field: 'default_channel' },
-  SLACK_FEEDBACK_CHANNEL: { category: 'SLACK', field: 'feedback_channel' },
-  SLACK_FINANCE_CHANNEL: { category: 'SLACK', field: 'finance_channel' },
-  SLACK_LEGAL_CHANNEL: { category: 'SLACK', field: 'legal_channel' },
-  SLACK_ANDROID_BUILDS_CHANNEL: { category: 'SLACK', field: 'android_builds_channel' },
-  SLACK_IOS_BUILDS_CHANNEL: { category: 'SLACK', field: 'ios_builds_channel' },
-  SLACK_ANDROID_STAGING_BUILDS_CHANNEL: { category: 'SLACK', field: 'android_staging_builds_channel' },
-  SLACK_IOS_STAGING_BUILDS_CHANNEL: { category: 'SLACK', field: 'ios_staging_builds_channel' },
-  SLACK_E2E_CHANNEL: { category: 'SLACK', field: 'e2e_channel' },
-  TURN_URLS: { category: 'TURN', field: 'urls' },
-  TURN_USERNAME: { category: 'TURN', field: 'username' },
-  TURN_CREDENTIAL: { category: 'TURN', field: 'credential' },
-  AISENSY_API_KEY: { category: 'AISENSY', field: 'api_key' },
-  AISENSY_CAMPAIGN_NAME: { category: 'AISENSY', field: 'campaign_name' },
-  AISENSY_OTP_CAMPAIGN_NAME: { category: 'AISENSY', field: 'otp_campaign_name' },
-  AISENSY_BASE_URL: { category: 'AISENSY', field: 'base_url' },
-  AISENSY_PROJECT_ID: { category: 'AISENSY', field: 'project_id' },
-  AISENSY_PROJECT_API_KEY: { category: 'AISENSY', field: 'project_api_key' },
-  AISENSY_PROJECT_API_BASE_URL: { category: 'AISENSY', field: 'project_api_base_url' },
-  AISENSY_WEBHOOK_SECRET: { category: 'AISENSY', field: 'webhook_secret' },
-  GITHUB_TOKEN: { category: 'GITHUB', field: 'token' },
-  GITHUB_OWNER: { category: 'GITHUB', field: 'owner' },
-  GITHUB_REPO: { category: 'GITHUB', field: 'repo' },
-  GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: { category: 'GOOGLE_PLAY', field: 'service_account_json' },
-  GOOGLE_PLAY_PACKAGE_NAME: { category: 'GOOGLE_PLAY', field: 'package_name' },
-  GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON: { category: 'GOOGLE_DRIVE', field: 'service_account_json' },
-  MSG91_WIDGET_ID: { category: 'MSG91', field: 'widget_id' },
-  MSG91_AUTH_KEY: { category: 'MSG91', field: 'auth_key' },
-  APPLE_TEAM_ID: { category: 'APPLE_SIGNIN', field: 'team_id' },
-  APPLE_BUNDLE_ID: { category: 'APPLE_SIGNIN', field: 'bundle_id' },
-  APPLE_SERVICES_ID: { category: 'APPLE_SIGNIN', field: 'services_id' },
-  APPLE_WEB_REDIRECT_URI: { category: 'APPLE_SIGNIN', field: 'web_redirect_uri' },
-  APPLE_KEY_ID: { category: 'APPLE_SIGNIN', field: 'key_id' },
-  APPLE_PRIVATE_KEY: { category: 'APPLE_SIGNIN', field: 'private_key' },
-  APP_STORE_CONNECT_ISSUER_ID: { category: 'APP_STORE_CONNECT', field: 'issuer_id' },
-  APP_STORE_CONNECT_KEY_ID: { category: 'APP_STORE_CONNECT', field: 'key_id' },
-  APP_STORE_CONNECT_PRIVATE_KEY: { category: 'APP_STORE_CONNECT', field: 'private_key' },
-  APP_STORE_CONNECT_BUNDLE_ID: { category: 'APP_STORE_CONNECT', field: 'bundle_id' },
-  SONAR_HOST_URL: { category: 'SONARQUBE', field: 'host_url' },
-  SONAR_TOKEN: { category: 'SONARQUBE', field: 'token' },
-  SONAR_PROJECT_KEY: { category: 'SONARQUBE', field: 'project_key' },
-  GODADDY_API_KEY: { category: 'GODADDY', field: 'api_key' },
-  GODADDY_API_SECRET: { category: 'GODADDY', field: 'api_secret' },
-  GODADDY_DOMAIN: { category: 'GODADDY', field: 'domain' },
-  CLOUDFLARE_API_TOKEN: { category: 'CLOUDFLARE', field: 'api_token' },
-  CLOUDFLARE_ACCOUNT_ID: { category: 'CLOUDFLARE', field: 'account_id' },
-  CLOUDFLARE_DOMAIN: { category: 'CLOUDFLARE', field: 'domain' },
-  // Social apps: `SOCIAL_<PROVIDER>_<FIELD>`, one category per network (see
-  // social.credentials.ts, which derives the key from the same two parts).
-  SOCIAL_INSTAGRAM_APP_ID: { category: 'SOCIAL_INSTAGRAM', field: 'app_id' },
-  SOCIAL_INSTAGRAM_APP_SECRET: { category: 'SOCIAL_INSTAGRAM', field: 'app_secret' },
-  SOCIAL_INSTAGRAM_GRAPH_VERSION: { category: 'SOCIAL_INSTAGRAM', field: 'graph_version' },
-  SOCIAL_FACEBOOK_APP_ID: { category: 'SOCIAL_FACEBOOK', field: 'app_id' },
-  SOCIAL_FACEBOOK_APP_SECRET: { category: 'SOCIAL_FACEBOOK', field: 'app_secret' },
-  SOCIAL_FACEBOOK_GRAPH_VERSION: { category: 'SOCIAL_FACEBOOK', field: 'graph_version' },
-  SOCIAL_THREADS_APP_ID: { category: 'SOCIAL_THREADS', field: 'app_id' },
-  SOCIAL_THREADS_APP_SECRET: { category: 'SOCIAL_THREADS', field: 'app_secret' },
-  SOCIAL_THREADS_GRAPH_VERSION: { category: 'SOCIAL_THREADS', field: 'graph_version' },
-  SOCIAL_YOUTUBE_CLIENT_ID: { category: 'SOCIAL_YOUTUBE', field: 'client_id' },
-  SOCIAL_YOUTUBE_CLIENT_SECRET: { category: 'SOCIAL_YOUTUBE', field: 'client_secret' },
-  SOCIAL_LINKEDIN_CLIENT_ID: { category: 'SOCIAL_LINKEDIN', field: 'client_id' },
-  SOCIAL_LINKEDIN_CLIENT_SECRET: { category: 'SOCIAL_LINKEDIN', field: 'client_secret' },
-  SOCIAL_LINKEDIN_API_VERSION: { category: 'SOCIAL_LINKEDIN', field: 'api_version' },
-  SOCIAL_X_CLIENT_ID: { category: 'SOCIAL_X', field: 'client_id' },
-  SOCIAL_X_CLIENT_SECRET: { category: 'SOCIAL_X', field: 'client_secret' },
-  TRUECALLER_ANDROID_CLIENT_ID: { category: 'TRUECALLER', field: 'android_client_id' },
-  TRUECALLER_APP_KEY: { category: 'TRUECALLER', field: 'app_key' },
-  TRUECALLER_IOS_APP_LINK: { category: 'TRUECALLER', field: 'ios_app_link' },
-  TRUECALLER_PARTNER_NAME: { category: 'TRUECALLER', field: 'partner_name' },
-  TRUECALLER_REGION: { category: 'TRUECALLER', field: 'region' },
-  SERPER_API_KEY: { category: 'SERPER', field: 'api_key' },
-  ANTHROPIC_API_KEY: { category: 'ANTHROPIC', field: 'api_key' },
-  ANTHROPIC_MODEL: { category: 'ANTHROPIC', field: 'model' },
-};
+export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string }> = Object.fromEntries(
+  ENV_CATEGORIES.flatMap((category) =>
+    CATEGORY_FIELDS[category].flatMap((field) => (field.envKey ? [[field.envKey, { category, field: field.name }]] : []))
+  )
+);
 
 export function maskSecret(value: string) {
   if (!value) return '';

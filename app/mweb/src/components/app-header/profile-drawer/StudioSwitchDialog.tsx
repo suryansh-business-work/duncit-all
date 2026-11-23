@@ -1,5 +1,5 @@
 import { JSX, useEffect, useState } from 'react';
-import { Box, ButtonBase, Dialog, DialogContent, Stack, Typography } from '@mui/material';
+import { Alert, AlertTitle, Box, ButtonBase, Dialog, DialogContent, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import PersonIcon from '@mui/icons-material/Person';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -8,7 +8,9 @@ import Inventory2Icon from '@mui/icons-material/Inventory2';
 import GroupsIcon from '@mui/icons-material/Groups';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { DuncitButton } from '@duncit/buttons';
+import { STUDIO_EMAIL_GATE_KEYS, studioSwitchConfirm } from '@duncit/utils';
 import { STUDIO_LABEL_KEY, availableModes, type StudioMode } from '../../../studio-mode';
+import { useStudioEmailGate } from '../../../hooks/useStudioEmailGate';
 import { useTranslation } from '../../../i18n/useTranslation';
 import type { Translate } from '../../../i18n/fallback';
 
@@ -36,11 +38,19 @@ interface Props {
 
 /** Bubble-style role switcher — one bubble per mode; the picked one lifts up
  * and expands into the big primary card below. Picking a bubble only stages the
- * choice; nothing switches until the Switch button below is pressed. */
+ * choice; nothing switches until the Switch button below is pressed. Host,
+ * Venue and Club Admin wait for a verified email: picking one says so in place
+ * and the button offers to verify instead (useStudioEmailGate). */
 export default function StudioSwitchDialog({ open, roles, showProducts = true, current, onClose, onSelect }: Readonly<Props>) {
   const { t } = useTranslation();
+  const emailGate = useStudioEmailGate();
   const options = availableModes(roles, { products: showProducts });
   const [pending, setPending] = useState<StudioMode>(current);
+  const confirm = studioSwitchConfirm(pending, current, emailGate.isEmailVerified);
+  const verifyInstead = () => {
+    onClose();
+    emailGate.verifyEmail();
+  };
 
   // The dialog stays mounted between openings, so the staged pick is reset every
   // time it opens — otherwise it would reopen on a choice the user abandoned.
@@ -124,16 +134,22 @@ export default function StudioSwitchDialog({ open, roles, showProducts = true, c
           </Box>
           <CheckCircleIcon color="primary" />
         </Box>
+        {confirm.verifyEmail && (
+          <Alert data-testid="studio-switch-email-gate" severity="warning" sx={{ mt: 2, borderRadius: '16px' }}>
+            <AlertTitle sx={{ fontWeight: 700 }}>{t(STUDIO_EMAIL_GATE_KEYS.title)}</AlertTitle>
+            {t(STUDIO_EMAIL_GATE_KEYS.body)}
+          </Alert>
+        )}
         <DuncitButton
           data-testid="studio-switch-confirm"
           fullWidth
           size="large"
           variant="contained"
-          disabled={!changed}
-          onClick={() => onSelect(pending)}
+          disabled={confirm.disabled}
+          onClick={confirm.verifyEmail ? verifyInstead : () => onSelect(pending)}
           sx={{ mt: 2, height: 52 }}
         >
-          {switchButtonLabel(t, changed, pending)}
+          {confirm.verifyEmail ? t(STUDIO_EMAIL_GATE_KEYS.action) : switchButtonLabel(t, changed, pending)}
         </DuncitButton>
       </DialogContent>
     </Dialog>

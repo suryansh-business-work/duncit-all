@@ -1886,11 +1886,6 @@
       "count": 2
     }
   },
-  "packages/host-pod-actions/src/PodTicketDiscountField.tsx": {
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
   "packages/host-pod-actions/src/attendance/AttendanceOtpDialog/OtpCodeField.tsx": {
     "no-restricted-syntax": {
       "count": 1

@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { EcommLeadModel, HostLeadModel, VenueLeadModel } from '@modules/crm/crm/crm.model';
 import { CommunityLeadModel, CreatorLeadModel } from '@modules/crm/prospectLead/prospectLead.model';
 import type { CrmLeadEntityType } from '@modules/crm/crm/crm.constants';
+import { escapeRegExp } from '@utils/regex';
 import {
   probeFilter,
   probesFor,
@@ -142,6 +143,39 @@ export async function assertNoLeadDuplicates(input: Readonly<Record<string, unkn
   throw new GraphQLError(duplicateMessage(first), {
     extensions: { code: 'DUPLICATE_LEAD', duplicates: [first, ...rest] },
   });
+}
+
+/** Another lead already pointing at the same Instagram profile. */
+export interface InstagramDuplicate {
+  entity_type: CrmLeadEntityType;
+  lead_id: string;
+  lead_name: string;
+  city: string;
+}
+
+/**
+ * Leads (any kind) whose Instagram link or creator handle is this profile.
+ * Not part of the save guard above — several leads may legitimately share a
+ * brand's profile — but a researched candidate or a quality score counts it.
+ */
+export async function findInstagramDuplicates(handle: string, self?: LeadRef): Promise<InstagramDuplicate[]> {
+  const clean = handle.trim().replace(/^@/, '').toLowerCase();
+  if (!/^[a-z0-9._]{1,30}$/.test(clean)) return [];
+  const link = new RegExp(String.raw`instagram\.com/${escapeRegExp(clean)}/?(?:[?#].*)?$`, 'i');
+  const bare = new RegExp(String.raw`^@?${escapeRegExp(clean)}$`, 'i');
+  const perKind = await Promise.all(
+    ENTITY_TYPES.map(async (entity_type) => {
+      const nameField = KINDS[entity_type].nameField;
+      const rows = await modelOf(entity_type)
+        .find({ $or: [{ instagram_link: link }, { handle: bare }] })
+        .select(`${nameField} city`)
+        .lean();
+      return rows
+        .filter((lead) => !sameLead(entity_type, lead._id, self))
+        .map((lead) => ({ entity_type, lead_id: String(lead._id), lead_name: String(lead[nameField] ?? ''), city: lead.city ?? '' }));
+    })
+  );
+  return perKind.flat();
 }
 
 /** A lead as a table page returns it (after `pub`): its id and contact values. */

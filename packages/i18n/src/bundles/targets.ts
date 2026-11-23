@@ -8,6 +8,40 @@ import type { NestedCatalogue } from '../catalogue';
  */
 export const TARGETS_BUNDLE: NestedCatalogue = {
   targets: {
+    dashboard: {
+      monthHeading: 'This month: {month}',
+      loadFailed: 'The dashboard could not load. Try again in a moment.',
+      retry: 'Try again',
+      ofTotal: '{count} of {total}',
+      stat: {
+        targetsSet: 'Targets this month',
+        activeEmployees: 'Active employees: {count}',
+        reported: 'Reports in',
+        averageCompletion: 'Average completion {percent}%',
+        noReports: 'No reports yet',
+        awaitingReview: 'Awaiting review',
+        acrossMonths: 'Across every month',
+        remindersDue: 'Reminders running',
+        remindersHint: 'Not yet reported, inside the month-end window',
+        savedPlans: 'Saved growth plans',
+        savedPlansHint: 'Runs kept in the Growth Calculator',
+      },
+      queue: {
+        title: 'Waiting for review',
+        subtitle: 'Longest waiting first',
+        empty: 'No reports are waiting for a review.',
+        submitted: '{month} · submitted {date}',
+        open: 'Open Employee Targets',
+      },
+      plan: {
+        title: 'Latest growth plan',
+        savedBy: 'Saved by {name} on {date}',
+        empty: 'No growth plan is saved yet.',
+        emptyBody: 'Save a run in the Growth Calculator to see its targets here.',
+        open: 'Open Growth Calculator',
+      },
+    },
+
     growth: {
       title: 'Growth Calculator',
       intro:

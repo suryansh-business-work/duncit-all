@@ -716,6 +716,52 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'Hi Aarav, Priya has sent you a Duncit gift card worth Rs 500.00. ' +
       'Open it here to add it to your account: https://mweb.duncit.com/gift-card/GC-7H2K-9QXA Team Duncit',
   },
+  GIFT_CARD_ORDER_CONFIRMED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your Duncit gift card order {{2}} is confirmed and we have received {{3}}. ' +
+      'Track it here: {{4}} Team Duncit',
+    sample:
+      'Hi Aarav, your Duncit gift card order GC-7H2K9QXAMB is confirmed and we have received Rs 1,049.00. ' +
+      'Track it here: https://mweb.duncit.com/gift-cards/orders/GC-7H2K9QXAMB Team Duncit',
+  },
+  GIFT_CARD_ORDER_SHIPPED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your gift card order {{2}} is on its way with {{3}} (tracking no. {{4}}). ' +
+      'Track it here: {{5}} Team Duncit',
+    sample:
+      'Hi Aarav, your gift card order GC-7H2K9QXAMB is on its way with Delhivery (tracking no. 1234567890123). ' +
+      'Track it here: https://mweb.duncit.com/gift-cards/orders/GC-7H2K9QXAMB Team Duncit',
+  },
+  GIFT_CARD_ORDER_OUT_FOR_DELIVERY: {
+    category: 'UTILITY',
+    language: 'English',
+    body: 'Hi {{1}}, your gift card order {{2}} is out for delivery today. Track it here: {{3}} Team Duncit',
+    sample:
+      'Hi Aarav, your gift card order GC-7H2K9QXAMB is out for delivery today. ' +
+      'Track it here: https://mweb.duncit.com/gift-cards/orders/GC-7H2K9QXAMB Team Duncit',
+  },
+  GIFT_CARD_ORDER_DELIVERY_FAILED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, the courier could not deliver your gift card order {{2}}. ' +
+      'They will try again — details here: {{3}} Team Duncit',
+    sample:
+      'Hi Aarav, the courier could not deliver your gift card order GC-7H2K9QXAMB. ' +
+      'They will try again — details here: https://mweb.duncit.com/gift-cards/orders/GC-7H2K9QXAMB Team Duncit',
+  },
+  GIFT_CARD_ORDER_DELIVERED: {
+    category: 'UTILITY',
+    language: 'English',
+    body: 'Hi {{1}}, your gift card order {{2}} has been delivered. View it here: {{3}} Team Duncit',
+    sample:
+      'Hi Aarav, your gift card order GC-7H2K9QXAMB has been delivered. ' +
+      'View it here: https://mweb.duncit.com/gift-cards/orders/GC-7H2K9QXAMB Team Duncit',
+  },
   ECOMM_PRODUCT_DECLINED: {
     category: 'UTILITY',
     language: 'English',
@@ -775,6 +821,70 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
     sample:
       'Hi Meera, Duncit has sent you Rs 15000.00 for: October salary. ' +
       'Transaction reference: 412345678901. Team Duncit',
+  },
+  VENUE_RENTAL_BOOKED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, a guest has booked these items from your venue: {{2}}. Pod: {{3}} on {{4}}. ' +
+      'Booked by: {{5}}. Reference: {{6}}. Please have them ready to hand over at the pod. ' +
+      'View rented items: {{7}} Team Duncit',
+    sample:
+      'Hi Rohan, a guest has booked these items from your venue: UNO Cards × 1, Chess set × 2. Pod: Sunday Chess Meetup on 29 Nov 2026, 07:30 PM. ' +
+      'Booked by: Aarav Mehta. Reference: DPAY-MI4K2Z1A9F3C21B7. Please have them ready to hand over at the pod. ' +
+      'View rented items: https://partners-app.duncit.com/venues/rented-items Team Duncit',
+  },
+  USER_RENTAL_BOOKED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your rented items are booked: {{2}}. Pod: {{3}} on {{4}} at {{5}}. ' +
+      'Amount paid: {{6}}, including any refundable deposit. The venue hands the items over at the pod. ' +
+      'View your rented items: {{7}} Team Duncit',
+    sample:
+      'Hi Aarav, your rented items are booked: UNO Cards × 1, Chess set × 2. Pod: Sunday Chess Meetup on 29 Nov 2026, 07:30 PM at The Board Room Cafe. ' +
+      'Amount paid: Rs 650.00, including any refundable deposit. The venue hands the items over at the pod. ' +
+      'View your rented items: https://mweb.duncit.com/rented-items Team Duncit',
+  },
+  VENUE_RENTAL_CANCELLED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, these rented items are no longer needed: {{2}}. Pod: {{3}} on {{4}}. Reason: {{5}}. ' +
+      'Please do not hand them out for this pod. View rented items: {{6}} Team Duncit',
+    sample:
+      'Hi Rohan, these rented items are no longer needed: UNO Cards × 1. Pod: Sunday Chess Meetup on 29 Nov 2026, 07:30 PM. Reason: The guest left the pod. ' +
+      'Please do not hand them out for this pod. View rented items: https://partners-app.duncit.com/venues/rented-items Team Duncit',
+  },
+  USER_RENTAL_CANCELLED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your rented items were cancelled: {{2}}. Pod: {{3}}. Reason: {{4}}. ' +
+      'A refund of {{5}} is on its way to your original payment method. View your rented items: {{6}} Team Duncit',
+    sample:
+      'Hi Aarav, your rented items were cancelled: UNO Cards × 1. Pod: Sunday Chess Meetup. Reason: The pod was cancelled. ' +
+      'A refund of Rs 350.00 is on its way to your original payment method. View your rented items: https://mweb.duncit.com/rented-items Team Duncit',
+  },
+  USER_RENTAL_RETURNED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, the return of your rented item {{2}} for {{3}} has been recorded: {{4}}. ' +
+      'Your deposit refund of {{5}} is on its way to your original payment method. View your rented items: {{6}} Team Duncit',
+    sample:
+      'Hi Aarav, the return of your rented item UNO Cards × 1 for Sunday Chess Meetup has been recorded: Returned in good shape. ' +
+      'Your deposit refund of Rs 200.00 is on its way to your original payment method. View your rented items: https://mweb.duncit.com/rented-items Team Duncit',
+  },
+  USER_RENTAL_REFUND_DELAYED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, your refund of {{2}} for {{3}} rented for {{4}} is taking longer than usual. ' +
+      'Our Finance team is looking into it and will send it again, so nothing is needed from you. View your rented items: {{5}} Team Duncit',
+    sample:
+      'Hi Aarav, your refund of Rs 200.00 for UNO Cards × 1 rented for Sunday Chess Meetup is taking longer than usual. ' +
+      'Our Finance team is looking into it and will send it again, so nothing is needed from you. View your rented items: https://mweb.duncit.com/rented-items Team Duncit',
   },
 };
 

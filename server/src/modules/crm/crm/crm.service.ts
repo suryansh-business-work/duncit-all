@@ -17,25 +17,18 @@ import {
 import { commsService } from '@services/comms/comms.service';
 import { communicationLogService } from '@modules/crm/communicationLog/communicationLog.service';
 import * as C from './crm.constants';
-import { CreatorLeadModel, CommunityLeadModel } from '@modules/crm/prospectLead/prospectLead.model';
+import { toActivity } from '@modules/crm/manualLog/manualLog.view';
+import { manualLogService } from '@modules/crm/manualLog/manualLog.service';
 import { removeLeadMedia } from '@modules/crm/leadMedia/leadMedia.model';
 import { assertNoLeadDuplicates, withDuplicateFlags } from '@modules/crm/leadDuplicate/leadDuplicate.service';
+import { applyAssignee } from '@modules/crm/crmUser/crmUser.service';
+import { LEAD_MODELS } from './leadModels';
+import { leadUpdate, type LeadGeoKind } from '@modules/crm/leadGeo/leadGeo.place';
+import { nearbyLeadTable, type LeadNearInput } from '@modules/crm/leadGeo/leadGeo.nearby';
+import { leadQualityService } from '@modules/crm/leadQuality/leadQuality.service';
 
-/** Lead model + human label per CRM entity type (manual logs, comms activity, lead media). */
-export const LEAD_MODELS = {
-  VENUE_LEAD: VenueLeadModel,
-  HOST_LEAD: HostLeadModel,
-  ECOMM_LEAD: EcommLeadModel,
-  CREATOR_LEAD: CreatorLeadModel,
-  COMMUNITY_LEAD: CommunityLeadModel,
-} as const;
-const LEAD_LABELS = {
-  VENUE_LEAD: 'Venue lead',
-  HOST_LEAD: 'Host lead',
-  ECOMM_LEAD: 'Ecomm lead',
-  CREATOR_LEAD: 'Creator lead',
-  COMMUNITY_LEAD: 'Community lead',
-} as const;
+// Re-exported: leadMedia.service and older callers import LEAD_MODELS from here.
+export { LEAD_MODELS } from './leadModels';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : (v ?? null));
 
@@ -86,17 +79,6 @@ export function cleanSocialLinks(raw: unknown): { name: string; url: string }[] 
   return out.slice(0, 20);
 }
 
-const toActivity = (a: any) => ({
-  type: a.type,
-  summary: a.summary ?? '',
-  status: a.status ?? '',
-  target: a.target ?? '',
-  body_html: a.body_html ?? '',
-  body_text: a.body_text ?? '',
-  created_by: a.created_by ?? null,
-  created_at: iso(a.created_at),
-});
-
 export function pub(doc: any) {
   const o = doc?.toObject ? doc.toObject() : doc;
   if (!o) return null;
@@ -119,6 +101,7 @@ export function pub(doc: any) {
     preferred_event_date: iso(o.preferred_event_date),
     created_at: iso(o.created_at),
     updated_at: iso(o.updated_at),
+    quality: o.quality ? { ...o.quality, scored_at: iso(o.quality.scored_at) } : null,
   };
 }
 
@@ -240,6 +223,10 @@ export function leadTableConfig(
       created_at: 'created_at',
       updated_at: 'updated_at',
       super_category_id: 'super_category_id',
+      // The Assigned To column sorts by the assignee's name and filters by their user id.
+      assigned_to: 'assigned_to',
+      // Lead Quality Score column: sorts by the stored score across the whole collection.
+      quality_score: 'quality.score',
       ...extras.sortFields,
     },
     filterFields: {
@@ -251,6 +238,12 @@ export function leadTableConfig(
       super_category_id: { type: 'enum' },
       next_follow_up_date: { type: 'date' },
       created_at: { type: 'date' },
+      assigned_to: { path: 'assigned_user_id', type: 'enum' },
+      quality_score: { path: 'quality.score', type: 'number' },
+      quality_classification: { path: 'quality.classification', type: 'enum' },
+      quality_qualification: { path: 'quality.qualification', type: 'enum' },
+      quality_verification: { path: 'quality.verification', type: 'enum' },
+      quality_failed_gates: { path: 'quality.failed_gates', type: 'number' },
       ...extras.filterFields,
     },
     defaultSort: { next_follow_up_date: 1 },
@@ -268,15 +261,23 @@ const ECOMM_LEAD_TABLE_CONFIG = leadTableConfig('seller_name', {
   filterFields: { brand_name: { type: 'string' } },
 });
 
-/** Server-side table page (search/filter/sort/paginate) for a lead collection. */
-async function leadTable(
-  entity_type: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD',
+/**
+ * Server-side table page (search/filter/sort/paginate) for any lead kind.
+ * With `near`, only the leads within the radius, each with its distance
+ * (nearest first by default), and the count of leads that cannot be put on
+ * the map.
+ */
+export async function leadTablePage(
+  entity_type: LeadGeoKind,
   config: TableEntityConfig,
-  input?: TableQueryInput | null
+  input?: TableQueryInput | null,
+  near?: LeadNearInput | null
 ) {
-  const { docs, total, page, page_size } = await runTableQuery(LEAD_MODELS[entity_type], {}, input, config);
+  const { docs, total, page, page_size, unplaced } = near
+    ? await nearbyLeadTable<unknown>(entity_type, near, input, config)
+    : { ...(await runTableQuery<unknown>(LEAD_MODELS[entity_type], {}, input, config)), unplaced: null };
   const rows = await withDuplicateFlags(entity_type, docs.map(pub).filter((row) => row !== null));
-  return { rows, total, page, page_size };
+  return { rows, total, page, page_size, unplaced };
 }
 
 /**
@@ -626,12 +627,10 @@ export const crmService = {
   },
 
   /**
-   * Append a manual NOTE entry to a lead's activity_log. Used by the
-   * "Manual Logs" tab — the body is the WYSIWYG HTML, body_text is the
-   * stripped plaintext fallback (server doesn't sanitise; the client is
-   * trusted CRM staff and the value is never re-rendered outside the app).
+   * Append a manual NOTE entry to a lead's activity_log ("Manual Logs" tab).
+   * Kept for existing callers; edit / delete / mentions live in manualLogService.
    */
-  async addManualLog(opts: {
+  addManualLog(opts: {
     entity_type: C.CrmLeadEntityType;
     entity_id: string;
     summary?: string | null;
@@ -639,29 +638,8 @@ export const crmService = {
     body_text?: string | null;
     by?: string | null;
   }) {
-    const body_html = (opts.body_html ?? '').trim();
-    if (!body_html) {
-      throw new GraphQLError('Log body is required', { extensions: { code: 'BAD_USER_INPUT' } });
-    }
-    // Casting to a permissive shape because the per-lead generic doc types
-    // diverge enough that the union of `findById` signatures isn't directly
-    // callable without one. Runtime behaviour is identical.
-    const Model = LEAD_MODELS[opts.entity_type] as unknown as (typeof VenueLeadModel);
-    const lead = await Model.findById(opts.entity_id);
-    if (!lead) notFound(LEAD_LABELS[opts.entity_type]);
-    const entry = {
-      type: 'NOTE' as const,
-      summary: (opts.summary ?? '').trim(),
-      status: '',
-      target: '',
-      body_html,
-      body_text: (opts.body_text ?? '').trim(),
-      created_by: opts.by ?? null,
-      created_at: new Date(),
-    };
-    lead.activity_log.push(entry as any);
-    await lead.save();
-    return toActivity(entry);
+    const { by, ...input } = opts;
+    return manualLogService.create(input, { id: by ?? '', roles: [] });
   },
 
   // ---- Venue leads ----
@@ -670,34 +648,37 @@ export const crmService = {
     return docs.map(pub);
   },
   /** Server-side table page (search/filter/sort/paginate) for the venueLeadsTable query. */
-  venueLeadsTable(input?: TableQueryInput | null) {
-    return leadTable('VENUE_LEAD', VENUE_LEAD_TABLE_CONFIG, input);
+  venueLeadsTable(input?: TableQueryInput | null, near?: LeadNearInput | null) {
+    return leadTablePage('VENUE_LEAD', VENUE_LEAD_TABLE_CONFIG, input, near);
   },
   async getVenueLead(id: string) {
     const doc = await VenueLeadModel.findById(id);
     return doc ? pub(doc) : null;
   },
   async createVenueLead(input: any) {
-    const safe = normaliseLeadInput(input);
+    const safe = await applyAssignee(normaliseLeadInput(input));
     await assertNoLeadDuplicates(safe, { entity_type: 'VENUE_LEAD' });
     const created = await VenueLeadModel.create({ ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) });
+    await leadQualityService.refreshAfterSave('VENUE_LEAD', String(created._id), 'CREATE');
     return pub(created);
   },
   async updateVenueLead(id: string, input: any) {
-    const safe = normaliseLeadInput(input);
+    const safe = await applyAssignee(normaliseLeadInput(input), { entity_type: 'VENUE_LEAD', id });
     await assertNoLeadDuplicates(safe, { entity_type: 'VENUE_LEAD', id });
     const updated = await VenueLeadModel.findByIdAndUpdate(
       id,
-      { $set: { ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) } },
+      leadUpdate({ ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) }, input),
       { new: true }
     );
     if (!updated) notFound('Venue lead');
+    await leadQualityService.refreshAfterSave('VENUE_LEAD', id, 'UPDATE');
     return pub(updated);
   },
   async deleteVenueLead(id: string) {
     const doc = await VenueLeadModel.findByIdAndDelete(id);
     if (!doc) notFound('Venue lead');
     await removeLeadMedia('VENUE_LEAD', id);
+    await leadQualityService.removeForLead('VENUE_LEAD', id);
     return true;
   },
 
@@ -707,44 +688,48 @@ export const crmService = {
     return docs.map(pub);
   },
   /** Server-side table page (search/filter/sort/paginate) for the hostLeadsTable query. */
-  hostLeadsTable(input?: TableQueryInput | null) {
-    return leadTable('HOST_LEAD', HOST_LEAD_TABLE_CONFIG, input);
+  hostLeadsTable(input?: TableQueryInput | null, near?: LeadNearInput | null) {
+    return leadTablePage('HOST_LEAD', HOST_LEAD_TABLE_CONFIG, input, near);
   },
   async getHostLead(id: string) {
     const doc = await HostLeadModel.findById(id);
     return doc ? pub(doc) : null;
   },
   async createHostLead(input: any) {
-    const safe = normaliseLeadInput(input);
+    const safe = await applyAssignee(normaliseLeadInput(input));
     await assertNoLeadDuplicates(safe, { entity_type: 'HOST_LEAD' });
     const created = await HostLeadModel.create({
       ...safe,
       preferred_event_date: parseDate(safe.preferred_event_date),
       next_follow_up_date: parseDate(safe.next_follow_up_date),
     });
+    await leadQualityService.refreshAfterSave('HOST_LEAD', String(created._id), 'CREATE');
     return pub(created);
   },
   async updateHostLead(id: string, input: any) {
-    const safe = normaliseLeadInput(input);
+    const safe = await applyAssignee(normaliseLeadInput(input), { entity_type: 'HOST_LEAD', id });
     await assertNoLeadDuplicates(safe, { entity_type: 'HOST_LEAD', id });
     const updated = await HostLeadModel.findByIdAndUpdate(
       id,
-      {
-        $set: {
+      leadUpdate(
+        {
           ...safe,
           preferred_event_date: parseDate(safe.preferred_event_date),
           next_follow_up_date: parseDate(safe.next_follow_up_date),
         },
-      },
+        input
+      ),
       { new: true }
     );
     if (!updated) notFound('Host lead');
+    await leadQualityService.refreshAfterSave('HOST_LEAD', id, 'UPDATE');
     return pub(updated);
   },
   async deleteHostLead(id: string) {
     const doc = await HostLeadModel.findByIdAndDelete(id);
     if (!doc) notFound('Host lead');
     await removeLeadMedia('HOST_LEAD', id);
+    await leadQualityService.removeForLead('HOST_LEAD', id);
     return true;
   },
 
@@ -754,34 +739,37 @@ export const crmService = {
     return docs.map(pub);
   },
   /** Server-side table page (search/filter/sort/paginate) for the ecommLeadsTable query. */
-  ecommLeadsTable(input?: TableQueryInput | null) {
-    return leadTable('ECOMM_LEAD', ECOMM_LEAD_TABLE_CONFIG, input);
+  ecommLeadsTable(input?: TableQueryInput | null, near?: LeadNearInput | null) {
+    return leadTablePage('ECOMM_LEAD', ECOMM_LEAD_TABLE_CONFIG, input, near);
   },
   async getEcommLead(id: string) {
     const doc = await EcommLeadModel.findById(id);
     return doc ? pub(doc) : null;
   },
   async createEcommLead(input: any) {
-    const safe = normaliseLeadInput(input);
+    const safe = await applyAssignee(normaliseLeadInput(input));
     await assertNoLeadDuplicates(safe, { entity_type: 'ECOMM_LEAD' });
     const created = await EcommLeadModel.create({ ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) });
+    await leadQualityService.refreshAfterSave('ECOMM_LEAD', String(created._id), 'CREATE');
     return pub(created);
   },
   async updateEcommLead(id: string, input: any) {
-    const safe = normaliseLeadInput(input);
+    const safe = await applyAssignee(normaliseLeadInput(input), { entity_type: 'ECOMM_LEAD', id });
     await assertNoLeadDuplicates(safe, { entity_type: 'ECOMM_LEAD', id });
     const updated = await EcommLeadModel.findByIdAndUpdate(
       id,
-      { $set: { ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) } },
+      leadUpdate({ ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) }, input),
       { new: true }
     );
     if (!updated) notFound('Ecomm lead');
+    await leadQualityService.refreshAfterSave('ECOMM_LEAD', id, 'UPDATE');
     return pub(updated);
   },
   async deleteEcommLead(id: string) {
     const doc = await EcommLeadModel.findByIdAndDelete(id);
     if (!doc) notFound('Ecomm lead');
     await removeLeadMedia('ECOMM_LEAD', id);
+    await leadQualityService.removeForLead('ECOMM_LEAD', id);
     return true;
   },
 

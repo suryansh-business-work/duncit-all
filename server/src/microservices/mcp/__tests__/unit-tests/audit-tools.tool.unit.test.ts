@@ -28,15 +28,18 @@ const audit = async (args: Record<string, unknown> = {}, options: Parameters<typ
 describe('mcp_audit_tools — the catalog', () => {
   it('counts every tool by kind and risk', async () => {
     const { catalog: report } = await audit({ scope: 'catalog' });
-    expect(report.total_tools).toBe(22);
-    expect(report.by_kind).toEqual({ CURATED: 9, QUERY: 7, MUTATION: 6 });
-    expect(report.by_risk).toEqual({ READ: 16, WRITE: 4, DESTRUCTIVE: 2 });
+    // 9 platform tools + 13 CRM lead research tools are curated (PRD 31).
+    expect(report.total_tools).toBe(35);
+    expect(report.by_kind).toEqual({ CURATED: 22, QUERY: 7, MUTATION: 6 });
+    expect(report.by_risk).toEqual({ READ: 21, WRITE: 11, DESTRUCTIVE: 3 });
   });
 
   it('counts the tools that need a yes and the ones that reach outside Duncit', async () => {
     const { catalog: report } = await audit({ scope: 'catalog' });
-    expect(report.needing_confirmation).toBe(3);
-    expect(report.reaching_outside_duncit).toBe(2);
+    // + add_qualified_leads and cancel_lead_search_job.
+    expect(report.needing_confirmation).toBe(5);
+    // + discover_external_leads and retry_lead_search_job (Serper, Instagram).
+    expect(report.reaching_outside_duncit).toBe(4);
   });
 
   it('reports every category, with its risk split and where it is served', async () => {
@@ -106,18 +109,19 @@ describe('mcp_audit_tools — scope "mine"', () => {
   it('says how many tools the person can use and why each of the rest is hidden', async () => {
     const { mine } = await audit();
     expect(mine?.usable_tools).toBe(19);
-    expect(mine?.hidden_tools).toEqual({ DISABLED: 0, READ_ONLY_CONNECTION: 0, WRITES_DISABLED: 0, NO_PORTAL_ACCESS: 3 });
+    // Pods staff cannot open the CRM console, so the 13 CRM lead tools are hidden too.
+    expect(mine?.hidden_tools).toEqual({ DISABLED: 0, READ_ONLY_CONNECTION: 0, WRITES_DISABLED: 0, NO_PORTAL_ACCESS: 16 });
   });
 
   it('accounts for every tool on a read-only connection', async () => {
     const { mine } = await audit({}, { scopes: READ_ONLY });
-    expect(mine?.hidden_tools).toEqual({ DISABLED: 0, READ_ONLY_CONNECTION: 6, WRITES_DISABLED: 0, NO_PORTAL_ACCESS: 1 });
-    expect((mine?.usable_tools ?? 0) + Object.values(mine?.hidden_tools ?? {}).reduce((a, b) => a + b, 0)).toBe(22);
+    expect(mine?.hidden_tools).toEqual({ DISABLED: 0, READ_ONLY_CONNECTION: 14, WRITES_DISABLED: 0, NO_PORTAL_ACCESS: 6 });
+    expect((mine?.usable_tools ?? 0) + Object.values(mine?.hidden_tools ?? {}).reduce((a, b) => a + b, 0)).toBe(35);
   });
 
   it('counts switched-off tools and categories, and writes switched off', async () => {
     const { mine } = await audit({}, { settings: settings({ disabled_tools: ['pods_pod'], disabled_categories: ['chat'], write_tools_enabled: false }) });
-    expect(mine?.hidden_tools).toMatchObject({ DISABLED: 2, WRITES_DISABLED: 6 });
+    expect(mine?.hidden_tools).toMatchObject({ DISABLED: 2, WRITES_DISABLED: 14 });
   });
 
   it('lists the person’s own connectors with what each would list', async () => {

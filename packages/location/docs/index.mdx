@@ -7,6 +7,7 @@ frameworkFree: false
 coverageGate: true
 consumers:
   - 'packages/club-form'
+  - 'packages/pod-form'
   - 'portals/crm'
   - 'portals/onboarding'
   - 'portals/partners-app'
@@ -15,6 +16,8 @@ exports:
   - 'AdminLocationSelect'
   - 'RhfAdminLocation'
   - 'useAdminLocations'
+  - 'useGoogleMapsApiKey'
+  - 'PUBLIC_MAPS_KEY'
   - 'useLocationValueFromId'
   - 'buildLocationValue'
   - 'buildLocationValueFromNames'
@@ -290,6 +293,8 @@ renders on the **City** dropdown.
 | --- | --- | --- |
 | `useAdminLocations` | `() => { locations, loading, error }` | The admin list, `cache-first`, filtered to `is_active: true`. |
 | `ADMIN_LOCATIONS` | `DocumentNode` | The query — import it for mocks. |
+| `useGoogleMapsApiKey` | `() => string` | The Google Maps key from `publicClientConfig` (Tech → Environment → Google Map), `cache-first`, trimmed; `''` until it arrives and when none is configured. |
+| `PUBLIC_MAPS_KEY` | `DocumentNode` | The query behind `useGoogleMapsApiKey` — import it for mocks. |
 | `buildLocationValue` | `(locations, locationId, locality?) => AdminLocationValue` | Pure rehydration from an id. `locality` defaults to `''`. |
 | `useLocationValueFromId` | `(locationId?, locality?) => AdminLocationValue` | Hook form; `EMPTY_LOCATION` until the list loads. |
 | `buildLocationValueFromNames` | `(locations, { country?, state?, city?, locality? }) => AdminLocationValue` | Case-insensitive city match, else the saved names. |
@@ -384,6 +389,15 @@ middle never produces `"Indiranagar, , Bengaluru"`. `mapEmbedUrl` builds the ifr
 `maps.google.com?output=embed` map (zoom 14 instead of 15). Do not gate the map behind a
 configured key — pass `hideWhenKeyMissing` on the card only when a keyed map is genuinely
 required.
+
+Never read the key from `import.meta.env`: no app bakes it into its bundle any more. Pass
+`apiKey={useGoogleMapsApiKey()}` — the key is resolved at runtime from the Tech portal, so
+rotating it is a Tech-portal edit rather than a rebuild of every app that shows a map.
+
+```tsx
+const mapsKey = useGoogleMapsApiKey();
+<MapEmbedCard parts={[address, city]} apiKey={mapsKey} hideWhenKeyMissing />
+```
 
 ## Coverage
 

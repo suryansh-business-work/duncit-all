@@ -34,6 +34,7 @@ const portal = (over: Partial<PortalAccessEntry> = {}): PortalAccessEntry => ({
   url: 'https://finance.duncit.com/',
   has_access: true,
   can_request: true,
+  required_roles: ['FINANCE_MANAGER'],
   request_status: null,
   ...over,
 });

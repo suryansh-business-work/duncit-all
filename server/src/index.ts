@@ -35,6 +35,7 @@ import { startAnalyticsRetentionScheduler } from '@modules/platform/analytics/an
 import { startContactInviteRetentionScheduler } from '@modules/access/contacts/contacts.retention';
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
 import { startFailedPaymentRefundPoller } from '@modules/finance/failedPayment/failedPayment.refundPoller';
+import { startGatewayRefundSweep } from '@modules/finance/payment/payment.gatewayRefund';
 import { buildRazorpayWebhookRouter } from '@modules/finance/failedPayment/failedPayment.webhook';
 import { startVenueFoodReconciler } from '@modules/venues/venueFood/venueFoodOrder.payment';
 import { startStoreScheduler } from '@modules/commerce/store/store.scheduler';
@@ -50,6 +51,7 @@ import { startEmployeeTargetReminderScheduler } from '@modules/targets/employeeT
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
 import { startAppStoreReleaseScheduler } from '@modules/platform/appBuild/appStoreRelease.scheduler';
 import { startStoreReleaseScheduler } from '@modules/platform/appBuild/storeRelease.scheduler';
+import { startAppInsightsScheduler } from '@modules/platform/analytics/appInsights/appInsights.scheduler';
 import { startE2eRunScheduler } from '@modules/platform/e2eRun/e2eRun.scheduler';
 import { startUnitTestRunSweeper } from '@modules/platform/unitTestRun/unitTestRun.sweep';
 import { startAnalyticsMailScheduler } from '@modules/platform/analytics/mail/analyticsMail.scheduler';
@@ -60,6 +62,7 @@ import { serverPulseMiddleware, startServerPulse } from './observability/serverP
 import { startAccountDeletionScheduler } from '@modules/access/accountDeletion/accountDeletion.scheduler';
 import { startAccountLockRefresh } from '@modules/access/accountDeletion/accountDeletion.lock';
 import { startSessionSealRefresh } from '@modules/access/auth/session-seal';
+import { startPolicyVersionRefresh } from '@modules/portals/portalSecurity/portalSecurity.policy';
 import { buildDbBackupRouter } from '@modules/platform/dbBackup/dbBackup.router';
 import { buildTicketRouter } from '@modules/pods/ticket/ticket.router';
 import { buildEmailAssetsRouter } from '@services/email/emailAssets.router';
@@ -400,6 +403,18 @@ async function bootstrap() {
     await autoExtendService.resumeSchedules();
   });
   await safeSeed('crmServices', () => crmService.seedServiceDefaults());
+  // Lead Quality Score: version 1 of each lead type's scoring model, then a first
+  // score for every lead that has none (existing leads, imports) in the background.
+  await safeSeed('leadQuality', async () => {
+    const { leadQualityConfigService } = await import('@modules/crm/leadQuality/leadQualityConfig.service');
+    const { QUALITY_LEAD_TYPES } = await import('@modules/crm/leadQuality/leadQuality.rules');
+    const { recalcRunning, startRecalc, SYSTEM_JOB_ACTOR } = await import('@modules/crm/leadQuality/leadQuality.recalc');
+    await leadQualityConfigService.seedDefaults();
+    for (const entity_type of QUALITY_LEAD_TYPES) {
+      if (await recalcRunning(entity_type)) continue;
+      await startRecalc(SYSTEM_JOB_ACTOR, { entity_type, trigger: 'BACKFILL', only_unscored: true });
+    }
+  });
   await safeSeed('surveyIndexes', () => surveyService.syncIndexes());
   // Universal challenge tools (Tool Master) and the ledgers' unique indexes,
   // which make score/vote retries and result publishing idempotent.
@@ -459,6 +474,15 @@ async function bootstrap() {
   await safeSeed('sessionSeals', async () => {
     const { loadSessionSeals } = await import('@modules/access/auth/session-seal');
     await loadSessionSeals();
+  });
+  /*
+    The consent version console sessions are checked against. Loaded before the
+    first request for the same reason as the seals above: until it is known a
+    session verified under older terms is accepted, never locked out.
+  */
+  await safeSeed('portalSecurityPolicy', async () => {
+    const { refreshPolicyVersion } = await import('@modules/portals/portalSecurity/portalSecurity.policy');
+    await refreshPolicyVersion();
   });
   // Builds the gift card unique indexes (code, payment_id, the once-only
   // redeem guard) — new unique indexes only land through syncIndexes at boot.
@@ -765,6 +789,9 @@ async function bootstrap() {
   startPaymentReconciler();
   // Failed-payment refunds whose end no webhook reported: finish them from Razorpay.
   startFailedPaymentRefundPoller();
+  // Pod payment refunds (cancellations, Finance refunds, Backouts): send what was
+  // queued, retry what failed, and confirm what Razorpay has not reported yet.
+  startGatewayRefundSweep();
 
   // Venue food orders are paid to the venue's own Razorpay account, outside the
   // payment finalizer — they get their own capture and refund sweep.
@@ -790,6 +817,8 @@ async function bootstrap() {
   // issue (advice, mail, Slack) for every newly rejected or awaiting version,
   // and raises every open issue again past the configured reminder window.
   startStoreReleaseScheduler();
+  // Analytics > App Insights: copies Google Play's and App Store Connect's daily reports in once a day.
+  startAppInsightsScheduler();
 
   // End-to-end tests: a one-minute tick that dispatches the E2E workflow when
   // the admin-configured window has passed (Tech > E2E Tests > Settings,
@@ -824,6 +853,8 @@ async function bootstrap() {
   startAccountLockRefresh();
   // The same safety net for the password-reset session seals.
   startSessionSealRefresh();
+  // And the console consent version, re-read each minute so a Legal edit reaches it.
+  startPolicyVersionRefresh();
 
   // WhatsApp: the scenarios no domain event can fire — the pod reminder, the
   // nudge to complete a finished pod, an unanswered slot request, a released

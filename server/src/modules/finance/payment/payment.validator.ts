@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { REFUND_KINDS } from './payment.refundSections';
 import { PHONE_EXTENSION_REGEX, PHONE_NUMBER_REGEX } from '@utils/phone';
 import {
   arr,
@@ -29,6 +30,7 @@ const pincodeRegex = /^\d{4,10}$/;
 
 const FULFILMENT_METHODS = ['SHIP', 'PICKUP'] as const;
 const GIFT_CARD_SCOPES = ['SHOP', 'SUPER', 'CATEGORY', 'SUB'] as const;
+const GIFT_CARD_DELIVERY_MODES = ['DIGITAL', 'PHYSICAL'] as const;
 
 const trimmedUpTo = (max: number) => str(z.string().check(maxLen(max)).optional(), { transforms: [trim] });
 const nullableText = (max?: number) =>
@@ -254,9 +256,18 @@ export const productShippingQuoteSchema = obj(
 // (purchaseFacts knows the configured min/max and the category levels) — this
 // only asserts the shape, but every field MUST be declared or validation drops
 // it before the service sees it.
+//
+// Two shapes share these fields: the catalogue purchase (design_id, quantity,
+// delivery_mode, shipping_address — current apps) and the legacy theme purchase
+// (scope_type + scope_category_id — apps installed before the catalogue), which
+// keeps working unchanged. purchaseFacts tells them apart.
 const giftCardCheckoutFields = {
-  scope_type: str(z.enum(GIFT_CARD_SCOPES), { oneOf: GIFT_CARD_SCOPES, required: true }),
+  scope_type: str(z.enum(GIFT_CARD_SCOPES).nullable(), { oneOf: GIFT_CARD_SCOPES, default: null }),
   scope_category_id: nullableText(),
+  design_id: nullableText(64),
+  quantity: num(finite().check(int('Quantity must be a whole number'), gte(1)).nullable(), { default: null }),
+  delivery_mode: str(z.enum(GIFT_CARD_DELIVERY_MODES).nullable(), { oneOf: GIFT_CARD_DELIVERY_MODES, default: null }),
+  shipping_address: shippingAddress(),
   amount: amount(),
   recipient_email: str(z.string().check(email('Enter a valid recipient email'), maxLen(254)).nullable(), {
     transforms: [trim],
@@ -273,3 +284,22 @@ export const dummyGiftCardCheckoutSchema = obj(
 
 /** Live Razorpay gift card order — same fields, no simulate_failure. */
 export const giftCardCheckoutSchema = obj(shape(giftCardCheckoutFields, billingRule));
+
+/**
+ * Finance sending an owed refund back to its source (refundPaymentToSource): which
+ * refund, and why. The note is mandatory — it is what the payment's audit trail
+ * shows next to the press.
+ */
+export const refundPaymentToSourceSchema = obj(
+  shape({
+    payment_doc_id: required('Payment is required'),
+    kind: str(z.enum(REFUND_KINDS), { oneOf: REFUND_KINDS, required: 'Refund kind is required' }),
+    entry_id: required('Refund is required'),
+    note: required(
+      'A note is required',
+      minLen(3, 'The note must be at least 3 characters'),
+      maxLen(500, 'The note must be at most 500 characters')
+    ),
+    client_request_id: trimmedUpTo(100),
+  })
+);

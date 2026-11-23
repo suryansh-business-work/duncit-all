@@ -1,5 +1,5 @@
 import { fromZonedTime } from 'date-fns-tz';
-import { PDF_PALETTE, loadPdfImage, pdfCurrency, renderPdf } from '@services/pdf/document';
+import { PDF_PALETTE, drawPdfFooters, loadPdfImage, pdfCurrency, renderPdf } from '@services/pdf/document';
 import { appDate, appDateTime, appFormat, appTime } from '@utils/app-time';
 import type { WalletStatement, WalletStatementRow } from './walletStatement.service';
 
@@ -288,29 +288,19 @@ function drawSummary(page: Page, s: WalletStatement, startY: number): void {
 /** Written last, once every page exists, so each one can state the total. */
 function drawFooters(page: Page, branding: StatementBranding): void {
   const { doc, left, right } = page;
-  const range = doc.bufferedPageRange();
   const support = [
     branding.support_email ? `Email: ${branding.support_email}` : '',
     branding.support_phone ? `Phone: ${branding.support_phone}` : '',
   ]
     .filter(Boolean)
     .join('   ·   ');
-  for (let index = 0; index < range.count; index += 1) {
-    doc.switchToPage(range.start + index);
-    const y = doc.page.height - FOOTER_ZONE + 14;
-    doc
-      .moveTo(left, y - 8)
-      .lineTo(right, y - 8)
-      .strokeColor(line)
-      .stroke();
-    doc.fillColor(muted).fontSize(8).font('Helvetica');
-    doc.text('This is a computer-generated statement and does not require a signature.', left, y, {
-      width: right - left - 90,
-      lineBreak: false,
-    });
-    if (support) doc.text(support, left, y + 12, { width: right - left - 90, lineBreak: false });
-    doc.text(`Page ${index + 1} of ${range.count}`, right - 90, y, { width: 90, align: 'right', lineBreak: false });
-  }
+  drawPdfFooters(doc, {
+    left,
+    right,
+    zone: FOOTER_ZONE,
+    note: 'This is a computer-generated statement and does not require a signature.',
+    support,
+  });
 }
 
 /** Render the statement. The logo is the only asynchronous part and is fetched before drawing starts. */

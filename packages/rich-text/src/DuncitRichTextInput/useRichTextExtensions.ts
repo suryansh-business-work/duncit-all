@@ -3,6 +3,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import StarterKit from '@tiptap/starter-kit';
 import { TableKit } from '@tiptap/extension-table';
 import Image from '@tiptap/extension-image';
+import { MentionNode } from '../mention/mentionNode';
 
 /** The tiptap extension set, rebuilt only when what configures it changes. */
 export function useRichTextExtensions(readOnly: boolean, resolvedPlaceholder: string) {
@@ -35,6 +36,8 @@ export function useRichTextExtensions(readOnly: boolean, resolvedPlaceholder: st
       // the saved HTML would be a megabyte of document nobody can cache.
       Image.configure({ inline: false, allowBase64: false }),
       Placeholder.configure({ placeholder: resolvedPlaceholder }),
+      // Always registered, so saved @mentions render even where mentioning is off.
+      MentionNode,
     ],
     [readOnly, resolvedPlaceholder],
   );

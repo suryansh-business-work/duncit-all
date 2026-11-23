@@ -4,8 +4,9 @@ import { DuncitTable, EM_DASH, type DuncitColumn, type TableFetch } from '@dunci
 import { formatDateTime, useTranslation, type Translator } from '@duncit/app-settings';
 import { StatusChip } from '@duncit/ui';
 import { STATUS_COLORS, fmt } from '../payment-logs-page/helpers';
-import { renderPaymentCustomer, renderPaymentIds } from '../payment-logs-page/cells';
+import { renderPaymentCustomer, paymentIdsText, renderPaymentIds } from '../payment-logs-page/cells';
 import type { UserRefundRow } from './queries';
+import { refundStatusColumn } from './refundStatusColumn';
 
 /** A refunded payment is REFUNDED once the whole booking came back, and stays
  * SUCCESS while the buyer keeps some seats — so the filter offers both. The
@@ -139,13 +140,14 @@ export default function UserRefundsTable({ fetchRows, refetchRef, onOpen }: Read
         cellRenderer: renderStatus,
         valueGetter: (r) => r.status,
       },
+      refundStatusColumn(t),
       {
         field: 'payment_id',
         headerName: t('finance.payment.colIds'),
-        minWidth: 190,
+        minWidth: 280,
         type: 'text',
-        cellRenderer: renderPaymentIds,
-        valueGetter: (r) => [r.payment_id, r.invoice_no].filter(Boolean).join(' '),
+        cellRenderer: renderPaymentIds(t),
+        valueGetter: (r) => paymentIdsText(t, r),
       },
       {
         // Absent for a refund raised from this console — nobody else set it off.

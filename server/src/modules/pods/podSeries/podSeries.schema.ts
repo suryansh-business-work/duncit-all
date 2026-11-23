@@ -141,7 +141,7 @@ export const podSeriesTypeDefs = gql`
     "Admin limits the plan was checked against."
     max_occurrences: Int!
     max_span_days: Int!
-    "The largest discount a tier may give (Pod Settings' multi-ticket ceiling)."
+    "The largest discount a multi-date tier may give."
     max_discount_pct: Int!
     "The multi-date discount a new recurring pod starts with (Pod Settings)."
     default_multi_date_discount_tiers: [MultiDateDiscountTier!]!

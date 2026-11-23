@@ -103,26 +103,24 @@ export function isPodActive(start?: string | null, end?: string | null): boolean
   return podStatus(start, end) !== 'ENDED';
 }
 
-/** True once the pod's start time has passed — the canonical "expired" test used
- * across Explore (join closed) and Pod details (shop disabled, "Attended"). */
-export function isPodExpired(start?: string | null): boolean {
-  if (!start) return false;
-  const ms = new Date(start).getTime();
-  return !Number.isNaN(ms) && ms < Date.now();
-}
+export type TimeTone = 'error' | 'warning' | 'info' | 'success';
 
-export type TimeTone = 'error' | 'warning' | 'info';
-
-/** Countdown chip data for the pod start: expired / soon / N days · hours.
- * Mirrors mWeb's PodOverview TimeChip. Null when the date is unknown. */
+/** Countdown chip data for the pod: ongoing (started, not ended) / expired
+ * (past its end) / soon / N days · hours. Mirrors mWeb's PodOverview TimeChip.
+ * Null when the date is unknown. */
 export function podTimeChip(
   iso?: string | null,
+  end?: string | null,
   t: Translate = fallbackT,
 ): { label: string; tone: TimeTone } | null {
   if (!iso) return null;
   const ms = new Date(iso).getTime() - Date.now();
   if (Number.isNaN(ms)) return null;
-  if (ms < 0) return { label: t('mweb.podDetails.podExpired'), tone: 'error' };
+  if (ms < 0) {
+    return podPhase(iso, end) === 'ONGOING'
+      ? { label: t('mweb.podDetails.podOngoing'), tone: 'success' }
+      : { label: t('mweb.podDetails.podExpired'), tone: 'error' };
+  }
   const days = Math.ceil(ms / (1000 * 60 * 60 * 24));
   const hours = Math.ceil(ms / (1000 * 60 * 60));
   let label: string;

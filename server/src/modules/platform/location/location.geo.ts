@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { logs } from '@observability/log';
+import { escapeRegExp } from '@utils/regex';
 import { LocationModel } from './location.model';
 
 export interface GeoPoint {
@@ -89,6 +90,21 @@ export async function locationPoint(locationId: string, zoneName?: string | null
   const point = await geocode(region);
   if (point) await LocationModel.updateOne({ _id: loc._id }, { $set: { lat: point.lat, lng: point.lng } });
   return point;
+}
+
+/**
+ * `locationPoint` for a city given by NAME, as records that store the city
+ * name rather than its Location id do (CRM leads). Matches the Location's
+ * city or name, ignoring case; null when no Location carries that name.
+ */
+export async function cityAreaPoint(city: string, zoneName?: string | null): Promise<GeoPoint | null> {
+  const name = city.trim();
+  if (!name) return null;
+  const exact = new RegExp(`^${escapeRegExp(name)}$`, 'i');
+  const loc = await LocationModel.findOne({ $or: [{ city: exact }, { location_name: exact }] })
+    .select('_id')
+    .lean<{ _id: Types.ObjectId }>();
+  return loc ? locationPoint(String(loc._id), zoneName) : null;
 }
 
 /** `locationPoint` memoised for one request — a search resolves each (city, area) once. */

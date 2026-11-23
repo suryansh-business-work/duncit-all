@@ -17,8 +17,6 @@ export interface SlideCopy {
   time: string;
   place: string;
   price: string;
-  /** The price line with tiers, e.g. "₹499 solo · ₹449 each for 2". */
-  price_detail: string;
   cta: string;
   about_heading: string;
   about: string;
@@ -59,13 +57,7 @@ const clip = (value: string, max: number) => {
   return chars.length <= max ? chars.join('') : `${chars.slice(0, max - 1).join('').trimEnd()}…`;
 };
 
-function priceLines(data: PodBannerData, t: Copy): { price: string; detail: string } {
-  if (data.is_free) return { price: t('free'), detail: t('free') };
-  const solo = rupees(data.price);
-  if (data.tiers.length === 0) return { price: solo, detail: solo };
-  const tiers = data.tiers.map((tier) => t('priceTier', { price: rupees(tier.each), count: tier.tickets }));
-  return { price: solo, detail: [t('priceSolo', { price: solo }), ...tiers].join(' · ') };
-}
+const priceLine = (data: PodBannerData, t: Copy): string => (data.is_free ? t('free') : rupees(data.price));
 
 /** The link as printed: the address without its scheme. */
 export const linkText = (url: string) => url.replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -74,7 +66,7 @@ export const linkText = (url: string) => url.replace(/^https?:\/\//, '').replace
 const SOON_MS = 14 * 86_400_000;
 
 export function templateCopy(data: PodBannerData, t: Copy, opts: { cta?: string; trackingUrl: string; now?: Date }): SlideCopy {
-  const { price, detail } = priceLines(data, t);
+  const price = priceLine(data, t);
   const now = opts.now ?? new Date();
   const time = data.end ? t('timeRange', { start: appTime(data.start), end: appTime(data.end) }) : appTime(data.start);
   return {
@@ -85,7 +77,6 @@ export function templateCopy(data: PodBannerData, t: Copy, opts: { cta?: string;
     time,
     place: [data.place_label, data.place_detail].filter(Boolean).join(' · '),
     price,
-    price_detail: detail,
     cta: clip(opts.cta?.trim() || t('cta'), COPY_LIMITS.cta),
     about_heading: t('aboutHeading'),
     about: clip(data.description, COPY_LIMITS.about),

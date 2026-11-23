@@ -13,7 +13,6 @@ const NUMBER_FIELDS = [
   'pod_auto_cancel_lead_hours',
   'pod_cancel_risk_window_hours',
   'pod_cancel_risk_alert_hours',
-  'ticket_discount_max_pct',
   'happening_nearby_days',
 ] as const;
 

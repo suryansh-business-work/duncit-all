@@ -183,6 +183,9 @@ const META_NAME = /^[A-Za-z][\w:.-]{0,79}$/;
 /** A payment transaction reference — Razorpay `pay_…`, a UTR or RRN: 6–40 letters, digits, `_` or `-`. See regex.mjs. */
 const PAYMENT_TRANSACTION_ID = /^[A-Za-z0-9_-]{6,40}$/;
 
+/** An Apple Developer Team ID: exactly 10 upper-case letters or digits. See regex.mjs. */
+const APPLE_TEAM_ID = /^[A-Z0-9]{10}$/;
+
 /** Keep only the digits in a string. See regex.mjs for the full note. */
 const toDigits = (v) => String(v ?? '').replaceAll(NON_DIGITS, '');
 
@@ -222,6 +225,7 @@ module.exports = {
   FONT_FAMILY,
   META_NAME,
   PAYMENT_TRANSACTION_ID,
+  APPLE_TEAM_ID,
   toDigits,
   isPhoneNumber: (v) => PHONE_NUMBER.test(v),
   isPincode: (v) => PINCODE.test(v),
@@ -252,6 +256,7 @@ module.exports = {
   isFontFamily: (v) => FONT_FAMILY.test(v),
   isMetaName: (v) => META_NAME.test(v),
   isPaymentTransactionId: (v) => PAYMENT_TRANSACTION_ID.test(v),
+  isAppleTeamId: (v) => APPLE_TEAM_ID.test(v),
   isHostname: (v) => {
     const name = String(v ?? '').replace(/\.$/, '');
     const labels = name.split('.');

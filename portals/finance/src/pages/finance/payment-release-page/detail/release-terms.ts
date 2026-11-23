@@ -20,7 +20,18 @@ export interface ReleaseRequestView {
   notes: string[];
   pending: PaymentReleaseRow[];
   pendingTotal: number;
+  /** What the payouts send out beyond what the pod collected; 0 when it paid its way. */
+  shortfall: number;
+  /** The same, on the payouts still pending — what "Approve all" needs a funding note for. */
+  pendingShortfall: number;
+  /** The typed bill was recorded as evidence only and the booked price was paid instead. */
+  billEvidenceOnly: boolean;
 }
+
+/** The largest frozen shortfall among `releases` — the server's own rule: every
+ * payout of one completion carries the same one, older releases carry none. */
+const shortfallOf = (releases: readonly PaymentReleaseRow[]) =>
+  Math.max(0, ...releases.map((r) => Number(r.breakdown?.funding_shortfall) || 0));
 
 /** The agreed offer frozen on the snapshot — both halves, or nothing to state. */
 function agreedOf(snapshot: ReleaseBreakdown): ReleaseAgreedTerms | null {
@@ -74,5 +85,9 @@ export function buildReleaseRequestView(releases: readonly PaymentReleaseRow[]):
     notes: [...new Set(releases.map((r) => (r.notes ?? '').trim()).filter(Boolean))],
     pending,
     pendingTotal: pending.reduce((sum, r) => sum + Number(r.amount_requested || 0), 0),
+    shortfall: shortfallOf(releases),
+    pendingShortfall: shortfallOf(pending),
+    // Null on releases from before it was recorded: a large bill there proves nothing either way.
+    billEvidenceOnly: current?.venue_bill_applied === false && current.venue_bill > 0,
   };
 }

@@ -21,6 +21,7 @@ import VenueCommercialSection from './sections/VenueCommercialSection';
 import VenueAmenitiesSection from './sections/VenueAmenitiesSection';
 import VenueMediaSection from './sections/VenueMediaSection';
 import VenueWebsiteSection from './sections/VenueWebsiteSection';
+import LeadSocialSection from '../fields/LeadSocialSection';
 import LeadServicesSection from '../fields/LeadServicesSection';
 import VenueLinkedHostsSection from './sections/VenueLinkedHostsSection';
 import VenueBrandingSection from './sections/VenueBrandingSection';
@@ -44,7 +45,7 @@ interface Props {
   leadId?: string;
 }
 
-const SECTIONS = [
+const SECTIONS: Array<{ title: string; titleKey?: string; expanded?: boolean; paths: string[] }> = [
   {
     title: '1. Venue Details',
     expanded: true,
@@ -60,13 +61,14 @@ const SECTIONS = [
   },
   { title: '7. Amenities', paths: ['amenities'] },
   { title: '8. Media', paths: ['photos', 'videos', 'brochure_url'] },
-  { title: '9. Website & Social Links', paths: ['website', 'instagram_link', 'social_links'] },
-  { title: '10. Services Offered', paths: ['services_offered'] },
-  { title: '11. Linked Host Leads', paths: ['linked_host_ids'] },
-  { title: '12. Logo & Tags', paths: ['logo_url', 'tags'] },
-  { title: '13. Custom Fields', paths: ['dynamic_values_json'] },
+  { title: '9. Website', paths: ['website'] },
+  { title: '10.', titleKey: 'crm.common.social', paths: ['instagram_link', 'social_links'] },
+  { title: '11. Services Offered', paths: ['services_offered'] },
+  { title: '12. Linked Host Leads', paths: ['linked_host_ids'] },
+  { title: '13. Logo & Tags', paths: ['logo_url', 'tags'] },
+  { title: '14. Custom Fields', paths: ['dynamic_values_json'] },
   {
-    title: '14. Internal Lead Tracking',
+    title: '15. Internal Lead Tracking',
     paths: ['lead_source', 'assigned_to', 'lead_status', 'priority', 'next_follow_up_date', 'remarks'],
   },
 ];
@@ -135,6 +137,7 @@ export default function VenueLeadForm({
 }
 
 function VenueSections({ config }: Readonly<{ config: CrmOptionGroup }>) {
+  const { t } = useTranslation();
   const [signal, setSignal] = useState(0);
   const [signalValue, setSignalValue] = useState(true);
   const toggleAll = (open: boolean) => {
@@ -151,6 +154,7 @@ function VenueSections({ config }: Readonly<{ config: CrmOptionGroup }>) {
     <VenueAmenitiesSection key="amenities" config={config} />,
     <VenueMediaSection key="media" />,
     <VenueWebsiteSection key="website" />,
+    <LeadSocialSection key="social" />,
     <LeadServicesSection key="services" appliesTo="VENUE" />,
     <VenueLinkedHostsSection key="linked-hosts" />,
     <VenueBrandingSection key="branding" />,
@@ -172,7 +176,7 @@ function VenueSections({ config }: Readonly<{ config: CrmOptionGroup }>) {
       {SECTIONS.map((section, idx) => (
         <FormAccordion
           key={section.title}
-          title={section.title}
+          title={section.titleKey ? `${section.title} ${t(section.titleKey)}` : section.title}
           defaultExpanded={section.expanded}
           fieldPaths={section.paths}
           expandSignal={signal}

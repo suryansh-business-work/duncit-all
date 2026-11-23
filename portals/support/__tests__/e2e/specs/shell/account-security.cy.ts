@@ -95,6 +95,7 @@ describe('Portal Shell · Account security (Support, run account)', () => {
     cy.clearAuth();
     cy.visitPortal('support', '/login');
     submitPassword(account.email, runPasswordNow(account));
+    cy.completeSecurityVerification();
     cy.location('pathname').should('eq', '/');
     cy.byTestId('shell-user-menu-button').should('be.visible');
   });

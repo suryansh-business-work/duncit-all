@@ -1,0 +1,30 @@
+---
+// One offering, at /solutions/<category>/<offering> — e.g.
+// /solutions/cafe-restaurant-automation/venue-kit.
+//
+// A page per published Solutions entry is generated at build time from the
+// Website portal, so each offering is a real, linkable, indexable URL. The
+// category segment is the entry's own category (category_slug), so renaming a
+// category in the portal moves the URL with the next build; the old Venue Kit
+// address (/venue-kit) redirects to wherever the entry lives now.
+import { VENUE_KIT_SOLUTION_SLUG, isListableSolution, type SolutionItem } from '@duncit/utils';
+import SolutionDetail from '../../../components/solutions/SolutionDetail.astro';
+import VenueKitPage from '../../../components/venue-kit/VenueKitPage.astro';
+import { fetchSolutions } from '../../../lib/site-data';
+
+export async function getStaticPaths() {
+  const solutions = await fetchSolutions();
+  return solutions.filter(isListableSolution).map((item) => ({
+    params: { category: item.category_slug, offering: item.slug },
+    props: { item },
+  }));
+}
+
+interface Props {
+  item: SolutionItem;
+}
+
+const { item } = Astro.props;
+---
+
+{item.slug === VENUE_KIT_SOLUTION_SLUG ? <VenueKitPage /> : <SolutionDetail item={item} />}

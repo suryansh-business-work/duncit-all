@@ -52,10 +52,44 @@ describe('UserRefundLogsPage', () => {
     expect(cellTexts('refund_reason')).toEqual(['Duplicate charge', '—']);
     expect(cellTexts('refund_initiated_by')).toEqual(['Finance console', 'SYSTEM']);
     expect(cellTexts('status')).toEqual(['REFUNDED', 'SUCCESS']);
-    expect(cellTexts('payment_id')).toEqual(['DUN-PAY-4821INV-2026-0042', 'DUN-PAY-4822']);
+    // Razorpay's payment, order and refund ids sit beside the Duncit ref and the invoice.
+    const [full, part] = cellTexts('payment_id');
+    for (const id of ['pay_U39hOwzQiUFqHT', 'order_U39IVJblWttbgN', 'rfnd_Q8a1LmZx', 'DUN-PAY-4821', 'INV-2026-0042']) {
+      expect(full).toContain(id);
+    }
+    // A refund that never went through Razorpay shows only our own reference.
+    expect(part).toContain('DUN-PAY-4822');
+    expect(part).not.toMatch(/pay_|order_|rfnd_/);
 
     // Only a part refund explains itself.
     expect(screen.getByLabelText(/Only some of the seats came back/)).toHaveTextContent('Part');
+  });
+
+  it('says where each refund’s money stands at Razorpay, and only “Refunded” once Razorpay processed it', async () => {
+    renderWithProviders(<UserRefundLogsPage />, {
+      mocks: [
+        userRefundsTableMock([
+          makeUserRefund({ id: 'r1', refund_status: 'SUCCEEDED' }),
+          makeUserRefund({ id: 'r2', refund_status: 'PROCESSING' }),
+          makeUserRefund({ id: 'r3', refund_status: 'FAILED' }),
+          makeUserRefund({ id: 'r4', refund_status: 'RECONCILIATION_REQUIRED' }),
+          makeUserRefund({ id: 'r5', refund_status: 'NOT_APPLICABLE' }),
+          makeUserRefund({ id: 'r6', refund_status: 'REQUESTED' }),
+          makeUserRefund({ id: 'r7', refund_status: null }),
+        ]),
+      ],
+    });
+    expect(await screen.findAllByText('Riya Sharma')).toHaveLength(7);
+    expect(cellTexts('refund_status')).toEqual([
+      'Refunded',
+      'Processing',
+      'Failed, retrying',
+      'Check Razorpay',
+      'Not via Razorpay',
+      'Sending',
+      // A refund recorded before refunds went through Razorpay has no state to show.
+      '—',
+    ]);
   });
 
   it('keeps the log current by re-reading it every 30 seconds', async () => {

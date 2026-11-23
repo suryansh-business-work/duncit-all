@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
-import { Alert, Box, Stack, Typography } from '@mui/material';
-import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import { Alert, Box } from '@mui/material';
 import { tableQueryToGql, type TableQueryState } from '@duncit/table';
-import { useTranslation, type Translator } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/app-settings';
 import { downloadBase64File } from '@duncit/utils';
 import {
   INVOICE_PDF,
@@ -18,23 +17,14 @@ import {
 } from './queries';
 import { paymentTableFilter } from './helpers';
 import TotalsCards from './TotalsCards';
+import PaymentLogsHeader from './PaymentLogsHeader';
+import { logCopy } from './logCopy';
+import { usePaymentLogsPdf } from './usePaymentLogsPdf';
 import PaymentsTable from './PaymentsTable';
 import RefundDialog from './RefundDialog';
 
 const POLL_MS = 30000;
-const EMPTY_TOTALS: PaymentTotals = { count: 0, gross: 0, fee: 0, gst: 0, ticket_discount_total: 0, smart_incentive_total: 0 };
-
-/** A log's heading, and for a shop's log a line saying what is — and is not — in
- * it. Every key is a literal so the localization gate can see it rendered. */
-function logCopy(t: Translator['t'], shop?: PaymentShop): { title: string; subtitle: string } {
-  if (shop === 'POD_SHOP') {
-    return { title: t('finance.payment.logsTitlePodShop'), subtitle: t('finance.payment.logsSubtitlePodShop') };
-  }
-  if (shop === 'ECOMM') {
-    return { title: t('finance.payment.logsTitleEcomm'), subtitle: t('finance.payment.logsSubtitleEcomm') };
-  }
-  return { title: t('finance.payment.logsTitle'), subtitle: '' };
-}
+const EMPTY_TOTALS: PaymentTotals = { count: 0, gross: 0, fee: 0, gst: 0, smart_incentive_total: 0 };
 
 /**
  * Payment Logs. With no `shop` it is every payment, as it always was (the Logs
@@ -43,10 +33,12 @@ function logCopy(t: Translator['t'], shop?: PaymentShop): { title: string; subti
  */
 export default function PaymentLogsPage({ shop }: Readonly<{ shop?: PaymentShop }>) {
   const { t } = useTranslation();
-  const { title, subtitle } = logCopy(t, shop);
+  const { title } = logCopy(t, shop);
   const client = useApolloClient();
   const navigate = useNavigate();
   const refetchRef = useRef<(() => void) | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const { exporting, exportPdf, remember } = usePaymentLogsPdf({ shop, onError: setActionError });
 
   // KPI totals come from a filter-wide server aggregation (no row cap); the
   // filter is synced from the table's search/status so the cards track what
@@ -63,6 +55,7 @@ export default function PaymentLogsPage({ shop }: Readonly<{ shop?: PaymentShop 
 
   const fetchRows = useCallback(
     async (q: TableQueryState) => {
+      remember(q);
       const filter = paymentTableFilter(q);
       const key = JSON.stringify(filter ?? null);
       if (key !== totalsKeyRef.current) {
@@ -77,7 +70,7 @@ export default function PaymentLogsPage({ shop }: Readonly<{ shop?: PaymentShop 
       const table = shop ? page.shopPaymentsTable : page.paymentsTable;
       return { rows: table.rows as PaymentRow[], total: table.total as number };
     },
-    [client, shop],
+    [client, remember, shop],
   );
 
   // The old page auto-refreshed via pollInterval — keep the table live too.
@@ -95,7 +88,6 @@ export default function PaymentLogsPage({ shop }: Readonly<{ shop?: PaymentShop 
   const [refundMut, { loading: refundLoading }] = useMutation<any>(REFUND_PAYMENT);
   const [refundFor, setRefundFor] = useState<PaymentRow | null>(null);
   const [refundReason, setRefundReason] = useState('');
-  const [actionError, setActionError] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const handleDownloadInvoice = useCallback(
@@ -143,27 +135,12 @@ export default function PaymentLogsPage({ shop }: Readonly<{ shop?: PaymentShop 
 
   return (
     <Box>
-      <Stack
-        direction="row"
-        spacing={1.5}
-        sx={{
-          alignItems: "center",
-          mb: shop ? 1 : 3
-        }}>
-        <ReceiptLongIcon color="primary" />
-        <Typography component="h1"
-          variant="h5"
-          sx={{
-            fontWeight: 700,
-            flex: 1
-          }}>
-          {title}
-        </Typography>
-      </Stack>
-      {subtitle && (
-        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
-          {subtitle}
-        </Typography>
+      <PaymentLogsHeader shop={shop} exporting={exporting} onExportPdf={exportPdf} />
+
+      {actionError && !refundFor && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setActionError(null)}>
+          {actionError}
+        </Alert>
       )}
 
       <TotalsCards totals={totals} />
@@ -188,12 +165,6 @@ export default function PaymentLogsPage({ shop }: Readonly<{ shop?: PaymentShop 
         onClose={() => setRefundFor(null)}
         onConfirm={handleConfirmRefund}
       />
-
-      {actionError && !refundFor && (
-        <Alert severity="error" sx={{ mt: 2 }} onClose={() => setActionError(null)}>
-          {actionError}
-        </Alert>
-      )}
     </Box>
   );
 }

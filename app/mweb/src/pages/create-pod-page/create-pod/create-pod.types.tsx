@@ -1,7 +1,7 @@
 /** Shared option lists + form value shape for the host Create Pod stepper. */
 import type { UseFormReturn } from 'react-hook-form';
 import { freeJustificationDefaults, type FreeJustificationValues } from '@duncit/forms/schemas';
-import { isFreeVenueOfferModel, type PodPickerProduct, type TicketDiscountTier } from '@duncit/utils';
+import { isFreeVenueOfferModel, type PodPickerProduct } from '@duncit/utils';
 import type { Translate } from '../../../i18n/fallback';
 export type {
   CreatePodClub,
@@ -107,8 +107,6 @@ export interface CreatePodFormValues extends FreeJustificationValues {
   products_enabled: boolean;
   product_requests: PodProductRequest[];
   place_charges: PodPlaceCharge[];
-  ticket_discount_enabled: boolean;
-  ticket_discount_tiers: TicketDiscountTier[];
   /** Smart Incentive: a one-time offer to members still deciding, off by default. */
   smart_incentive_enabled: boolean;
   /** The discount as typed ('' until typed) — `smartIncentiveInput` sends it as a number. */
@@ -154,8 +152,6 @@ export const blankCreatePodForm: CreatePodFormValues = {
   products_enabled: false,
   product_requests: [],
   place_charges: [],
-  ticket_discount_enabled: false,
-  ticket_discount_tiers: [],
   smart_incentive_enabled: false,
   smart_incentive_pct: '',
   payment_terms: '',

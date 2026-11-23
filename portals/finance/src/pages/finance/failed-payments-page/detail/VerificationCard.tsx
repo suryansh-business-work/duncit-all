@@ -3,6 +3,7 @@ import { StatusChip } from '@duncit/ui';
 import { useTranslation, type DateFormatter } from '@duncit/app-settings';
 import { fmt } from '../../payment-logs-page/helpers';
 import DetailCard from './DetailCard';
+import { tracedId } from '../../../../components/TraceLink';
 import { VERIFICATION_COLORS, labelOf, verificationLabels } from '../labels';
 import type { FailedPaymentDetail } from '../queries';
 
@@ -33,7 +34,7 @@ export default function VerificationCard({ detail, formatDateTime }: Readonly<Pr
         },
         { label: t('finance.failedPayments.confidence'), value: confidence },
         { label: t('finance.failedPayments.matchedFields'), value: v.matched_fields.join(', ') },
-        { label: t('finance.failedPayments.matchedPaymentId'), value: v.matched_payment_id },
+        { label: t('finance.failedPayments.matchedPaymentId'), value: tracedId(v.matched_payment_id) },
         { label: t('finance.failedPayments.razorpayStatus'), value: v.razorpay_status },
         { label: t('finance.failedPayments.razorpayAmount'), value: razorpayAmount },
         { label: t('finance.failedPayments.checkedAt'), value: v.checked_at ? formatDateTime(v.checked_at) : '' },

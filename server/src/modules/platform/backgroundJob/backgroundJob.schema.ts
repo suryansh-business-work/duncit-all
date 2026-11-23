@@ -12,6 +12,8 @@ export const backgroundJobTypeDefs = /* GraphQL */ `
     AI_TRANSLATE
     MEDIA_ORGANIZE
     EMAIL_VERIFY
+    LEAD_QUALITY_RECALC
+    LEAD_DISCOVERY
   }
 
   "SELECTED deletes the ticked rows; ALL deletes every row matching the table's current view."

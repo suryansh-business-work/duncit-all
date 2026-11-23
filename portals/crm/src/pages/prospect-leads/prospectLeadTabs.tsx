@@ -19,9 +19,10 @@ import { remindersTab } from '../../components/reminders-tab/remindersTab';
 import ExternalLink from '../../components/ExternalLink';
 import DynamicValuesView from '../../components/DynamicValuesView';
 import type { LeadTab } from '../../components/LeadTabs';
-import SocialLinksRows from '../../components/SocialLinksRows';
 import { leadServicesTab } from '../../components/leadServicesTab';
+import { leadSocialTab } from '../../components/leadSocialTab';
 import { leadMediaTab } from '../../components/lead-media/leadMediaTab';
+import { leadQualityTab } from '../../components/lead-quality-tab';
 import { profileRows } from './prospectDetails';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
@@ -76,11 +77,6 @@ function OverviewTab({ lead }: Readonly<{ lead: ProspectLead }>) {
         </LeadDetailCard>
         <LeadDetailCard title={t('crm.prospectLeads.onlinePresence')} icon={<LanguageIcon color="primary" />}>
           <LeadDetailRow label={t('crm.common.website')} value={lead.website ? <ExternalLink variant="body2" href={lead.website} /> : DASH} />
-          <LeadDetailRow
-            label={t('crm.common.instagram')}
-            value={lead.instagram_link ? <ExternalLink variant="body2" href={lead.instagram_link} /> : DASH}
-          />
-          <SocialLinksRows links={lead.social_links} />
         </LeadDetailCard>
       </Stack>
       <Stack spacing={2.5} sx={{ width: { lg: 360 }, flexShrink: 0 }}>
@@ -104,12 +100,14 @@ export function buildProspectLeadTabs(
       icon: <PersonPinIcon fontSize="small" />,
       render: () => <OverviewTab lead={lead} />,
     },
+    leadQualityTab(entity, lead.id, t),
     {
       value: 'contacts',
       label: t('crm.prospectLeads.contactsCount', { count: lead.contacts.length }),
       icon: <ContactsIcon fontSize="small" />,
       render: () => <ContactsTab entity={entity} leadId={lead.id} leadName={displayName} contacts={lead.contacts} />,
     },
+    leadSocialTab(lead, t),
     leadServicesTab(lead.services_offered ?? [], t),
     leadMediaTab(entity, lead.id, t),
     {

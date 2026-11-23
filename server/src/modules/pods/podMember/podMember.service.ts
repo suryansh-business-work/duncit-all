@@ -17,6 +17,7 @@ import {
   reactivateFreeMembership,
 } from './podMember.freeSpot';
 import { PaymentModel, type IPayment } from '@modules/finance/payment/payment.model';
+import { processGatewayRefund, queueGatewayRefund } from '@modules/finance/payment/payment.gatewayRefund';
 import {
   coinService,
   coinsForBackoutRefund,
@@ -44,10 +45,12 @@ import {
   releaseSeats,
 } from '@modules/pods/pod/pod.seats.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { razorpaySearchAlso } from '@modules/finance/payment/payment.razorpaySearch';
 import { userContactNumber } from '@utils/contact';
 import { logs } from '@observability/log';
 import { appDate, appTime } from '@utils/app-time';
 import { assertPodOpenForBooking } from '@utils/hidden';
+import { podBookingClosed } from '@modules/pods/pod/pod.lifecycle';
 import { addOnMoneyOf } from '@modules/venues/venueRental/rentalLines';
 import { rentalLifecycleService } from '@modules/venues/venueRental/rentalLifecycle.service';
 
@@ -575,7 +578,20 @@ async function runRefundPart(request: IBackoutRequest, payment: IPayment, part: 
   const reason = `Backout ${request.backout_no}`;
   try {
     if (part === 'CASH') {
-      await stampPaymentRefund(payment, request, Number(request.refund_amount ?? 0));
+      const amount = Number(request.refund_amount ?? 0);
+      await stampPaymentRefund(payment, request, amount);
+      // The money itself, back through Razorpay — keyed on this request, so a
+      // second click or a retry after a lost answer never sends it twice. A
+      // send that fails stays queued for the refund sweep to retry.
+      const record = await queueGatewayRefund({
+        payment,
+        amount,
+        key: `backout:${String(request._id)}`,
+        source: 'BACKOUT',
+        reason,
+        initiatedBy: 'FINANCE',
+      });
+      if (record?.status === 'QUEUED') await processGatewayRefund(record._id);
     } else if (part === 'COINS') {
       // Keyed on the backout, not the payment: a booking released in parts
       // reaches here once per release. The ledger's unique index is the second
@@ -1143,7 +1159,8 @@ export const podMemberService = {
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
     assertBookableRow(pod);
     assertPodOpenForBooking(pod);
-    if (pod.pod_date_time && pod.pod_date_time.getTime() < Date.now()) {
+    // Open until the pod ENDS: a running pod can still be joined.
+    if (podBookingClosed(pod)) {
       throw new GraphQLError('This pod has already taken place — booking is closed.', {
         extensions: { code: 'BAD_REQUEST' },
       });
@@ -1763,7 +1780,8 @@ export const podMemberService = {
       BackoutRequestModel,
       {},
       input,
-      BACKOUT_REFUND_TABLE_CONFIG
+      BACKOUT_REFUND_TABLE_CONFIG,
+      { searchAlso: await razorpaySearchAlso(input?.search, 'payment_id', 'docId') }
     );
     return { rows: await hydrateBackoutRequests(docs), total, page, page_size };
   },

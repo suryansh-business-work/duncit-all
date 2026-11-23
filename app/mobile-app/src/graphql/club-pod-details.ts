@@ -45,11 +45,6 @@ export const ClubAdminPodDetailDocument = gql(`
       venue_approval_status
       pod_hosts_id
       host_names
-      ticket_discount_enabled
-      ticket_discount_tiers {
-        min_tickets
-        discount_pct
-      }
       attendance {
         attended_seats
         booked_seats

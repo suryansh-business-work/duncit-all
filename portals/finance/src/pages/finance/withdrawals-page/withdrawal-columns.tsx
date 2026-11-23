@@ -145,6 +145,25 @@ export function buildWithdrawalColumns({ t, podId, busy, onReview, onRetry }: Co
       cellRenderer: renderPayment,
       valueGetter: (w) => w.payout_status ?? EM_DASH,
     },
+    // The references a withdrawer quotes to their bank — the same pair Withdrawal Logs shows.
+    {
+      field: 'razorpay_payout_id',
+      headerName: t('finance.payouts.logPayoutId'),
+      width: 190,
+      type: 'text',
+      sortable: false,
+      filterable: false,
+      valueGetter: (w) => w.razorpay_payout_id || EM_DASH,
+    },
+    {
+      field: 'payout_utr',
+      headerName: t('finance.payouts.logReference'),
+      width: 170,
+      type: 'text',
+      sortable: false,
+      filterable: false,
+      valueGetter: (w) => w.payout_utr || EM_DASH,
+    },
     {
       field: 'requested_at',
       headerName: t('finance.common.requested'),

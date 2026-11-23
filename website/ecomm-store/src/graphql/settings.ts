@@ -331,3 +331,15 @@ export const PUBLIC_CLIENT_CONFIG: TypedDocumentNode<{ publicClientConfig: { goo
     }
   }
 `;
+
+/**
+ * The Google sign-in client id, from Tech → Environment → Google OAuth through
+ * the server — never baked into the build, so rotating it needs no rebuild.
+ */
+export const GOOGLE_SIGN_IN_CONFIG: TypedDocumentNode<{ publicClientConfig: { google_client_id: string } }, NoVars> = gql`
+  query EcommStoreGoogleSignInConfig {
+    publicClientConfig {
+      google_client_id
+    }
+  }
+`;

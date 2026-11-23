@@ -1,15 +1,17 @@
 import type { MockedResponse } from '@apollo/client/testing';
 import { GraphQLError } from 'graphql';
-import type { FailedPaymentDetail, FailedPaymentRow, PaymentEvent } from '@duncit/gql-types';
+import type { FailedPaymentDetail, FailedPaymentRefundPreview, FailedPaymentRow, PaymentEvent } from '@duncit/gql-types';
 import {
   FAILED_PAYMENT,
   FAILED_PAYMENTS_TABLE,
   FAILED_PAYMENT_EVENTS,
   FAILED_PAYMENT_EVIDENCE_LINK,
+  FAILED_PAYMENT_REFUND_PREVIEW,
   INITIATE_FAILED_PAYMENT_REFUND,
   MARK_FAILED_PAYMENT_NOT_REFUNDABLE,
   REVERIFY_FAILED_PAYMENT,
   REVIEW_FAILED_PAYMENT,
+  SUMMARIZE_FAILED_PAYMENT,
 } from '../../src/pages/finance/failed-payments-page/queries';
 
 type Vars = Record<string, unknown>;
@@ -24,6 +26,7 @@ export const makeFailedPaymentRow = (over: Partial<FailedPaymentRow> = {}): Fail
   id: 'fp1',
   payment_doc_id: 'pd1',
   payment_id: 'DUN-PAY-9001',
+  payment_source: 'POD_BOOKING',
   user_id: 'u1',
   user_name: 'Riya Sharma',
   user_email: 'riya@duncit.com',
@@ -60,6 +63,7 @@ export const makeFailedPaymentDetail = (over: Partial<FailedPaymentDetail> = {})
   id: 'fp1',
   payment_doc_id: 'pd1',
   payment_id: 'DUN-PAY-9001',
+  payment_source: 'POD_BOOKING',
   amount: 499,
   currency_symbol: '₹',
   pod_id: 'pod1',
@@ -148,6 +152,7 @@ export const makeFailedPaymentDetail = (over: Partial<FailedPaymentDetail> = {})
   needs_review: false,
   can_mark_not_refundable: false,
   refundable_amount: 499,
+  ai_summary: null,
   revision: 3,
   created_at: '2026-11-20T10:00:00.000Z',
   updated_at: '2026-11-20T10:05:00.000Z',
@@ -216,6 +221,36 @@ export const evidenceLinkMock = (fileRef: string, kind: string, url: string, cas
 export const evidenceLinkErrorMock = (fileRef: string, message: string, caseId = 'fp1'): MockedResponse => ({
   request: { query: FAILED_PAYMENT_EVIDENCE_LINK, variables: { caseId, fileRef } },
   result: { errors: [new GraphQLError(message)] },
+});
+
+/** Razorpay's live answer for the Refund dialog. Asked once per dialog opened. */
+export const refundPreviewMock = (
+  preview: Partial<FailedPaymentRefundPreview> = {},
+  caseId = 'fp1',
+): MockedResponse => ({
+  request: { query: FAILED_PAYMENT_REFUND_PREVIEW, variables: { caseId } },
+  maxUsageCount: Number.POSITIVE_INFINITY,
+  result: {
+    data: {
+      failedPaymentRefundPreview: {
+        __typename: 'FailedPaymentRefundPreview',
+        refundable: true,
+        amount: 499,
+        razorpay_payment_id: 'pay_RZP123',
+        reason: null,
+        ...preview,
+      },
+    },
+  },
+});
+
+/** One answer to "Get AI recommendation": the case with its note, or the server's refusal. */
+export const summarizeMock = (
+  answer: FailedPaymentDetail | string,
+  onCall: (v: Vars) => void = () => undefined,
+): MockedResponse => ({
+  request: { query: SUMMARIZE_FAILED_PAYMENT, variables: capture(onCall) },
+  result: typeof answer === 'string' ? { errors: [new GraphQLError(answer)] } : { data: { summarizeFailedPayment: answer } },
 });
 
 type MutationName =

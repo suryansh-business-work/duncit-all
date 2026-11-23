@@ -76,19 +76,45 @@ describe('PodActionPanel', () => {
     expect(screen.getByText(/booking is closed/i)).toBeInTheDocument();
   });
 
-  // Joining is closed the moment a pod STARTS, not once it is over — so the
-  // warning must not tell somebody the pod "has already taken place" while it
-  // is still running. Same panel, different sentence.
-  it('says the pod is happening right now while it is still running', () => {
+  // Booking closes once the pod is OVER, not when it starts: a running pod still
+  // offers Book (the "already ongoing" ask lives in StickyPodActionPanel).
+  it('keeps the Book CTA while the pod is still running', () => {
+    const onPaidCheckout = vi.fn();
     renderPanel({
+      onPaidCheckout,
       pod: {
         ...baseProps.pod,
         pod_date_time: new Date(Date.now() - 3_600_000).toISOString(),
         pod_end_date_time: new Date(Date.now() + 3_600_000).toISOString(),
       },
     });
-    expect(screen.getByText(/happening right now/i)).toBeInTheDocument();
-    expect(screen.queryByText(/already taken place/i)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('pod-booking-closed')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Book now' }));
+    expect(onPaidCheckout).toHaveBeenCalledTimes(1);
+  });
+
+  it('still shows "Pod is full" on a running pod with no seats left', () => {
+    renderPanel({
+      membershipState: { can_join: false },
+      pod: {
+        ...baseProps.pod,
+        pod_date_time: new Date(Date.now() - 3_600_000).toISOString(),
+        pod_end_date_time: new Date(Date.now() + 3_600_000).toISOString(),
+      },
+    });
+    expect(screen.getByRole('button', { name: /pod is full/i })).toBeDisabled();
+  });
+
+  it('closes booking once the pod end time has passed, even if it started recently', () => {
+    renderPanel({
+      pod: {
+        ...baseProps.pod,
+        pod_date_time: new Date(Date.now() - 2 * 3_600_000).toISOString(),
+        pod_end_date_time: new Date(Date.now() - 60_000).toISOString(),
+      },
+    });
+    expect(screen.getByTestId('pod-booking-closed')).toHaveTextContent(/already taken place/i);
+    expect(screen.queryByRole('button', { name: 'Book now' })).not.toBeInTheDocument();
   });
 
   it('renders the backout-in-process panel and fires Keep My Spot', () => {

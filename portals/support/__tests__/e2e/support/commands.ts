@@ -5,7 +5,12 @@ import {
   E2E_TRAFFIC_KEY_QUERY,
   type E2eCodePurpose,
 } from '@duncit/utils';
-import { LOGIN_MUTATION } from './operations';
+import {
+  LOGIN_MUTATION,
+  PORTAL_SECURITY_CHALLENGE_QUERY,
+  PORTAL_SECURITY_VERIFY_MUTATION,
+  securityVerificationInput,
+} from './operations';
 import { portalTokenKey, portalUrl, type StaffPortal } from './portals';
 
 /**
@@ -45,6 +50,11 @@ declare global {
       readOtp(purpose: E2eCodePurpose, target: CodeTarget, after?: string): Chainable<string>;
       /** Sign in to a staff portal through the API and keep the token for the next `visitPortal`. */
       apiPortalLogin(portal: StaffPortal, email: string, password: string): Chainable<string>;
+      /**
+       * On the Security Verification screen every console sign-in ends on: share the (stubbed) location,
+       * tick the four confirmations, proceed, and wait for the console to reload with the new session.
+       */
+      completeSecurityVerification(): Chainable<void>;
       /** Forget the token so the next `visitPortal` boots signed out. */
       clearAuth(): Chainable<void>;
       /** `cy.visit` a path on the portal's own origin, with its token applied when it has one. */
@@ -70,6 +80,9 @@ const TOKEN_KEY = '__liveToken';
 const PORTAL_KEY = '__livePortal';
 const TRAFFIC_KEY = '__trafficKey';
 const DUID = 'e2e-live-duid';
+
+/** The position the browser stub reports (operations.ts `E2E_LOCATION` is the same fix, for the API). */
+const E2E_LOCATION_COORDS = { latitude: 12.9716, longitude: 77.5946, accuracy: 25 };
 const OTP_POLL_MS = 1000;
 const OTP_POLL_TRIES = 30;
 
@@ -166,9 +179,37 @@ Cypress.Commands.add('apiPortalLogin', (portal: StaffPortal, email: string, pass
   return cy
     .gql<{ login: { token: string } }>(LOGIN_MUTATION, { input: { email, password, portal_key: portal } }, { token: null })
     .then((data) => {
-      Cypress.env(TOKEN_KEY, data.login.token);
-      return data.login.token;
+      // A console sign-in is not a session until Security Verification is completed: do it as the
+      // screen does (the version on screen, the three acknowledgements, the location and its consent).
+      const pending = data.login.token;
+      return cy
+        .gql<{ portalSecurityChallenge: { policy_version: string } }>(PORTAL_SECURITY_CHALLENGE_QUERY, {}, { token: pending })
+        .then(({ portalSecurityChallenge }) =>
+          cy.gql<{ submitPortalSecurityVerification: { token: string } }>(
+            PORTAL_SECURITY_VERIFY_MUTATION,
+            { input: securityVerificationInput(portalSecurityChallenge.policy_version) },
+            { token: pending },
+          ),
+        )
+        .then(({ submitPortalSecurityVerification }) => {
+          Cypress.env(TOKEN_KEY, submitPortalSecurityVerification.token);
+          return submitPortalSecurityVerification.token;
+        });
     });
+});
+
+Cypress.Commands.add('completeSecurityVerification', () => {
+  cy.byTestId('security-proceed', { timeout: 20_000 }).should('be.visible').and('be.disabled');
+  cy.byTestId('security-location-request').click();
+  cy.byTestId('security-location-granted').should('be.visible');
+  for (const confirmation of ['authorized', 'credentials', 'policies', 'location']) {
+    cy.byTestId(`security-consent-${confirmation}`).click();
+  }
+  cy.interceptOperation('SubmitPortalSecurityVerification');
+  cy.byTestId('security-proceed').should('be.enabled').click();
+  cy.wait('@SubmitPortalSecurityVerification').its('response.body.errors').should('be.undefined');
+  // The page reloads at the same address with the new session, so the screen is gone.
+  cy.byTestId('security-proceed').should('not.exist');
 });
 
 Cypress.Commands.add('clearAuth', () => {
@@ -181,6 +222,10 @@ Cypress.Commands.add('visitPortal', (portal: StaffPortal, path: string) => {
   const tokenKey = portalTokenKey(portal);
   return cy.visit(portalUrl(portal, path), {
     onBeforeLoad(win) {
+      // The Security Verification screen asks the browser for a location; a test browser has none to give.
+      cy.stub(win.navigator.geolocation, 'getCurrentPosition').callsFake((ok: PositionCallback) =>
+        ok({ coords: { ...E2E_LOCATION_COORDS } } as GeolocationPosition),
+      );
       win.localStorage.setItem('duncit_duid', DUID);
       if (token) {
         win.localStorage.setItem(tokenKey, token);

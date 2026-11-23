@@ -3,7 +3,6 @@ import type { HomePod } from '@/hooks/useHomeFeed';
 import {
   formatMeetingPlatform,
   isPodActive,
-  isPodExpired,
   podDateLabel,
   podImageUrl,
   podModeLabel,
@@ -97,6 +96,17 @@ describe('pod-format', () => {
     expect(podTimeChip(soon)).toEqual({ label: 'Starting soon', tone: 'warning' });
   });
 
+  it('reads a started pod as ongoing until its end, and expired only after it', () => {
+    const hour = 60 * 60 * 1000;
+    const started = new Date(Date.now() - hour).toISOString();
+    const endsLater = new Date(Date.now() + hour).toISOString();
+    const endedAlready = new Date(Date.now() - 60 * 1000).toISOString();
+    expect(podTimeChip(started, endsLater)).toEqual({ label: 'Pod ongoing', tone: 'success' });
+    expect(podTimeChip(started, endedAlready)).toEqual({ label: 'Pod expired', tone: 'error' });
+    // No end set: ongoing for the default live window after the start.
+    expect(podTimeChip(started)).toEqual({ label: 'Pod ongoing', tone: 'success' });
+  });
+
   it('maps meeting-platform enums to human labels with a title-cased fallback', () => {
     expect(formatMeetingPlatform('GOOGLE_MEET')).toBe('Google Meet');
     expect(formatMeetingPlatform('ZOOM')).toBe('Zoom');
@@ -120,13 +130,6 @@ describe('pod-format', () => {
     expect(isPodActive(recentStart, futureEnd)).toBe(true);
     const pastEnd = new Date(Date.now() - 30 * 60 * 1000).toISOString();
     expect(isPodActive(recentStart, pastEnd)).toBe(false);
-  });
-
-  it('marks a pod expired only once its start time has passed', () => {
-    expect(isPodExpired(null)).toBe(false);
-    expect(isPodExpired('not-a-date')).toBe(false);
-    expect(isPodExpired(new Date(Date.now() + 60 * 60 * 1000).toISOString())).toBe(false);
-    expect(isPodExpired(new Date(Date.now() - 60 * 60 * 1000).toISOString())).toBe(true);
   });
 
   it('formats the long schedule label with and without an end', () => {

@@ -7,7 +7,7 @@ interface Props {
   isFirst: boolean;
   isLast: boolean;
   busy: boolean;
-  /** Money's pricing rules failed — Create Pod stays disabled until they clear. */
+  /** A paid pod has no fresh projection that says viable — Create Pod stays disabled until it does. */
   submitDisabled?: boolean;
   /** Names the next step on the Next button ("Next: Money"); plain "Next" without it. */
   nextLabel?: string;

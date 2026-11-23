@@ -64,13 +64,10 @@ env:
   # container; the URLs are compiled into the bundles for links and canonicals.
   LITE_URL: ${{ github.ref_name == 'staging' && 'https://staging.lite.duncit.com' || 'https://lite.duncit.com' }}
   LITE_PORTAL_URL: ${{ github.ref_name == 'staging' && 'https://staging.lite-portal.duncit.com' || 'https://lite-portal.duncit.com' }}
-  # Build-time Google creds baked into the frontend bundles. Staging builds
-  # prefer the STAGING_-prefixed secret and fall back to the production one
-  # when it is not set. (Runtime service creds — SMTP/ImageKit/OpenAI/... —
-  # do NOT live here at all: the server reads them from the Tech portal's
-  # env entries, and each environment has its own database.)
-  BUILD_GOOGLE_CLIENT_ID: ${{ github.ref_name == 'staging' && secrets.STAGING_GOOGLE_CLIENT_ID || secrets.GOOGLE_CLIENT_ID }}
-  BUILD_GOOGLE_MAP_API: ${{ github.ref_name == 'staging' && secrets.STAGING_GOOGLE_MAP_API || secrets.GOOGLE_MAP_API }}
+  # No Google, Remotion or Apple value is baked into any bundle: mWeb, the
+  # portals and the ecomm store read them at RUNTIME from the server's
+  # publicClientConfig, which resolves them from the Tech portal (each stack has
+  # its own database). env-registry.json lists the only secrets kept here.
 
 jobs:
   # -----------------------------------------------------------
@@ -689,12 +686,8 @@ jobs:
           # build-args). Hashed into one digest and nothing else; never printed
           # or written. A secret newly baked into a build must be added here.
           BUILD_SECRETS: |
-            ${{ env.BUILD_GOOGLE_CLIENT_ID }}
-            ${{ env.BUILD_GOOGLE_MAP_API }}
             ${{ secrets.DOCKERHUB_USERNAME }}
             ${{ secrets.MWEB_ANDROID_CERT_SHA256 }}
-            ${{ secrets.MWEB_IOS_TEAM_ID }}
-            ${{ secrets.REMOTION_LICENSE_KEY }}
         run: node scripts/ci-deploy-gate.mjs gate .ci-ledger/deploy.json
 
   # -----------------------------------------------------------
@@ -769,8 +762,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-admin:${{ env.IMAGE_TAG }} \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-admin:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
-              --build-arg VITE_GOOGLE_MAP_API=${{ env.BUILD_GOOGLE_MAP_API }} \
               --cache-from type=gha,scope=duncit-admin${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-admin${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -806,10 +797,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-mweb:${{ env.IMAGE_TAG }} \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-mweb:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
-              --build-arg VITE_GOOGLE_MAP_API=${{ env.BUILD_GOOGLE_MAP_API }} \
               --build-arg MWEB_ANDROID_CERT_SHA256=${{ secrets.MWEB_ANDROID_CERT_SHA256 }} \
-              --build-arg MWEB_IOS_TEAM_ID=${{ secrets.MWEB_IOS_TEAM_ID }} \
               --cache-from type=gha,scope=duncit-mweb${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-mweb${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -885,8 +873,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-partners-app:${{ env.IMAGE_TAG }} \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-partners-app:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
-              --build-arg VITE_GOOGLE_MAP_API=${{ env.BUILD_GOOGLE_MAP_API }} \
               --cache-from type=gha,scope=duncit-partners-app${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-partners-app${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1277,7 +1263,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-support:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=SUPPORT_MANAGER,SUPPORT_USER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-support${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-support${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1314,7 +1299,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-website-app:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=WEBSITE_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-website-app${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-website-app${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1351,7 +1335,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-legal:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=LEGAL_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-legal${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-legal${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1388,7 +1371,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ai:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=AI_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-ai${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-ai${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1425,7 +1407,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-products:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=PRODUCTS_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-products${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-products${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1462,8 +1443,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-marketing:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=MARKETING_MANAGER,MARKETING_EDITOR \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
-              --build-arg VITE_REMOTION_LICENSE_KEY=${{ secrets.REMOTION_LICENSE_KEY }} \
               --cache-from type=gha,scope=duncit-marketing${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-marketing${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1500,7 +1479,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-onboarding:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=ONBOARDING_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-onboarding${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-onboarding${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1537,7 +1515,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-hr:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=HR_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-hr${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-hr${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1574,7 +1551,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-employee:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=EMPLOYEE \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-employee${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-employee${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1646,7 +1622,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-challenge:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=CHALLENGE_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-challenge${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-challenge${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1683,7 +1658,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-developers:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=DEVELOPERS_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-developers${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-developers${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1720,7 +1694,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-regional-club-admin:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=REGIONAL_CLUB_ADMIN \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-regional-club-admin${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-regional-club-admin${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1757,7 +1730,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-venues:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=ALL_VENUES_ACCESS,ONBOARDING_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-venues${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-venues${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1794,7 +1766,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-clubs:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=ALL_CLUBS_ACCESS \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-clubs${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-clubs${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1831,7 +1802,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-club-admins:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=ALL_CLUB_ADMINS_ACCESS \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-club-admins${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-club-admins${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1868,7 +1838,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-hosts:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=ALL_HOSTS_ACCESS,ONBOARDING_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-hosts${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-hosts${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1905,7 +1874,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-pods:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=ALL_PODS_ACCESS \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-pods${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-pods${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1935,7 +1903,7 @@ jobs:
           max_attempts: 3
           retry_wait_seconds: 20
           command: |
-            docker buildx build               --file portals/communications/Dockerfile               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-communications:${{ env.IMAGE_TAG }}               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-communications:${{ env.SHA_TAG }}               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }}               --build-arg VITE_REQUIRED_ROLES=COMMUNICATIONS_MANAGER               --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }}               --cache-from type=gha,scope=duncit-communications${{ env.SCOPE_SUFFIX }}               --cache-to   type=gha,scope=duncit-communications${{ env.SCOPE_SUFFIX }},mode=max               --push .
+            docker buildx build               --file portals/communications/Dockerfile               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-communications:${{ env.IMAGE_TAG }}               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-communications:${{ env.SHA_TAG }}               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }}               --build-arg VITE_REQUIRED_ROLES=COMMUNICATIONS_MANAGER                             --cache-from type=gha,scope=duncit-communications${{ env.SCOPE_SUFFIX }}               --cache-to   type=gha,scope=duncit-communications${{ env.SCOPE_SUFFIX }},mode=max               --push .
 
   build-logs:
     needs: changes
@@ -1962,7 +1930,7 @@ jobs:
           max_attempts: 3
           retry_wait_seconds: 20
           command: |
-            docker buildx build               --file portals/logs/Dockerfile               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-logs:${{ env.IMAGE_TAG }}               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-logs:${{ env.SHA_TAG }}               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }}               --build-arg VITE_REQUIRED_ROLES=LOGS_MANAGER               --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }}               --cache-from type=gha,scope=duncit-logs${{ env.SCOPE_SUFFIX }}               --cache-to   type=gha,scope=duncit-logs${{ env.SCOPE_SUFFIX }},mode=max               --push .
+            docker buildx build               --file portals/logs/Dockerfile               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-logs:${{ env.IMAGE_TAG }}               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-logs:${{ env.SHA_TAG }}               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }}               --build-arg VITE_REQUIRED_ROLES=LOGS_MANAGER                             --cache-from type=gha,scope=duncit-logs${{ env.SCOPE_SUFFIX }}               --cache-to   type=gha,scope=duncit-logs${{ env.SCOPE_SUFFIX }},mode=max               --push .
 
   build-analytics:
     needs: changes
@@ -1989,7 +1957,7 @@ jobs:
           max_attempts: 3
           retry_wait_seconds: 20
           command: |
-            docker buildx build               --file portals/analytics/Dockerfile               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-analytics:${{ env.IMAGE_TAG }}               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-analytics:${{ env.SHA_TAG }}               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }}               --build-arg VITE_REQUIRED_ROLES=ANALYTICS_MANAGER               --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }}               --cache-from type=gha,scope=duncit-analytics${{ env.SCOPE_SUFFIX }}               --cache-to   type=gha,scope=duncit-analytics${{ env.SCOPE_SUFFIX }},mode=max               --push .
+            docker buildx build               --file portals/analytics/Dockerfile               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-analytics:${{ env.IMAGE_TAG }}               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-analytics:${{ env.SHA_TAG }}               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }}               --build-arg VITE_REQUIRED_ROLES=ANALYTICS_MANAGER                             --cache-from type=gha,scope=duncit-analytics${{ env.SCOPE_SUFFIX }}               --cache-to   type=gha,scope=duncit-analytics${{ env.SCOPE_SUFFIX }},mode=max               --push .
 
   build-localization:
     needs: changes
@@ -2022,7 +1990,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-localization:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=LOCALIZATION_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-localization${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-localization${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -2058,7 +2025,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-targets:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=TARGETS_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-targets${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-targets${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -2094,7 +2060,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-gig-jobs:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=GIG_JOBS_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-gig-jobs${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-gig-jobs${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -2130,7 +2095,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-mcp:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=MCP_MANAGER,MCP_USER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-mcp${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-mcp${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -2166,7 +2130,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-loyalty:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=LOYALTY_MANAGER,FINANCE_MANAGER,FINANCE_USER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-loyalty${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-loyalty${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -2202,7 +2165,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-tests:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=TESTS_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-tests${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-tests${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -2238,7 +2200,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ecomm-portal:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=ECOMM_STORE_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --build-arg VITE_STORE_URL=${{ env.ECOMM_URL }} \
               --cache-from type=gha,scope=duncit-ecomm-portal${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-ecomm-portal${{ env.SCOPE_SUFFIX }},mode=max \
@@ -2274,7 +2235,6 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ecomm-store:${{ env.IMAGE_TAG }} \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ecomm-store:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --build-arg VITE_MWEB_URL=${{ env.MWEB_URL }} \
               --build-arg VITE_SITE_URL=${{ env.ECOMM_URL }} \
               --build-arg VITE_EARNWITH_URL=${{ env.EARNWITH_URL }} \

@@ -1,6 +1,6 @@
 import { freeJustificationDefaults, type FreeJustificationValues } from '@duncit/forms/schemas';
 import type { SlotFormatter, SlotLabels } from '@duncit/slots';
-import type { ClubCityLocation, TicketDiscountTier } from '@duncit/utils';
+import type { ClubCityLocation } from '@duncit/utils';
 
 export type PodMode = 'PHYSICAL' | 'VIRTUAL';
 
@@ -74,13 +74,6 @@ export interface PodFormValues extends FreeJustificationValues {
   place_charges: PodPlaceCharge[];
   products_enabled: boolean;
   product_requests: PodProductRequest[];
-  /**
-   * Multi-ticket discount: the switch and its stored tiers (min_tickets ≥ 2,
-   * both columns strictly increasing). Never sent for a free pod or an Auto
-   * Pod template — see `ticketDiscountInput` in @duncit/utils.
-   */
-  ticket_discount_enabled: boolean;
-  ticket_discount_tiers: TicketDiscountTier[];
   is_active: boolean;
 }
 
@@ -254,6 +247,11 @@ export interface PodFormData {
    * Omitted, no venue is treated as the host's own.
    */
   ownVenueIds?: readonly string[];
+  /**
+   * The pod being edited is completed or cancelled. The server never judges
+   * such a pod's money, so Save is never held back by its earnings verdict.
+   */
+  podClosed?: boolean;
 }
 
 /**
@@ -325,8 +323,6 @@ export const blankPodFormValues: PodFormValues = {
   place_charges: [],
   products_enabled: false,
   product_requests: [],
-  ticket_discount_enabled: false,
-  ticket_discount_tiers: [],
   is_active: true,
   ...freeJustificationDefaults,
 };

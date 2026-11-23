@@ -185,8 +185,14 @@ export const profileResolvers = {
   },
   Query: {
     me: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      if (!ctx.user) return null;
-      return userService.me(ctx.user.id);
+      // A console sign-in that still owes the Security Verification screen is
+      // not a session, but the console reads `me` to know whose it is — a null
+      // here would read as "signed out" and pop the recovery dialog over the
+      // screen. It is the one query a pending token may make, and it answers
+      // only about the caller's own account.
+      const id = ctx.user?.id ?? ctx.portalSecurity?.userId;
+      if (!id) return null;
+      return userService.me(id);
     },
     mySavedPods: async (
       _p: unknown,

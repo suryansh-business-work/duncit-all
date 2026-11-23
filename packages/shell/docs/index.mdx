@@ -185,6 +185,44 @@ so mWeb and the app sign in exactly as before. The code box is `TwoFactorCodeFor
 (`src/two-factor/two-factor-code/`), validated by `makeTwoFactorCodeSchema` from
 `@duncit/forms/schemas`.
 
+### Security Verification (the screen between sign-in and every console)
+
+Every console sign-in — and only a console sign-in: mWeb, the app and the Partner portal never see
+it — ends on **Security Verification & Location Tracking** before the console opens. It shows the
+yellow security warning, what the **server** read off this connection (the public IP through the
+trusted proxy, an *approximate* place derived from it, device, browser, time), the person's own
+position on an interactive map once the browser shares it, the security / access / privacy /
+location-notice / confidentiality / acceptable-use wording (served by the server, versioned, with
+links to the full Legal policies), and four confirmations that all start unticked. **Proceed &
+Store IP and Location** stays shut until the three acknowledgements hold **and** there is a
+consented location fix — or an administrator-approved alternative.
+
+It is a server rule, not a page the client may skip. A console sign-in mints a token with a `psv`
+claim that is `verified: false`; the server reads such a token as signed-out on **every** request,
+the notification stream and the sockets included, except the few operations the screen needs
+(`me`, `portalSecurityChallenge`, `submitPortalSecurityVerification`,
+`requestPortalSecurityException`). Completing the screen swaps it for a `verified: true` token that
+carries the policy version consented to. Nothing here replaces the role gate or two-step sign-in:
+both still run first.
+
+- **`PortalSecurityGate`** is mounted once by `mountPortal`, around the whole route tree. A pending
+  token sees the screen at whatever address it asked for (the login page excepted), and finishing
+  reloads at that same address — so a deep link lands where it was going. No portal registers a
+  route or wraps a page for it.
+- **Same session, no repeats.** A verified token is not asked again — until the next sign-in, or
+  until the wording changes (the version is the notice's own version plus a digest of the linked
+  Legal policies). `createApolloClient` carries a link that notices a verified token being refused
+  as signed-out and tells the gate, which asks the server whether the screen is owed again.
+- **A refusal is never a bypass.** Declining the location explains why it is needed and how to allow
+  it, and offers **Ask an administrator** (`AlternativeVerificationForm`, validated by
+  `makeSecurityExceptionSchema` in `@duncit/forms/schemas`). The request is recorded, an
+  administrator approves or rejects it in Tech → Security → Verification requests, and an approval
+  is spent by one verification within 24 hours.
+- **`SecurityLocationMap`** (exported) is the keyless embedded map with the accuracy written beside
+  it; the Tech portal's Login verifications detail view uses the same component.
+- The place worked out from an IP address is always labelled **Approximate** — it is never shown as
+  a GPS fix.
+
 ### Brand details: activity log and sales analytics
 
 A brand's details page shows the same two panels whether the brand owner opens it in the Partners
@@ -808,8 +846,10 @@ laptop.
 
 Work that outlives a page runs on the server as a **background job**, and the header shows it. Each
 `kind` has its own wording in the drawer and the finished snackbar: `BULK_DELETE` (rows),
-`AI_TRANSLATE` (keys), `MEDIA_ORGANIZE` (files) and `EMAIL_VERIFY` (the CRM Email Verifier's bulk
-CSV check — emails). A new kind needs an entry in `JobRow`'s `TITLE_COPY` / `FAILED_COPY` and
+`AI_TRANSLATE` (keys), `MEDIA_ORGANIZE` (files), `EMAIL_VERIFY` (the CRM Email Verifier's bulk
+CSV check — emails), `LEAD_QUALITY_RECALC` (CRM leads rescored with the published Lead Quality Score
+model — leads) and `LEAD_DISCOVERY` (a CRM Lead Research discovery — new leads found against its
+target; refused searches count as failed). A new kind needs an entry in `JobRow`'s `TITLE_COPY` / `FAILED_COPY` and
 `useJobSettlement`'s `NOTICE_COPY`. `AppShell` mounts `BackgroundJobsProvider` beside `WorkspaceProvider`; the
 header's `BackgroundJobsIndicator` renders nothing until the signed-in person has a job, then a
 ring with the percentage across every running job (rows done over rows in scope, so a 10-row job

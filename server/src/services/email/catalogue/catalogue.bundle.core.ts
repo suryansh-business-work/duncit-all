@@ -63,6 +63,11 @@ export const CORE_EMAIL_FALLBACK: Record<string, string> = {
     'This code expires in {{expiresMinutes}} minutes and can be used once. Never forward it — it unlocks every key and secret on the platform.',
   'email.envAccessOtp.ignore':
     'If nobody on your team asked for this, do not share the code and review who has Tech console access.',
+  'email.venueKitOtp.title': 'Verify your email for the Duncit Venue Kit',
+  'email.venueKitOtp.body':
+    'Thanks for your interest in the Duncit Venue Kit. Enter this code on the form to confirm this email address.',
+  'email.venueKitOtp.ignore':
+    'If you did not ask to hear about the Venue Kit, ignore this email. Nothing is registered without the code.',
 
   // --- Admin and partner access ---------------------------------------------
   'email.adminCredentials.title': 'Duncit Super Admin Credentials',

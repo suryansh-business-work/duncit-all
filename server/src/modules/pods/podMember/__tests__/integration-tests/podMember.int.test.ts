@@ -152,11 +152,55 @@ describe('podMemberService integration', () => {
 });
 
 describe('expired pod booking guard', () => {
-  it('rejects joinFree once the pod date has passed', async () => {
-    const past = await makePodDoc({ pod_date_time: new Date(Date.now() - 3_600_000) });
+  it('rejects joinFree once the pod end time has passed', async () => {
+    const past = await makePodDoc({
+      pod_date_time: new Date(Date.now() - 3 * 3_600_000),
+      pod_end_date_time: new Date(Date.now() - 3_600_000),
+    });
     await expect(
       podMemberService.joinFree(String(past._id), new Types.ObjectId().toString())
     ).rejects.toThrow(/already taken place/i);
+  });
+
+  it('rejects joinFree on a pod with no end once the default live window is over', async () => {
+    // No end set: the pod reads as over POD_LIVE_TAIL_MS (4h) after its start.
+    const past = await makePodDoc({ pod_date_time: new Date(Date.now() - 5 * 3_600_000) });
+    await expect(
+      podMemberService.joinFree(String(past._id), new Types.ObjectId().toString())
+    ).rejects.toThrow(/already taken place/i);
+  });
+
+  it('rejects joinFree on a pod Finance has already completed, even before its end', async () => {
+    const settled = await makePodDoc({
+      pod_date_time: new Date(Date.now() - 3_600_000),
+      pod_end_date_time: new Date(Date.now() + 3_600_000),
+      completed_at: new Date(),
+    });
+    await expect(
+      podMemberService.joinFree(String(settled._id), new Types.ObjectId().toString())
+    ).rejects.toThrow(/already taken place/i);
+  });
+
+  it('allows joinFree while the pod is ongoing (started, not yet ended)', async () => {
+    const ongoing = await makePodDoc({
+      pod_date_time: new Date(Date.now() - 3_600_000),
+      pod_end_date_time: new Date(Date.now() + 3_600_000),
+    });
+    const member = await podMemberService.joinFree(String(ongoing._id), new Types.ObjectId().toString());
+    expect(member.status).toBe('JOINED');
+  });
+
+  it('refuses joinFree on an ongoing pod that is already full', async () => {
+    const full = await makePodDoc({
+      pod_date_time: new Date(Date.now() - 3_600_000),
+      pod_end_date_time: new Date(Date.now() + 3_600_000),
+      no_of_spots: 1,
+      pod_attendees: [new Types.ObjectId()],
+    });
+    await expect(
+      podMemberService.joinFree(String(full._id), new Types.ObjectId().toString())
+    ).rejects.toThrow(/full/i);
+    expect(await PodMemberModel.countDocuments({ pod_id: full._id, status: 'JOINED' })).toBe(0);
   });
 
   it('rejects joinFree for a paid pod and is idempotent for a joined member', async () => {

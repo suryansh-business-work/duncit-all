@@ -1,5 +1,6 @@
 import { parse } from 'graphql';
 import { ClientError } from 'graphql-request';
+import { Platform } from 'react-native';
 
 import { config } from '@/constants/config';
 import { getAuthToken } from '@/services/auth-token';
@@ -205,6 +206,37 @@ describe('graphqlRequest', () => {
     await graphqlRequest(DOC);
     expect(ctorCalls[1]?.[1].headers?.['x-consent']).toBe('analytics');
     useConsentStore.setState({ choice: null });
+  });
+
+  it.each([
+    ['android', 'ANDROID'],
+    ['ios', 'IOS'],
+  ] as const)(
+    'names the %s store build so Admin > Users can tell the platforms apart',
+    async (os, header) => {
+      const originalOS = Platform.OS;
+      Platform.OS = os;
+      try {
+        mockRequest.mockResolvedValue({});
+        await graphqlRequest(DOC);
+        expect(ctorCalls[0]?.[1].headers?.['x-duncit-platform']).toBe(header);
+        expect(ctorCalls[0]?.[1].headers?.['x-duncit-surface']).toBe('NATIVE');
+      } finally {
+        Platform.OS = originalOS;
+      }
+    },
+  );
+
+  it('leaves the platform header off the web build, which a browser would preflight', async () => {
+    const originalOS = Platform.OS;
+    Platform.OS = 'web';
+    try {
+      mockRequest.mockResolvedValue({});
+      await graphqlRequest(DOC);
+      expect(ctorCalls[0]?.[1].headers).not.toHaveProperty('x-duncit-platform');
+    } finally {
+      Platform.OS = originalOS;
+    }
   });
 
   it('omits the auth header when no token is stored', async () => {

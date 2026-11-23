@@ -56,12 +56,20 @@ export type ResolutionState = (typeof RESOLUTION_STATES)[number];
 
 export type Highlight = 'GREEN' | 'YELLOW' | 'NONE';
 
+/** What the AI suggests Finance does with a case. Advice only — the refund rules and Razorpay's live answer decide. */
+export const AI_RECOMMENDATIONS = ['REFUND', 'DO_NOT_REFUND', 'NEEDS_REVIEW'] as const;
+export type AiRecommendation = (typeof AI_RECOMMENDATIONS)[number];
+
 /** Who did something, frozen at the moment they did it. */
 export interface ActorSnapshot {
   id: string;
   name: string;
   roles: string[];
 }
+
+/** The server acting on its own — the automatic refund of a capture that bought nothing.
+ * Same 'SYSTEM' marker the workflow already writes when it resolves a case itself. */
+export const SYSTEM_ACTOR: ActorSnapshot = { id: 'SYSTEM', name: 'SYSTEM', roles: [] };
 
 /**
  * Who reads and who acts. Reading follows Payment Logs' finance read set (and

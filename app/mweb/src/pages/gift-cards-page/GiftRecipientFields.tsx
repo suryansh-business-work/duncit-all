@@ -14,6 +14,8 @@ interface GiftRecipientFieldsProps {
   onName: (name: string) => void;
   message: string;
   onMessage: (message: string) => void;
+  /** A printed card: who it is for and the note on it — no inbox, no self/gift choice. */
+  printed?: boolean;
 }
 
 /** "For myself / send as a gift" — the recipient fields appear only when it is
@@ -28,6 +30,7 @@ export default function GiftRecipientFields({
   onName,
   message,
   onMessage,
+  printed = false,
 }: Readonly<GiftRecipientFieldsProps>) {
   const { t } = useTranslation();
   const emailHelper = emailError
@@ -36,7 +39,11 @@ export default function GiftRecipientFields({
 
   return (
     <Card data-testid="gift-recipient-fields" sx={{ p: 2 }}>
-      <SectionHeader testId="gift-recipient-fields-header" title={t('mweb.giftCards.forHeading')} />
+      <SectionHeader
+        testId="gift-recipient-fields-header"
+        title={printed ? t('mweb.giftCards.printedForHeading') : t('mweb.giftCards.forHeading')}
+      />
+      {!printed && (
       <ToggleButtonGroup
         exclusive
         fullWidth
@@ -49,8 +56,10 @@ export default function GiftRecipientFields({
         <ToggleButton data-testid="gift-card-for-myself" value="self">{t('mweb.giftCards.forMyself')}</ToggleButton>
         <ToggleButton data-testid="gift-card-for-someone" value="gift">{t('mweb.giftCards.forSomeone')}</ToggleButton>
       </ToggleButtonGroup>
-      {gift && (
+      )}
+      {(gift || printed) && (
         <Stack spacing={1.5} sx={{ mt: 2 }}>
+          {!printed && (
           <TextField
             data-testid="gift-card-recipient-email"
             required
@@ -65,6 +74,7 @@ export default function GiftRecipientFields({
               htmlInput: { 'data-testid': 'gift-card-recipient-email-input' }
             }}
           />
+          )}
           <TextField
             data-testid="gift-card-recipient-name"
             fullWidth

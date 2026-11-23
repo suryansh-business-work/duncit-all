@@ -51,34 +51,63 @@ describe('MyRentedItemsScreen', () => {
       { limit: 20, offset: 0 },
       { auth: true },
     );
-    // An open rental has no outcome yet, and a short page offers no "Load more".
-    expect(screen.queryByText(/Refund/)).toBeNull();
+    // An item still out: its deposit comes back after return, nothing reads refunded yet.
+    expect(screen.getByTestId('rented-item-r1-outcome')).toHaveTextContent(
+      /^Deposit refunded after return ₹\s?500$/,
+    );
+    expect(screen.queryByText(/^Refunded/)).toBeNull();
+    // A short page offers no "Load more".
     expect(screen.queryByTestId('rented-items-more')).toBeNull();
   });
 
-  it('says how each closed rental ended: refunded, refund due, deposit back at the venue, or kept for damage', async () => {
+  it('says where each refund stands, refunded only once Razorpay confirmed it', async () => {
     respond([
-      rental('paid', { status: 'RETURNED', refund_status: 'PAID', refund_due: 500 }),
-      rental('inpay', { status: 'CANCELLED', refund_status: 'IN_PAYMENT', refund_due: 800 }),
-      rental('due', { status: 'UNAVAILABLE', refund_status: 'DUE', refund_due: 300 }),
-      rental('kept', { status: 'DAMAGED', refund_status: 'NONE', damage_claim: 200 }),
-      rental('venue', {
-        status: 'DAMAGED',
-        refund_status: 'NONE',
-        damage_claim: 100,
-        deposit_at_venue: 400,
+      rental('out', { deposit_amount: 500, refund_state: 'AWAITING_RETURN' }),
+      rental('paid', {
+        status: 'RETURNED',
+        deposit_amount: 500,
+        refund_status: 'PAID',
+        refund_due: 500,
+        refund_state: 'REFUNDED',
+        refunded_amount: 500,
       }),
+      rental('inpay', { status: 'CANCELLED', refund_status: 'IN_PAYMENT', refund_due: 800 }),
+      rental('sending', {
+        status: 'RETURNED',
+        refund_status: 'DUE',
+        refund_due: 300,
+        refund_state: 'PROCESSING',
+        refund_outstanding: 300,
+      }),
+      // Hand-marked paid before Razorpay refunds, from a server that sends no state.
+      rental('legacy', { status: 'RETURNED', refund_status: 'PAID', refund_due: 450 }),
+      rental('kept', { status: 'DAMAGED', refund_status: 'NONE', damage_claim: 200 }),
     ]);
     renderWithProviders(<MyRentedItemsScreen />);
 
     await waitFor(() => expect(screen.getByTestId('rented-item-kept')).toBeOnTheScreen());
-    expect(screen.getByText(/Refunded ₹\s?500 · Refunded$/)).toBeOnTheScreen();
-    expect(screen.getByText(/Refunded ₹\s?800 · Refunded with the booking/)).toBeOnTheScreen();
-    expect(screen.getByText(/Refund due ₹\s?300 · Refund due/)).toBeOnTheScreen();
-    // Nothing owed through Duncit: no refund status tagged on.
-    expect(screen.getByText(/^₹\s?200 kept for damage$/)).toBeOnTheScreen();
-    // Settled at the venue: the cash the venue handed back, again with no gateway refund.
-    expect(screen.getByText(/^Deposit back at the venue ₹\s?400$/)).toBeOnTheScreen();
+    const outcome = (id: string) => screen.getByTestId(`rented-item-${id}-outcome`);
+    expect(outcome('out')).toHaveTextContent(/^Deposit refunded after return ₹\s?500$/);
+    expect(outcome('paid')).toHaveTextContent(/^Refunded ₹\s?500$/);
+    expect(outcome('inpay')).toHaveTextContent(/^Refunded ₹\s?800$/);
+    expect(outcome('sending')).toHaveTextContent(/^Refund of ₹\s?300 processing$/);
+    expect(outcome('legacy')).toHaveTextContent(/^Refund of ₹\s?450 under review$/);
+    expect(outcome('kept')).toHaveTextContent(/^₹\s?200 kept for damage$/);
+  });
+
+  it('never claims a refund before Razorpay confirms it, and says nothing when none is owed', async () => {
+    respond([
+      rental('sending', { status: 'RETURNED', refund_status: 'DUE', refund_due: 300 }),
+      rental('none', { status: 'RETURNED', refund_state: 'NOT_ELIGIBLE' }),
+    ]);
+    renderWithProviders(<MyRentedItemsScreen />);
+
+    await waitFor(() => expect(screen.getByTestId('rented-item-none')).toBeOnTheScreen());
+    // An older server's "refund due" row: owed and not yet confirmed.
+    expect(screen.getByTestId('rented-item-sending-outcome')).toHaveTextContent(
+      /^Refund of ₹\s?300 processing$/,
+    );
+    expect(screen.queryByTestId('rented-item-none-outcome')).toBeNull();
   });
 
   it('shows the empty state when nothing was ever rented', async () => {

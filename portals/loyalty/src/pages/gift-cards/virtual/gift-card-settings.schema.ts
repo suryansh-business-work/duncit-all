@@ -47,6 +47,11 @@ export const giftCardSettingsSchema = (t: Translator['t']) =>
       .trim()
       .min(1, t('finance.giftCards.validityLabel'))
       .regex(DIGITS, t('finance.giftCards.validityLabel')),
+  })
+  // The server refuses a minimum above the maximum; say so on the field first.
+  .refine((v) => !DIGITS.test(v.min_amount) || !DIGITS.test(v.max_amount) || Number(v.max_amount) >= Number(v.min_amount), {
+    path: ['max_amount'],
+    message: t('finance.giftCards.maxBelowMin'),
   });
 
 export const BLANK_GIFT_CARD_SETTINGS: GiftCardSettingsForm = {

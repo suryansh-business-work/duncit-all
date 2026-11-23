@@ -213,8 +213,6 @@ describe('CheckoutPage', () => {
             payment_id: 'PAY-123',
             invoice_no: 'INV-1',
             total: 1000,
-            ticket_discount_amount: 0,
-            ticket_discount_pct: 0,
             currency_symbol: '₹',
             status: 'SUCCESS',
             paid_at: '2026-08-01T10:05:00.000Z',

@@ -563,21 +563,56 @@ export interface OfferEarningsArgs {
   min_spots?: number;
   venue_amount_at_min?: number;
   venue_commission_on_top_at_min?: number;
+  /** How the offer pays the venue — picks which of the venue's minimum business amounts applies. */
+  venue_offer_model?: HostOfferModel;
+  /** The offer window in hours, rounded as the server's create guard rounds it. */
+  venue_hours?: number;
+}
+
+/** The booking an offer's money is for: how it pays the venue and its window (a `VenueOfferInput` is one). */
+export interface OfferBooking {
+  model: string | null | undefined;
+  start_at: string | null | undefined;
+  end_at: string | null | undefined;
+}
+
+const HOUR_MS = 3_600_000;
+
+/**
+ * What `potentialPodEarnings` is told about an offer's booking, so its verdict
+ * holds the pod to the venue's minimum business exactly as the create guard
+ * does: the offer's model (a FREE ask has no minimum) and its window in hours,
+ * to two places like the server's `hoursBetween`. Nothing for an option this
+ * build does not know — an unknown enum value would fail the whole query.
+ */
+export function offerBookingArgs(booking: Readonly<OfferBooking> | null | undefined): Pick<OfferEarningsArgs, 'venue_offer_model' | 'venue_hours'> {
+  if (!booking || !isHostOfferModel(booking.model)) return {};
+  const from = booking.start_at ? new Date(booking.start_at).getTime() : Number.NaN;
+  const to = booking.end_at ? new Date(booking.end_at).getTime() : Number.NaN;
+  const ms = to - from;
+  const hours = Number.isFinite(ms) && ms > 0 ? Math.round((ms / HOUR_MS) * 100) / 100 : 0;
+  return { venue_offer_model: booking.model, venue_hours: hours };
 }
 
 /**
  * What Create Pod sends `potentialPodEarnings` for an offer: the venue's money
  * and Duncit's commission on top at the pod's spots, and — when the venue's
  * minimum is below them — the same at that minimum, so the host sees what they
- * earn at the fewest guests too. The server does every sum.
+ * earn at the fewest guests too; with the offer's `booking`, also how it pays
+ * the venue and for how long (`offerBookingArgs`). The server does every sum.
  */
 export function offerEarningsArgs(
   quote: Readonly<OfferQuoteMoney>,
   quoteMin: Readonly<OfferQuoteMoney> | null | undefined,
   minGuests: number,
-  spots: number
+  spots: number,
+  booking?: Readonly<OfferBooking> | null
 ): OfferEarningsArgs {
-  const args: OfferEarningsArgs = { venue_amount: quote.venue_payout, venue_commission_on_top: quote.platform_fee };
+  const args: OfferEarningsArgs = {
+    venue_amount: quote.venue_payout,
+    venue_commission_on_top: quote.platform_fee,
+    ...offerBookingArgs(booking),
+  };
   const fewest = Math.floor(minGuests) || 0;
   if (!quoteMin || fewest <= 0 || fewest >= spots) return args;
   return {

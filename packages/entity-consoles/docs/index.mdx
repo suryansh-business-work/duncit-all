@@ -132,6 +132,15 @@ namespaces would be four copies of "Awaiting review" drifting apart one console
 at a time. The bundle is `DIRECTORY_BUNDLE` in `@duncit/i18n`, and each portal
 layers it over the shell's with `i18nFallback`.
 
+A console that renders copy beyond the directory namespace passes it to
+`mountDirectoryPortal({ i18nFallback })`; it is shallow-merged over
+`DIRECTORY_BUNDLE`, so its namespaces must be disjoint from `directory`. The
+venues console does this for its Venue Kit section:
+
+```tsx
+mountDirectoryPortal({ appConfig, spec: VENUES_SPEC, /* … */ i18nFallback: VENUE_KIT_BUNDLE });
+```
+
 ## Coverage
 
 `coverageGate: false`, and the vitest thresholds start at the floor. This is a

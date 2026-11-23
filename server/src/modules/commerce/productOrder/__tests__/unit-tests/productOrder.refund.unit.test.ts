@@ -129,7 +129,8 @@ describe('issueRefund', () => {
       account: 'acct_1',
     });
     expect(creditCoinsBack).toHaveBeenCalledWith(expect.anything(), 100, 'pod-shop-refund:ORD-1', req().reason);
-    expect(recordPaymentRefund).toHaveBeenCalledWith(expect.anything(), 900, req().reason, 'POD_SHOP_ADMIN_CANCEL');
+    // The refund log keeps the Razorpay refund id, so Finance finds it by the id the dashboard shows.
+    expect(recordPaymentRefund).toHaveBeenCalledWith(expect.anything(), 900, req().reason, 'POD_SHOP_ADMIN_CANCEL', 'rfnd_1');
     expect(out.finance_recorded).toBe(true);
     // attempted_at is stored before the call so a crash is recognisable
     expect(t.save).toHaveBeenCalledTimes(2);
@@ -156,6 +157,8 @@ describe('issueRefund', () => {
     expect(out).toMatchObject({ status: 'FAILED', error: 'Insufficient balance' });
     expect(out.refunded_at).toBeUndefined();
     expect(m(recordPaymentRefund).mock.calls[0][3]).toBe('POD_SHOP_ADMIN_CANCEL:MANUAL_PAYOUT');
+    // Nothing reached Razorpay, so there is no refund id to log.
+    expect(m(recordPaymentRefund).mock.calls[0][4]).toBeNull();
     // Finance hears at once, with the gateway's own reason.
     expect(alertStaff).toHaveBeenCalledWith(
       expect.objectContaining({ desk: 'FINANCE', lines: expect.arrayContaining(['Gateway said: Insufficient balance']) })

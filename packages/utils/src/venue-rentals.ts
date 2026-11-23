@@ -71,7 +71,7 @@ export interface RentalBookingRow {
   refund_status: RentalRefundStatus;
   refund_ref: string;
   refunded_at: string | null;
-  /** The deposit the venue hands the guest in cash at the venue when the item comes back. */
+  /** Cash a venue handed back at the venue: bookings closed before 2026-11-22 only (Duncit refunds deposits since). */
   deposit_at_venue: number;
   commission_pct: number;
   commission_amount: number;
@@ -80,6 +80,22 @@ export interface RentalBookingRow {
   marked_at: string | null;
   auto_released: boolean;
   created_at: string;
+  // Optional: older servers do not send them, and a client's generated types read nullable fields as optional.
+  /** Where the refund stands (see RentalRefundState). */
+  refund_state?: string | null;
+  /** What the booking is owed back. */
+  refund_eligible?: number | null;
+  /** Queued or in flight on Razorpay. */
+  refund_pending?: number | null;
+  /** Confirmed processed by Razorpay. */
+  refunded_amount?: number | null;
+  /** Owed and not yet confirmed. */
+  refund_outstanding?: number | null;
+  /** Why the refund waits for Finance. */
+  refund_review_reason?: string | null;
+  refund_gateway_status?: string | null;
+  /** DUNCIT_REFUND, or VENUE_CASH for older bookings. */
+  deposit_policy?: string | null;
 }
 
 export interface RentalVenueStats {
@@ -149,22 +165,23 @@ export function rentalClosedKey(catalogue: Pick<PodRentalCatalogue, 'open' | 'cl
 }
 
 /**
- * What the venue hands the guest at the venue when it marks an item back — the
- * twin of the server's `settleRentalOutcome`: the deposit less any damage
- * claim, or nothing when Finance made deposits non-refundable. Duncit pays the
- * whole deposit to the venue in its payout either way.
+ * The deposit Duncit refunds to the guest through Razorpay when the venue marks
+ * an item back — the twin of the server's `settleRentalOutcome`: the deposit
+ * less any damage claim, or nothing when Finance made deposits non-refundable
+ * (the venue keeps it then, in its payout).
  */
-export function rentalHandBack(deposit: number, claim: number, depositRefundable: boolean): number {
+export function rentalDepositRefund(deposit: number, claim: number, depositRefundable: boolean): number {
   if (!depositRefundable) return 0;
   const safeDeposit = Math.max(0, deposit);
   const safeClaim = Math.min(safeDeposit, Math.max(0, Number.isFinite(claim) ? claim : 0));
   return Math.round((safeDeposit - safeClaim) * 100) / 100;
 }
 
+/** @deprecated The deposit is no longer handed back at the venue: use {@link rentalDepositRefund}. Same math. */
+export const rentalHandBack = rentalDepositRefund;
+
 /** Only a booking still out can be marked returned or damaged. */
 export const canMarkRental = (row: { status: unknown }) => String(row.status) === 'BOOKED';
-/** Only a refund owed can be recorded as paid. */
-export const canRecordRentalRefund = (row: { refund_status: unknown }) => String(row.refund_status) === 'DUE';
 
 /** The most of one item a booking may take: the venue's per-guest limit for every seat, never past what is left. */
 export function rentalMaxQuantity(item: Pick<PodRentalItem, 'available' | 'per_guest_limit'>, seats: number): number {
@@ -268,9 +285,12 @@ export const rentalSelections = (picks: Readonly<Record<string, number>>): Renta
 
 const ITEM_FIELDS = 'id name description images unit rate deposit available per_guest_limit';
 
-const BOOKING_FIELDS = `id currency_symbol payment_ref pod_id pod_title guest_name venue_id item_id name image_url unit rate units quantity
+/** Every field of a RentalBooking row, as every rental document selects it. */
+export const RENTAL_BOOKING_FIELDS = `id currency_symbol payment_ref pod_id pod_title guest_name venue_id item_id name image_url unit rate units quantity
   rent_amount deposit_amount status damage_claim damage_note refund_due refund_status refund_ref refunded_at
-  deposit_at_venue commission_pct commission_amount venue_amount release_id marked_at auto_released created_at`;
+  deposit_at_venue commission_pct commission_amount venue_amount release_id marked_at auto_released created_at
+  refund_state refund_eligible refund_pending refunded_amount refund_outstanding refund_review_reason refund_gateway_status deposit_policy`;
+const BOOKING_FIELDS = RENTAL_BOOKING_FIELDS;
 
 export const POD_RENTALS_QUERY = `query PodRentals($pod_id: ID!) {
   podRentals(pod_id: $pod_id) { open closed_reason hours currency_symbol venue_terms_html items { ${ITEM_FIELDS} } }
@@ -298,10 +318,6 @@ export const VENUE_RENTAL_STATS_QUERY = `query VenueRentalStats($venue_id: ID!) 
 
 export const MARK_RENTAL_BOOKING_MUTATION = `mutation MarkRentalBooking($id: ID!, $input: MarkRentalBookingInput!) {
   markRentalBooking(id: $id, input: $input) { ${BOOKING_FIELDS} }
-}`;
-
-export const MARK_RENTAL_REFUNDED_MUTATION = `mutation MarkRentalRefunded($id: ID!, $reference: String!) {
-  markRentalRefunded(id: $id, reference: $reference) { ${BOOKING_FIELDS} }
 }`;
 
 /* ------------------------------------------------------------------ *

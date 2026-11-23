@@ -22,7 +22,9 @@
  */
 import { PodModel } from './pod.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
+import { sendSoon } from '@modules/finance/payment/payment.gatewayRefund';
 import { settingsService } from '@modules/platform/settings/settings.service';
+import { returnCancellationMoney } from './pod.refundMoney';
 import { sendPodRefundEmail } from '@services/email/email.service';
 import { logs } from '@observability/log';
 import { startClusterJob } from '@utils/clusterJob';
@@ -88,6 +90,8 @@ export async function holdRefundForPayment(input: {
   releaseAt: Date;
   initiatedBy: string;
   initiatorId: string;
+  /** The share of the ticket money refunded — coins come back in proportion at release. */
+  pct?: number;
 }): Promise<boolean> {
   const claimed = await PaymentModel.findOneAndUpdate(
     { _id: input.paymentId, status: 'SUCCESS', 'metadata.refund_hold': { $ne: true } },
@@ -95,6 +99,7 @@ export async function holdRefundForPayment(input: {
       $set: {
         'metadata.refund_hold': true,
         'metadata.refund_hold_amount': round2(input.amount),
+        'metadata.refund_hold_pct': input.pct ?? 100,
         'metadata.refund_hold_reason': input.reason,
         'metadata.refund_hold_release_at': input.releaseAt,
         'metadata.refund_hold_initiated_by': input.initiatedBy,
@@ -163,6 +168,17 @@ async function releaseHeldRefund(payment: any): Promise<boolean> {
     }
   );
   if (!flipped) return false;
+  // The money moves now, not at cancellation: the Razorpay refund and the
+  // coins, keyed like the immediate path so a pod cancelled twice pays once.
+  const record = await returnCancellationMoney({
+    payment: flipped,
+    refund: amount,
+    pct: Number(meta.refund_hold_pct ?? 100),
+    reason: meta.refund_hold_reason ?? '',
+    initiatedBy: meta.refund_hold_initiated_by ?? 'SYSTEM',
+    initiatorId: meta.refund_hold_initiator_id ?? '',
+  });
+  sendSoon([record]);
   if (amount <= 0) return true;
   // Best-effort, exactly as the immediate path treats it: the money has moved
   // whether or not the note about it lands.

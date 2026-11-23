@@ -16,7 +16,7 @@
  */
 import { GraphQLError } from 'graphql';
 import { settingsService } from '@modules/platform/settings/settings.service';
-import { MAX_OFFER_RATE, VENUE_OFFER_MODELS, type VenueOfferModel } from '@modules/venues/venueOffer/venueOffer.types';
+import { FREE_OFFER_MODEL, MAX_OFFER_RATE, VENUE_OFFER_MODELS, type VenueOfferModel } from '@modules/venues/venueOffer/venueOffer.types';
 
 /** Roughly what the venue hopes to earn on one pricing basis, in rupees. */
 export interface IVenueMinBusiness {
@@ -108,6 +108,40 @@ export function assertOfferMeetsMinSpend(minSpend: unknown, model: unknown, offe
     `This venue's minimum spend is ${min} per booking — your offer comes to ${amount}, ${shortfall} short. Raise your offer`,
     { extensions: { code: 'BAD_USER_INPUT', reason: 'BELOW_MIN_SPEND', field: 'venue_offer_rate', min, offered: amount, shortfall } }
   );
+}
+
+/** How a booking pays the venue and how big it is — what its minimum reads. */
+export interface BookingShape {
+  /** The basis the venue is paid on; null/unknown = only the minimum spend applies. */
+  model?: string | null;
+  /** People at the venue — the pod's spots, the host's seat included. */
+  guests: number;
+  /** Hours the venue is booked for. */
+  hours: number;
+}
+
+/**
+ * The least one booking must bring this venue, in rupees: the larger of its
+ * minimum spend and the business amount for the way the booking pays — per
+ * guest × the guests, per hour × the hours, or the per-booking amount. A basis
+ * with no amount, an unknown basis and a free ask add nothing; 0 = no minimum.
+ *
+ * The same two settings the host's offer is held to (Partners > Fees & Minimum
+ * Spend), stated as one booking total so a pod's ticket money can be held to it
+ * too (podViability: ticket money − Duncit's commission must be MORE).
+ */
+export function venueBookingMinimum(
+  offers: Partial<IVenueOfferSettings> | null | undefined,
+  shape: BookingShape
+): number {
+  if (shape.model === FREE_OFFER_MODEL) return 0;
+  const pub = toOfferSettingsPub(offers);
+  const row = isModel(shape.model) ? pub.min_business.find((entry) => entry.model === shape.model) : undefined;
+  let basisTotal = 0;
+  if (row?.model === 'FLAT') basisTotal = row.amount;
+  else if (row?.model === 'PER_GUEST') basisTotal = row.amount * Math.max(0, Math.floor(shape.guests) || 0);
+  else if (row?.model === 'PER_HOUR') basisTotal = row.amount * Math.max(0, Number(shape.hours) || 0);
+  return round2(Math.max(pub.min_spend, basisTotal));
 }
 
 /**

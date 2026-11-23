@@ -3,13 +3,13 @@
  * update, host resubmit and update, spot limits, status posts and meeting-link
  * generation. Composed into `podService` in pod.service.ts.
  */
-import { slotVenueCharge } from '@modules/venues/venueSlot/slotCharge';
 import { randomInt } from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { assertSpotsWithinLimits, resolveSpotLimits, type PodSpotLimits } from './pod.capacity';
 import { PodModel, type PodVenueApproval } from './pod.model';
 import { breakdownService } from '@modules/finance/finance/breakdown.service';
+import { assertPortalEditEconomics, editedPodView, minBusinessForBooking, venueCostForCreate } from './pod.economics';
 import { sendPodUpdatedEmail } from '@services/email/email.service';
 import { notifyPodRescheduled, podWhenWhereChanged } from './pod.rescheduleNotify';
 import { moderationService } from '@modules/moderation/moderation.service';
@@ -61,7 +61,6 @@ import {
   applyRerouteState,
   applyResubmitPhysicalVenue,
   applySmartIncentiveForUpdate,
-  applyTicketDiscountForUpdate,
   claimRerouteSlot,
   holdOrBookForResubmit,
   placeOfferForResubmit,
@@ -70,7 +69,6 @@ import {
   prepareSlotReroute,
   smartIncentiveForCreate,
   snapshotBooking,
-  ticketDiscountForCreate,
 } from './pod.edit';
 
 const MEET_ALPHABET = 'abcdefghijklmnopqrstuvwxyz';
@@ -80,21 +78,6 @@ function randomAlpha(length: number): string {
   let out = '';
   for (let i = 0; i < length; i += 1) out += MEET_ALPHABET[randomInt(MEET_ALPHABET.length)];
   return out;
-}
-
-type CreateSlot = Parameters<typeof slotVenueCharge>[0] & { price_snapshot?: { total: number } | null };
-
-/**
- * What the venue costs a new pod, for the economics guard: a venue offer, or a
- * held booking whose price was already agreed (an Auto Pod or Pod Request
- * window), its whole quote — venue price + Duncit's commission on top, both off
- * the host's side; any other slot by its pricing mode, a per-person slot at a
- * full pod.
- */
-function venueCostForCreate(offer: { quote: { total: number } } | null, slotDoc: CreateSlot | null, spots: number): number {
-  if (offer) return offer.quote.total;
-  if (slotDoc?.price_snapshot) return slotDoc.price_snapshot.total;
-  return slotDoc ? slotVenueCharge(slotDoc, { pax: spots }).total : 0;
 }
 
 /** Whether an edit's start is given and differs from the stored one. */
@@ -158,7 +141,6 @@ export const podWriteMethods = {
       userId: audit?.actorUserId,
       source: audit?.source ?? 'ADMIN',
     });
-    const ticketDiscount = await ticketDiscountForCreate(input);
     const smartIncentive = await smartIncentiveForCreate(input);
 
     const { slotDoc, needsVenueApproval } = await resolveSlotForCreate(
@@ -190,6 +172,17 @@ export const podWriteMethods = {
       // held booking's agreed price, already include it. A held slot from before
       // agreed prices (no snapshot) settles as it always did.
       commissionOnTop: !offer && !!slotDoc && !slotDoc.price_snapshot && !autoPodSlot && !partnerRequestSlot,
+      // ...and bring the venue more than its minimum business after Duncit's
+      // commission. Not on a window the venue itself named and priced (an Auto
+      // Pod or a Pod Request) — the venue's minimums are for hosts' terms.
+      minBusiness:
+        autoPodSlot || partnerRequestSlot
+          ? 0
+          : await minBusinessForBooking(
+              venueLocation.venue_id,
+              { offer, slot: slotDoc, start: input.pod_date_time, end: input.pod_end_date_time },
+              input.no_of_spots ?? 0
+            ),
     });
     const clubCategory = await resolveClubCategory(input.club_id);
     await assertMeetsMinPax(clubCategory, input.no_of_spots ?? 0);
@@ -258,7 +251,6 @@ export const podWriteMethods = {
         products_enabled: !!input.products_enabled,
         product_requests: productRequests,
         product_cost_total: productRequests.reduce((sum, item) => sum + item.total_cost, 0),
-        ...ticketDiscount,
         ...smartIncentive,
         // A pod awaiting the venue's answer stays offline until it is accepted.
         is_active: venueState.pending ? false : input.is_active ?? true,
@@ -364,6 +356,15 @@ export const podWriteMethods = {
       );
     }
     delete input.free_justification;
+    // The same economics guard as create, on the pod as this edit would leave
+    // it and its new booking. Before anything is written — the edit core moves
+    // product stock — so a refused edit keeps the stored pod and its old slot.
+    // An amount the pod's type does not allow is an input error, answered as
+    // one — not as an earnings verdict on a price that could never be saved.
+    if (input.pod_type !== undefined || input.pod_amount !== undefined) {
+      validateAmount(input.pod_type ?? doc.pod_type, input.pod_amount ?? doc.pod_amount);
+    }
+    await assertPortalEditEconomics(editedPodView(doc, input, reroute), input, reroute, doc);
     await applyPodEditCore(doc, input);
     if (reroute) applyRerouteState(doc, input, reroute);
     await doc.save();
@@ -467,6 +468,16 @@ export const podWriteMethods = {
       venueId: resubmitVenueId,
       venueAmount: venueCostForCreate(offer, slotDoc, input.no_of_spots ?? doc.no_of_spots ?? 0),
       commissionOnTop: !offer && !!slotDoc,
+      minBusiness: await minBusinessForBooking(
+        resubmitVenueId,
+        {
+          offer,
+          slot: slotDoc,
+          start: input.pod_date_time ?? doc.pod_date_time,
+          end: input.pod_end_date_time ?? doc.pod_end_date_time,
+        },
+        input.no_of_spots ?? doc.no_of_spots ?? 0
+      ),
     });
     // A pod resubmitted free says why (again, if it had no justification yet).
     const freeJustification = freePodJustification(
@@ -575,10 +586,8 @@ export const podWriteMethods = {
       await assertSpotsWithinLimits(doc, input.no_of_spots, { canDecrease: false });
       doc.no_of_spots = Math.floor(Number(input.no_of_spots) || 0);
     }
-    // The host may set or change the multi-ticket discount on a live pod; it is
-    // judged on the spots just applied above. Likewise the Smart Incentive —
-    // an offer a member already unlocked keeps its frozen percentage.
-    await applyTicketDiscountForUpdate(doc, input);
+    // The host may set or change the Smart Incentive on a live pod — an offer a
+    // member already unlocked keeps its frozen percentage.
     await applySmartIncentiveForUpdate(doc, input);
     await doc.save();
     await podAuditService.record({ pod: doc, action: 'UPDATE', source: 'HOST', actorUserId: userId, before });

@@ -27,6 +27,7 @@ export const WIDGET_LOADERS: Record<string, () => Promise<CmsWidget>> = {
   faq: () => import('./faq'),
   'help-center': () => import('./help-center'),
   'grievance-form': () => import('./grievance-form'),
+  'venue-kit-interest': () => import('./venue-kit-interest'),
   'policy-list': () => import('./policy-list'),
   'policy-reader': () => import('./policy-reader'),
   'site-nav': () => import('./site-nav'),

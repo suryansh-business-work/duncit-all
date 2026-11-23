@@ -129,6 +129,7 @@ export default function AdminPodEditorPage({
             dateFormatter={fmt}
             slotLabels={slotLabels}
             editingPodDocId={editor.editingPodDocId}
+            podClosed={editor.podClosed}
             onSubmit={editor.submit}
             onReady={ai.onReady}
             hideDraftOnEdit

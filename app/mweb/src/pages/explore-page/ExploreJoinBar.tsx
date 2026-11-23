@@ -8,6 +8,8 @@ import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   expired: boolean;
+  /** Started, not over: still joinable, so Go stays and the bar says so. */
+  ongoing?: boolean;
   /** "₹199 · Confirm with UPI" / "Free spot" — the one line a live pod shows. */
   subtitle: string;
   goAriaLabel: string;
@@ -19,9 +21,10 @@ interface Props {
 /**
  * The pill pinned above the bottom nav on every reel: the price line and a
  * green Go, or — for a pod that has already run — the expired notice with no
- * CTA. Native twin: components/explore/ExploreJoinBar.
+ * CTA. A running pod keeps Go under a "Pod ongoing" line.
+ * Native twin: components/explore/ExploreJoinBar.
  */
-export default function ExploreJoinBar({ expired, subtitle, goAriaLabel, onGo, podId }: Readonly<Props>) {
+export default function ExploreJoinBar({ expired, ongoing = false, subtitle, goAriaLabel, onGo, podId }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
     <Stack
@@ -67,9 +70,20 @@ export default function ExploreJoinBar({ expired, subtitle, goAriaLabel, onGo, p
         </Box>
       ) : (
         <>
-          <Typography sx={{ minWidth: 0, flex: 1, fontSize: '0.875rem', fontWeight: 600 }} noWrap>
-            {subtitle}
-          </Typography>
+          {ongoing ? (
+            <Box sx={{ minWidth: 0, flex: 1 }} data-testid="explore-join-ongoing">
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, lineHeight: 1.15 }} noWrap>
+                {t('mweb.podDetails.podOngoing')}
+              </Typography>
+              <Typography variant="caption" sx={{ opacity: 0.82 }} noWrap>
+                {subtitle}
+              </Typography>
+            </Box>
+          ) : (
+            <Typography sx={{ minWidth: 0, flex: 1, fontSize: '0.875rem', fontWeight: 600 }} noWrap>
+              {subtitle}
+            </Typography>
+          )}
           <DuncitButton
             data-testid={`reel-go-${podId}`}
             variant="contained"

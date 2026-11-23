@@ -34,31 +34,21 @@ interface ReceiptPayment {
   invoice_no?: string | null;
   paid_at?: string | null;
   created_at?: string | null;
-  /** Frozen on the payment at checkout; absent or 0 when no tier applied. */
-  ticket_discount_amount?: number | null;
   /** Frozen on the payment at checkout; absent or 0 when no Smart Incentive applied. */
   smart_incentive_amount?: number | null;
 }
 
-/** The receipt card: what was paid, when, the ids — and the multi-ticket
- * discount and Smart Incentive the booking got, when it got them. */
+/** The receipt card: what was paid, when, the ids — and the Smart Incentive
+ * the booking got, when it got one. */
 export function SuccessReceiptCard({ payment }: Readonly<{ payment: ReceiptPayment }>) {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
   const paidAt = payment.paid_at ?? payment.created_at;
-  const ticketDiscount = Number(payment.ticket_discount_amount) || 0;
   const smartIncentive = Number(payment.smart_incentive_amount) || 0;
   return (
     <Box sx={{ ...SURFACE_SX, p: 2, textAlign: 'left' }}>
       <Stack spacing={1} divider={<Divider flexItem />}>
         <SuccessRow label={t('mweb.checkout.amountPaid')} value={formatMoney(payment.currency_symbol, payment.total)} bold />
-        {ticketDiscount > 0 && (
-          <SuccessRow
-            testId="checkout-success-ticket-discount"
-            label={t('mweb.checkout.ticketDiscountSaved')}
-            value={`− ${formatMoney(payment.currency_symbol, ticketDiscount)}`}
-          />
-        )}
         {smartIncentive > 0 && (
           <SuccessRow
             testId="checkout-success-smart-incentive"

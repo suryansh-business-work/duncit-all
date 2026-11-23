@@ -1,9 +1,12 @@
 import { useId, useState } from 'react';
+import { useQuery } from '@apollo/client/react';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { Dialog, DialogContent, DialogTitle, Divider, Link, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitIconButton } from '@duncit/buttons';
 
-import { GOOGLE_CLIENT_ID, SIGNUP_URL } from '../../config/env';
+import { SIGNUP_URL } from '../../config/env';
+import { GOOGLE_SIGN_IN_CONFIG } from '../../graphql/settings';
 import { useStoreSession } from '../../app/providers/SessionProvider';
 import { useStoreT } from '../../i18n';
 import { GoogleSignInButton } from './GoogleSignInButton';
@@ -21,6 +24,10 @@ export function SignInDialog() {
   const { dialogOpen, closeSignIn, completeSignIn } = useStoreSession();
   const [method, setMethod] = useState<Method>('PASSWORD');
   const titleId = useId();
+  // Asked only once the dialog opens, so a page view (and its server render)
+  // never waits on it. Blank hides "Continue with Google" entirely.
+  const { data } = useQuery(GOOGLE_SIGN_IN_CONFIG, { fetchPolicy: 'cache-first', skip: !dialogOpen });
+  const googleClientId = data?.publicClientConfig.google_client_id.trim() ?? '';
   return (
     <Dialog open={dialogOpen} onClose={closeSignIn} aria-labelledby={titleId} fullWidth maxWidth="xs">
       <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', pr: 1 }}>
@@ -48,11 +55,11 @@ export function SignInDialog() {
           ) : (
             <OtpSignInForm onToken={completeSignIn} />
           )}
-          {GOOGLE_CLIENT_ID ? (
-            <>
+          {googleClientId ? (
+            <GoogleOAuthProvider clientId={googleClientId}>
               <Divider>{t('ecommStore.auth.or')}</Divider>
               <GoogleSignInButton onToken={completeSignIn} />
-            </>
+            </GoogleOAuthProvider>
           ) : null}
           <Typography variant="body2" sx={{ textAlign: 'center' }}>
             {t('ecommStore.auth.newHere')}{' '}

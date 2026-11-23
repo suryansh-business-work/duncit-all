@@ -13,9 +13,7 @@ import { createPodSeed } from '../createPodSeed';
 import { hydrateDraft, serializeDraft } from '../create-pod/create-pod.draft';
 import { blankCreatePodForm, type CreatePodFormValues } from '../create-pod/create-pod.types';
 import { stepForField, stepSubtitleKey, stepTitleKey } from '../create-pod/create-pod.steps';
-import { refineTicketDiscount } from '../create-pod/create-pod.ticket-discount';
 import { refinePublish } from '../create-pod/create-pod.refine';
-import { toTierFieldErrors } from '../create-pod/fields/tier-errors';
 import { offerOfForm, useOfferQuote } from '../create-pod/useOfferQuote';
 import ChipArrayField from '../create-pod/fields/ChipArrayField';
 import HashtagChipsField, { parseHashtags } from '../create-pod/fields/HashtagChipsField';
@@ -288,55 +286,12 @@ describe('stepper step helpers', () => {
   });
 });
 
-describe('ticket discount and publish refinements', () => {
-  const run = (values: Partial<CreatePodFormValues>, maxPct = 50) => {
-    const issues: Array<{ path: unknown[]; message: string }> = [];
-    const ctx = { addIssue: (issue: { path: unknown[]; message: string }) => issues.push(issue) } as unknown as z.RefinementCtx;
-    refineTicketDiscount({ ...blankCreatePodForm, ...values }, ctx, fallbackT, maxPct);
-    return issues;
-  };
-
-  it('does not check a free pod, nor a paid pod whose tiers are fine or switched off', () => {
-    expect(run({ pod_type: 'FREE', ticket_discount_enabled: true, ticket_discount_tiers: [] })).toEqual([]);
-    expect(run({ pod_type: 'PAID', ticket_discount_enabled: false })).toEqual([]);
-    expect(run({ pod_type: 'PAID', no_of_spots: 10, ticket_discount_enabled: true, ticket_discount_tiers: [{ min_tickets: 2, discount_pct: 10 }] })).toEqual([]);
-  });
-
-  it('places a list-level problem on the list and a row problem on its row', () => {
-    const none = run({ pod_type: 'PAID', no_of_spots: 10, ticket_discount_enabled: true, ticket_discount_tiers: [] });
-    expect(none.length).toBeGreaterThan(0);
-    expect(none[0].path).toEqual(['ticket_discount_tiers']);
-    const tooHigh = run({ pod_type: 'PAID', no_of_spots: 10, ticket_discount_enabled: true, ticket_discount_tiers: [{ min_tickets: 2, discount_pct: 99 }] });
-    expect(tooHigh[0].path).toEqual(['ticket_discount_tiers', 0, 'discount_pct']);
-    expect(tooHigh[0].message.length).toBeGreaterThan(0);
-  });
-
+describe('publish refinements', () => {
   it('refuses a pod type the stepper does not offer', () => {
     const issues: Array<{ path: unknown[] }> = [];
     const ctx = { addIssue: (issue: { path: unknown[] }) => issues.push(issue) } as unknown as z.RefinementCtx;
     refinePublish({ ...blankCreatePodForm, pod_type: 'OTHER' as never }, ctx, fallbackT);
     expect(issues.some((i) => i.path[0] === 'pod_type')).toBe(true);
-  });
-});
-
-describe('toTierFieldErrors', () => {
-  it('has nothing for no error', () => {
-    expect(toTierFieldErrors(undefined, 2)).toBeUndefined();
-  });
-
-  it('reads a list message from the node or its root, and row messages by index', () => {
-    expect(toTierFieldErrors({ message: 'List bad' }, 0)).toEqual({ list: 'List bad', rows: [] });
-    expect(toTierFieldErrors({ root: { message: 'Root bad' } }, 1)).toEqual({ list: 'Root bad', rows: [{ min_tickets: undefined, discount_pct: undefined }] });
-    expect(
-      toTierFieldErrors({ '0': { min_tickets: { message: 'min' } }, '1': { discount_pct: { message: 'pct' } } }, 3)
-    ).toEqual({
-      list: undefined,
-      rows: [
-        { min_tickets: 'min', discount_pct: undefined },
-        { min_tickets: undefined, discount_pct: 'pct' },
-        { min_tickets: undefined, discount_pct: undefined },
-      ],
-    });
   });
 });
 

@@ -151,6 +151,8 @@ export type RootStackParamList = {
   VenueFoodCoupons: undefined;
   /** Venue Options → Rented Items. */
   VenueRentedItems: undefined;
+  /** Venue Options → Rented Items → one rental: guest, refund, proofs and activity. */
+  VenueRentalBookingDetail: { id: string };
   /** Host Options → Publish Your Host Page, Host Share, Your Categories. */
   HostPublish: undefined;
   HostShare: undefined;
@@ -220,6 +222,7 @@ export type RootStackParamList = {
   GiftCardCheckout: { selection: GiftCardSelection };
   GiftCardRedeem: undefined;
   GiftCardClaim: { code: string };
+  GiftCardOrder: { orderNo: string };
   ProductDetail: { productId: string };
   HostsVenues: undefined;
   /** Pod rooms and the people you follow. Both were bottom tabs; they are
@@ -306,6 +309,7 @@ export type MenuStackRoute = Exclude<
   | 'ProductDetail'
   | 'GiftCardCheckout'
   | 'GiftCardClaim'
+  | 'GiftCardOrder'
   | 'ClubPods'
   | 'ClubPodEditor'
   | 'ClubPodEdit'

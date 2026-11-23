@@ -9,8 +9,16 @@ jest.mock('@modules/finance/giftcard/giftcard.service', () => ({
   giftcardService: {
     assertPurchaseEnabled: jest.fn().mockResolvedValue(undefined),
     purchaseFacts: jest.fn(),
-    issueForPayment: jest.fn().mockResolvedValue({ _id: 'gc-doc-1', code: 'DUN-GC-TESTCODE' }),
-    emailForPayment: jest.fn().mockResolvedValue({ to: 'priya@x.com', cardId: 'gc-doc-1' }),
+    // The order leg issues through issueAllForPayment and stores the card ids
+    // on the gift card order, so the stub answers a real ObjectId.
+    issueAllForPayment: jest
+      .fn()
+      .mockResolvedValue([{ _id: '64b0c0ffee00000000000001', code: 'DUN-GC-TESTCODE' }]),
+    emailForPayment: jest.fn().mockResolvedValue({
+      to: 'priya@x.com',
+      cardId: '64b0c0ffee00000000000001',
+      cardIds: ['64b0c0ffee00000000000001'],
+    }),
   },
 }));
 

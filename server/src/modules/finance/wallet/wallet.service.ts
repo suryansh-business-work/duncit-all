@@ -219,7 +219,17 @@ export const withdrawalPub = (w: IWalletWithdrawal) => ({
 
 /** Allowlists for the shared table engine (withdrawalRequestsTable — DUNCIT TABLE CONTRACT v1). */
 const WITHDRAWAL_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['withdrawal_id', 'beneficiary_name', 'beneficiary_email', 'upi_id', 'account_number'],
+  // The RazorpayX payout id and the bank's UTR find a withdrawal too — the ids
+  // the Razorpay dashboard and the payee's bank statement show.
+  searchFields: [
+    'withdrawal_id',
+    'beneficiary_name',
+    'beneficiary_email',
+    'upi_id',
+    'account_number',
+    'payout.razorpay_payout_id',
+    'payout.utr',
+  ],
   sortFields: {
     beneficiary_name: 'beneficiary_name',
     amount: 'amount',

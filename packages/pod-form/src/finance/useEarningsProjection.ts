@@ -1,13 +1,15 @@
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { useDebouncedValue } from '@duncit/ui';
-import type { EarningsWaterfall } from '@duncit/utils';
+import type { EarningsWaterfall, PodViabilityVerdict } from '@duncit/utils';
 
 /**
  * The admin consoles' earnings projection. The server bills the PAYABLE spots
  * (total − 1, the host's own seat is free), prices at the chosen host's rates
  * — or the platform defaults with no host chosen, which is what an Auto Pod
  * template is judged on — and reads the venue's money from the slot itself.
+ * `viable` is the create/edit guard's own verdict at every spot, with the
+ * venue's minimum business and the lowest ticket price that works.
  * No money math happens on this side.
  */
 export const ADMIN_POTENTIAL_POD_EARNINGS = gql`
@@ -28,6 +30,10 @@ export const ADMIN_POTENTIAL_POD_EARNINGS = gql`
       total_spots
       payable_spots
       venue_budget
+      viable
+      viability_reason
+      minimum_viable_ticket_price
+      venue_min_business
       waterfall {
         amount
         gst_pct
@@ -52,7 +58,7 @@ export const ADMIN_POTENTIAL_POD_EARNINGS = gql`
   }
 `;
 
-export interface EarningsProjection {
+export interface EarningsProjection extends PodViabilityVerdict {
   total_spots: number;
   payable_spots: number;
   /** The highest venue slot price this pod can still carry. */
@@ -78,6 +84,12 @@ export interface EarningsProjectionState {
   stale: boolean;
   /** Nothing to project yet: no price, or only the host's own free seat. */
   idle: boolean;
+  /** The request failed: there is no projection to judge the pod on. */
+  failed: boolean;
+  /** The projection answers exactly the inputs on the form — not loading, not stale, no error. */
+  fresh: boolean;
+  /** Asks the server again after a failure. */
+  retry: () => void;
 }
 
 // Typing a price fires one request after the keys stop, not one per key.
@@ -90,7 +102,8 @@ export function useEarningsProjection(input: Readonly<EarningsProjectionInput>):
   const noOfSpots = useDebouncedValue(input.noOfSpots, DEBOUNCE_MS);
   // A 1-spot pod is the host's own free seat — there is nothing to bill.
   const idle = podAmount <= 0 || noOfSpots <= 1;
-  const { data, loading } = useQuery<{ adminPotentialPodEarnings: EarningsProjection }>(
+  const skip = idle || !!input.skip;
+  const { data, loading, error, refetch } = useQuery<{ adminPotentialPodEarnings: EarningsProjection }>(
     ADMIN_POTENTIAL_POD_EARNINGS,
     {
       variables: {
@@ -100,14 +113,23 @@ export function useEarningsProjection(input: Readonly<EarningsProjectionInput>):
         venue_id: input.venueId,
         venue_slot_id: input.venueSlotId,
       },
-      skip: idle || !!input.skip,
+      skip,
       fetchPolicy: 'cache-and-network',
     },
   );
+  const projection = data?.adminPotentialPodEarnings;
+  const stale = podAmount !== input.podAmount || noOfSpots !== input.noOfSpots;
+  const settled = !skip && !stale && !loading;
   return {
-    projection: data?.adminPotentialPodEarnings,
+    projection,
     loading,
-    stale: podAmount !== input.podAmount || noOfSpots !== input.noOfSpots,
+    stale,
     idle,
+    failed: settled && Boolean(error),
+    fresh: settled && !error && projection !== undefined,
+    retry: () => {
+      // A second failure lands in `error` again, which the panel shows.
+      refetch().catch(() => undefined);
+    },
   };
 }

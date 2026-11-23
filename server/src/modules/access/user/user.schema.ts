@@ -155,6 +155,21 @@ export const userTypeDefs = gql`
     data_issues: [UserDataIssue!]!
     "The last calendar day (UTC, yyyy-MM-dd) the app saw this account (staff only); null when never."
     last_active_on: String
+      @deprecated(reason: "Read last_activity_at: it is a full timestamp, covers every signed-in request and sorts.")
+    """
+    When this account last used Duncit while signed in, on Android, iOS or the
+    web (ISO 8601, staff only). Null until its first tracked request.
+    """
+    last_activity_at: String
+    "Every platform this account has used Duncit from while signed in, in display order (staff only)."
+    platforms_used: [UserPlatform!]!
+  }
+
+  "Where an account uses Duncit from: the Android or iOS app, or a browser."
+  enum UserPlatform {
+    ANDROID
+    IOS
+    WEB
   }
 
   "A problem with an account's contact data, flagged red in Admin > Users."

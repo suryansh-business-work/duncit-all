@@ -132,6 +132,10 @@ export { getGoogleClientId, setGoogleClientId, loadGoogleClientId } from './lib/
 export { RequireAuth, createAuthed, type RequireAuthProps, type CreateAuthedOptions } from './auth/RequireAuth';
 export { PageErrorBoundary } from './auth/PageErrorBoundary';
 
+// Security Verification: the screen between a console sign-in and the console, and
+// the map the Tech portal's login-verification log opens a record with.
+export { SecurityLocationMap, type SecurityLocationMapProps } from './security-verification';
+
 // The login page every console previously hand-rolled (wraps user-context's LoginScreen).
 export { PortalLoginPage } from './portal-login';
 export type { PortalLoginAppConfig, PortalLoginPageProps, PortalLoginSession } from './portal-login';

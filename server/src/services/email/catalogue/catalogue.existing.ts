@@ -195,6 +195,18 @@ const EXISTING_ROWS: readonly EmailDef[] = [
     footerNote: '',
     vars: otpVars('opening Environment Variables'),
   }),
+  describeEmail({
+    slug: 'venue-kit-otp',
+    name: 'Venue Kit Interest Email OTP',
+    description:
+      'The code a venue types on the Venue Kit interest form (duncit.com/venue-kit or the Venues console) to prove its email address before it is registered.',
+    audience: 'VENUE',
+    category: 'authentication',
+    fires: 'A venue asks for a code on the Venue Kit interest form',
+    subject: 'Your Duncit Venue Kit verification code',
+    footerNote: '',
+    vars: otpVars('registering interest in the Venue Kit'),
+  }),
 
   // --- Bookings and pods --------------------------------------------------
   describeEmail({

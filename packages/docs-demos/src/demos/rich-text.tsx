@@ -69,4 +69,22 @@ export default defineDemos('rich-text', [
         'The upload finishes before anything is inserted, so a failed upload leaves the document untouched rather than saving a src that 404s for every reader from then on.',
     }),
   }),
+
+  defineDemo<HtmlMock>({
+    id: 'mention',
+    title: 'A mention is a span an API can read',
+    note:
+      "This is what picking someone from the @ list leaves in the HTML. The data-id is what a server reads to know who was mentioned (CRM manual logs email each newly mentioned teammate), and the text stays readable as \"@Label\". Remove the data-id from a span to see a mention nobody can be notified about; type an email address into the text to see that it is not a mention.",
+    mock: {
+      html: '<p>Rates agreed. <span data-type="mention" data-id="64b7f0c2a1b2c3d4e5f60718" data-label="Priya">@Priya</span> please send the contract, cc <span data-type="mention" data-id="64b7f0c2a1b2c3d4e5f60719" data-label="Amit">@Amit</span> (amit@duncit.com).</p>',
+    },
+    render: (mock) => <Box sx={RICH_TEXT_BODY_SX} dangerouslySetInnerHTML={{ __html: mock.html }} />,
+    compute: (mock) => ({
+      'htmlToText(html)': htmlToText(mock.html),
+      'Mention spans': String(mock.html.split('data-type="mention"').length - 1),
+      'Mentioned ids': (mock.html.match(/data-id="[^"]*"/g) ?? []).join(', ') || '(none)',
+      'Why it matters':
+        'A label alone ("@Priya") cannot be notified: two teammates can share a name, so the id travels with every mention.',
+    }),
+  }),
 ]);

@@ -1,19 +1,22 @@
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import { useTranslation } from '@duncit/app-settings';
 import { useApolloTableFetch } from '@duncit/table';
 import { canMarkRental, type RentalBookingRow } from '@duncit/utils';
 import { VENUE_RENTAL_BOOKINGS_TABLE } from '../documents';
 import type { VenueRentalProps } from '../types';
+import type { RentalDetailOptions } from './detail/RentalDetailDrawer';
 import MarkRentalDialog from './MarkRentalDialog';
 import RentalBookingsBoard, { RowAction } from './RentalBookingsBoard';
-import { buildRentalBookingColumns } from './rental-booking-columns';
+
+export type VenueRentalBookingsProps = VenueRentalProps & RentalDetailOptions;
 
 /**
- * A venue's rental bookings: what guests rented for which pod, and the one
- * action the venue owns: marking an item back, or damaged.
+ * A venue's rental bookings: what guests rented for which pod, the one action
+ * the venue owns (marking an item back, or damaged), and each rental's detail
+ * with its refund and the optional proof the venue may add.
  */
-export default function VenueRentalBookings({ venueId, surface }: Readonly<VenueRentalProps>) {
+export default function VenueRentalBookings({ venueId, surface, links, uploadSurface }: Readonly<VenueRentalBookingsProps>) {
   const { t } = useTranslation();
   const client = useApolloClient();
   const updateRowRef = useRef<((row: RentalBookingRow) => void) | null>(null);
@@ -25,29 +28,27 @@ export default function VenueRentalBookings({ venueId, surface }: Readonly<Venue
     { extraVariables: { venue_id: venueId } },
     [venueId]
   );
+  const detail = useMemo(() => ({ links, uploadSurface }), [links, uploadSurface]);
 
-  const columns = useMemo(
-    () =>
-      buildRentalBookingColumns(t, {
-        showGuest: true,
-        renderActions: (row) =>
-          canMarkRental(row) ? (
-            <RowAction
-              label={t('venueRentals.mark.action')}
-              ariaLabel={t('venueRentals.mark.title', { vars: { name: row.name } })}
-              onClick={() => setMarking(row)}
-            />
-          ) : null,
-      }),
+  const renderActions = useCallback(
+    (row: RentalBookingRow) =>
+      canMarkRental(row) ? (
+        <RowAction
+          label={t('venueRentals.mark.action')}
+          ariaLabel={t('venueRentals.mark.title', { vars: { name: row.name } })}
+          onClick={() => setMarking(row)}
+        />
+      ) : null,
     [t]
   );
 
   return (
     <RentalBookingsBoard
       tableId={`${surface}-venue-rental-bookings`}
-      columns={columns}
       fetchRows={fetchRows}
       updateRowRef={updateRowRef}
+      renderActions={renderActions}
+      detail={detail}
     >
       <MarkRentalDialog booking={marking} onClose={() => setMarking(null)} onMarked={(row) => updateRowRef.current?.(row)} />
     </RentalBookingsBoard>

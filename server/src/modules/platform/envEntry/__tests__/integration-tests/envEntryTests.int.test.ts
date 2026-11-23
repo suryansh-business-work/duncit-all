@@ -26,12 +26,12 @@ describe('envEntry interactive tests', () => {
     expect((await envEntryService.get(entry!.id))?.last_used_at).toBeTruthy();
 
     expect((await envEntryTests.email(entry!.id, '')).ok).toBe(false); // no recipient
-    const noHost = await envEntryService.create({ name: 'NoHost', category: 'EMAIL', config: cfg({}) });
+    const noHost = await envEntryService.create({ name: 'NoHost', category: 'EMAIL', config: cfg({ password: 'p' }) });
     expect((await envEntryTests.email(noHost!.id, 'd@x.com')).ok).toBe(false);
   });
 
   it('email: surfaces transport errors', async () => {
-    const entry = await envEntryService.create({ name: 'S2', category: 'EMAIL', config: cfg({ host: 'smtp.test' }) });
+    const entry = await envEntryService.create({ name: 'S2', category: 'EMAIL', config: cfg({ host: 'smtp.test', password: 'p' }) });
     sendMailMock.mockRejectedValue(new Error('auth failed'));
     const res = await envEntryTests.email(entry!.id, 'd@x.com');
     expect(res.ok).toBe(false);
@@ -66,7 +66,7 @@ describe('envEntry interactive tests', () => {
   });
 
   it('twilio: places a call and validates required fields', async () => {
-    const entry = await envEntryService.create({ name: 'TW', category: 'TWILIO', config: cfg({ account_sid: 'AC', auth_token: 't', phone_number: '+1' }) });
+    const entry = await envEntryService.create({ name: 'TW', category: 'TWILIO', config: cfg({ account_sid: 'AC', auth_token: 't', phone_number: '+14155550101' }) });
     (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ sid: 'CA1' }) });
     const res = await envEntryTests.twilioCall(entry!.id, '+919876543210');
     expect(res.ok).toBe(true);
@@ -88,7 +88,7 @@ describe('envEntry interactive tests', () => {
   });
 
   it('openai: surfaces upstream errors and missing key', async () => {
-    const noKey = await envEntryService.create({ name: 'OAI2', category: 'OPENAI', config: cfg({}) });
+    const noKey = await envEntryService.create({ name: 'OAI2', category: 'OPENAI', config: cfg({}) }, { enforceRequired: false });
     expect((await envEntryTests.openai(noKey!.id, 'x')).ok).toBe(false);
     const ok = await envEntryService.create({ name: 'OAI3', category: 'OPENAI', config: cfg({ api_key: 'k' }) });
     (global as any).fetch = jest.fn().mockResolvedValue({ ok: false, status: 401, json: async () => ({ error: { message: 'bad key' } }) });

@@ -28,6 +28,8 @@ export type WebsiteContentItemMock = Pick<
   | 'cta_url'
   | 'is_published'
   | 'sort_order'
+  | 'audience'
+  | 'coming_soon'
   | 'created_at'
   | 'updated_at'
 > & { __typename: 'WebsiteContentItem'; published_at: string | null };
@@ -49,6 +51,8 @@ export const makeContentItem = (
   published_at: '2026-01-01T00:00:00.000Z',
   is_published: true,
   sort_order: 1,
+  audience: null,
+  coming_soon: false,
   created_at: '2026-01-02T00:00:00.000Z',
   updated_at: '2026-01-03T00:00:00.000Z',
   ...over,

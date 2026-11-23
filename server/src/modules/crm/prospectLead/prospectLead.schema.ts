@@ -31,7 +31,10 @@ export const prospectLeadTypeDefs = gql`
     profile_photo_url: String
     dynamic_values_json: String!
     lead_source: String
+    "The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here."
     assigned_to: String
+    "The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name."
+    assigned_user_id: ID
     lead_status: String!
     priority: String!
     next_follow_up_date: String
@@ -41,6 +44,12 @@ export const prospectLeadTypeDefs = gql`
     updated_at: String
     "True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere."
     is_duplicate: Boolean
+    "Lead Quality Score summary (score, classification, qualification); null until the lead is first scored."
+    quality: CrmLeadQualitySummary
+    "Kilometres from the centre of a Nearby leads search. Set only on a table page read with near; null elsewhere."
+    distance_km: Float
+    "How exactly the lead sits on the map: PIN (its map link), AREA or CITY (that centre). Null until a Nearby leads search places it, or when it has no known city."
+    geo_precision: String
   }
 
   type CommunityLead {
@@ -67,7 +76,10 @@ export const prospectLeadTypeDefs = gql`
     profile_photo_url: String
     dynamic_values_json: String!
     lead_source: String
+    "The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here."
     assigned_to: String
+    "The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name."
+    assigned_user_id: ID
     lead_status: String!
     priority: String!
     next_follow_up_date: String
@@ -77,6 +89,12 @@ export const prospectLeadTypeDefs = gql`
     updated_at: String
     "True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere."
     is_duplicate: Boolean
+    "Lead Quality Score summary (score, classification, qualification); null until the lead is first scored."
+    quality: CrmLeadQualitySummary
+    "Kilometres from the centre of a Nearby leads search. Set only on a table page read with near; null elsewhere."
+    distance_km: Float
+    "How exactly the lead sits on the map: PIN (its map link), AREA or CITY (that centre). Null until a Nearby leads search places it, or when it has no known city."
+    geo_precision: String
   }
 
   input CreatorLeadInput {
@@ -101,7 +119,10 @@ export const prospectLeadTypeDefs = gql`
     profile_photo_url: String
     dynamic_values_json: String
     lead_source: String
+    "The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here."
     assigned_to: String
+    "The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name."
+    assigned_user_id: ID
     lead_status: String
     priority: String
     next_follow_up_date: String
@@ -129,7 +150,10 @@ export const prospectLeadTypeDefs = gql`
     profile_photo_url: String
     dynamic_values_json: String
     lead_source: String
+    "The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here."
     assigned_to: String
+    "The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name."
+    assigned_user_id: ID
     lead_status: String
     priority: String
     next_follow_up_date: String
@@ -142,6 +166,8 @@ export const prospectLeadTypeDefs = gql`
     total: Int!
     page: Int!
     page_size: Int!
+    "Leads of this kind with no place on the map (no city, or one the map does not know), so a Nearby leads search cannot include them. Null outside a nearby search."
+    unplaced: Int
   }
 
   "Server-side table page for the shared table engine (communityLeadsTable)."
@@ -150,6 +176,8 @@ export const prospectLeadTypeDefs = gql`
     total: Int!
     page: Int!
     page_size: Int!
+    "Leads of this kind with no place on the map (no city, or one the map does not know), so a Nearby leads search cannot include them. Null outside a nearby search."
+    unplaced: Int
   }
 
   "Lead kinds whose contact email / call goes through the generic CRM lead mutations."
@@ -159,9 +187,11 @@ export const prospectLeadTypeDefs = gql`
   }
 
   extend type Query {
-    creatorLeadsTable(query: TableQueryInput): CreatorLeadTablePage!
+    "With near, only the leads within the radius, nearest first unless another sort is picked."
+    creatorLeadsTable(query: TableQueryInput, near: CrmLeadNearInput): CreatorLeadTablePage!
     creatorLead(id: ID!): CreatorLead
-    communityLeadsTable(query: TableQueryInput): CommunityLeadTablePage!
+    "With near, only the leads within the radius, nearest first unless another sort is picked."
+    communityLeadsTable(query: TableQueryInput, near: CrmLeadNearInput): CommunityLeadTablePage!
     communityLead(id: ID!): CommunityLead
   }
 

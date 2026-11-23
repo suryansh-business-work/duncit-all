@@ -3,11 +3,7 @@ FROM node:24-alpine AS builder
 WORKDIR /repo
 
 ARG VITE_GRAPHQL_URL
-ARG VITE_GOOGLE_CLIENT_ID
-ARG VITE_GOOGLE_MAP_API
 ENV VITE_GRAPHQL_URL=${VITE_GRAPHQL_URL}
-ENV VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
-ENV VITE_GOOGLE_MAP_API=${VITE_GOOGLE_MAP_API}
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY server/package.json ./server/

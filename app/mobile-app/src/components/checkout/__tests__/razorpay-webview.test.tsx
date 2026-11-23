@@ -1,6 +1,11 @@
 import { fireEvent, screen } from '@testing-library/react-native';
+import { Linking } from 'react-native';
 
-import { RazorpayWebView, buildRazorpayHtml } from '@/components/checkout/RazorpayWebView';
+import {
+  RazorpayWebView,
+  buildRazorpayHtml,
+  shouldLoadInSheet,
+} from '@/components/checkout/RazorpayWebView';
 import type { RazorpayOrder } from '@/hooks/useCheckout';
 import { renderWithProviders } from '@/utils/test-utils';
 
@@ -29,6 +34,45 @@ describe('buildRazorpayHtml', () => {
     expect(html).toContain('checkout.razorpay.com/v1/checkout.js');
     expect(html).toContain('rzp_test_123');
     expect(html).toContain('order_9');
+  });
+
+  it("asks Razorpay to list the phone's UPI apps", () => {
+    expect(buildRazorpayHtml(order)).toContain('"webview_intent":true');
+  });
+});
+
+describe('shouldLoadInSheet', () => {
+  let openURL: jest.SpyInstance;
+  beforeEach(() => {
+    openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+  });
+  afterEach(() => openURL.mockRestore());
+
+  it('keeps Razorpay and bank pages inside the sheet', () => {
+    expect(shouldLoadInSheet({ url: 'https://api.razorpay.com/v1/payments/create/checkout' })).toBe(
+      true,
+    );
+    expect(openURL).not.toHaveBeenCalled();
+  });
+
+  it('opens a UPI app link on the phone and keeps the sheet where it is', () => {
+    expect(shouldLoadInSheet({ url: 'upi://pay?pa=merchant@icici&am=590.00' })).toBe(false);
+    expect(openURL).toHaveBeenCalledWith('upi://pay?pa=merchant@icici&am=590.00');
+  });
+
+  it('turns an Android intent link into the scheme link the OS can open', () => {
+    expect(
+      shouldLoadInSheet({
+        url: 'intent://pay?pa=m@icici#Intent;scheme=upi;package=com.phonepe.app;end',
+      }),
+    ).toBe(false);
+    expect(openURL).toHaveBeenCalledWith('upi://pay?pa=m@icici');
+  });
+
+  it('does not throw when no installed app can open the link', async () => {
+    openURL.mockRejectedValueOnce(new Error('No Activity found to handle Intent'));
+    expect(shouldLoadInSheet({ url: 'phonepe://pay?pa=m@icici' })).toBe(false);
+    await new Promise((resolve) => setImmediate(resolve));
   });
 });
 
@@ -71,6 +115,15 @@ describe('RazorpayWebView', () => {
     message('not-json');
     expect(onSuccess).not.toHaveBeenCalled();
     expect(onFailure).not.toHaveBeenCalled();
+  });
+
+  it('routes navigations through the UPI hand-off', () => {
+    renderWithProviders(
+      <RazorpayWebView order={order} open onSuccess={jest.fn()} onFailure={jest.fn()} />,
+    );
+    expect(screen.getByTestId('razorpay-webview-frame').props.onShouldStartLoadWithRequest).toBe(
+      shouldLoadInSheet,
+    );
   });
 
   it('renders nothing without an order', () => {

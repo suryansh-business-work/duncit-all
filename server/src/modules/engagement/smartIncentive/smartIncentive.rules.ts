@@ -4,15 +4,14 @@
  * A host may offer a percentage off a pod's TICKET money to the members who
  * stay on the pod page without booking. Staying long enough unlocks the offer
  * for that member on that pod (the popup), and checkout takes it off on its
- * own. It comes off after the multi-ticket discount and before the coupon, the
- * coins and the GST split, so — exactly like the multi-ticket discount — the
+ * own. It comes off before the coupon, the coins and the GST split, so the
  * payment's `total` is already net of it and settlement, which runs on the
  * money collected, makes it host-funded by construction.
  *
  * Server twin of packages/utils/src/smart-incentive.ts: the server imports no
  * @duncit/* package, so the clients mirror these for their previews. A leaf
- * module like pod.ticketDiscount: it imports nothing but GraphQLError, so pod,
- * payment and the incentive module can all share it without an import cycle.
+ * module: it imports nothing but GraphQLError, so pod, payment and the
+ * incentive module can all share it without an import cycle.
  */
 import { GraphQLError } from 'graphql';
 
@@ -33,9 +32,8 @@ function badInput(message: string): never {
 }
 
 /**
- * What an unlocked offer takes off one booking. `ticketNet` is the ticket
- * money after the multi-ticket discount (never add-on products), so the two
- * discounts compound rather than add. Both fields are 0 when nothing applies.
+ * What an unlocked offer takes off one booking. `ticketNet` is every seat at
+ * the pod's price (never add-on products). Both fields are 0 when nothing applies.
  */
 export function smartIncentiveFor(ticketNet: number, pct: number): { pct: number; amount: number } {
   if (!Number.isInteger(pct) || pct <= 0 || !(ticketNet > 0)) return { pct: 0, amount: 0 };

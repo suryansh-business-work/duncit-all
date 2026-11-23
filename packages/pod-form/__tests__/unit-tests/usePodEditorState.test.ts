@@ -55,6 +55,17 @@ describe('usePodEditorState', () => {
     expect(result.current.initialValues.pod_title).toBe('Existing');
     expect(result.current.initialValues.pod_id).toBe('p1');
     expect(result.current.editingPodDocId).toBe('doc-1');
+    // A live pod: its money is judged when an edit changes it.
+    expect(result.current.podClosed).toBe(false);
+  });
+
+  it('marks a completed or cancelled pod closed — the server never judges its money — and a new pod open', () => {
+    const closed = (pod: Record<string, unknown>) =>
+      renderHook(() => usePodEditorState(baseArgs({ editingPod: { id: 'doc-9', ...pod } }))).result.current.podClosed;
+    expect(closed({ completed_at: '2030-01-05T12:00:00.000Z' })).toBe(true);
+    expect(closed({ is_deleted: true })).toBe(true);
+    expect(closed({ completed_at: null, is_deleted: false })).toBe(false);
+    expect(renderHook(() => usePodEditorState(baseArgs())).result.current.podClosed).toBe(false);
   });
 
   it('collapses a legacy multi-host pod to its first host when singleHost is on', () => {

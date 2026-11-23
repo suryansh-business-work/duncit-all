@@ -1,6 +1,6 @@
 /**
  * The clamped single-value readers the rest of the server gates on (signup age,
- * ticket discount cap, the reminder sweep clocks), the flag import that moves
+ * the reminder sweep clocks), the flag import that moves
  * flags between environments, and the branding writes that validate before
  * storing (legal links, theme colours, login backdrops, launch page media).
  */
@@ -93,23 +93,6 @@ describe('draft retention days', () => {
     expect((await settingsService.updateAppSettings({ draft_retention_days: 2.9 })).draft_retention_days).toBe(2);
     expect((await settingsService.updateAppSettings({ draft_retention_days: 0 })).draft_retention_days).toBe(3);
     expect((await settingsService.updateAppSettings({ draft_retention_days: -7 })).draft_retention_days).toBe(1);
-  });
-});
-
-describe('getTicketDiscountMaxPct', () => {
-  it('defaults to 50% before anything is saved', async () => {
-    expect(await settingsService.getTicketDiscountMaxPct()).toBe(50);
-  });
-
-  it('clamps to 1–99% so a tier can never make a ticket free', async () => {
-    await settingsService.updateAppSettings({ ticket_discount_max_pct: 150 });
-    expect(await settingsService.getTicketDiscountMaxPct()).toBe(99);
-
-    await storeRaw({ ticket_discount_max_pct: -5 });
-    expect(await settingsService.getTicketDiscountMaxPct()).toBe(1);
-
-    await storeRaw({ ticket_discount_max_pct: 0 });
-    expect(await settingsService.getTicketDiscountMaxPct()).toBe(50);
   });
 });
 

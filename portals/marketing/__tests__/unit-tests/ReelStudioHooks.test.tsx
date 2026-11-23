@@ -21,6 +21,7 @@ import { useDriveFolder } from '../../src/pages/reels/studio/sources/useDriveFol
 import { useReelActions } from '../../src/pages/reels/studio/useReelActions';
 import type { ReelDriveEntry, ReelProject } from '../../src/pages/reels/types';
 import { answerQuery, mutationOf, queryOptions, resetApollo } from '../mocks/reel-apollo-mock';
+import { REMOTION_LICENSE } from '../../src/pages/reels/license';
 
 const confirm = vi.hoisted(() => vi.fn());
 const renderer = vi.hoisted(() => ({ canRenderMediaOnWeb: vi.fn(), renderMediaOnWeb: vi.fn() }));
@@ -403,6 +404,19 @@ describe('useReelExport', () => {
     expect(state.file).toBeInstanceOf(File);
     expect(state.file.name).toBe('jam-night-recap-2.mp4');
     expect(state.file.type).toBe('video/mp4');
+  });
+
+  it('renders under the Tech portal licence when one is set, and with none when it is not', async () => {
+    renderer.canRenderMediaOnWeb.mockResolvedValue(canRender);
+    renderer.renderMediaOnWeb.mockResolvedValue(rendered);
+    const unlicensed = renderHook(() => useReelExport(project));
+    await act(() => unlicensed.result.current.start());
+    expect(renderer.renderMediaOnWeb).toHaveBeenLastCalledWith(expect.objectContaining({ licenseKey: null }));
+
+    answerQuery(REMOTION_LICENSE, { data: { publicClientConfig: { remotion_license_key: ' rm_pub_duncit ' } } });
+    const licensed = renderHook(() => useReelExport(project));
+    await act(() => licensed.result.current.start());
+    expect(renderer.renderMediaOnWeb).toHaveBeenLastCalledWith(expect.objectContaining({ licenseKey: 'rm_pub_duncit' }));
   });
 
   it('saves the rendered reel to the operator’s computer and closes', async () => {

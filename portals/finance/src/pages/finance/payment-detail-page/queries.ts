@@ -1,5 +1,6 @@
 import { gql } from '@apollo/client';
 import { formatMoney, type PaymentRentalLine } from '@duncit/utils';
+import type { PaymentEvent } from '../failed-payments-page/queries';
 
 /** The whole audit, as one fragment: the detail query reads it and the retry
  * mutation answers with it, so a re-run refreshes the page from its own reply
@@ -38,13 +39,14 @@ export const PAYMENT_DETAIL_FIELDS = gql`
       currency_symbol
       coupon_code
       coupon_discount
-      ticket_discount_amount
-      ticket_discount_pct
       smart_incentive_amount
       smart_incentive_pct
       status
       gateway
       gateway_ref
+      razorpay_payment_id
+      razorpay_order_id
+      razorpay_refund_ids
       paid_at
       created_at
       rental_lines {
@@ -133,6 +135,43 @@ export const PAYMENT_DETAIL_FIELDS = gql`
     original_total
     coins_redeemed
     coins_earned
+    refunds {
+      kind
+      state
+      amount
+      coins
+      entries {
+        id
+        ref
+        source
+        status
+        state
+        amount
+        coins
+        razorpay_refund_id
+        razorpay_refund_ids
+        razorpay_payment_id
+        initiated_by
+        reason
+        error
+        attempts
+        requested_at
+        processed_at
+        due_at
+        can_refund
+      }
+      events {
+        id
+        type
+        source
+        actor_name
+        details {
+          key
+          value
+        }
+        created_at
+      }
+    }
   }
 `;
 
@@ -149,6 +188,20 @@ export const PAYMENT_DETAIL = gql`
 export const RETRY_PAYMENT_STEPS = gql`
   mutation RetryPaymentSteps($id: ID!, $stepKeys: [String!]) {
     retryPaymentSteps(payment_doc_id: $id, step_keys: $stepKeys) {
+      ...PaymentDetailFields
+    }
+  }
+  ${PAYMENT_DETAIL_FIELDS}
+`;
+
+/**
+ * Send one owed refund back to the payment's own source with a note on record.
+ * Answers with the whole audit (the same fragment), so the page refreshes from
+ * the reply instead of racing a refetch against the write.
+ */
+export const REFUND_PAYMENT_TO_SOURCE = gql`
+  mutation RefundPaymentToSource($input: RefundPaymentToSourceInput!) {
+    refundPaymentToSource(input: $input) {
       ...PaymentDetailFields
     }
   }
@@ -197,17 +250,17 @@ export interface DetailPayment {
   currency_symbol: string;
   coupon_code: string | null;
   coupon_discount: number;
-  /** Rupees the multi-ticket tier took off the ticket price, frozen at checkout (0 when none). */
-  ticket_discount_amount: number;
-  /** That tier's percentage (0 when none). */
-  ticket_discount_pct: number;
-  /** Rupees the member's unlocked Smart Incentive took off what the tier left, frozen at checkout (0 when none). */
+  /** Rupees the member's unlocked Smart Incentive took off the ticket price, frozen at checkout (0 when none). */
   smart_incentive_amount: number;
   /** That offer's percentage (0 when none). */
   smart_incentive_pct: number;
   status: string;
   gateway: string;
   gateway_ref: string | null;
+  /** Razorpay's own ids, as its dashboard shows them (null/empty for other gateways). */
+  razorpay_payment_id?: string | null;
+  razorpay_order_id?: string | null;
+  razorpay_refund_ids?: string[];
   /** Rented items on a pod payment, frozen at checkout (empty when none). */
   rental_lines?: PaymentRentalLine[];
   paid_at: string | null;
@@ -292,6 +345,54 @@ export interface PaymentGiftCardInfo {
   redeemed_at: string | null;
 }
 
+/** The kind of refund a section of the Refund area is, as the server names it. */
+export type PaymentRefundKind =
+  | 'COIN'
+  | 'POD_PAYMENT'
+  | 'PAYMENT'
+  | 'POD_SHOP'
+  | 'ECOMM'
+  | 'FAILED_PAYMENT'
+  | 'RENTAL';
+
+/** PENDING = owed or on its way (yellow), COMPLETED = back with the buyer, FAILED = refused (red). */
+export type PaymentRefundState = 'PENDING' | 'COMPLETED' | 'FAILED';
+
+/** One refund inside a section: a gateway refund, an order, a return, a case or a coin ledger row. */
+export interface PaymentRefundEntry {
+  id: string;
+  ref: string | null;
+  /** Why it was sent (FINANCE_REFUND, POD_CANCELLATION, BACKOUT, RENTAL, HELD, RECORDED, CANCELLATION, RETURN, CASE, LEDGER). */
+  source: string;
+  /** The refund engine's own status, for the label. */
+  status: string;
+  state: PaymentRefundState;
+  amount: number;
+  coins: number;
+  /** The first (primary) Razorpay refund id. */
+  razorpay_refund_id: string | null;
+  /** Every refund id behind the row. */
+  razorpay_refund_ids: string[];
+  razorpay_payment_id: string | null;
+  initiated_by: string | null;
+  reason: string | null;
+  error: string | null;
+  attempts: number;
+  requested_at: string | null;
+  processed_at: string | null;
+  due_at: string | null;
+  can_refund: boolean;
+}
+
+export interface PaymentRefundSection {
+  kind: PaymentRefundKind;
+  state: PaymentRefundState;
+  amount: number;
+  coins: number;
+  entries: PaymentRefundEntry[];
+  events: PaymentEvent[];
+}
+
 export interface PaymentDetail {
   payment: DetailPayment;
   finalize_state: string;
@@ -308,8 +409,10 @@ export interface PaymentDetail {
   pod_booking: PaymentPodBooking | null;
   product_orders: PaymentProductOrderLine[];
   gift_card: PaymentGiftCardInfo | null;
-  /** The cart before EVERY discount: ticket gross + products, ahead of the tier, Smart Incentive, coupon and coins. */
+  /** The cart before EVERY discount: ticket gross + products, ahead of the Smart Incentive, coupon and coins. */
   original_total: number;
   coins_redeemed: number;
   coins_earned: number;
+  /** Every refund the payment has seen, one section per kind, in the server's order. Optional so older fixtures stay valid. */
+  refunds?: PaymentRefundSection[] | null;
 }

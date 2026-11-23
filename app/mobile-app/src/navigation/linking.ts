@@ -2,6 +2,7 @@ import { getStateFromPath, type LinkingOptions } from '@react-navigation/native'
 import * as Linking from 'expo-linking';
 
 import { isAppleAuthReturn } from '@/components/AppleAuthButton/appleSignIn';
+import { getInitialURL } from '@/navigation/initialURL';
 import { linkingConfig } from '@/navigation/linkingConfig';
 import { bookingIdFromPath, rememberPendingBooking } from '@/navigation/pendingBooking';
 import { useAuthStore } from '@/stores/auth.store';
@@ -18,6 +19,9 @@ export const linking: LinkingOptions<RootStackParamList> = {
   // /.well-known/assetlinks.json served from mweb.duncit.com with the Play
   // signing cert's SHA-256 fingerprint.
   prefixes: [Linking.createURL('/'), 'https://mweb.duncit.com'],
+  // Read synchronously from expo-linking instead of React Navigation's 150 ms
+  // race, which iOS loses on a cold start — see initialURL.ts.
+  getInitialURL,
   // A booking link that lands while signed out would resolve to a screen the
   // auth-gated stack has not rendered, and React Navigation would silently drop
   // it. Park the booking id and send the user to Login instead — RootNavigator

@@ -42,6 +42,8 @@ export const USER = gql`
       dob
       created_at
       updated_at
+      platforms_used
+      last_activity_at
     }
     roles {
       id

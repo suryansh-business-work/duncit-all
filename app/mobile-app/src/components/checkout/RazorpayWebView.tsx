@@ -1,5 +1,6 @@
-import { Modal } from 'react-native';
+import { Linking, Modal } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
+import type { ShouldStartLoadRequest } from 'react-native-webview/lib/WebViewTypes';
 import { YStack } from 'tamagui';
 
 import type { RazorpayErrorLike } from '@duncit/utils';
@@ -8,6 +9,9 @@ import { light } from '@duncit/auth-tokens';
 import { ModalSafeArea } from '@/components/ModalSafeArea';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import type { RazorpayOrder, RazorpaySignature } from '@/hooks/useCheckout';
+import { fireAndForget } from '@/utils/fire-and-forget';
+
+import { externalUrlFor, isExternalPaymentUrl } from './razorpayNavigation';
 
 /**
  * What the hosted checkout is opened with — the part of a `RazorpayOrder` this
@@ -41,6 +45,9 @@ export function buildRazorpayHtml(order: RazorpaySheet): string {
     prefill: { email: order.prefill_email, contact: order.prefill_contact },
     // The hosted sheet's pay button wears the app's action green.
     theme: { color: light.primary },
+    // List the phone's UPI apps (GPay, PhonePe, Paytm…) instead of only a UPI
+    // ID box; the app links it then opens are handed to the OS below.
+    webview_intent: true,
   };
   const serializedOptions = JSON.stringify(options).replaceAll('<', String.raw`\u003c`);
   // The failure is posted WITH what Razorpay said, and posted ONCE. Razorpay
@@ -72,6 +79,18 @@ export function buildRazorpayHtml(order: RazorpaySheet): string {
 </script>
 <script src="https://checkout.razorpay.com/v1/checkout.js" onload="openCheckout()" onerror="handleSdkLoadError()"></script>
 </body></html>`;
+}
+
+/**
+ * A UPI app link (or any non-web link) leaves the sheet for the phone; the sheet
+ * stays open behind it and hears the result from Razorpay when the buyer comes
+ * back. A link no installed app can open is logged and the sheet keeps the
+ * buyer's other payment options in front of them.
+ */
+export function shouldLoadInSheet(request: Pick<ShouldStartLoadRequest, 'url'>): boolean {
+  if (!isExternalPaymentUrl(request.url)) return true;
+  fireAndForget(Linking.openURL(externalUrlFor(request.url)));
+  return false;
 }
 
 /** Full-screen modal hosting the Razorpay checkout WebView. */
@@ -127,6 +146,7 @@ export function RazorpayWebView({ order, open, onSuccess, onFailure }: Readonly<
                   baseUrl: 'https://checkout.razorpay.com',
                 }}
                 onMessage={onMessage}
+                onShouldStartLoadWithRequest={shouldLoadInSheet}
                 style={{ flex: 1, backgroundColor: '#0b0b0f' }}
               />
             ) : null}

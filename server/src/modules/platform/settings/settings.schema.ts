@@ -38,8 +38,7 @@ export const settingsTypeDefs = gql`
     attendance_otp_required: Boolean!
     "How many hours after a pod ends its host has to complete it. Past that they can no longer mark attendance and the pod settles with no host earnings."
     pod_complete_timeout_hours: Int!
-    "The biggest discount (whole %, 1-99) any multi-ticket tier on a pod may give. Pods already above it keep their tiers until they are edited."
-    ticket_discount_max_pct: Int!
+    ticket_discount_max_pct: Int! @deprecated(reason: "The multi-ticket discount was removed. Always 50.")
     "How many hours after a pod ends the host is emailed and WhatsApped a reminder to complete it."
     pod_complete_reminder_hours: Int!
     "How many hours before a pod starts its attendees are reminded over email and WhatsApp."
@@ -150,8 +149,7 @@ export const settingsTypeDefs = gql`
     attendance_otp_required: Boolean!
     "How many hours after a pod ends its host has to complete it. Past that the host can no longer mark attendance and the pod settles with no host earnings."
     pod_complete_timeout_hours: Int!
-    "The biggest discount (whole %, 1-99) any multi-ticket tier on a pod may give — the pod editors cap their tiers at it."
-    ticket_discount_max_pct: Int!
+    ticket_discount_max_pct: Int! @deprecated(reason: "The multi-ticket discount was removed. Always 50.")
     "How many days ahead Home's Happening nearby looks: only upcoming pods starting within this many days (1-60) are shown there."
     happening_nearby_days: Int!
   }
@@ -171,6 +169,8 @@ export const settingsTypeDefs = gql`
     apple_web_redirect_uri: String!
     "Where Apple posts the web flow's answer for the Android app and native web: <server>/apple/callback."
     apple_relay_url: String!
+    "The Apple Developer Team ID (Tech → Environment → Sign in with Apple), trimmed; blank when unset. mWeb's build writes it into apple-app-site-association so iOS opens mWeb links in the app."
+    apple_team_id: String!
     "Truecaller on the Android app — its OAuth client ID. Blank: the Android app offers no Truecaller button."
     truecaller_android_client_id: String!
     "Truecaller on the iOS app and mobile web — the partner app key. Blank: those doors offer no Truecaller button."
@@ -179,6 +179,10 @@ export const settingsTypeDefs = gql`
     truecaller_ios_app_link: String!
     "The name the mobile-web Truecaller sheet shows."
     truecaller_partner_name: String!
+    "SHA-256 fingerprints of the Android app's signing certificates, comma separated (Tech → Google Play → App Links SHA-256 fingerprints); blank when unset. mWeb's build writes them into /.well-known/assetlinks.json so Android opens mWeb links in the app."
+    android_app_links_sha256: String!
+    "Remotion company licence key Reel Studio renders under (Tech → Remotion); blank when unset."
+    remotion_license_key: String!
   }
 
   input UpdateAppSettingsInput {
@@ -204,8 +208,7 @@ export const settingsTypeDefs = gql`
     attendance_otp_required: Boolean
     "How many hours after a pod ends its host has to complete it (1-8760)."
     pod_complete_timeout_hours: Int
-    "The biggest discount any multi-ticket tier on a pod may give, in whole % (1-99)."
-    ticket_discount_max_pct: Int
+    ticket_discount_max_pct: Int @deprecated(reason: "The multi-ticket discount was removed. Ignored.")
     "How many hours after a pod ends the host is reminded to complete it (1-8760)."
     pod_complete_reminder_hours: Int
     "How many hours before a pod starts its attendees are reminded (1-8760)."

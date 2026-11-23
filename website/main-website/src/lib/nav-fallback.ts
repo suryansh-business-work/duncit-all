@@ -35,6 +35,7 @@ export function navFallback(t: Translate, supportEmail?: string): FallbackNavGro
       icon: 'fa-circle-info',
       links: [
         link('n-about', t('website.main.nav.aboutUs'), '/about'),
+        link('n-solutions', t('website.main.nav.solutions'), '/solutions'),
         link('n-newsroom', t('website.main.nav.newsroom'), '/newsroom'),
         link('n-careers', t('website.main.nav.careers'), '/careers'),
         link('n-contact', t('website.main.nav.contactUs'), '/contact'),

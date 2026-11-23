@@ -3,7 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { YStack } from 'tamagui';
 
 import type { ExploreClub, ExplorePod, LikeState } from '@/stores/explore.store';
-import { isPodExpired, podPriceLabel, podWebUrl } from '@/utils/pod-format';
+import { podPriceLabel, podWebUrl } from '@/utils/pod-format';
 import { shareUrl } from '@/services/share-link';
 import { ExploreActionRail } from '@/components/explore/ExploreActionRail';
 import { ExploreJoinBar } from '@/components/explore/ExploreJoinBar';
@@ -11,7 +11,7 @@ import { ExploreNoAudioHint } from '@/components/explore/ExploreNoAudioHint';
 import { ExplorePodOverlay } from '@/components/explore/ExplorePodOverlay';
 import { DoubleTapJoin } from '@/components/explore/DoubleTapJoin';
 import { ReelBackdrop } from '@/components/explore/ReelVideo';
-import { podSeatsTaken } from '@duncit/utils';
+import { podPhase, podSeatsTaken } from '@duncit/utils';
 import { useReelSoundAction } from '@/hooks/useReelSoundAction';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -74,8 +74,10 @@ export function ExplorePodCard({
   const railAvailable = height - contentBottom - (insets.top + 56);
   const attendees = podSeatsTaken(pod);
   const spotsSuffix = pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : '';
-  // Expired pods can't be joined — the join rail + CTA become an "expired" notice.
-  const expired = isPodExpired(pod.pod_date_time);
+  // Over (past its end): the join rail + CTA become an "expired" notice. Running:
+  // still joinable, the bar says it is ongoing. Same rule as Pod details.
+  const phase = podPhase(pod.pod_date_time, pod.pod_end_date_time);
+  const expired = phase === 'PREVIOUS';
   const joinLabel = expired ? 'Expired' : `${attendees}${spotsSuffix}`;
   // Free pods need no payment, so the "Confirm with UPI" copy is hidden for them.
   const paidSubtitle = `${podPriceLabel(pod)} · Confirm with UPI`;
@@ -180,6 +182,7 @@ export function ExplorePodCard({
       <ExploreJoinBar
         podId={pod.pod_id}
         expired={expired}
+        ongoing={phase === 'ONGOING'}
         subtitle={ctaSubtitle}
         bottom={ctaBottom}
         onGo={onOpen}

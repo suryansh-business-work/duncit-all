@@ -43,6 +43,9 @@ export const ANALYTICS_MAIL_PAGES: Readonly<Record<AnalyticsEntity, { path: stri
   TEST_COVERAGE: { path: '/testing/unit-coverage', copy: 'coverage' },
   STRESS_TESTS: { path: '/testing/stress', copy: 'stress' },
   E2E_TESTS: { path: '/testing/e2e', copy: 'e2e' },
+  APP_INSIGHTS: { path: '/app-insights', copy: 'appInsights' },
+  APP_INSIGHTS_ANDROID: { path: '/app-insights', copy: 'appInsightsAndroid' },
+  APP_INSIGHTS_IOS: { path: '/app-insights', copy: 'appInsightsIos' },
 };
 
 /** Every dashboard, in sidebar order — a report's sections follow it whatever order they were ticked in. */

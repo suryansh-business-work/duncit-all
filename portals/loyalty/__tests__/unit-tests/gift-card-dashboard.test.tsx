@@ -150,12 +150,25 @@ describe('GiftCardSettingsCard', () => {
       mocks: [giftCardSettingsMock(), updateGiftCardSettingsMock(true)],
     });
     await waitFor(() => expect(field(/^Maximum amount/).value).toBe('10000'));
-    fireEvent.change(field(/^Maximum amount/), { target: { value: '100' } });
+    fireEvent.change(field(/^Maximum amount/), { target: { value: '5000' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save policy' }));
     await waitFor(() =>
       expect(notifyError).toHaveBeenCalledWith('The policy could not be saved. Please try again.'),
     );
     expect(notifySuccess).not.toHaveBeenCalled();
+  });
+
+  it('refuses a maximum below the minimum on the field, before asking the server', async () => {
+    renderWithProviders(<GiftCardSettingsCard />, {
+      mocks: [giftCardSettingsMock(), updateGiftCardSettingsMock()],
+    });
+    await waitFor(() => expect(field(/^Maximum amount/).value).toBe('10000'));
+    fireEvent.change(field(/^Maximum amount/), { target: { value: '100' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save policy' }));
+    await waitFor(() => expect(field(/^Maximum amount/)).toHaveAttribute('aria-invalid', 'true'));
+    expect(screen.getByText('The maximum must be at least the minimum amount.')).toBeInTheDocument();
+    expect(notifySuccess).not.toHaveBeenCalled();
+    expect(notifyError).not.toHaveBeenCalled();
   });
 
   it('shows why the policy could not be read', async () => {

@@ -37,8 +37,8 @@ const CATALOGUE = [shuttles, football];
 
 const preview = {
   slotPrice: null, podAmount: 0, noOfSpots: 0, venueId: null, isPhysical: false, isFree: false,
-  projection: undefined, loading: false, stale: false, hasVenue: false, ready: false,
-  priceMissing: true, zeroEarnings: false, venueShortfall: false, blocked: true,
+  projection: undefined, loading: false, stale: false, failed: false, hasVenue: false, ready: false,
+  priceMissing: true, venueShortfall: false, fresh: false, notViable: false, blocked: true, retry: () => undefined,
 } as EarningsPreview;
 
 function Harness({ products }: Readonly<{ products: CreatePodProduct[] }>) {

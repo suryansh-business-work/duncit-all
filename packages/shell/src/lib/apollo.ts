@@ -16,6 +16,7 @@ import {
   resolveNoRedisFlag,
   type ClientSurface,
 } from '@duncit/user-core';
+import { createPortalSecurityRecheckLink } from '../security-verification/recheckLink';
 import { trackingFetch } from './request-progress';
 
 const NETWORK_FAILURE_PATTERN = /failed to fetch|network request failed|load failed/i;
@@ -110,7 +111,9 @@ export function createApolloClient(options: Readonly<CreateApolloClientOptions>)
   });
 
   return new ApolloClient({
-    link: from([apolloErrorLink, retryLink, authLink, httpLink]),
+    // The recheck link tells the Security Verification gate when a verified
+    // token starts being refused (the consent terms changed under it).
+    link: from([apolloErrorLink, createPortalSecurityRecheckLink(getToken), retryLink, authLink, httpLink]),
     cache: new InMemoryCache({
       // Normalize User by its `user_id` (the API's id field) so Apollo can merge
       // the `me` result with other User queries instead of warning about data loss.

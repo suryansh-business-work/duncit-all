@@ -1,6 +1,7 @@
 import {
   ACCOUNT_DELETION_REVOKE_REASON,
   APP_HEADER,
+  PLATFORM_HEADER,
   SURFACE_HEADER,
   accountEmail,
   accountName,
@@ -9,6 +10,7 @@ import {
   hasAppAccess,
   holdSessionRevoked,
   initials,
+  nativePlatformHeaders,
   normalizeMe,
   parseUserChangedFrame,
   releaseSessionRevoked,
@@ -41,6 +43,8 @@ interface IdentityMock {
   surface: ClientSurface;
   /** The portal key, `mweb`, `native`, or empty for a caller that says nothing. */
   app: string;
+  /** React Native's `Platform.OS` (android, ios, web); read only when the surface is NATIVE. */
+  os: string;
 }
 
 /**
@@ -156,21 +160,24 @@ export default defineDemos('user-core', [
 
   defineDemo<IdentityMock>({
     id: 'headers',
-    title: 'Two headers, so the server knows who is calling',
+    title: 'Identity headers, so the server knows who is calling',
     note:
-      "Blank out app and the caller becomes unidentified: the Tech portal's Rate Limiting console files it under UNKNOWN / -, and only surface-wide rules can reach it. Switch surface to PORTAL and leave app as 'tech' to see the pair a console sends — PORTAL alone covers all seventeen, which is why a per-console ceiling needs the second header.",
+      "Blank out app and the caller becomes unidentified: the Tech portal's Rate Limiting console files it under UNKNOWN / -, and only surface-wide rules can reach it. Switch surface to PORTAL and leave app as 'tech' to see the pair a console sends — PORTAL alone covers all seventeen, which is why a per-console ceiling needs the second header. Switch surface to NATIVE to see the third: os 'android' or 'ios' adds the platform header Admin > Users reads as Platforms Used, and 'web' adds nothing, because the native web build runs in a browser.",
     mock: {
       surface: 'PORTAL',
       app: 'tech',
+      os: 'android',
     },
     compute: (mock) => {
       const app = mock.app.trim();
       const headers: Record<string, string> = {
         [SURFACE_HEADER]: mock.surface,
         ...(app ? { [APP_HEADER]: app } : {}),
+        // Only a store build names its OS; the web build would trip a browser preflight.
+        ...(mock.surface === 'NATIVE' ? nativePlatformHeaders(mock.os) : {}),
       };
       return {
-        'Header names': [SURFACE_HEADER, APP_HEADER],
+        'Header names': [SURFACE_HEADER, APP_HEADER, PLATFORM_HEADER],
         'Sent on every request': headers,
         'Rate limiter files this as': `${mock.surface} / ${app || '-'}`,
         'Reachable by a per-app rule': Boolean(app),

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { fireAndForget, logs } from '@duncit/logs';
-import { WA_CONNECT, WA_DISCONNECT, WA_GENERATE_API_KEY, WA_QR, WA_SAVE_CONFIG, WA_STATUS, type WaConnection } from '../whatsappQueries';
+import { WA_CONNECT, WA_DISCONNECT, WA_QR, WA_SAVE_CONFIG, WA_STATUS, type WaConnection } from '../whatsappQueries';
 
 /** Manual gateway override sent by Advanced settings (`WaConfigInput`). */
 export interface WaConfigInput {
@@ -13,25 +13,32 @@ const LOGGER = logs.portal['crm'];
 
 /** How often the live status + QR are re-read while a scan is pending. */
 export const WA_POLL_MS = 3000;
-/** A session with no QR after this long is treated as stuck and restarted once. */
-export const WA_STUCK_RESTART_MS = 60_000;
+/**
+ * A session with no QR after this long is treated as stuck and restarted once. It outlasts the
+ * gateway's own start deadline (a 2-minute WhatsApp Web boot window plus 30 s), so a slow but
+ * healthy boot is never cut short.
+ */
+export const WA_STUCK_RESTART_MS = 180_000;
+/** Automatic restarts per visit for a start that failed (e.g. `auth timeout`) before it is left to the user. */
+export const WA_MAX_ERROR_RESTARTS = 2;
 
 const log = (action: string, error: unknown) =>
   LOGGER.warn('WhatsAppConnectCard', action, { error, code: `wa_${action}_failed` });
 
 /**
- * Connection state machine for the Lead Generator.
+ * Connection state machine for the Lead Generator. The gateway API key is managed
+ * by the server, so the only thing left for a person to do is scan the QR.
  * - Reads the LIVE gateway status on mount (the stored one can be days old) and,
  *   when the session is not running, starts it — no button press needed.
  * - While CONNECTING, polls status + QR; a session that produces no QR within
- *   WA_STUCK_RESTART_MS is restarted once.
+ *   WA_STUCK_RESTART_MS is restarted once, and a start that fails is retried up to
+ *   WA_MAX_ERROR_RESTARTS times.
  * - Reports every change of the live status to the page (`onChanged`).
  */
 export function useWaConnect(connection: WaConnection, onChanged: () => void) {
   const connecting = connection.status === 'CONNECTING';
   const [connect, connectState] = useMutation<{ waConnect: WaConnection }, { restart: boolean }>(WA_CONNECT);
   const [disconnect, disconnectState] = useMutation<{ waDisconnect: WaConnection }>(WA_DISCONNECT);
-  const [generate, generateState] = useMutation<{ waGenerateApiKey: { connection: WaConnection } }>(WA_GENERATE_API_KEY);
   const [saveConfig, saveState] = useMutation<{ waSaveConfig: WaConnection }, { input: WaConfigInput }>(WA_SAVE_CONFIG);
 
   const live = useQuery<{ waStatus: WaConnection }>(WA_STATUS, {
@@ -63,13 +70,22 @@ export function useWaConnect(connection: WaConnection, onChanged: () => void) {
     [connect],
   );
 
-  // Auto-start once per visit, from the first live status.
+  // Start once per visit from the first live status, then retry a start that
+  // fails (the live status turns ERROR) a bounded number of times.
   const autoStarted = useRef(false);
+  const errorRestarts = useRef(0);
   useEffect(() => {
-    if (!liveStatus || autoStarted.current) return;
-    autoStarted.current = true;
-    if (liveStatus === 'DISCONNECTED' || liveStatus === 'ERROR') {
-      fireAndForget(start(liveStatus === 'ERROR'), LOGGER, 'WhatsAppConnectCard', 'autoStart');
+    if (!liveStatus) return;
+    if (!autoStarted.current) {
+      autoStarted.current = true;
+      if (liveStatus === 'DISCONNECTED' || liveStatus === 'ERROR') {
+        fireAndForget(start(liveStatus === 'ERROR'), LOGGER, 'WhatsAppConnectCard', 'autoStart');
+      }
+      return;
+    }
+    if (liveStatus === 'ERROR' && errorRestarts.current < WA_MAX_ERROR_RESTARTS) {
+      errorRestarts.current += 1;
+      fireAndForget(start(true), LOGGER, 'WhatsAppConnectCard', 'errorRestart');
     }
   }, [liveStatus, start]);
 
@@ -88,15 +104,6 @@ export function useWaConnect(connection: WaConnection, onChanged: () => void) {
     }, WA_STUCK_RESTART_MS);
     return () => clearTimeout(timer);
   }, [connecting, qr, start]);
-
-  const generateKey = async () => {
-    try {
-      await generate();
-    } catch (error) {
-      log('generateApiKey', error); // shown via generateState.error
-    }
-    changed.current();
-  };
 
   const saveAndConnect = async (input: WaConfigInput) => {
     try {
@@ -120,13 +127,12 @@ export function useWaConnect(connection: WaConnection, onChanged: () => void) {
   return {
     qr,
     connecting,
+    /** A start request is in flight: the QR area already shows its spinner. */
+    starting: connectState.loading,
     start,
     stop,
-    generateKey,
     saveAndConnect,
-    generated: !!generateState.data && !generateState.error,
-    generateError: generateState.error?.message,
     actionError: connectState.error?.message || saveState.error?.message || disconnectState.error?.message,
-    busy: saveState.loading || connectState.loading || disconnectState.loading || generateState.loading,
+    busy: saveState.loading || connectState.loading || disconnectState.loading,
   };
 }

@@ -40,6 +40,10 @@ export const giftCardTypeDefs = /* GraphQL */ `
     scope_image_front_url: String!
     "The back face of the card artwork. Empty when the category ships none."
     scope_image_back_url: String!
+    "The catalogue design the card was bought in. Null on cards bought with a category theme."
+    design_id: ID
+    "The design's name, frozen at purchase. Empty on category-theme cards."
+    design_name: String!
     initial_amount: Float!
     "Equals initial_amount until redeemed, then 0."
     balance: Float!
@@ -80,6 +84,12 @@ export const giftCardTypeDefs = /* GraphQL */ `
     max_amount: Int!
     "Months from purchase until a card expires."
     validity_months: Int!
+    "Most cards one order may buy."
+    max_quantity: Int!
+    "Whether printed cards can be ordered for courier delivery."
+    physical_enabled: Boolean!
+    "Flat delivery fee charged once on every physical order, whatever its quantity."
+    shipping_fee: Float!
     updated_at: String!
   }
 
@@ -89,6 +99,15 @@ export const giftCardTypeDefs = /* GraphQL */ `
     min_amount: Int
     max_amount: Int
     validity_months: Int
+    max_quantity: Int
+    physical_enabled: Boolean
+    shipping_fee: Float
+    "ShipRocket pickup nickname printed cards ship from. Empty = the account default."
+    pickup_location: String
+    parcel_weight_kg: Float
+    parcel_length_cm: Float
+    parcel_breadth_cm: Float
+    parcel_height_cm: Float
   }
 
   "One calendar month of gift card flow. The client formats the label from the key."
@@ -210,6 +229,10 @@ export const giftCardTypeDefs = /* GraphQL */ `
     status: String!
     gateway: String!
     gateway_ref: String
+    "Razorpay's payment id (pay_…), exactly as the Razorpay dashboard shows it. payment_id is Duncit's own reference, not this."
+    razorpay_payment_id: String
+    "Razorpay's order id (order_…) the purchase was opened with."
+    razorpay_order_id: String
     subtotal: Float!
     platform_fee_amount: Float!
     gst_amount: Float!

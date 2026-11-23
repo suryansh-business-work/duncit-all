@@ -182,7 +182,7 @@ describe('VenueLeadForm submit', () => {
   it('expands and collapses every section at once', () => {
     mount(<VenueLeadForm config={config} onSubmit={vi.fn()} />);
     const details = screen.getByRole('button', { name: /1\. Venue Details/ });
-    const tracking = screen.getByRole('button', { name: /14\. Internal Lead Tracking/ });
+    const tracking = screen.getByRole('button', { name: /15\. Internal Lead Tracking/ });
 
     // On first render each section keeps its own default: only Venue Details is open.
     expect(details).toHaveAttribute('aria-expanded', 'true');

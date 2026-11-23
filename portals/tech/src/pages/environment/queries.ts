@@ -19,7 +19,12 @@ export const ENV_CATEGORIES = gql`
       groupKey
       groupLabel
       groupDescription
-      fields { name label secret number bool phone hint }
+      usedIn
+      fields {
+        name label secret number bool phone hint
+        description envKey usedIn
+        validation { type required min max }
+      }
     }
   }
 `;
@@ -193,12 +198,31 @@ export interface EnvFieldDef {
   bool: boolean;
   phone?: boolean;
   hint?: string | null;
+  /** Why the value is used (env-registry.json). */
+  description?: string | null;
+  /** The legacy env key the server resolves to this field, e.g. SMTP_HOST. */
+  envKey?: string | null;
+  /** Repo files that read this field through its env key. */
+  usedIn?: string[];
+  /** How the value is checked on save; absent from a server older than the registry. */
+  validation?: EnvFieldValidation | null;
+}
+
+export interface EnvFieldValidation {
+  /** text, url, hostname, email, phone, number, bool, json, pem, list or fingerprints. */
+  type: string;
+  /** Must be filled when an entry is created. */
+  required: boolean;
+  min?: number | null;
+  max?: number | null;
 }
 
 export interface EnvCategoryDef {
   category: EnvCategory;
   label: string;
   fields: EnvFieldDef[];
+  /** Repo files that read the category directly. */
+  usedIn?: string[];
   docUrl?: string | null;
   apiDocsUrl?: string | null;
   description?: string | null;

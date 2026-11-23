@@ -5,8 +5,8 @@
  * moment it started, so the two things asserted here are the two that carried
  * that bug: the rail disappears completely when nothing is running (it must not
  * leave an empty heading between the feed and the clubs), and a card still
- * opens the pod — where booking is closed, which is why the rail offers no join
- * of its own.
+ * opens the pod — where a running pod is joined, which is why the rail offers no
+ * join of its own.
  */
 import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';

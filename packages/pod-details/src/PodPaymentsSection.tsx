@@ -39,12 +39,6 @@ const renderPayer = (row: PodPaymentRow) => (
   </Stack>
 );
 
-/** The tier frozen on the payment at checkout — amount and percentage — or a dash when none applied. */
-const ticketDiscountValue = (row: PodPaymentRow) =>
-  row.ticket_discount_amount > 0
-    ? `${money(row.currency_symbol, row.ticket_discount_amount)} · ${row.ticket_discount_pct}%`
-    : '—';
-
 const renderStatus = (row: PodPaymentRow) => (
   <StatusChip status={row.status} colorMap={PAYMENT_STATUS_COLORS} />
 );
@@ -115,14 +109,6 @@ export default function PodPaymentsSection({ podId }: Readonly<Props>) {
         width: 130,
         hide: true,
         valueGetter: (row) => row.coupon_code ?? '—',
-      },
-      {
-        field: 'ticket_discount_amount',
-        headerName: t('podDetailsPanel.podPaymentsSection.ticketDiscount'),
-        width: 160,
-        hide: true,
-        type: 'number',
-        valueGetter: ticketDiscountValue,
       },
       {
         field: 'paid_at',

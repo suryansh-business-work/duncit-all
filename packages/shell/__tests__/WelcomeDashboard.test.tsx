@@ -63,6 +63,13 @@ describe('WelcomeDashboard', () => {
     expect(screen.getByText('Payroll')).toBeInTheDocument();
   });
 
+  it('hides the role chips when showRoles is off', () => {
+    set({ data: { me: { first_name: 'Ada', roles: ['FINANCE_MANAGER'] } }, loading: false, error: undefined });
+    render(<WelcomeDashboard dashboardId="finance.overview" name="Finance" tagline="Hi" showRoles={false} />);
+    expect(screen.getByText('Welcome back, Ada')).toBeInTheDocument();
+    expect(screen.queryByText('FINANCE MANAGER')).not.toBeInTheDocument();
+  });
+
   it('translates a module carrying keys instead of literal copy', () => {
     set({
       data: { me: { first_name: 'Ada', roles: ['ADMIN'] } },

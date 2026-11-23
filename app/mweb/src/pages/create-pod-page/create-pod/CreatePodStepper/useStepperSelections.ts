@@ -82,7 +82,7 @@ function useVenueCost(form: CreatePodForm, venues: CreatePodVenue[], podMode: st
     skip: podMode !== 'PHYSICAL' || !venueId || !slotId,
     fetchPolicy: 'cache-first',
   });
-  const { quote, quoteMin } = useOfferQuote(form);
+  const { quote, quoteMin, offer } = useOfferQuote(form);
   const selectedVenue = venues.find((venue) => venue.id === venueId) ?? null;
   const space = venueSpaces(selectedVenue).find((item) => item.label === form.watch('venue_space_label'));
   if (slotId) {
@@ -98,8 +98,9 @@ function useVenueCost(form: CreatePodForm, venues: CreatePodVenue[], podMode: st
     amount: quote?.total ?? null,
     bookedCapacity: space?.capacity,
     offerMinGuests: offering ? offerGuestFloor(selectedVenue?.offer_min_guests, space?.capacity) : 0,
-    // The quote priced at the venue's minimum names its guests (`pax`).
-    offerEarnings: quote ? offerEarningsArgs(quote, quoteMin, quoteMin?.pax ?? 0, spots) : null,
+    // The quote priced at the venue's minimum names its guests (`pax`); the
+    // offer it priced names the model and window the venue's minimum business is keyed on.
+    offerEarnings: quote ? offerEarningsArgs(quote, quoteMin, quoteMin?.pax ?? 0, spots, offer) : null,
   };
 }
 
@@ -161,8 +162,8 @@ export function useStepperSelections(
   });
   useClampedSpots(form, podMode === 'PHYSICAL', spots);
 
-  // Step-4 money lives here so the footer can block Create Pod on the same two
-  // rules the panel renders (zero earnings / venue price not covered).
+  // Step-4 money lives here so the footer blocks Create Pod on the same
+  // server verdict the panel renders (a fresh projection that says viable).
   const podType = form.watch('pod_type');
   const preview = useEarningsPreview({
     slotPrice: venue.amount,

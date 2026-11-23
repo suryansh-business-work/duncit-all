@@ -36,6 +36,7 @@ import { PodShopReturnModel } from '@modules/commerce/podShopReturn/podShopRetur
 import { StoreReturnModel } from '@modules/commerce/store/storeReturn.model';
 import { PaymentModel } from './payment.model';
 import type { PaymentShop } from './payment.source';
+import { razorpaySearchAlso } from './payment.razorpaySearch';
 import {
   buildTableFilter,
   clampPage,
@@ -54,7 +55,8 @@ const orEmpty = (path: string) => ({ $ifNull: [path, ''] });
 
 /** Allowlists for the shared table engine, over the UNIFIED row (shopOrderRefundsTable). */
 const ORDER_REFUND_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['ref_no', 'order_no', 'buyer_name', 'buyer_email'],
+  // The Razorpay refund id (rfnd_…) Finance copies from the dashboard finds its row too.
+  searchFields: ['ref_no', 'order_no', 'buyer_name', 'buyer_email', 'razorpay_refund_id'],
   sortFields: {
     event_at: 'event_at',
     ref_no: 'ref_no',
@@ -287,7 +289,7 @@ export const orderRefundService = {
     const pipeline: PipelineStage[] = [
       ...(shop === 'ECOMM' ? storeBranches() : podShopBranches()),
       ...unifiedFields(shop),
-      { $match: buildTableFilter(q, ORDER_REFUND_TABLE_CONFIG) },
+      { $match: buildTableFilter(q, ORDER_REFUND_TABLE_CONFIG, await razorpaySearchAlso(q.search, 'payment_id', 'docId')) },
       {
         $facet: {
           rows: [

@@ -271,4 +271,24 @@ export const SHIPPED_AFTER_REDESIGN: ReadonlySet<string> = new Set<string>([
   'employee-target-reminder',
   'host-monthly-performance',
   'club-admin-host-performance-alert',
+  // The Venue Kit interest form's email code, first shipped 2026-11-22.
+  'venue-kit-otp',
+  // CRM manual-log @mention notice, first shipped 2026-11-22.
+  'crm-log-mention',
+  // Rented items (booked, called off, returned, refund delayed) and the
+  // generic refund-processed email, first shipped 2026-11-22.
+  'venue-rental-booked',
+  'rental-booked-user',
+  'venue-rental-cancelled',
+  'rental-cancelled-user',
+  'rental-returned-user',
+  'rental-refund-delayed-user',
+  'refund-processed',
+  // Gift card orders (confirmed, dispatched, out for delivery, failed attempt,
+  // delivered), first shipped 2026-11-23.
+  'gift-card-order-confirmed',
+  'gift-card-order-shipped',
+  'gift-card-order-out-for-delivery',
+  'gift-card-order-delivery-failed',
+  'gift-card-order-delivered',
 ]);

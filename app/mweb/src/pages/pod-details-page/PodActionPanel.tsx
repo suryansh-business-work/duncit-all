@@ -72,9 +72,10 @@ export default function PodActionPanel({
   const m = ms?.membership;
   const referralToken = m?.referral_token as string | null;
 
-  // Once the pod has STARTED, booking is closed — block checkout entirely (the
-  // server enforces the same rule on joinFree + payment order creation). A pod
-  // that is still running says so rather than claiming it has already happened.
+  // Booking stays open while the pod is running and closes once its END time
+  // has passed — the server enforces the same rule on joinFree + payment order
+  // creation. `isExpired` (started) only picks the past tense for the host and
+  // a booked member.
   const phase = podPhase(pod?.pod_date_time, pod?.pod_end_date_time);
   const isExpired = phase !== 'UPCOMING';
 
@@ -98,13 +99,10 @@ export default function PodActionPanel({
     );
   }
 
-  const closedMessage = phase === 'ONGOING'
-    ? t('mweb.podDetails.bookingClosedOngoing')
-    : t('mweb.podDetails.bookingClosed');
-  if (isExpired && !isMember && !inProcess) {
+  if (phase === 'PREVIOUS' && !isMember && !inProcess) {
     return (
       <Stack direction="row" data-testid="pod-booking-closed" sx={{ alignItems: 'center', minHeight: 48 }}>
-        <BarNotice icon={<EventBusyIcon sx={{ color: 'warning.main' }} />}>{closedMessage}</BarNotice>
+        <BarNotice icon={<EventBusyIcon sx={{ color: 'warning.main' }} />}>{t('mweb.podDetails.bookingClosed')}</BarNotice>
       </Stack>
     );
   }

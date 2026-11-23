@@ -110,4 +110,4 @@ export type { PodPricingInput, PodPricingState } from './usePodPricing';
 export { FreePodNote } from './FreePodNote';
 export { SuggestedPriceLink } from './SuggestedPriceLink';
 export { SuggestedPricesModal } from './SuggestedPricesModal';
-export { ZeroEarningsNotice } from './ZeroEarningsNotice';
+export { ViabilityNotice } from './ViabilityNotice';

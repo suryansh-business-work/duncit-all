@@ -73,3 +73,14 @@ export { default as EarningsSplitView } from '../../../../../packages/ui/src/fin
 // lines are what Finance approves against, and omitting it made the import
 // `undefined`.
 export { default as VenueBillSummary } from '../../../../../packages/ui/src/finance-waterfall/VenueBillSummary';
+
+/** A titled card: the title, the header action and the body, nothing more. */
+export function SectionCard({ title, action, children }: any) {
+  return (
+    <section data-testid="section-card">
+      <h2>{title}</h2>
+      {action}
+      {children}
+    </section>
+  );
+}

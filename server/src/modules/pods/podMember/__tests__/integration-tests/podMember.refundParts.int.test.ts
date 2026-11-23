@@ -8,7 +8,14 @@
  * The coin ledger is the seam here: its own suite covers the ledger writes, so
  * these assert what the refund flow asks of it and what it records back.
  */
+jest.mock('@modules/finance/payment/razorpay.gateway', () => ({
+  createRazorpayRefund: jest.fn(),
+  listRazorpayRefunds: jest.fn().mockResolvedValue([]),
+}));
+
 import { Types } from 'mongoose';
+import { createRazorpayRefund } from '@modules/finance/payment/razorpay.gateway';
+import { PaymentGatewayRefundModel } from '@modules/finance/payment/payment.gatewayRefund.model';
 import { podMemberService } from '../../podMember.service';
 import { PodMemberModel } from '../../podMember.model';
 import { BackoutRequestModel } from '../../backoutRequest.model';
@@ -202,6 +209,31 @@ describe('processBackoutRefund — one part at a time', () => {
     expect(refundCoins).toHaveBeenCalledTimes(2);
     expect(retried.pending_refund_parts).toEqual(['CASH', 'EARN_REVOKE']);
     expect((await stored(id)).coins_refund_processed_at).toBeInstanceOf(Date);
+  });
+
+  it('sends the cash part back through Razorpay once, keyed on the request', async () => {
+    const createRefund = createRazorpayRefund as jest.Mock;
+    createRefund.mockReset().mockResolvedValue({ id: 'rfnd_bko', status: 'processed', amount: 27000, receipt: 'dr_x_1' });
+    const { id, payment } = await filledRequest();
+    await PaymentModel.updateOne(
+      { _id: payment._id },
+      { $set: { gateway: 'RAZORPAY', gateway_ref: 'pay_bko1', 'metadata.razorpay_payment_id': 'pay_bko1' } }
+    );
+
+    await podMemberService.processBackoutRefund(id, 'CASH');
+
+    expect(createRefund).toHaveBeenCalledTimes(1);
+    expect(createRefund).toHaveBeenCalledWith(expect.objectContaining({ paymentId: 'pay_bko1', amountPaise: 27000 }));
+    expect(await PaymentGatewayRefundModel.findOne({ idempotency_key: `backout:${id}` })).toMatchObject({
+      status: 'SUCCEEDED',
+      source: 'BACKOUT',
+      razorpay_refund_id: 'rfnd_bko',
+    });
+    // A second click on the same part is refused before any money moves.
+    await expect(podMemberService.processBackoutRefund(id, 'CASH')).rejects.toMatchObject({
+      extensions: { code: 'CONFLICT' },
+    });
+    expect(createRefund).toHaveBeenCalledTimes(1);
   });
 
   it('runs every outstanding part in order when no part is named', async () => {

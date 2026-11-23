@@ -3,11 +3,11 @@ import { InfoRow } from '@duncit/ui';
 import { EM_DASH } from '@duncit/table';
 import { useTranslation, type DateFormatter } from '@duncit/app-settings';
 import SectionBlock from './SectionBlock';
-import { money, type DetailPayment, type PaymentPodBooking } from './queries';
+import type { DetailPayment, PaymentPodBooking } from './queries';
 
 interface Props {
   booking: PaymentPodBooking;
-  /** The payment the seats were bought on — its multi-ticket tier and Smart Incentive are frozen there. */
+  /** The payment the seats were bought on — its Smart Incentive is frozen there. */
   payment: DetailPayment;
   formatDateTime: DateFormatter['formatDateTime'];
 }
@@ -18,11 +18,6 @@ interface Props {
 export default function PodBookingCard({ booking, payment, formatDateTime }: Readonly<Props>) {
   const { t } = useTranslation();
   const podDate = booking.pod_date_time ? formatDateTime(booking.pod_date_time) : EM_DASH;
-  // The tier the booking got at checkout, not the pod's current offer.
-  const ticketDiscount =
-    payment.ticket_discount_amount > 0
-      ? `${payment.ticket_discount_pct}% · −${money(payment.currency_symbol, payment.ticket_discount_amount)}`
-      : t('finance.payment.ticketDiscountNone');
 
   return (
     <SectionBlock title={t('finance.payment.podBookingTitle')}>
@@ -30,7 +25,6 @@ export default function PodBookingCard({ booking, payment, formatDateTime }: Rea
         <InfoRow variant="split" label={t('finance.payment.pod')} value={booking.pod_title} />
         <InfoRow variant="split" label={t('finance.payment.podDate')} value={podDate} />
         <InfoRow variant="split" label={t('finance.payment.seats')} value={String(booking.seats)} />
-        <InfoRow variant="split" label={t('finance.payment.ticketDiscountTier')} value={ticketDiscount} />
         {/* The offer this member had unlocked at checkout — absent unless one applied. */}
         {payment.smart_incentive_pct > 0 && (
           <InfoRow

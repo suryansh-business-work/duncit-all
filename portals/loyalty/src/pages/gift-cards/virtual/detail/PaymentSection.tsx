@@ -70,11 +70,17 @@ export default function PaymentSection({ payment }: Readonly<{ payment: GiftCard
       <Stack spacing={2}>
         <InfoGrid
           items={[
-            { key: 'payment-id', label: t('loyalty.virtual.paymentId'), value: payment.payment_id },
+            // Razorpay's ids are what its dashboard shows; the Duncit ref is our own and never matches them.
+            {
+              key: 'razorpay-payment-id',
+              label: t('loyalty.virtual.razorpayPaymentId'),
+              value: payment.razorpay_payment_id || EM_DASH,
+            },
+            { key: 'razorpay-order-id', label: t('loyalty.virtual.razorpayOrderId'), value: payment.razorpay_order_id || EM_DASH },
+            { key: 'duncit-ref', label: t('loyalty.virtual.duncitRef'), value: payment.payment_id },
             { key: 'invoice', label: t('loyalty.virtual.invoice'), value: payment.invoice_no || EM_DASH },
             { key: 'payment-status', label: t('loyalty.virtual.paymentStatus'), value: payment.status },
             { key: 'gateway', label: t('loyalty.virtual.gateway'), value: payment.gateway || EM_DASH },
-            { key: 'gateway-ref', label: t('loyalty.virtual.gatewayRef'), value: payment.gateway_ref || EM_DASH },
             {
               key: 'paid-at',
               label: t('loyalty.virtual.paidAt'),

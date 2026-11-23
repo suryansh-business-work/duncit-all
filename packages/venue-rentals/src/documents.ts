@@ -7,7 +7,6 @@ import {
   type RentalItemsConfig,
   type RentalsVenue,
   MARK_RENTAL_BOOKING_MUTATION,
-  MARK_RENTAL_REFUNDED_MUTATION,
   RENTAL_BOOKINGS_TABLE_QUERY,
   VENUE_RENTAL_BOOKINGS_TABLE_QUERY,
   VENUE_RENTAL_STATS_QUERY,
@@ -16,6 +15,11 @@ import {
   type RentalBookingRow,
   type RentalVenueStats,
   type toVenueRentalsInput,
+  RENTAL_BOOKING_DETAIL_QUERY,
+  SEND_RENTAL_REFUND_MUTATION,
+  ADD_RENTAL_BOOKING_PROOF_MUTATION,
+  type RentalBookingDetail,
+  type RentalProofValues,
 } from '@duncit/utils';
 
 /**
@@ -41,10 +45,19 @@ export const MARK_RENTAL_BOOKING: TypedDocumentNode<
   { id: string; input: MarkRentalInput }
 > = gql(MARK_RENTAL_BOOKING_MUTATION);
 
-export const MARK_RENTAL_REFUNDED: TypedDocumentNode<
-  { markRentalRefunded: RentalBookingRow },
-  { id: string; reference: string }
-> = gql(MARK_RENTAL_REFUNDED_MUTATION);
+/** One rental, whole: Finance's view or its venue's, decided by the server. */
+export const RENTAL_BOOKING_DETAIL: TypedDocumentNode<{ rentalBookingDetail: RentalBookingDetail }, { id: string }> =
+  gql(RENTAL_BOOKING_DETAIL_QUERY);
+
+/** Finance sends a refund that waited for review through Razorpay; nothing is ever marked paid by hand. */
+export const SEND_RENTAL_REFUND: TypedDocumentNode<{ sendRentalRefund: RentalBookingDetail }, { id: string; note: string }> =
+  gql(SEND_RENTAL_REFUND_MUTATION);
+
+/** An optional note and/or photos on a rental, from Finance or the venue. */
+export const ADD_RENTAL_BOOKING_PROOF: TypedDocumentNode<
+  { addRentalBookingProof: RentalBookingDetail },
+  { id: string; input: RentalProofValues }
+> = gql(ADD_RENTAL_BOOKING_PROOF_MUTATION);
 
 /** Finance's rules, read by the mark dialog to say what the venue hands back. */
 export const PUBLIC_RENTAL_SETTINGS: TypedDocumentNode<{ publicRentalSettings: PublicRentalSettings }, Record<string, never>> =

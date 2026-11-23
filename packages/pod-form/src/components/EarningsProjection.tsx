@@ -1,13 +1,11 @@
 import { Alert, Box, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import InsightsIcon from '@mui/icons-material/Insights';
-import { useFormContext, useWatch } from 'react-hook-form';
 import { buildEarningsStatement, formatStatementMoney } from '@duncit/utils';
 import { usePodFormData } from '../context';
-import { useEarningsProjection } from '../finance/useEarningsProjection';
-import { projectionRows, type ProjectionRow, type VenueStanding } from '../finance/projectionRows';
+import { useFormEarnings } from '../finance/useFormEarnings';
+import { projectionRows, type ProjectionRow } from '../finance/projectionRows';
 import { useTranslation } from '../i18n/useTranslation';
-import { isFreePodType } from '../pod-type';
-import type { PodFormValues } from '../types';
+import { ProjectionFailedAlert, ViabilityAlert } from './EarningsVerdict';
 
 interface Props {
   /** Duncit products attached to the pod (rupees) — deducted from the payout. */
@@ -48,14 +46,6 @@ function Row({ row, money }: Readonly<{ row: ProjectionRow; money: (v: number) =
   );
 }
 
-/** Where the venue stands, from the form: an Auto Pod's venue is still to
- * enrol, a virtual pod has none, a physical pod may or may not have its slot. */
-function venueStanding(autoPod: boolean, podMode: string, slotId: string): VenueStanding {
-  if (autoPod) return 'pending';
-  if (podMode === 'VIRTUAL') return 'none';
-  return slotId ? 'slot' : 'unpicked';
-}
-
 /**
  * The admin editor's live earnings projection for a paid pod.
  *
@@ -68,30 +58,17 @@ function venueStanding(autoPod: boolean, podMode: string, slotId: string): Venue
  *
  * A free pod collects nothing, so there is nothing to project: the panel is
  * not drawn and the server is not asked.
+ *
+ * The server's verdict rides on the same projection: when it says the pod
+ * would be refused, the reason, the venue's minimum business and the lowest
+ * ticket price that works are shown here, and Save waits (useEconomicsGate).
  */
 export default function EarningsProjection({ productCost }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { config, finance } = usePodFormData();
-  const { control } = useFormContext<PodFormValues>();
-  const podAmount = Number(useWatch({ control, name: 'pod_amount' })) || 0;
-  const noOfSpots = Number(useWatch({ control, name: 'no_of_spots' })) || 0;
-  const podMode = useWatch({ control, name: 'pod_mode' });
-  const venueId = useWatch({ control, name: 'venue_id' });
-  const slotId = useWatch({ control, name: 'venue_slot_id' });
-  const hosts = useWatch({ control, name: 'pod_hosts_id' });
-  const isFree = isFreePodType(useWatch({ control, name: 'pod_type' }));
-  const venue = venueStanding(!!config.autoPod, podMode, slotId);
+  const { finance } = usePodFormData();
+  const { projection, stale, idle, failed, retry, podAmount, venue, isFree } = useFormEarnings(true);
   const symbol = finance?.currency_symbol || '₹';
   const money = (value: number) => formatStatementMoney(value, symbol);
-
-  const { projection, loading, stale, idle } = useEarningsProjection({
-    podAmount,
-    noOfSpots,
-    hostUserId: hosts[0] ?? null,
-    venueId: venue === 'slot' ? venueId : null,
-    venueSlotId: venue === 'slot' ? slotId : null,
-    skip: isFree,
-  });
   if (isFree) return null;
 
   const body = () => {
@@ -102,12 +79,14 @@ export default function EarningsProjection({ productCost }: Readonly<Props>) {
         </Typography>
       );
     }
+    if (failed) return <ProjectionFailedAlert onRetry={retry} />;
     // During the debounce window the previous waterfall would sit beside labels
-    // built from the live inputs — treat it as loading instead.
+    // built from the live inputs — treat it as loading instead. Not idle and
+    // not failed, a missing projection is one still on its way.
     if (!projection || stale) {
       return (
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-          {(loading || stale) && <CircularProgress size={16} />}
+          <CircularProgress size={16} />
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
             {t('podForm.priceBreakdown.loading')}
           </Typography>
@@ -144,7 +123,10 @@ export default function EarningsProjection({ productCost }: Readonly<Props>) {
             </Typography>
           </Alert>
         )}
-        {payout && payout.amount !== null && payout.amount <= 0 && (
+        <ViabilityAlert verdict={projection} money={money} />
+        {/* The server's verdict leaves out attached products; when they alone
+            take the payout to ₹0 the admin is still told, without a block. */}
+        {projection.viable && payout && payout.amount !== null && payout.amount <= 0 && (
           <Alert severity="error" data-testid="earnings-zero">
             {t('podForm.priceBreakdown.zeroEarnings')}
           </Alert>

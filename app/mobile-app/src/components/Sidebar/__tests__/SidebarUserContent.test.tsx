@@ -14,6 +14,12 @@ jest.mock('@/hooks/useActiveAds', () => ({
   useActiveAds: () => ({ ads: mockAds, loading: false }),
 }));
 jest.mock('@/services/secure-storage', () => ({ getItem: jest.fn(), setItem: jest.fn() }));
+// The Studio card's email gate (useStudioEmailGate) navigates and reads the
+// user info; its behaviour is covered by SidebarStudioOptionsEntry.test.
+jest.mock('@react-navigation/native', () => ({ useNavigation: () => ({ navigate: jest.fn() }) }));
+jest.mock('@/hooks/useMe', () => ({
+  useMe: () => ({ data: { me: { is_email_verified: true } } }),
+}));
 
 const mockGet = getItem as jest.Mock;
 const mockSet = setItem as jest.Mock;

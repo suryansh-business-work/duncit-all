@@ -36,8 +36,11 @@ const mockedVenues = useMyVenues as jest.Mock;
 const HALL = { id: 'v1', venue_name: 'Hall', city: 'Pune', status: 'APPROVED' };
 const TURF = { id: 'v2', venue_name: 'Turf', city: 'Pune', status: 'SUBMITTED' };
 
-const signedIn = (roles: string[]) =>
-  mockedMe.mockReturnValue({ data: { me: { roles } }, isLoading: false });
+const signedIn = (roles: string[], verified = true) =>
+  mockedMe.mockReturnValue({
+    data: { me: { roles, is_email_verified: verified } },
+    isLoading: false,
+  });
 
 const venuesState = (over: Record<string, unknown> = {}) => ({
   venues: [HALL, TURF],
@@ -215,5 +218,52 @@ describe('Studio Options screens', () => {
     signedIn([]);
     renderWithProviders(<HostOptionsScreen />);
     expect(screen.queryByTestId('studio-options-list')).toBeNull();
+  });
+
+  it.each([
+    ['HOST', ['HOST'], HostOptionsScreen],
+    ['VENUE', ['VENUE_OWNER'], VenueOptionsScreen],
+    ['CLUB', ['CLUB_ADMIN'], ClubOptionsScreen],
+  ] as const)(
+    'keeps the %s options behind "verify your email first" while the email is unverified',
+    (_mode, roles, Screen) => {
+      signedIn([...roles], false);
+      renderWithProviders(<Screen />);
+      expect(screen.getByTestId('studio-email-gate')).toHaveTextContent(/Verify your email first/);
+      expect(screen.queryByTestId('studio-options-list')).toBeNull();
+      expect(screen.queryByTestId('venue-switcher')).toBeNull();
+    },
+  );
+
+  it('sends the unverified partner to verify their email from the gate', () => {
+    signedIn(['HOST'], false);
+    renderWithProviders(<HostOptionsScreen />);
+    fireEvent.press(screen.getByTestId('studio-email-gate-action'));
+    expect(mockNavigate).toHaveBeenCalledWith('Profile', { verifyEmail: true });
+  });
+
+  it('waits for the account before showing the gate', () => {
+    mockedMe.mockReturnValue({ data: undefined, isLoading: true });
+    renderWithProviders(<HostOptionsScreen />);
+    expect(screen.queryByTestId('studio-email-gate')).toBeNull();
+  });
+
+  it('still lists the Brand options on an unverified email', () => {
+    signedIn(['ECOMM_MANAGER'], false);
+    renderWithProviders(<BrandOptionsScreen />);
+    expect(screen.getByTestId('studio-options-list')).toBeOnTheScreen();
+    expect(screen.queryByTestId('studio-email-gate')).toBeNull();
+  });
+
+  it('explains instead of switching to a gated role from the switcher, and remembers nothing', () => {
+    signedIn(['HOST', 'ECOMM_MANAGER'], false);
+    renderWithProviders(<BrandOptionsScreen />);
+    fireEvent.press(screen.getByTestId('studio-role-host'));
+    expect(screen.getByTestId('studio-email-gate-dialog')).toBeOnTheScreen();
+    expect(useStudioModeStore.getState().mode).toBe('USER');
+    expect(mockReplace).not.toHaveBeenCalled();
+    fireEvent.press(screen.getByTestId('studio-email-gate-dialog-confirm'));
+    expect(mockNavigate).toHaveBeenCalledWith('Profile', { verifyEmail: true });
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 });

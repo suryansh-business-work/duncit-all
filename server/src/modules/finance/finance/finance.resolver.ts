@@ -5,6 +5,8 @@ import {
   getFinanceSettings,
   INVOICE_TEMPLATE_KINDS,
   partyTemplateOf,
+  REFUND_PROCESSING_DAYS_RANGE,
+  refundProcessingDaysOf,
   type IFinanceSettings,
 } from './finance.model';
 import { getFoodTaxDefaults, updateFoodTaxDefaults } from './foodTaxDefaults';
@@ -63,6 +65,9 @@ const toPub = (d: IFinanceSettings) => ({
   host_payout_mode: d.host_payout_mode,
   payout_day_of_week: d.payout_day_of_week,
   payout_time: d.payout_time,
+  // Declared Int! in the SDL but never returned here, so every read that
+  // selected it died with "Cannot return null for non-nullable field".
+  refund_processing_days: refundProcessingDaysOf(d),
   currency_symbol: d.currency_symbol,
   invoice_prefix: d.invoice_prefix,
   dummy_mode: d.dummy_mode,
@@ -112,7 +117,29 @@ function validatePctInputs(input: any) {
   }
 }
 
+/**
+ * The patch with every explicit `null` left out. Each input field is optional,
+ * so null can only mean "not changing this" — written through, it would blank
+ * a field the SDL promises is never null and break every later read.
+ */
+function withoutNulls<T extends object>(input: T): T {
+  // Same keys minus the nulls — still the caller's shape, so T holds.
+  return Object.fromEntries(Object.entries(input ?? {}).filter(([, value]) => value !== null)) as T;
+}
+
+function validateRefundDays(input: { refund_processing_days?: unknown }) {
+  const days = input.refund_processing_days;
+  if (days === undefined) return;
+  const { min, max } = REFUND_PROCESSING_DAYS_RANGE;
+  if (typeof days !== 'number' || !Number.isInteger(days) || days < min || days > max) {
+    throw new GraphQLError(`refund_processing_days must be a whole number from ${min} to ${max}`, {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+}
+
 function validatePayoutInputs(input: any) {
+  validateRefundDays(input);
   if (
     input.payout_day_of_week !== undefined &&
     (input.payout_day_of_week < 0 || input.payout_day_of_week > 6)
@@ -125,6 +152,11 @@ function validatePayoutInputs(input: any) {
 }
 
 export const financeResolvers = {
+  // The multi-ticket discount was removed; app and portal versions still in use
+  // select this non-null field, so it always answers 0.
+  PodFinanceBreakdown: {
+    ticket_discount_total: (): number => 0,
+  },
   Query: {
     financeSettings: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, FINANCE_READ);
@@ -238,10 +270,15 @@ export const financeResolvers = {
         min_spots?: number | null;
         venue_amount_at_min?: number | null;
         venue_commission_on_top_at_min?: number | null;
+        venue_offer_model?: string | null;
+        venue_hours?: number | null;
       },
       ctx: GraphQLContext
     ) => {
       const user = requireAuth(ctx);
+      if (args.venue_hours != null && (!Number.isFinite(args.venue_hours) || args.venue_hours < 0 || args.venue_hours > 720)) {
+        throw new GraphQLError('venue_hours must be from 0 to 720', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
       return breakdownService.potentialPodEarnings(
         user.id,
         args.pod_amount,
@@ -256,7 +293,8 @@ export const financeResolvers = {
               venueAmount: args.venue_amount_at_min ?? null,
               commissionOnTop: args.venue_commission_on_top_at_min ?? null,
             }
-          : null
+          : null,
+        { model: args.venue_offer_model ?? null, hours: args.venue_hours ?? null }
       );
     },
     adminPotentialPodEarnings: async (
@@ -339,7 +377,7 @@ export const financeResolvers = {
       requireRole(ctx, ADMIN_RW);
       // Fees, shares and payout rules apply to every city at once.
       assertPlatformFinanceWrite(ctx, ADMIN_RW);
-      const input = args.input;
+      const input = withoutNulls(args.input);
       validatePctInputs(input);
       validatePayoutInputs(input);
       // Flatten nested invoice templates to dotted paths — one per FIELD, not
@@ -384,11 +422,15 @@ export const financeResolvers = {
       await assertPodFinanceScope(ctx, ADMIN_RW, () => financeTargets.releaseRequest(args.request_id));
       return paymentReleaseService.review(args.request_id, args.input, ctx.user?.id ?? null);
     },
-    approvePodPaymentRelease: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+    approvePodPaymentRelease: async (
+      _p: unknown,
+      args: { id: string; shortfall_funding_note?: string | null },
+      ctx: GraphQLContext
+    ) => {
       const user = requireRole(ctx, ADMIN_RW);
       // A batch can span pods in several cities — every one must be the admin's.
       await assertPodFinanceScope(ctx, ADMIN_RW, () => financeTargets.releaseGroup(args.id));
-      await paymentReleaseService.approveGroup(args.id, user.id);
+      await paymentReleaseService.approveGroup(args.id, user.id, args.shortfall_funding_note);
       return paymentReleaseGroupService.detail(args.id);
     },
     completePodSettlement: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {

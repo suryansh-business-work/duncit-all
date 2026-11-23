@@ -1,114 +1,141 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { YStack } from 'tamagui';
-import { EMAIL } from '@duncit/regex';
+import {
+  canOrderPhysical,
+  giftCardPurchaseDefaults,
+  giftCardPurchaseRecipient,
+  giftCardPurchaseTotals,
+  makeGiftCardPurchaseSchema,
+  maxQuantityFor,
+  type GiftCardPurchasePolicy,
+  type GiftCardPurchaseValues,
+} from '@duncit/forms/schemas';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
-import type { GiftCardCategory, GiftCardSettings } from '@/hooks/useGiftCards';
+import type { GiftCardDesign, GiftCardStorefront } from '@/hooks/useGiftCards';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatMoney } from '@/utils/checkout-math';
 import type { GiftCardSelection } from '@/utils/gift-cards';
+import { GiftCardScopeType } from '@/generated/graphql/graphql';
 import { GiftCardAmountPicker } from './GiftCardAmountPicker';
+import { GiftCardDeliveryPicker } from './GiftCardDeliveryPicker';
 import { GiftCardHowItWorks } from './GiftCardHowItWorks';
+import { GiftCardQuantityPicker } from './GiftCardQuantityPicker';
 import { GiftCardRecipientFields } from './GiftCardRecipientFields';
-import { GiftCardThemePicker, type GiftCardThemeChoice } from './GiftCardThemePicker';
+import { GiftCardTotalCard } from './GiftCardTotalCard';
+import { GiftCardVisual } from './GiftCardVisual';
 
 interface Props {
-  settings: GiftCardSettings;
-  categories: readonly GiftCardCategory[];
-  currency: string;
+  storefront: GiftCardStorefront;
+  design: GiftCardDesign;
   onContinue: (selection: GiftCardSelection) => void;
 }
 
-/** The Buy tab: theme → amount → recipient → Continue, over the instruction
- * block. Owns the buy-form state; the screen only routes the selection on. */
-export function GiftCardBuySection({
-  settings,
-  categories,
-  currency,
-  onContinue,
-}: Readonly<Props>) {
+const policyOf = (s: GiftCardStorefront): GiftCardPurchasePolicy => ({
+  min_amount: s.settings.min_amount,
+  max_amount: s.settings.max_amount,
+  max_quantity: s.settings.max_quantity,
+  physical_enabled: s.settings.physical_enabled,
+  physical_available: s.physical_available,
+  shipping_fee: s.settings.shipping_fee,
+});
+
+/**
+ * The Buy tab: the one gift card (the default design, flippable) → amount →
+ * how many → email or printed → who it is for → Continue, over the
+ * instruction block. Validated by the shared purchase schema mWeb uses too.
+ */
+export function GiftCardBuySection({ storefront, design, onContinue }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [theme, setTheme] = useState<GiftCardThemeChoice | null>(null);
-  const [chipAmount, setChipAmount] = useState<number | null>(null);
-  const [customText, setCustomText] = useState('');
-  const [forGift, setForGift] = useState(false);
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [message, setMessage] = useState('');
-
-  const rangeHint = t('mweb.giftCards.amountRangeHint', {
-    vars: {
-      min: formatMoney(currency, settings.min_amount),
-      max: formatMoney(currency, settings.max_amount),
-    },
+  const { settings, currency_symbol: currency } = storefront;
+  const policy = useMemo(() => policyOf(storefront), [storefront]);
+  const schema = useMemo(() => makeGiftCardPurchaseSchema(t, policy), [t, policy]);
+  const { control, setValue, handleSubmit, formState } = useForm<GiftCardPurchaseValues>({
+    defaultValues: giftCardPurchaseDefaults(settings.denominations, policy),
+    resolver: zodResolver(schema),
+    mode: 'onChange',
   });
-  const hasCustom = customText.trim() !== '';
-  const customValue = Number.parseInt(customText.trim(), 10);
-  const customValid =
-    Number.isFinite(customValue) &&
-    customValue >= settings.min_amount &&
-    customValue <= settings.max_amount;
-  let amount: number | null = chipAmount;
-  if (hasCustom) amount = customValid ? customValue : null;
-  const amountError = hasCustom && !customValid ? rangeHint : null;
+  const values = useWatch({ control }) as GiftCardPurchaseValues;
+  const set = <K extends keyof GiftCardPurchaseValues>(name: K, value: GiftCardPurchaseValues[K]) =>
+    setValue(name, value as never, { shouldValidate: true, shouldDirty: true });
+  const totals = giftCardPurchaseTotals(values, settings.shipping_fee);
+  const errors = formState.errors;
+  // One amount in the form; the picker shows it as a chip when it is one, else as typed.
+  const chip = settings.denominations.includes(Number(values.amount))
+    ? Number(values.amount)
+    : null;
 
-  const trimmedEmail = email.trim();
-  const emailValid = EMAIL.test(trimmedEmail);
-  let emailError: string | null = null;
-  if (forGift && trimmedEmail !== '' && !emailValid) {
-    emailError = t('mweb.auth.validation.emailInvalid');
-  }
-  const canContinue = !!theme && amount !== null && (!forGift || emailValid);
-
-  const continueToPayment = () => {
-    /* istanbul ignore next -- the button is disabled until both exist */
-    if (!theme || amount === null) return;
+  const continueToPayment = handleSubmit((valid) =>
     onContinue({
-      scope_type: theme.scope_type,
-      scope_category_id: theme.scope_category_id,
-      scope_name: theme.scope_name,
-      scope_image_url: theme.scope_image_url,
-      scope_image_front_url: theme.scope_image_front_url,
-      scope_image_back_url: theme.scope_image_back_url,
-      amount,
-      recipient_email: forGift ? trimmedEmail : '',
-      recipient_name: forGift ? name.trim() : '',
-      message: forGift ? message.trim() : '',
-    });
-  };
+      design_id: design.id,
+      design_name: design.name,
+      front_url: design.front_image_url,
+      back_url: design.back_image_url,
+      amount: totals.amount,
+      quantity: totals.quantity,
+      delivery_mode: valid.delivery_mode,
+      shipping_fee: totals.shippingFee,
+      gift: valid.delivery_mode === 'DIGITAL' && valid.gift,
+      ...giftCardPurchaseRecipient(valid),
+    }),
+  );
 
   return (
     <YStack gap={16}>
-      <GiftCardThemePicker categories={categories} value={theme} onChange={setTheme} />
+      <GiftCardVisual
+        testID="gift-card-preview"
+        theme={{ scope_type: GiftCardScopeType.Shop, scope_name: '', design_name: design.name }}
+        imageUrl=""
+        artworkFrontUrl={design.front_image_url}
+        artworkBackUrl={design.back_image_url}
+        amountLabel={formatMoney(currency, totals.amount)}
+        minHeight={180}
+      />
       <GiftCardAmountPicker
         denominations={settings.denominations}
         min={settings.min_amount}
         max={settings.max_amount}
         currency={currency}
-        selected={chipAmount}
-        customText={customText}
-        error={amountError}
-        onSelect={(picked) => {
-          setChipAmount(picked);
-          setCustomText('');
-        }}
-        onCustomChange={setCustomText}
+        selected={chip}
+        customText={chip === null ? values.amount : ''}
+        error={errors.amount?.message ?? null}
+        onSelect={(picked) => set('amount', String(picked))}
+        onCustomChange={(text) => set('amount', text)}
+      />
+      <GiftCardDeliveryPicker
+        value={values.delivery_mode}
+        physicalAvailable={canOrderPhysical(policy)}
+        shippingFee={settings.shipping_fee}
+        currency={currency}
+        onChange={(next) => set('delivery_mode', next)}
+      />
+      <GiftCardQuantityPicker
+        value={values.quantity}
+        max={maxQuantityFor(policy, values.delivery_mode)}
+        error={errors.quantity?.message}
+        onChange={(next) => set('quantity', next)}
       />
       <GiftCardRecipientFields
-        forGift={forGift}
-        email={email}
-        name={name}
-        message={message}
-        emailError={emailError}
-        onToggle={setForGift}
-        onEmail={setEmail}
-        onName={setName}
-        onMessage={setMessage}
+        printed={values.delivery_mode === 'PHYSICAL'}
+        forGift={values.gift}
+        email={values.recipient_email}
+        name={values.recipient_name}
+        message={values.message}
+        emailError={
+          values.recipient_email.trim() === '' ? null : (errors.recipient_email?.message ?? null)
+        }
+        onToggle={(next) => set('gift', next)}
+        onEmail={(next) => set('recipient_email', next)}
+        onName={(next) => set('recipient_name', next)}
+        onMessage={(next) => set('message', next)}
       />
+      <GiftCardTotalCard totals={totals} currency={currency} />
       <PrimaryButton
         testID="gift-card-continue"
         label={t('mweb.giftCards.continueCta')}
-        disabled={!canContinue}
+        disabled={!formState.isValid}
         onPress={continueToPayment}
       />
       <GiftCardHowItWorks />

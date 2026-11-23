@@ -41,14 +41,37 @@ export const crmTypeDefs = gql`
   }
 
   type CrmActivity {
+    "A manual log's id (edit / delete it with this). Null for EMAIL / CALL entries and audit entries."
+    id: ID
+    "EMAIL, CALL, NOTE (a manual log), or NOTE_CREATED / NOTE_UPDATED / NOTE_DELETED (a manual log's history; target = its id)."
     type: String!
     summary: String
     status: String
     target: String
+    "Empty once the log is deleted."
     body_html: String
     body_text: String
+    "CRM users the log @mentions (crmUsersByIds names them)."
+    mention_user_ids: [ID!]!
     created_by: String
     created_at: String
+    updated_by: String
+    updated_at: String
+    deleted_by: String
+    deleted_at: String
+    "A deleted manual log keeps its place in the history, without its words."
+    is_deleted: Boolean!
+    "True when the signed-in user may edit / delete this manual log (its author, or a SUPER_ADMIN)."
+    can_change: Boolean!
+  }
+
+  "A CRM team member, or the name behind a user id the CRM shows. Email and roles only for active CRM staff."
+  type CrmStaffUser {
+    id: ID!
+    name: String!
+    email: String
+    roles: [String!]!
+    is_staff: Boolean!
   }
 
   type CrmLinkedHost {
@@ -131,6 +154,16 @@ export const crmTypeDefs = gql`
   input ManualLogInput {
     entity_type: CrmEntityType!
     entity_id: ID!
+    summary: String
+    "Rich text. Each @mention is a span with data-type mention and data-id set to the user id; every mentioned CRM team member is emailed."
+    body_html: String!
+    body_text: String
+  }
+
+  input UpdateManualLogInput {
+    entity_type: CrmEntityType!
+    entity_id: ID!
+    log_id: ID!
     summary: String
     body_html: String!
     body_text: String
@@ -220,7 +253,10 @@ export const crmTypeDefs = gql`
     "Stringified JSON map of dynamic field values. Empty object when none set."
     dynamic_values_json: String!
     lead_source: String
+    "The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here."
     assigned_to: String
+    "The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name."
+    assigned_user_id: ID
     lead_status: String!
     priority: String!
     next_follow_up_date: String
@@ -230,6 +266,12 @@ export const crmTypeDefs = gql`
     updated_at: String
     "True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere."
     is_duplicate: Boolean
+    "Lead Quality Score summary (score, classification, qualification); null until the lead is first scored."
+    quality: CrmLeadQualitySummary
+    "Kilometres from the centre of a Nearby leads search. Set only on a table page read with near; null elsewhere."
+    distance_km: Float
+    "How exactly the lead sits on the map: PIN (its map link), AREA or CITY (that centre). Null until a Nearby leads search places it, or when it has no known city."
+    geo_precision: String
   }
 
   type HostLead {
@@ -268,7 +310,10 @@ export const crmTypeDefs = gql`
     profile_photo_url: String
     dynamic_values_json: String!
     lead_source: String
+    "The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here."
     assigned_to: String
+    "The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name."
+    assigned_user_id: ID
     lead_status: String!
     priority: String!
     next_follow_up_date: String
@@ -278,6 +323,12 @@ export const crmTypeDefs = gql`
     updated_at: String
     "True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere."
     is_duplicate: Boolean
+    "Lead Quality Score summary (score, classification, qualification); null until the lead is first scored."
+    quality: CrmLeadQualitySummary
+    "Kilometres from the centre of a Nearby leads search. Set only on a table page read with near; null elsewhere."
+    distance_km: Float
+    "How exactly the lead sits on the map: PIN (its map link), AREA or CITY (that centre). Null until a Nearby leads search places it, or when it has no known city."
+    geo_precision: String
   }
 
   type EcommLead {
@@ -309,7 +360,10 @@ export const crmTypeDefs = gql`
     profile_photo_url: String
     dynamic_values_json: String!
     lead_source: String
+    "The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here."
     assigned_to: String
+    "The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name."
+    assigned_user_id: ID
     lead_status: String!
     priority: String!
     next_follow_up_date: String
@@ -319,6 +373,12 @@ export const crmTypeDefs = gql`
     updated_at: String
     "True when another lead of any kind shares one of this lead's phone numbers, emails or its website. Set on table pages (the Leads listing); null elsewhere."
     is_duplicate: Boolean
+    "Lead Quality Score summary (score, classification, qualification); null until the lead is first scored."
+    quality: CrmLeadQualitySummary
+    "Kilometres from the centre of a Nearby leads search. Set only on a table page read with near; null elsewhere."
+    distance_km: Float
+    "How exactly the lead sits on the map: PIN (its map link), AREA or CITY (that centre). Null until a Nearby leads search places it, or when it has no known city."
+    geo_precision: String
   }
 
   type CrmOptionGroup {
@@ -387,7 +447,10 @@ export const crmTypeDefs = gql`
     logo_url: String
     dynamic_values_json: String
     lead_source: String
+    "The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here."
     assigned_to: String
+    "The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name."
+    assigned_user_id: ID
     lead_status: String
     priority: String
     next_follow_up_date: String
@@ -427,7 +490,10 @@ export const crmTypeDefs = gql`
     profile_photo_url: String
     dynamic_values_json: String
     lead_source: String
+    "The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here."
     assigned_to: String
+    "The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name."
+    assigned_user_id: ID
     lead_status: String
     priority: String
     next_follow_up_date: String
@@ -460,11 +526,23 @@ export const crmTypeDefs = gql`
     profile_photo_url: String
     dynamic_values_json: String
     lead_source: String
+    "The assignee's name. Filled from assigned_user_id when one is set; older clients still send free text here."
     assigned_to: String
+    "The CRM team member this lead is assigned to (crmAssignableUsers). Null when unassigned or a legacy free-text name."
+    assigned_user_id: ID
     lead_status: String
     priority: String
     next_follow_up_date: String
     notes: String
+  }
+
+  "Centre and radius of a Nearby leads search: the searcher position (lat and lng together) or a city, optionally with an area, from the admin Location list. radius_km is 0.5 to 50."
+  input CrmLeadNearInput {
+    lat: Float
+    lng: Float
+    city: String
+    area: String
+    radius_km: Float!
   }
 
   input CrmLeadFilter {
@@ -481,6 +559,8 @@ export const crmTypeDefs = gql`
     total: Int!
     page: Int!
     page_size: Int!
+    "Leads of this kind with no place on the map (no city, or one the map does not know), so a Nearby leads search cannot include them. Null outside a nearby search."
+    unplaced: Int
   }
 
   "Server-side table page for the shared table engine (hostLeadsTable)."
@@ -489,6 +569,8 @@ export const crmTypeDefs = gql`
     total: Int!
     page: Int!
     page_size: Int!
+    "Leads of this kind with no place on the map (no city, or one the map does not know), so a Nearby leads search cannot include them. Null outside a nearby search."
+    unplaced: Int
   }
 
   "Server-side table page for the shared table engine (ecommLeadsTable)."
@@ -497,6 +579,8 @@ export const crmTypeDefs = gql`
     total: Int!
     page: Int!
     page_size: Int!
+    "Leads of this kind with no place on the map (no city, or one the map does not know), so a Nearby leads search cannot include them. Null outside a nearby search."
+    unplaced: Int
   }
 
   type LeadContactActionResult {
@@ -560,13 +644,16 @@ export const crmTypeDefs = gql`
   extend type Query {
     crmLeadConfig: CrmOptionGroup!
     venueLeads(filter: CrmLeadFilter): [VenueLead!]!
-    venueLeadsTable(query: TableQueryInput): VenueLeadTablePage!
+    "With near, only the leads within the radius, nearest first unless another sort is picked."
+    venueLeadsTable(query: TableQueryInput, near: CrmLeadNearInput): VenueLeadTablePage!
     venueLead(id: ID!): VenueLead
     hostLeads(filter: CrmLeadFilter): [HostLead!]!
-    hostLeadsTable(query: TableQueryInput): HostLeadTablePage!
+    "With near, only the leads within the radius, nearest first unless another sort is picked."
+    hostLeadsTable(query: TableQueryInput, near: CrmLeadNearInput): HostLeadTablePage!
     hostLead(id: ID!): HostLead
     ecommLeads(filter: CrmLeadFilter): [EcommLead!]!
-    ecommLeadsTable(query: TableQueryInput): EcommLeadTablePage!
+    "With near, only the leads within the radius, nearest first unless another sort is picked."
+    ecommLeadsTable(query: TableQueryInput, near: CrmLeadNearInput): EcommLeadTablePage!
     ecommLead(id: ID!): EcommLead
     crmExcelTemplate(entity: CrmAiEntity!): CrmExcelFile!
     crmExcelExport(entity: CrmAiEntity!): CrmExcelFile!
@@ -579,6 +666,10 @@ export const crmTypeDefs = gql`
     crmCallFromNumber: String
     "Which of these phone numbers, emails or website already belong to a lead of any kind (the lead forms' live duplicate check)."
     crmLeadDuplicates(input: CrmLeadDuplicateCheckInput!): [CrmLeadDuplicateMatch!]!
+    "Active CRM team members matching a name / email search — the Assigned To picker and @mentions."
+    crmAssignableUsers(search: String, limit: Int): [CrmStaffUser!]!
+    "Names for the user ids a lead page shows (log authors, mentions, assignee), in one request."
+    crmUsersByIds(ids: [ID!]!): [CrmStaffUser!]!
   }
 
   "The value a duplicate was found on."
@@ -682,6 +773,10 @@ export const crmTypeDefs = gql`
       @deprecated(reason: "Use askCrmLeadAi, which keeps the conversation and works for every lead kind.")
     crmExcelImport(entity: CrmAiEntity!, content_base64: String!, mapping: [CrmImportMappingInput!]): CrmExcelImportResult!
     addCrmManualLog(input: ManualLogInput!): CrmActivity!
+    "Edit a manual log (its author, or a SUPER_ADMIN). Leaves a NOTE_UPDATED entry in the history."
+    updateCrmManualLog(input: UpdateManualLogInput!): CrmActivity!
+    "Delete a manual log (its author, or a SUPER_ADMIN). It stays in the history as deleted, without its words."
+    deleteCrmManualLog(entity_type: CrmEntityType!, entity_id: ID!, log_id: ID!): CrmActivity!
     createCrmDynamicField(input: CrmDynamicFieldInput!): CrmDynamicField!
     updateCrmDynamicField(id: ID!, input: CrmDynamicFieldInput!): CrmDynamicField!
     deleteCrmDynamicField(id: ID!): Boolean!

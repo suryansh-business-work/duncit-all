@@ -40,20 +40,24 @@ describe('freeMoneyLine', () => {
     expect(freeMoneyLine(fallbackT, 'HOST', false, 'FLAT')).toBeNull();
   });
 
-  it("tells each side a free pod's venue is settled directly", () => {
+  it("tells each side a free pod's venue on priced terms is settled directly", () => {
     expect(freeMoneyLine(fallbackT, 'VENUE', true, 'FLAT')).toBe(
       'Free pod: the host settles your charges with you directly, so no amount is quoted here.',
     );
-    expect(freeMoneyLine(fallbackT, 'HOST', true, 'FREE')).toBe(
+    expect(freeMoneyLine(fallbackT, 'HOST', true, 'PER_GUEST')).toBe(
       "Free pod: you settle the venue's charges with it directly, so no amount is quoted here.",
     );
   });
 
-  it('tells the host a free venue is paid nothing, and leaves the venue to read the reason', () => {
-    expect(freeMoneyLine(fallbackT, 'HOST', false, 'FREE')).toMatch(
-      /^Free venue: the venue is paid nothing for this booking\./,
-    );
-    expect(freeMoneyLine(fallbackT, 'VENUE', false, 'FREE')).toBe('');
+  it('tells each side a free venue is ₹0 with no charges, commission or earnings — its free pod settles nothing', () => {
+    for (const podIsFree of [true, false]) {
+      expect(freeMoneyLine(fallbackT, 'VENUE', podIsFree, 'FREE')).toBe(
+        'Free booking for an initiative: ₹0. No venue charges, no Duncit commission and no earnings on this booking.',
+      );
+      expect(freeMoneyLine(fallbackT, 'HOST', podIsFree, 'FREE')).toBe(
+        'Free venue: ₹0. The venue is paid nothing and Duncit takes no commission, so your pod is free.',
+      );
+    }
   });
 });
 

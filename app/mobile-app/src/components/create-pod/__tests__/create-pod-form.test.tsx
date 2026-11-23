@@ -66,13 +66,15 @@ const issuesOf = (values: CreatePodFormValues) => {
 /** Why the pod or the venue is free, with the host's acceptance of the policy. */
 const justified: Partial<CreatePodFormValues> = { free_reason: 'INITIATIVE', free_accepted: true };
 
-/** An offer to the venue for the window, asking for it FREE. */
+/** An offer to the venue for the window, asking for it FREE — which makes the pod free too. */
 const freeVenueOffer: Partial<CreatePodFormValues> = {
   venue_slot_id: '',
   pod_end_date_time_text: futureEndText,
   venue_offer_model: 'FREE',
   venue_offer_rate: '',
   venue_offer_offerings: 'A projector',
+  pod_type: 'FREE',
+  pod_amount_text: '0',
 };
 
 describe('parseDateTimeText', () => {
@@ -406,6 +408,16 @@ describe('createPodSchema — free pods and free venues', () => {
     );
   });
 
+  it('holds a free venue to a free pod: a paid ticket is refused at the type', () => {
+    const paid = valid({ ...freeVenueOffer, ...justified, pod_type: 'PAID', pod_amount_text: '500' });
+    expect(issuesOf(paid)).toEqual(['pod_type']);
+    expect(messageOn(paid, 'pod_type')).toBe('A free venue booking is for a free pod. Pick Free.');
+    // A priced offer leaves the ticket to the host.
+    expect(
+      issuesOf(valid({ ...freeVenueOffer, venue_offer_model: 'FLAT', venue_offer_rate: '900', pod_type: 'PAID', pod_amount_text: '500' })),
+    ).toEqual([]);
+  });
+
   it('asks nothing of a paid pod at a priced or held venue, whatever the hidden fields hold', () => {
     expect(issuesOf(valid({ free_reason: 'NOPE' }))).toEqual([]);
     // A held slot sends no offer, so a stale FREE model there is not a free venue.
@@ -652,8 +664,9 @@ describe('buildCreatePodInput fallbacks', () => {
         free_justification: { reason: 'INITIATIVE', details: '', accepted: true },
       }),
     );
-    // The pod itself is paid, so it carries no justification of its own.
-    expect(input).not.toHaveProperty('free_justification');
+    // Its pod is free too, and says why on the same answer.
+    expect(input).toMatchObject({ pod_type: 'FREE', pod_amount: 0 });
+    expect(input.free_justification).toMatchObject({ reason: 'INITIATIVE', accepted: true });
   });
 
   // A free pod has no money terms: one typed while the pod was paid is not sent.

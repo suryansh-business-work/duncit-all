@@ -507,8 +507,18 @@ describe('CreatePodStepper', () => {
     expect(input.pod_end_date_time).not.toBeNull();
   });
 
-  it('asks the venue for the window free: no amount, the policy and a reason, then offers it at ₹0', async () => {
-    const { onPublish } = setup();
+  it('lists Free on Money only for a venue open to free bookings for initiatives', async () => {
+    setup();
+    await pickClub();
+    await pickWindow();
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-offer-step');
+    expect(screen.getByTestId('create-pod-offer-model-FLAT')).toBeOnTheScreen();
+    expect(screen.queryByTestId('create-pod-offer-model-FREE')).toBeNull();
+  });
+
+  it('asks a venue open to free bookings for the window free: no amount, a free pod, the policy and a reason, then offers it at ₹0', async () => {
+    const { onPublish } = setup({ venues: [{ ...venues[0], offer_free_booking: true }, venues[1]] });
     await pickClub();
     await pickWindow();
     // The free venue is asked for on Money, not beside the window.
@@ -524,9 +534,15 @@ describe('CreatePodStepper', () => {
     expect(await screen.findByTestId('create-pod-venue-quote-free')).toHaveTextContent(
       /the venue is paid nothing for this booking/,
     );
-    // The pod itself stays paid, so its ticket asks no reason of its own.
+    // A free venue makes the pod free: Paid goes, Free is picked, and no price is asked.
+    expect(await screen.findByTestId('create-pod-free-venue-ticket')).toHaveTextContent(
+      'Your venue booking is free, so this pod is free too. Free is the only ticket.',
+    );
+    expect(screen.queryByTestId('create-pod-paid')).toBeNull();
+    expect(screen.getByTestId('create-pod-free')).toHaveProp('aria-checked', true);
+    expect(screen.queryByTestId('field-pod_amount_text')).toBeNull();
+    // The reason is asked once, beside the free venue — not again under the ticket.
     expect(screen.queryByTestId('create-pod-pod-free-arrangement')).toBeNull();
-    fireEvent.changeText(screen.getByTestId('field-pod_amount_text'), '500');
     // Money holds until the host says why the venue is free and accepts the policy.
     press('create-pod-submit');
     expect(await screen.findByTestId('create-pod-venue-free-reason-error')).toHaveTextContent(
@@ -547,9 +563,9 @@ describe('CreatePodStepper', () => {
         free_justification: { reason: 'PROMOTIONAL', details: '', accepted: true },
       }),
     );
-    // The pod itself stays paid.
-    expect(input).toMatchObject({ pod_type: 'PAID' });
-    expect(input).not.toHaveProperty('free_justification');
+    // The pod is free too, at ₹0, and says why on the same answer.
+    expect(input).toMatchObject({ pod_type: 'FREE', pod_amount: 0 });
+    expect(input.free_justification).toMatchObject({ reason: 'PROMOTIONAL', accepted: true });
   });
 
   it('holds a virtual pod on Where & when until it has a platform and an end', async () => {

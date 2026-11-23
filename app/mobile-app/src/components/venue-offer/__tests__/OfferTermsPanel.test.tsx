@@ -128,22 +128,24 @@ describe('OfferTermsPanel — the host reading their pod', () => {
 });
 
 describe('OfferTermsPanel — a free venue', () => {
-  it("names the free venue without ₹0, and gives the venue the host's reason instead of money", () => {
-    renderWithProviders(
-      <OfferTermsPanel offer={freeVenueOffer()} podIsFree={false} side="VENUE" />,
-    );
+  it("tells the venue it is a ₹0 booking with no earnings, with the host's reason and no quote", () => {
+    // A free venue's pod is free too, yet the venue settles nothing with the host.
+    renderWithProviders(<OfferTermsPanel offer={freeVenueOffer()} podIsFree side="VENUE" />);
     expect(screen.getByTestId('offer-terms-line')).toHaveTextContent('Free venue');
+    expect(screen.getByTestId('offer-free-venue')).toHaveTextContent(
+      'Free booking for an initiative: ₹0. No venue charges, no Duncit commission and no earnings on this booking.',
+    );
+    expect(screen.queryByTestId('offer-free-pod')).toBeNull();
     expect(screen.getByTestId('offer-free-reason')).toHaveTextContent(
       'Requested free — Promotional offer: Launch week',
     );
     expect(screen.queryByTestId('offer-money')).toBeNull();
-    expect(screen.queryByText(/₹0/)).toBeNull();
   });
 
-  it('tells the host the venue is paid nothing and still answers', () => {
+  it('tells the host the venue is paid nothing, so the pod is free', () => {
     renderWithProviders(<OfferTermsPanel offer={freeVenueOffer()} podIsFree={false} side="HOST" />);
     expect(screen.getByTestId('offer-free-venue')).toHaveTextContent(
-      /^Free venue: the venue is paid nothing for this booking\./,
+      'Free venue: ₹0. The venue is paid nothing and Duncit takes no commission, so your pod is free.',
     );
     // The reason is the venue's to read; the host wrote it.
     expect(screen.queryByTestId('offer-free-reason')).toBeNull();

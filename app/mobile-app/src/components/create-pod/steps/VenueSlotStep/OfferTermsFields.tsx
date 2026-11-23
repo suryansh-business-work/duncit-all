@@ -2,9 +2,8 @@ import { useController } from 'react-hook-form';
 import { YStack } from 'tamagui';
 import { toDigits } from '@duncit/regex';
 import {
-  HOST_OFFER_MODELS,
-  VENUE_OFFER_MODELS,
   VENUE_OFFER_MODEL_KEY,
+  hostOfferModelsFor,
   isFreeVenueOfferModel,
   isVenueOfferModel,
   venueOfferHelpKey,
@@ -25,7 +24,8 @@ export interface OfferTermsInputsProps {
   rateError?: string;
   /**
    * Offer "Free venue" after the pricing options — only a host's opening offer
-   * may (Create Pod, the resubmit sheet); a counter is always priced.
+   * may (Create Pod, the resubmit sheet), and only to a venue open to free
+   * bookings for initiatives; a counter is always priced.
    */
   allowFree?: boolean;
 }
@@ -54,7 +54,7 @@ export function OfferTermsInputs({
   // Once an option is picked, the line under it says how that option pays the venue.
   const helpKey = venueOfferHelpKey(model);
   const modelHelp = helpKey ? t(helpKey) : t('mweb.createPod.offer.modelHint');
-  const options = (allowFree ? HOST_OFFER_MODELS : VENUE_OFFER_MODELS).map((option) => ({
+  const options = hostOfferModelsFor(allowFree).map((option) => ({
     value: option,
     label: t(venueOfferModelKey(option)),
   }));
@@ -87,8 +87,11 @@ export function OfferTermsInputs({
   );
 }
 
-/** The offer terms on Create Pod's form — free venue included. */
-export function OfferTermsFields({ form }: Readonly<{ form: CreatePodForm }>) {
+/** The offer terms on Create Pod's form — free venue included when the picked venue takes free bookings. */
+export function OfferTermsFields({
+  form,
+  allowFree,
+}: Readonly<{ form: CreatePodForm; allowFree: boolean }>) {
   const model = useController({ control: form.control, name: 'venue_offer_model' });
   const rate = useController({ control: form.control, name: 'venue_offer_rate' });
   return (
@@ -99,7 +102,7 @@ export function OfferTermsFields({ form }: Readonly<{ form: CreatePodForm }>) {
       onRate={rate.field.onChange}
       modelError={model.fieldState.error?.message}
       rateError={rate.fieldState.error?.message}
-      allowFree
+      allowFree={allowFree}
     />
   );
 }

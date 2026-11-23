@@ -492,6 +492,29 @@ describe('Money for a free physical pod', () => {
     expect(screen.getByTestId('create-pod-pod-free-arrangement')).toBeOnTheScreen();
   });
 
+  it('offers only the Free ticket, already picked, when the host asks the venue for it free', async () => {
+    renderWithProviders(<PricingHarness initial={{ ...paidPod, venue_offer_model: 'FREE' }} />);
+    expect(await screen.findByTestId('create-pod-free-venue-ticket')).toHaveTextContent(
+      'Your venue booking is free, so this pod is free too. Free is the only ticket.',
+    );
+    await waitFor(() => expect(screen.getByTestId('create-pod-free')).toHaveProp('aria-checked', true));
+    expect(screen.queryByTestId('create-pod-paid')).toBeNull();
+    // No price to type, and no earnings: the free note stands in their place.
+    expect(screen.queryByTestId('field-pod_amount_text')).toBeNull();
+  });
+
+  it('keeps both tickets for a priced offer, or a held slot whatever model a draft holds', () => {
+    for (const initial of [
+      { ...paidPod, venue_offer_model: 'FLAT' },
+      { ...paidPod, venue_slot_id: 'slot-1', venue_offer_model: 'FREE' },
+    ]) {
+      const view = renderWithProviders(<PricingHarness initial={initial} />);
+      expect(screen.getByTestId('create-pod-paid')).toHaveProp('aria-checked', true);
+      expect(screen.queryByTestId('create-pod-free-venue-ticket')).toBeNull();
+      view.unmount();
+    }
+  });
+
   it('leaves the question to the free venue offer above, which already asks it', () => {
     renderWithProviders(<PricingHarness initial={{ ...freePod, venue_offer_model: 'FREE' }} />);
     expect(screen.queryByTestId('create-pod-pod-free-arrangement')).toBeNull();

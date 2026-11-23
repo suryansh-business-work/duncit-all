@@ -49,6 +49,7 @@ const SDL_CATEGORIES = [
   'TRUECALLER',
   'SERPER',
   'ANTHROPIC',
+  'REMOTION',
 ];
 
 if (SDL_CATEGORIES.join(',') !== ENV_CATEGORIES.join(',')) {

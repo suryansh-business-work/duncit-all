@@ -12,7 +12,9 @@
  * - the minimum spend — the least one booking's offer must come to: the rate
  *   times the fewest guests, times the hours, or the flat price
  *   (`assertOfferMeetsMinSpend`). It replaces the old silent top-up.
- * A free ask meets neither: the venue only accepts or declines it.
+ * A free ask meets neither: the venue only accepts or declines it — and a host
+ * may only make one to a venue that is open to free bookings for initiatives
+ * (`free_booking`, off unless the venue turns it on; `assertVenueTakesFreeBookings`).
  */
 import { GraphQLError } from 'graphql';
 import { settingsService } from '@modules/platform/settings/settings.service';
@@ -33,6 +35,8 @@ export interface IVenueOfferSettings {
   min_business: IVenueMinBusiness[];
   /** The least one booking's offer must come to, in rupees. 0 = none. */
   min_spend: number;
+  /** The venue is open to free bookings for initiatives: hosts may then ask for it free (offer model FREE). */
+  free_booking: boolean;
 }
 
 export const VENUE_OFFER_SETTINGS_MAX = { minGuests: 1000, responseHours: 720 } as const;
@@ -66,7 +70,22 @@ export const toOfferSettingsPub = (s?: Partial<IVenueOfferSettings> | null): IVe
   response_hours: clampWhole(s?.response_hours, VENUE_OFFER_SETTINGS_MAX.responseHours, 0),
   min_business: toMinBusinessPub(s?.min_business),
   min_spend: toMinSpendPub(s?.min_spend),
+  // Only an explicit yes opens it: a venue that never saved the switch takes no free bookings.
+  free_booking: s?.free_booking === true,
 });
+
+/**
+ * A host may ask this venue for the window free only while it is open to free
+ * bookings for initiatives (Fees & Minimum Spend), else FREE_BOOKING_OFF. The
+ * terms the venue already holds are not touched: only a new ask is checked.
+ * Client twin: `hostOfferModelsFor` in @duncit/utils.
+ */
+export function assertVenueTakesFreeBookings(offers: Partial<IVenueOfferSettings> | null | undefined): void {
+  if (toOfferSettingsPub(offers).free_booking) return;
+  throw new GraphQLError('This venue does not take free bookings — offer it a price instead', {
+    extensions: { code: 'BAD_USER_INPUT', reason: 'FREE_BOOKING_OFF', field: 'venue_offer_model' },
+  });
+}
 
 const refuse = (message: string, field = 'min_business') =>
   new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT', field } });
@@ -187,7 +206,14 @@ export function normalizeOfferSettingsInput(
     // Left out (an app from before these fields): they stay as they are.
     min_business: given(input.min_business) ? cleanMinBusiness(input.min_business) : base.min_business,
     min_spend: given(input.min_spend) ? cleanMinSpend(input.min_spend) : base.min_spend,
+    free_booking: given(input.free_booking) ? cleanFreeBooking(input.free_booking) : base.free_booking,
   };
+}
+
+/** The free-bookings switch an owner (or staff) sends: a true/false, nothing else. */
+export function cleanFreeBooking(raw: unknown): boolean {
+  if (typeof raw !== 'boolean') throw refuse('Turn free bookings on or off', 'free_booking');
+  return raw;
 }
 
 export interface VenueOfferDefaults {

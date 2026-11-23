@@ -44,6 +44,8 @@ export interface VenueOfferCreateInput {
   reroute_pod_id?: string | null;
   pod_date_time?: unknown;
   pod_end_date_time?: unknown;
+  /** The type the pod will have: a free venue is only for a free pod. */
+  pod_type?: string | null;
 }
 
 /** A resolved venue offer: the request to place, its price, whether the host owns the venue, and why a FREE one is free. */
@@ -467,8 +469,9 @@ async function openingAsk(venueId: string, offer: VenueOfferRequest, pax: number
  * an instant booking instead, which is refused with a message to update.
  *
  * A FREE offer (the venue gives the window for nothing) is the host's own
- * choice, so it needs `actorUserId` — who accepted the free policy — and a
- * justification; without either it is refused.
+ * choice, so it needs `actorUserId` — who accepted the free policy — a
+ * justification, a venue open to free bookings and a free pod (`pod_type`);
+ * without any of them it is refused.
  */
 export async function resolveVenueOfferForCreate(
   input: VenueOfferCreateInput,
@@ -487,7 +490,7 @@ export async function resolveVenueOfferForCreate(
   // offered exactly the seats the pod sells.
   const spots = Math.floor(Number(input.no_of_spots) || 0);
   const pax = spots > 0 ? spots : Math.floor(Number(input.venue_offer.pax) || 0);
-  const freeJustification = await freeOfferJustification(input.venue_offer, actorUserId);
+  const freeJustification = await freeOfferJustification(input.venue_offer, input.pod_type, actorUserId);
   // The raw justification stops here; the checked one travels beside the request.
   const request: VenueOfferRequest = {
     ...input.venue_offer,
@@ -506,16 +509,50 @@ export async function resolveVenueOfferForCreate(
   return { request, quote: prepared.quote, own, freeJustification };
 }
 
-/** A FREE offer's justification, checked and stamped with who accepted the policy; null for a priced offer. */
-async function freeOfferJustification(offer: VenueOfferRequest, actorUserId?: string | null): Promise<FreeJustification | null> {
+/**
+ * A FREE offer's justification, checked and stamped with who accepted the
+ * policy; null for a priced offer. A venue given free carries no charges, no
+ * commission and no earnings, so its pod sells no tickets either: a FREE offer
+ * for a pod that is not free is refused (FREE_VENUE_NEEDS_FREE_POD).
+ */
+async function freeOfferJustification(
+  offer: VenueOfferRequest,
+  podType: string | null | undefined,
+  actorUserId?: string | null
+): Promise<FreeJustification | null> {
   if (offer.model !== FREE_OFFER_MODEL) return null;
   if (!actorUserId) {
     throw new GraphQLError("A free venue can only be offered by the pod's host", {
       extensions: { code: 'BAD_USER_INPUT', reason: 'FREE_HOST_ONLY' },
     });
   }
+  if (!isFreePod({ pod_type: podType })) {
+    throw new GraphQLError('A free venue booking is for a free pod — set the ticket to Free', {
+      extensions: { code: 'BAD_USER_INPUT', reason: 'FREE_VENUE_NEEDS_FREE_POD', field: 'pod_type' },
+    });
+  }
   const { cleanFreeJustification } = await import('@modules/venues/venueOffer/venueOffer.free');
   return cleanFreeJustification(offer.free_justification, actorUserId);
+}
+
+/**
+ * A pod booked on a free venue stays free: turned paid, it would sell tickets
+ * on a booking the venue gave for nothing, with no settlement, commission or
+ * earnings behind it (FREE_VENUE_NEEDS_FREE_POD). Only a move to PAID costs a
+ * read; a pod moving to a new booking is judged on that booking instead.
+ */
+export async function assertFreeVenueKeepsPodFree(
+  doc: { venue_slot_id?: unknown },
+  nextType: string | null | undefined
+): Promise<void> {
+  if (!nextType || isFreePod({ pod_type: nextType }) || !doc.venue_slot_id) return;
+  const slot = await VenueSlotModel.findById(doc.venue_slot_id)
+    .select('offer.model')
+    .lean<{ offer?: { model?: string | null } | null }>();
+  if (slot?.offer?.model !== FREE_OFFER_MODEL) return;
+  throw new GraphQLError('This pod is booked on a free venue, so it stays free', {
+    extensions: { code: 'BAD_USER_INPUT', reason: 'FREE_VENUE_NEEDS_FREE_POD', field: 'pod_type' },
+  });
 }
 
 /**

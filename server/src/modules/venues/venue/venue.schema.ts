@@ -332,6 +332,8 @@ export const venueTypeDefs = /* GraphQL */ `
     min_business: [VenueMinBusiness!]!
     "The least one booking's offer must come to, in rupees: the rate times the fewest guests, times the hours, or the flat price. 0 = none."
     min_spend: Float!
+    "The venue is open to free bookings for initiatives: hosts may ask for it free (offer model FREE), which makes the pod free too. Off by default."
+    free_booking: Boolean!
   }
 
   input VenueOfferSettingsInput {
@@ -343,6 +345,8 @@ export const venueTypeDefs = /* GraphQL */ `
     min_business: [VenueMinBusinessInput!]
     "Rupees, 0 = none. Left out: unchanged."
     min_spend: Float
+    "Open to free bookings for initiatives. Left out: unchanged."
+    free_booking: Boolean
   }
 
   type VenueSettings {
@@ -421,6 +425,8 @@ export const venueTypeDefs = /* GraphQL */ `
     offer_min_business: [VenueMinBusiness!]!
     "The least one booking's offer must come to (rupees, 0 = none). A host's offer or counter below it is refused (BELOW_MIN_SPEND)."
     offer_min_spend: Float!
+    "The venue takes free bookings for initiatives: Create Pod offers it the Free option, and a free venue makes the pod free."
+    offer_free_booking: Boolean!
     capacity_items: [VenueCapacityItem!]!
     "The venue serves food. On publicVenue the menu is empty unless this is on."
     offers_food: Boolean!

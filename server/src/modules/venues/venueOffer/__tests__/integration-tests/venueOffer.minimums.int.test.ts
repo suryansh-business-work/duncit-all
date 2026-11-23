@@ -70,9 +70,24 @@ describe("Create Pod's opening offer", () => {
   it('asks nothing of a free venue, whose price is nothing', async () => {
     const w = await seedWorld();
     await withMinimums(w);
+    await VenueModel.updateOne({ _id: w.venueId }, { $set: { 'settings.offers.free_booking': true } });
     await expect(
       venueOfferService.preview(w.venueId, request({ model: 'FREE', rate: 0 }), undefined, HOST_OPENING)
     ).resolves.toMatchObject({ ok: true, quote: { total: 0 } });
+  });
+
+  it('refuses a free ask to a venue that is not open to free bookings, and lets priced offers through', async () => {
+    const w = await seedWorld();
+    await withMinimums(w);
+    await expect(
+      venueOfferService.preview(w.venueId, request({ model: 'FREE', rate: 0 }), undefined, HOST_OPENING)
+    ).resolves.toMatchObject({ ok: false, reason: 'FREE_BOOKING_OFF' });
+    await expect(venueOfferService.prepare(w.venueId, request({ model: 'FREE', rate: 0 }), undefined, HOST_OPENING)).rejects.toMatchObject({
+      extensions: { code: 'BAD_USER_INPUT', reason: 'FREE_BOOKING_OFF' },
+    });
+    await expect(venueOfferService.preview(w.venueId, request({ rate: 850, min_guests: undefined }), undefined, HOST_OPENING)).resolves.toMatchObject({
+      ok: true,
+    });
   });
 });
 

@@ -192,7 +192,9 @@ settings → discovery → status polling → evidence research with sources →
 after the person says yes. The gateway and `crm` connector instructions carry the same rule.
 
 `create_pod` walks a free pod or a free venue through Duncit's free policy and asks for the
-`free_justification` the server requires of a host; `review_free_arrangements` audits them with
+`free_justification` the server requires of a host. A free venue is offered only to a venue open to free
+bookings for initiatives (`offer_free_booking`, set on Fees & Minimum Spend), and it makes the pod free —
+the server refuses anything else (`FREE_BOOKING_OFF`, `FREE_VENUE_NEEDS_FREE_POD`); `review_free_arrangements` audits them with
 `pods_admin_free_arrangements_table` (the Pods console's Free Arrangements page), read-only.
 
 ## Never exposed

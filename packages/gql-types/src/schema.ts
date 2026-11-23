@@ -54592,6 +54592,8 @@ export type Venue = {
   lng?: Maybe<Scalars['Float']['output']>;
   locality: Scalars['String']['output'];
   location_id?: Maybe<Scalars['ID']['output']>;
+  /** The venue takes free bookings for initiatives: Create Pod offers it the Free option, and a free venue makes the pod free. */
+  offer_free_booking: Scalars['Boolean']['output'];
   /** The least the venue takes per booking on each pricing basis (Create Pod's offer step shows it; an offer below it is refused). */
   offer_min_business: Array<VenueMinBusiness>;
   /** The fewest guests a host's booking offer may be for: the venue's own setting, else the platform default. */
@@ -55827,6 +55829,8 @@ export type VenueOfferQuoteResult = {
 /** A venue's own terms for hosts' booking offers. 0 = the platform's default (Admin settings). */
 export type VenueOfferSettings = {
   __typename?: 'VenueOfferSettings';
+  /** The venue is open to free bookings for initiatives: hosts may ask for it free (offer model FREE), which makes the pod free too. Off by default. */
+  free_booking: Scalars['Boolean']['output'];
   /** The least the venue takes, one per pricing basis (per guest, per hour, per booking). */
   min_business: Array<VenueMinBusiness>;
   /** The fewest guests a host may offer to book for. */
@@ -55838,6 +55842,8 @@ export type VenueOfferSettings = {
 };
 
 export type VenueOfferSettingsInput = {
+  /** Open to free bookings for initiatives. Left out: unchanged. */
+  free_booking?: InputMaybe<Scalars['Boolean']['input']>;
   /** At least one, one per pricing basis. Left out: unchanged. */
   min_business?: InputMaybe<Array<VenueMinBusinessInput>>;
   /** 0 = the platform default (0-1000). */

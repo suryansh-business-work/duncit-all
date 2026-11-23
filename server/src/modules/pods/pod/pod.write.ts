@@ -34,6 +34,7 @@ import {
   validateMeetingDetails,
 } from './pod.validation';
 import {
+  assertFreeVenueKeepsPodFree,
   assertPartnerVenue,
   bookOrHoldSlotForPod,
   placeVenueOfferForPod,
@@ -343,6 +344,8 @@ export const podWriteMethods = {
     if (input.no_of_spots !== undefined && !reroute) {
       await assertSpotsWithinLimits(doc, input.no_of_spots, { canDecrease: true });
     }
+    // A pod on a free venue cannot be turned paid while it keeps that booking.
+    if (!reroute) await assertFreeVenueKeepsPodFree(doc, input.pod_type);
     const booking = reroute ? snapshotBooking(doc) : null;
     const before = snapshotPod(doc);
     const was = { pod_date_time: doc.pod_date_time, venue_id: doc.venue_id };
@@ -437,6 +440,7 @@ export const podWriteMethods = {
       no_of_spots: input.no_of_spots ?? doc.no_of_spots,
       pod_hosts_id: slotInput.pod_hosts_id,
       reroute_pod_id: String(doc._id),
+      pod_type: slotInput.pod_type,
     };
     const offer = await resolveVenueOfferForCreate(offerInput, nextMode, userId);
     delete input.venue_offer;

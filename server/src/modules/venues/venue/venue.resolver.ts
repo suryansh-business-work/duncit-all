@@ -74,6 +74,7 @@ export const venueResolvers = {
       effectiveOfferSettings(parent.settings?.offers, await requestOfferDefaults(ctx)).response_hours,
     offer_min_business: (parent: VenueOfferParent) => toOfferSettingsPub(parent.settings?.offers).min_business,
     offer_min_spend: (parent: VenueOfferParent) => toOfferSettingsPub(parent.settings?.offers).min_spend,
+    offer_free_booking: (parent: VenueOfferParent) => toOfferSettingsPub(parent.settings?.offers).free_booking,
     // Live pods hosted at this venue. `.exec()` returns a real Promise so the
     // GraphQL executor never adopts a bare Mongoose Query twice.
     pod_count: (parent: { id?: string }) => {

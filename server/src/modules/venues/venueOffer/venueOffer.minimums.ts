@@ -12,12 +12,14 @@
  *
  * The venue's own counters, and the terms a venue names itself (Auto Pods, Pod
  * Requests, change requests), are its own choice and are not held. A free ask
- * carries no price, so only its guests are held.
+ * carries no price, so only its guests are held — and it reaches only a venue
+ * open to free bookings for initiatives (FREE_BOOKING_OFF).
  */
 import { GraphQLError } from 'graphql';
 import {
   assertOfferMeetsMinBusiness,
   assertOfferMeetsMinSpend,
+  assertVenueTakesFreeBookings,
   venueOfferSettingsOf,
   type IVenueOfferSettings,
 } from '@modules/venues/venue/venue.offerSettings';
@@ -26,14 +28,21 @@ import { FREE_OFFER_MODEL, type VenueOfferTerms } from './venueOffer.types';
 
 export type MinimumsVenue = { settings?: { offers?: Partial<IVenueOfferSettings> | null } | null };
 
-/** The host's price terms meet the venue's business amount and minimum spend. `quoteMin` is the terms priced at the fewest guests. */
+/**
+ * The host's price terms meet the venue's business amount and minimum spend; a
+ * free ask, that the venue takes free bookings at all. `quoteMin` is the terms
+ * priced at the fewest guests.
+ */
 export function assertHostPriceMeetsVenue(
   venue: MinimumsVenue,
   terms: Pick<VenueOfferTerms, 'model' | 'rate'>,
   quoteMin: Pick<VenuePriceBreakdown, 'base'>
 ): void {
-  if (terms.model === FREE_OFFER_MODEL) return;
   const offers = venue.settings?.offers;
+  if (terms.model === FREE_OFFER_MODEL) {
+    assertVenueTakesFreeBookings(offers);
+    return;
+  }
   assertOfferMeetsMinBusiness(offers?.min_business, terms.model, terms.rate);
   assertOfferMeetsMinSpend(offers?.min_spend, terms.model, quoteMin.base);
 }

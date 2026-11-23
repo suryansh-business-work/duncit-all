@@ -110,6 +110,10 @@ const GROWTH_CALLS = [
   call('deleteGrowthCalculation', `mutation E2eGrowthDelete($id: ID!) { deleteGrowthCalculation(id: $id) }`, { id: NO_ID }),
 ];
 
+const DASHBOARD_CALLS = [
+  call('targetsDashboard', `query E2eTargetsDashboard { targetsDashboard { month awaiting_review } }`),
+];
+
 describe('API · HR, Employee and Targets open only for their own role', { testIsolation: false }, () => {
   let memberToken = '';
 
@@ -169,5 +173,10 @@ describe('API · HR, Employee and Targets open only for their own role', { testI
 
   it('WC-07 a Finance seat cannot list, preview, save, edit, duplicate or delete growth calculations', () => {
     asRole(OTHER_SEAT, (token) => expectCallsRefused(token, GROWTH_CALLS));
+  });
+
+  it('WC-08 the Targets dashboard is refused signed out, to a member and to a Finance seat', () => {
+    expectOutsidersRefused(memberToken, DASHBOARD_CALLS);
+    asRole(OTHER_SEAT, (token) => expectCallsRefused(token, DASHBOARD_CALLS));
   });
 });

@@ -73,8 +73,8 @@ function objectId(id: string): Types.ObjectId {
 export const todayKey = (now: Date = new Date()): string => appFormat(now, 'yyyy-MM-dd');
 
 /** The months whose reminder window is open today. */
-async function dueMonths(): Promise<Set<string>> {
-  return new Set(reminderMonthsFor(todayKey(), await employeeTargetSettingsService.window()));
+export async function dueMonths(now: Date = new Date()): Promise<Set<string>> {
+  return new Set(reminderMonthsFor(todayKey(now), await employeeTargetSettingsService.window()));
 }
 
 /** The signed-in person as the record names them — read from their account, never the payload. */

@@ -37382,6 +37382,8 @@ export type Query = {
   tableChangeLogs: TableChangeLogPage;
   /** Targets console: active employees a target can be assigned to, by name or email (at most 20). */
   targetAssignableEmployees: Array<EmployeeTargetAssignee>;
+  /** Targets console: the dashboard's numbers: this month's employee targets, the review queue and the newest growth plan. */
+  targetsDashboard: TargetsDashboard;
   /** HR console: one structure with all its seats and pay. */
   teamStructure: TeamStructureView;
   /** HR console: share links of a structure. */
@@ -49642,6 +49644,38 @@ export type TableQueryInput = {
 export type TableSortDir =
   | 'asc'
   | 'desc';
+
+/** Everything the Targets console's dashboard shows, read in one request. */
+export type TargetsDashboard = {
+  __typename?: 'TargetsDashboard';
+  /** Active employees a target can be assigned to, to read current_month.total against. */
+  active_employees: Scalars['Int']['output'];
+  /** Reports waiting for a review, across every month. */
+  awaiting_review: Scalars['Int']['output'];
+  /** Targets set for the current month. */
+  current_month: TargetsMonthCounts;
+  /** The newest saved run. Null while nothing is saved. */
+  latest_calculation?: Maybe<GrowthCalculation>;
+  /** YYYY-MM: the current month in the admin's time zone. */
+  month: Scalars['String']['output'];
+  /** Targets still unreported inside an open month-end reminder window (Targets > Settings). */
+  reminders_due: Scalars['Int']['output'];
+  /** The longest-waiting reports (at most 5), oldest submission first. */
+  review_queue: Array<EmployeeTarget>;
+  /** Saved Growth Calculator runs. */
+  saved_calculations: Scalars['Int']['output'];
+};
+
+/** Live employee targets for one month, counted by status. */
+export type TargetsMonthCounts = {
+  __typename?: 'TargetsMonthCounts';
+  assigned: Scalars['Int']['output'];
+  /** Mean completion percent of the month's reports (submitted or reviewed), to one decimal. Null until someone reports. */
+  average_completion?: Maybe<Scalars['Float']['output']>;
+  reviewed: Scalars['Int']['output'];
+  submitted: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+};
 
 export type TeamEmploymentType =
   | 'ADVISOR'

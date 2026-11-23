@@ -73,6 +73,8 @@ describe('buildFailedPaymentColumns', () => {
       user_phone: null,
       razorpay_payment_id: null,
       razorpay_order_id: null,
+      // The Duncit ref is an id too: with it present the cell shows a trace link, not a dash.
+      payment_id: '',
       error_code: null,
       error_description: null,
       ticket_no: null,
@@ -93,6 +95,7 @@ describe('buildFailedPaymentColumns', () => {
     );
     expect(screen.getByText('riya@duncit.com')).toBeInTheDocument();
     expect(screen.getAllByText('—').length).toBeGreaterThan(0);
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 
   it('renders status chips and the caller-provided actions', () => {

@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import type { DuncitColumn } from '@duncit/table';
+import { STATUS_COLORS } from '../../src/pages/finance/payment-logs-page/helpers';
 import { buildPaymentColumns } from '../../src/pages/finance/payment-logs-page/paymentColumns';
 import type { PaymentRow } from '../../src/pages/finance/payment-logs-page/queries';
 
@@ -204,9 +205,12 @@ describe('buildPaymentColumns — a log a person can read at a glance', () => {
   });
 
   it('draws the status chip with the plain word, not the raw code', () => {
+    // The finance suite swaps @duncit/ui for a stub whose chip prints only its label,
+    // so the colours are pinned on the map the chip is given instead.
     draw('status', payment({ status: 'SUCCESS' }));
-    expect(screen.getByText('finance.payment.statusPaid').closest('.MuiChip-root')).toHaveClass('MuiChip-colorSuccess');
+    expect(screen.getByTestId('status-chip')).toHaveTextContent('finance.payment.statusPaid');
     expect(screen.queryByText('SUCCESS')).not.toBeInTheDocument();
+    expect(STATUS_COLORS).toEqual({ PENDING: 'warning', SUCCESS: 'success', FAILED: 'error', REFUNDED: 'info' });
   });
 });
 

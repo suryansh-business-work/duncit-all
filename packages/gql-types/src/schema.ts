@@ -12192,6 +12192,7 @@ export type EnvCategory =
   | 'OPENAI'
   | 'PEXELS'
   | 'RAZORPAY'
+  | 'REMOTION'
   | 'SERPER'
   | 'SERVAM'
   | 'SHIPROCKET'
@@ -12233,6 +12234,8 @@ export type EnvCategoryDef = {
   groupKey: Scalars['String']['output'];
   groupLabel: Scalars['String']['output'];
   label: Scalars['String']['output'];
+  /** Repo files that read the category directly (env-registry.json). */
+  usedIn: Array<Scalars['String']['output']>;
 };
 
 export type EnvConfigPair = {
@@ -12308,12 +12311,30 @@ export type EnvEntryTablePage = {
 export type EnvFieldDef = {
   __typename?: 'EnvFieldDef';
   bool: Scalars['Boolean']['output'];
+  /** Why the value is used — what stops working without it (env-registry.json). */
+  description?: Maybe<Scalars['String']['output']>;
+  /** The legacy env key the server resolves to this field, e.g. SMTP_HOST. Null when code reads the category directly. */
+  envKey?: Maybe<Scalars['String']['output']>;
   hint?: Maybe<Scalars['String']['output']>;
   label: Scalars['String']['output'];
   name: Scalars['String']['output'];
   number: Scalars['Boolean']['output'];
   phone: Scalars['Boolean']['output'];
   secret: Scalars['Boolean']['output'];
+  /** Repo files that read this field through its env key. */
+  usedIn: Array<Scalars['String']['output']>;
+  /** How the value is checked when it is saved. */
+  validation: EnvFieldValidation;
+};
+
+/** A field's save-time check. type: text, url, hostname, email, phone, number, bool, json, pem, list or fingerprints. */
+export type EnvFieldValidation = {
+  __typename?: 'EnvFieldValidation';
+  max?: Maybe<Scalars['Float']['output']>;
+  min?: Maybe<Scalars['Float']['output']>;
+  /** Must be filled when an entry is created. */
+  required: Scalars['Boolean']['output'];
+  type: Scalars['String']['output'];
 };
 
 /**
@@ -12733,6 +12754,27 @@ export type ExpenseTablePage = {
   total: Scalars['Int']['output'];
 };
 
+/** What the AI note suggests. Advice only: the refund rules and Razorpay's live check decide. */
+export type FailedPaymentAiRecommendation =
+  | 'DO_NOT_REFUND'
+  | 'NEEDS_REVIEW'
+  | 'REFUND';
+
+/** The AI's short refund note on a case. Never moves money. */
+export type FailedPaymentAiSummary = {
+  __typename?: 'FailedPaymentAiSummary';
+  /** Why the last run produced no note: AI switched off, an outage, an unreadable answer. */
+  error?: Maybe<Scalars['String']['output']>;
+  generated_at?: Maybe<Scalars['String']['output']>;
+  generated_by_name?: Maybe<Scalars['String']['output']>;
+  reasons: Array<Scalars['String']['output']>;
+  /** Null when the last run failed (see error). */
+  recommendation?: Maybe<FailedPaymentAiRecommendation>;
+  /** True once the case changed after the note was written; ask for a fresh one. */
+  stale: Scalars['Boolean']['output'];
+  summary: Scalars['String']['output'];
+};
+
 export type FailedPaymentBooking = {
   __typename?: 'FailedPaymentBooking';
   booked_razorpay_payment_id?: Maybe<Scalars['String']['output']>;
@@ -12754,6 +12796,8 @@ export type FailedPaymentClaim = {
 
 export type FailedPaymentDetail = {
   __typename?: 'FailedPaymentDetail';
+  /** The AI refund note, once someone asked for one. */
+  ai_summary?: Maybe<FailedPaymentAiSummary>;
   amount: Scalars['Float']['output'];
   attempts: Scalars['Int']['output'];
   booking: FailedPaymentBooking;
@@ -12768,6 +12812,7 @@ export type FailedPaymentDetail = {
   needs_review: Scalars['Boolean']['output'];
   payment_doc_id: Scalars['ID']['output'];
   payment_id: Scalars['String']['output'];
+  payment_source?: Maybe<PaymentSource>;
   pod_id?: Maybe<Scalars['ID']['output']>;
   pod_title: Scalars['String']['output'];
   razorpay_order_id?: Maybe<Scalars['String']['output']>;
@@ -12844,6 +12889,17 @@ export type FailedPaymentRefund = {
   status: FailedPaymentRefundStatus;
 };
 
+/** What a refund would do right now, from Razorpay's live answer. Nothing is sent. */
+export type FailedPaymentRefundPreview = {
+  __typename?: 'FailedPaymentRefundPreview';
+  /** Rupees Razorpay would send back, when refundable. */
+  amount?: Maybe<Scalars['Float']['output']>;
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  /** Why it cannot be refunded, when not refundable. */
+  reason?: Maybe<Scalars['String']['output']>;
+  refundable: Scalars['Boolean']['output'];
+};
+
 /** NONE means no refund was ever started. */
 export type FailedPaymentRefundStatus =
   | 'FAILED'
@@ -12885,7 +12941,7 @@ export type FailedPaymentRow = {
   attempts: Scalars['Int']['output'];
   /** Razorpay never captured it; Finance can close it as a bank reversal. */
   can_mark_not_refundable: Scalars['Boolean']['output'];
-  /** Refundable now (green, or yellow after approval). Only FINANCE_MANAGER / SUPER_ADMIN may act on it. */
+  /** Refund may be offered: the evidence was verified (green, or yellow after approval), or the buyer sent none and Razorpay's live check decides. Only FINANCE_MANAGER / SUPER_ADMIN may act on it. */
   can_refund: Scalars['Boolean']['output'];
   claim_count: Scalars['Int']['output'];
   created_at: Scalars['String']['output'];
@@ -12898,6 +12954,8 @@ export type FailedPaymentRow = {
   needs_review: Scalars['Boolean']['output'];
   payment_doc_id: Scalars['ID']['output'];
   payment_id: Scalars['String']['output'];
+  /** The checkout the payment came from (pod booking, pod shop, pet store, gift card / other). Null when the payment is gone. */
+  payment_source?: Maybe<PaymentSource>;
   pod_id?: Maybe<Scalars['ID']['output']>;
   pod_title: Scalars['String']['output'];
   razorpay_order_id?: Maybe<Scalars['String']['output']>;
@@ -19159,6 +19217,8 @@ export type Mutation = {
   decideMarketingRun: MarketingRun;
   /** Onboarding staff approve or deny a DONE meeting themselves — approval drafts the onboarded host/venue/seller (or grants the club-admin role). No admin round-trip. */
   decideMeeting: OnboardingMeeting;
+  /** Approve or reject an alternative-verification request. Cannot be your own. */
+  decidePortalSecurityException: PortalSecurityException;
   /** Approve, partially approve or reject a pending withdrawal; an approval pays through Razorpay. */
   decideWithdrawal: WalletWithdrawal;
   /** Owner declines a pending booking request — the slot frees up again. round: the offer round read. */
@@ -19956,6 +20016,12 @@ export type Mutation = {
   /** Ops: pull the latest tracking from ShipRocket. */
   refreshProductOrderTracking: ProductOrder;
   refundPayment: Payment;
+  /**
+   * Send one owed refund back to the payment's own source, with a note on record.
+   * Only a refund that is owed and safe to repeat is accepted; the answer is the
+   * payment's fresh audit, so the page refreshes from its own reply.
+   */
+  refundPaymentToSource: PaymentDetail;
   /** Goods checked: back in stock, and the buyer refunded through Razorpay. */
   refundPodShopReturn: PodShopReturn;
   /** Render one slide of a pod's carousel again. */
@@ -20213,6 +20279,8 @@ export type Mutation = {
    * works here and what they can reach.
    */
   requestPortalLoginOtp: OtpRequestResult;
+  /** Declined or could not share a location: ask an administrator for another way. Recorded. */
+  requestPortalSecurityException: PortalSecurityExceptionStatus;
   /**
    * Signup step one: send a code to the WhatsApp number joining Duncit.
    *
@@ -20997,6 +21065,8 @@ export type Mutation = {
   submitPaymentDeductionClaim: PaymentDeductionClaimResult;
   /** Competitor (or host on their behalf): submit or replace an entry. */
   submitPodChallengeEntry: PodChallenge;
+  /** Complete the screen: record the consent and location, and swap the sign-in token for a session. */
+  submitPortalSecurityVerification: PortalSecurityVerificationResult;
   submitProductListing: InventoryProduct;
   /**
    * PUBLIC and unauthenticated, on purpose: somebody locked out of every
@@ -21035,6 +21105,8 @@ export type Mutation = {
    * follow-up becomes one reminder, never two.
    */
   summarizeCommunicationLog: CommunicationLog;
+  /** Write the AI refund note for a case (advice only; moves no money). An unchanged case answers from its cached note unless force is true. */
+  summarizeFailedPayment: FailedPaymentDetail;
   /** Support agents can create a user account on a caller's behalf. */
   supportCreateUser: User;
   /** Sync now: starts a sync of the given store, or both, in the background, and returns the integrations. */
@@ -22987,6 +23059,11 @@ export type MutationDecideMeetingArgs = {
 };
 
 
+export type MutationDecidePortalSecurityExceptionArgs = {
+  input: PortalSecurityExceptionDecisionInput;
+};
+
+
 export type MutationDecideWithdrawalArgs = {
   input: DecideWithdrawalInput;
   withdrawal_id: Scalars['ID']['input'];
@@ -24767,6 +24844,11 @@ export type MutationRefundPaymentArgs = {
 };
 
 
+export type MutationRefundPaymentToSourceArgs = {
+  input: RefundPaymentToSourceInput;
+};
+
+
 export type MutationRefundPodShopReturnArgs = {
   id: Scalars['ID']['input'];
 };
@@ -25176,6 +25258,11 @@ export type MutationRequestPortalAccessArgs = {
 
 export type MutationRequestPortalLoginOtpArgs = {
   input: PortalLoginOtpRequestInput;
+};
+
+
+export type MutationRequestPortalSecurityExceptionArgs = {
+  input: PortalSecurityExceptionRequestInput;
 };
 
 
@@ -27116,6 +27203,11 @@ export type MutationSubmitPodChallengeEntryArgs = {
 };
 
 
+export type MutationSubmitPortalSecurityVerificationArgs = {
+  input: PortalSecurityVerificationInput;
+};
+
+
 export type MutationSubmitProductListingArgs = {
   input: ProductListingInput;
 };
@@ -27203,6 +27295,12 @@ export type MutationSuggestSocialReplyArgs = {
 
 export type MutationSummarizeCommunicationLogArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationSummarizeFailedPaymentArgs = {
+  case_id: Scalars['ID']['input'];
+  force?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -30239,6 +30337,12 @@ export type PaymentDetail = {
   payment: Payment;
   pod_booking?: Maybe<PaymentPodBooking>;
   product_orders: Array<PaymentProductOrderLine>;
+  /**
+   * Every refund this payment has seen, one section per kind of refund (pod
+   * payment, coins, pod shop, failed payment, ...). Empty when nothing was ever
+   * refunded or is owed. Read lazily: only a query that selects it pays for it.
+   */
+  refunds?: Maybe<Array<PaymentRefundSection>>;
   /** Every deferred step still owed. What the page's Retry all sends. */
   retryable_step_keys: Array<Scalars['String']['output']>;
   steps: Array<PaymentStep>;
@@ -30330,6 +30434,79 @@ export type PaymentProductOrderLine = {
   order_no: Scalars['String']['output'];
   total: Scalars['Float']['output'];
 };
+
+/** One refund inside a section: one gateway refund, one order, one return, one case, or one coin ledger row. */
+export type PaymentRefundEntry = {
+  __typename?: 'PaymentRefundEntry';
+  /** Cash going back, in the payment's currency (0 for a coins-only row). */
+  amount: Scalars['Float']['output'];
+  attempts: Scalars['Int']['output'];
+  /** True when the caller may press Refund on this row now: it is owed, it is safe to send and the caller's role may. */
+  can_refund: Scalars['Boolean']['output'];
+  /** Duncit Coins going back. */
+  coins: Scalars['Int']['output'];
+  /** When a held cancellation refund is released. */
+  due_at?: Maybe<Scalars['String']['output']>;
+  /** The last error Razorpay or the engine reported. */
+  error?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  /** Who set it off: an admin, SYSTEM, a pod-cancel initiator. */
+  initiated_by?: Maybe<Scalars['String']['output']>;
+  processed_at?: Maybe<Scalars['String']['output']>;
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  /** The Razorpay refund id (rfnd_…) of this row; the first of razorpay_refund_ids. Null when none was sent. */
+  razorpay_refund_id?: Maybe<Scalars['String']['output']>;
+  /** Every Razorpay refund id behind this row (an older recorded refund can carry more than one). */
+  razorpay_refund_ids: Array<Scalars['String']['output']>;
+  reason?: Maybe<Scalars['String']['output']>;
+  /** The business reference: an order or return number, a booking, a Duncit payment reference. Null when it has none. */
+  ref?: Maybe<Scalars['String']['output']>;
+  requested_at?: Maybe<Scalars['String']['output']>;
+  /** Why it was sent: FINANCE_REFUND, POD_CANCELLATION, BACKOUT, RENTAL, HELD, RECORDED, CANCELLATION, RETURN, CASE, LEDGER. */
+  source: Scalars['String']['output'];
+  state: PaymentRefundState;
+  /** The refund engine's own status (QUEUED, PROCESSING, SUCCEEDED, FAILED, HELD, PROCESSED, RECORDED ...), for the label. */
+  status: Scalars['String']['output'];
+};
+
+/** Which kind of refund a section of the payment's Refund area is. */
+export type PaymentRefundKind =
+  /** Duncit Coins returned to the buyer's wallet. */
+  | 'COIN'
+  /** An e-commerce store order refund. Separate from the pod shop, never mixed with it. */
+  | 'ECOMM'
+  /** A captured payment that bought nothing and was refunded through Failed Payments. */
+  | 'FAILED_PAYMENT'
+  /** A refund of a payment that is not a pod booking (a shop cart or gift card Finance refunded). */
+  | 'PAYMENT'
+  /** A pod booking's money going back: a cancellation, a Finance refund, a Backout, or a held cancellation refund. */
+  | 'POD_PAYMENT'
+  /** A pod-shop order cancelled or a return refunded. */
+  | 'POD_SHOP'
+  /** A rented item's deposit or rent going back. */
+  | 'RENTAL';
+
+/** One kind of refund on a payment, with what happened to it. */
+export type PaymentRefundSection = {
+  __typename?: 'PaymentRefundSection';
+  amount: Scalars['Float']['output'];
+  coins: Scalars['Int']['output'];
+  entries: Array<PaymentRefundEntry>;
+  /** This kind's refund activity, oldest first (the payment's audit trail). */
+  events: Array<PaymentEvent>;
+  kind: PaymentRefundKind;
+  /** FAILED when any row needs somebody, else PENDING when any row is owed, else COMPLETED. */
+  state: PaymentRefundState;
+};
+
+/** Where a refund stands, in three buckets the page colours: owed, done, or refused. */
+export type PaymentRefundState =
+  /** The money (or coins) are back with the buyer. */
+  | 'COMPLETED'
+  /** Razorpay refused it or the retries are used up; somebody must act (red). */
+  | 'FAILED'
+  /** Money is owed or on its way and not yet confirmed back (yellow). */
+  | 'PENDING';
 
 /** A refund's progress at Razorpay. Accepted by Razorpay (PROCESSING) is not yet money in the buyer's bank. */
 export type PaymentRefundStatus =
@@ -30640,6 +30817,153 @@ export type PaymentTotals = {
   smart_incentive_total: Scalars['Float']['output'];
   /** @deprecated The multi-ticket discount was removed. Always 0. */
   ticket_discount_total: Scalars['Float']['output'];
+};
+
+export type PaymentTrace = {
+  __typename?: 'PaymentTrace';
+  events: Array<PaymentTraceEvent>;
+  failed_cases: Array<PaymentTraceFailedCase>;
+  food_orders: Array<PaymentTraceFoodOrder>;
+  /** False when nothing anywhere carries this id. */
+  found: Scalars['Boolean']['output'];
+  gateway_refunds: Array<PaymentTraceGatewayRefund>;
+  payments: Array<PaymentTracePayment>;
+  ref: Scalars['String']['output'];
+  shop_orders: Array<PaymentTraceShopOrder>;
+  steps: Array<PaymentTraceStep>;
+  webhooks: Array<PaymentTraceWebhook>;
+};
+
+/** One entry of a payment's event timeline. */
+export type PaymentTraceEvent = {
+  __typename?: 'PaymentTraceEvent';
+  actor_name?: Maybe<Scalars['String']['output']>;
+  created_at: Scalars['String']['output'];
+  details: Array<PaymentEventDetail>;
+  id: Scalars['ID']['output'];
+  payment_id: Scalars['String']['output'];
+  source: Scalars['String']['output'];
+  type: Scalars['String']['output'];
+};
+
+export type PaymentTraceFailedCase = {
+  __typename?: 'PaymentTraceFailedCase';
+  created_at: Scalars['String']['output'];
+  /** Failed-payment case id (opens Failed Payments › detail). */
+  id: Scalars['ID']['output'];
+  payment_id: Scalars['String']['output'];
+  refund_status: Scalars['String']['output'];
+  resolution_state: Scalars['String']['output'];
+  verification_status: Scalars['String']['output'];
+};
+
+/** A venue food order paid to the venue's own Razorpay account. */
+export type PaymentTraceFoodOrder = {
+  __typename?: 'PaymentTraceFoodOrder';
+  /** Rupees. */
+  amount: Scalars['Float']['output'];
+  created_at: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  order_no: Scalars['String']['output'];
+  payment_status: Scalars['String']['output'];
+  razorpay_order_id?: Maybe<Scalars['String']['output']>;
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  razorpay_refund_id?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  venue_name: Scalars['String']['output'];
+};
+
+/** One refund sent back through Razorpay for the payment. */
+export type PaymentTraceGatewayRefund = {
+  __typename?: 'PaymentTraceGatewayRefund';
+  /** Rupees. */
+  amount: Scalars['Float']['output'];
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  last_error?: Maybe<Scalars['String']['output']>;
+  payment_id: Scalars['String']['output'];
+  processed_at?: Maybe<Scalars['String']['output']>;
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  razorpay_refund_id?: Maybe<Scalars['String']['output']>;
+  reason?: Maybe<Scalars['String']['output']>;
+  source: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+};
+
+/** Which of a payment's ids the traced id equals. One id can match several (an old Duncit ref shaped like pay_…). */
+export type PaymentTraceMatch =
+  | 'DOCUMENT_ID'
+  | 'DUNCIT_REF'
+  | 'INVOICE'
+  | 'RAZORPAY_ORDER'
+  | 'RAZORPAY_PAYMENT'
+  | 'RAZORPAY_REFUND';
+
+export type PaymentTracePayment = {
+  __typename?: 'PaymentTracePayment';
+  /** Rupees. */
+  amount: Scalars['Float']['output'];
+  created_at: Scalars['String']['output'];
+  currency_symbol: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  finalize_state: Scalars['String']['output'];
+  /** Payment document id (opens Payment Logs › detail). */
+  id: Scalars['ID']['output'];
+  invoice_no?: Maybe<Scalars['String']['output']>;
+  matched_on: Array<PaymentTraceMatch>;
+  paid_at?: Maybe<Scalars['String']['output']>;
+  /** Duncit reference (DPAY-…, or pay_… on older payments). */
+  payment_id: Scalars['String']['output'];
+  razorpay_order_id?: Maybe<Scalars['String']['output']>;
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  razorpay_refund_ids: Array<Scalars['String']['output']>;
+  /** Which checkout it came from: pod booking, pod shop, pet store, gift card / other. */
+  source: PaymentSource;
+  status: Scalars['String']['output'];
+  user_name: Scalars['String']['output'];
+};
+
+/** A pod shop or pet store order the payment paid for. */
+export type PaymentTraceShopOrder = {
+  __typename?: 'PaymentTraceShopOrder';
+  /** POD_SHOP or PET_STORE. */
+  channel: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  fulfilment_status: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  order_no: Scalars['String']['output'];
+  payment_id: Scalars['String']['output'];
+  refund_status: Scalars['String']['output'];
+  /** Rupees. */
+  total: Scalars['Float']['output'];
+};
+
+/** One finalization step of a payment (booking, invoice, email, shipment…). */
+export type PaymentTraceStep = {
+  __typename?: 'PaymentTraceStep';
+  at?: Maybe<Scalars['String']['output']>;
+  detail?: Maybe<Scalars['String']['output']>;
+  key: Scalars['String']['output'];
+  /** Duncit reference of the payment it belongs to. */
+  payment_id: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+};
+
+/** One Razorpay webhook delivery that mentions the payment's Razorpay ids. */
+export type PaymentTraceWebhook = {
+  __typename?: 'PaymentTraceWebhook';
+  /** Rupees. */
+  amount?: Maybe<Scalars['Float']['output']>;
+  error?: Maybe<Scalars['String']['output']>;
+  event: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  outcome?: Maybe<Scalars['String']['output']>;
+  razorpay_order_id?: Maybe<Scalars['String']['output']>;
+  razorpay_payment_id?: Maybe<Scalars['String']['output']>;
+  razorpay_refund_id?: Maybe<Scalars['String']['output']>;
+  received_at: Scalars['String']['output'];
+  status?: Maybe<Scalars['String']['output']>;
 };
 
 /** One row of the immutable money-out audit trail. */
@@ -34149,6 +34473,8 @@ export type PortalAccessEntry = {
   name: Scalars['String']['output'];
   /** The user's latest PORTAL_ACCESS request outcome for this console, if any. */
   request_status?: Maybe<ApprovalStatus>;
+  /** Roles that open this console (SUPER_ADMIN opens every one). Empty for ungated surfaces. */
+  required_roles: Array<Scalars['String']['output']>;
   url: Scalars['String']['output'];
 };
 
@@ -34209,6 +34535,267 @@ export type PortalModeTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<PortalMode>;
   total: Scalars['Int']['output'];
+};
+
+export type PortalSecurityAccessEntry = {
+  __typename?: 'PortalSecurityAccessEntry';
+  /** LIST or VIEW. */
+  action: Scalars['String']['output'];
+  actor_name: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+};
+
+/** Everything the Security Verification screen renders. Only a console sign-in that owes the screen may ask. */
+export type PortalSecurityChallenge = {
+  __typename?: 'PortalSecurityChallenge';
+  detected: PortalSecurityDetected;
+  exception?: Maybe<PortalSecurityExceptionStatus>;
+  links: Array<PortalSecurityPolicyLink>;
+  notice_version: Scalars['String']['output'];
+  /** The version a consent is recorded against — send it back with the consent. */
+  policy_version: Scalars['String']['output'];
+  portal_key: Scalars['String']['output'];
+  retention_days: Scalars['Int']['output'];
+  /** True when the person verified before and the terms have changed since. */
+  reverify: Scalars['Boolean']['output'];
+  sections: Array<PortalSecuritySection>;
+  user_name: Scalars['String']['output'];
+};
+
+export type PortalSecurityClientInput = {
+  language?: InputMaybe<Scalars['String']['input']>;
+  platform?: InputMaybe<Scalars['String']['input']>;
+  timezone?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PortalSecurityConsentInput = {
+  authorized_person: Scalars['Boolean']['input'];
+  credentials_not_shared: Scalars['Boolean']['input'];
+  location_consent: Scalars['Boolean']['input'];
+  policies_acknowledged: Scalars['Boolean']['input'];
+};
+
+export type PortalSecurityConsentRecord = {
+  __typename?: 'PortalSecurityConsentRecord';
+  authorized_person: Scalars['Boolean']['output'];
+  credentials_not_shared: Scalars['Boolean']['output'];
+  location_consent: Scalars['Boolean']['output'];
+  policies_acknowledged: Scalars['Boolean']['output'];
+};
+
+/**
+ * What the server itself sees of this sign-in. The address is read from the
+ * request through the trusted proxy, never taken from the screen; the place
+ * derived from it is always approximate.
+ */
+export type PortalSecurityDetected = {
+  __typename?: 'PortalSecurityDetected';
+  browser?: Maybe<Scalars['String']['output']>;
+  city?: Maybe<Scalars['String']['output']>;
+  country?: Maybe<Scalars['String']['output']>;
+  device_type?: Maybe<Scalars['String']['output']>;
+  ip?: Maybe<Scalars['String']['output']>;
+  /** Always true: an address maps to a provider's region, not to a person's position. */
+  ip_location_is_approximate: Scalars['Boolean']['output'];
+  os?: Maybe<Scalars['String']['output']>;
+  region?: Maybe<Scalars['String']['output']>;
+  server_time: Scalars['String']['output'];
+  user_agent?: Maybe<Scalars['String']['output']>;
+};
+
+export type PortalSecurityException = {
+  __typename?: 'PortalSecurityException';
+  created_at: Scalars['String']['output'];
+  decided_at?: Maybe<Scalars['String']['output']>;
+  decided_by_name?: Maybe<Scalars['String']['output']>;
+  decision_note?: Maybe<Scalars['String']['output']>;
+  expires_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  location_error?: Maybe<Scalars['String']['output']>;
+  portal_key: Scalars['String']['output'];
+  reason: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  used_at?: Maybe<Scalars['String']['output']>;
+  user_id: Scalars['ID']['output'];
+  user_name: Scalars['String']['output'];
+};
+
+export type PortalSecurityExceptionDecisionInput = {
+  approve: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PortalSecurityExceptionPage = {
+  __typename?: 'PortalSecurityExceptionPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<PortalSecurityException>;
+  total: Scalars['Int']['output'];
+};
+
+export type PortalSecurityExceptionRequestInput = {
+  /** PERMISSION_DENIED, POSITION_UNAVAILABLE, TIMEOUT or UNSUPPORTED. */
+  location_error?: InputMaybe<Scalars['String']['input']>;
+  reason: Scalars['String']['input'];
+};
+
+/** Where an alternative-verification request stands, as its owner sees it. */
+export type PortalSecurityExceptionStatus = {
+  __typename?: 'PortalSecurityExceptionStatus';
+  created_at: Scalars['String']['output'];
+  decided_at?: Maybe<Scalars['String']['output']>;
+  decision_note?: Maybe<Scalars['String']['output']>;
+  /** An APPROVED request can be used until this moment. */
+  expires_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  reason: Scalars['String']['output'];
+  /** PENDING, APPROVED, REJECTED, USED or EXPIRED. */
+  status: Scalars['String']['output'];
+};
+
+export type PortalSecurityExceptionSummary = {
+  __typename?: 'PortalSecurityExceptionSummary';
+  decided_at?: Maybe<Scalars['String']['output']>;
+  decided_by_name?: Maybe<Scalars['String']['output']>;
+  decision_note?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  reason: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+};
+
+/** A fix from the browser's location API. Accuracy is the radius, in metres, the browser reports. */
+export type PortalSecurityLocationInput = {
+  accuracy_meters: Scalars['Float']['input'];
+  latitude: Scalars['Float']['input'];
+  longitude: Scalars['Float']['input'];
+};
+
+/** A row of the verification log. No address and no coordinates: those are opened one row at a time. */
+export type PortalSecurityLog = {
+  __typename?: 'PortalSecurityLog';
+  accuracy_m?: Maybe<Scalars['Float']['output']>;
+  browser?: Maybe<Scalars['String']['output']>;
+  created_at: Scalars['String']['output'];
+  device_type?: Maybe<Scalars['String']['output']>;
+  employee_department?: Maybe<Scalars['String']['output']>;
+  employee_title?: Maybe<Scalars['String']['output']>;
+  employment_type?: Maybe<Scalars['String']['output']>;
+  has_location: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  ip_city?: Maybe<Scalars['String']['output']>;
+  ip_country?: Maybe<Scalars['String']['output']>;
+  /** The address with its host part hidden, e.g. 103.21.x.x. */
+  ip_masked?: Maybe<Scalars['String']['output']>;
+  ip_region?: Maybe<Scalars['String']['output']>;
+  /** Whether the HR portal's team structure holds this person, as recorded at the time. */
+  is_employee: Scalars['Boolean']['output'];
+  /** GPS or ADMIN_EXCEPTION. */
+  method?: Maybe<Scalars['String']['output']>;
+  os?: Maybe<Scalars['String']['output']>;
+  policy_version: Scalars['String']['output'];
+  portal_key: Scalars['String']['output'];
+  /** VERIFIED, EXCEPTION_APPROVED or LOCATION_DENIED. */
+  result: Scalars['String']['output'];
+  roles: Array<Scalars['String']['output']>;
+  signed_in_at?: Maybe<Scalars['String']['output']>;
+  user_email: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+  user_name: Scalars['String']['output'];
+};
+
+/** One verification opened in full. Reading it is recorded in access_history. */
+export type PortalSecurityLogDetail = {
+  __typename?: 'PortalSecurityLogDetail';
+  /** Who has opened this record. */
+  access_history: Array<PortalSecurityAccessEntry>;
+  accuracy_m?: Maybe<Scalars['Float']['output']>;
+  browser?: Maybe<Scalars['String']['output']>;
+  consent: PortalSecurityConsentRecord;
+  created_at: Scalars['String']['output'];
+  current_employee_title?: Maybe<Scalars['String']['output']>;
+  /** Today's answer from the HR portal, beside the one recorded at the time. */
+  current_is_employee: Scalars['Boolean']['output'];
+  device_type?: Maybe<Scalars['String']['output']>;
+  duid?: Maybe<Scalars['String']['output']>;
+  employee_department?: Maybe<Scalars['String']['output']>;
+  employee_title?: Maybe<Scalars['String']['output']>;
+  employment_type?: Maybe<Scalars['String']['output']>;
+  exception?: Maybe<PortalSecurityExceptionSummary>;
+  has_location: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  ip?: Maybe<Scalars['String']['output']>;
+  ip_city?: Maybe<Scalars['String']['output']>;
+  ip_country?: Maybe<Scalars['String']['output']>;
+  /** Always true: the place above is derived from the address, never a GPS fix. */
+  ip_location_is_approximate: Scalars['Boolean']['output'];
+  ip_masked?: Maybe<Scalars['String']['output']>;
+  ip_region?: Maybe<Scalars['String']['output']>;
+  is_employee: Scalars['Boolean']['output'];
+  language?: Maybe<Scalars['String']['output']>;
+  latitude?: Maybe<Scalars['Float']['output']>;
+  location_error?: Maybe<Scalars['String']['output']>;
+  longitude?: Maybe<Scalars['Float']['output']>;
+  method?: Maybe<Scalars['String']['output']>;
+  notice_version: Scalars['String']['output'];
+  os?: Maybe<Scalars['String']['output']>;
+  platform?: Maybe<Scalars['String']['output']>;
+  policy_version: Scalars['String']['output'];
+  portal_key: Scalars['String']['output'];
+  /** This person's other verifications, newest first. */
+  related: Array<PortalSecurityLog>;
+  result: Scalars['String']['output'];
+  roles: Array<Scalars['String']['output']>;
+  signed_in_at?: Maybe<Scalars['String']['output']>;
+  timezone?: Maybe<Scalars['String']['output']>;
+  user_agent?: Maybe<Scalars['String']['output']>;
+  user_email: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+  user_name: Scalars['String']['output'];
+};
+
+export type PortalSecurityLogPage = {
+  __typename?: 'PortalSecurityLogPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<PortalSecurityLog>;
+  total: Scalars['Int']['output'];
+};
+
+/** A link to a full policy published by Legal. */
+export type PortalSecurityPolicyLink = {
+  __typename?: 'PortalSecurityPolicyLink';
+  policy_type: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
+/** One titled block of the consent wording (security, access, privacy, location notice…). Plain text. */
+export type PortalSecuritySection = {
+  __typename?: 'PortalSecuritySection';
+  key: Scalars['String']['output'];
+  paragraphs: Array<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
+};
+
+export type PortalSecurityVerificationInput = {
+  client?: InputMaybe<PortalSecurityClientInput>;
+  consent: PortalSecurityConsentInput;
+  /** An APPROVED alternative-verification request, used instead of a location. */
+  exception_id?: InputMaybe<Scalars['ID']['input']>;
+  /** Required unless exception_id is given. */
+  location?: InputMaybe<PortalSecurityLocationInput>;
+  policy_version: Scalars['String']['input'];
+};
+
+export type PortalSecurityVerificationResult = {
+  __typename?: 'PortalSecurityVerificationResult';
+  policy_version: Scalars['String']['output'];
+  record_id: Scalars['ID']['output'];
+  /** The session token. Replaces the one the sign-in returned, which could not call anything else. */
+  token: Scalars['String']['output'];
+  verified_at: Scalars['String']['output'];
 };
 
 export type Post = {
@@ -35044,6 +35631,8 @@ export type PublicAppSettings = {
 
 export type PublicClientConfig = {
   __typename?: 'PublicClientConfig';
+  /** SHA-256 fingerprints of the Android app's signing certificates, comma separated (Tech → Google Play → App Links SHA-256 fingerprints); blank when unset. mWeb's build writes them into /.well-known/assetlinks.json so Android opens mWeb links in the app. */
+  android_app_links_sha256: Scalars['String']['output'];
   /** Sign in with Apple on the iOS app — its App ID. Blank: the iOS app offers no Apple button. */
   apple_bundle_id: Scalars['String']['output'];
   /** Where Apple posts the web flow's answer for the Android app and native web: <server>/apple/callback. */
@@ -35060,6 +35649,8 @@ export type PublicClientConfig = {
   /** Google sign-in on the iOS app — its iOS OAuth client. Blank: the app falls back to google_client_id. */
   google_ios_client_id: Scalars['String']['output'];
   google_maps_api_key: Scalars['String']['output'];
+  /** Remotion company licence key Reel Studio renders under (Tech → Remotion); blank when unset. */
+  remotion_license_key: Scalars['String']['output'];
   /** Truecaller on the Android app — its OAuth client ID. Blank: the Android app offers no Truecaller button. */
   truecaller_android_client_id: Scalars['String']['output'];
   /** Truecaller on the iOS app and mobile web — the partner app key. Blank: those doors offer no Truecaller button. */
@@ -36014,6 +36605,8 @@ export type Query = {
   failedPaymentEvents: Array<PaymentEvent>;
   /** Short-lived signed link to one private evidence file. Finance and Support only. */
   failedPaymentEvidenceLink: FailedPaymentEvidenceLink;
+  /** What a refund of this case would send right now, from Razorpay's live answer; read-only, nothing is claimed or sent. */
+  failedPaymentRefundPreview: FailedPaymentRefundPreview;
   /** Finance › Failed Payments (DUNCIT TABLE CONTRACT v1). */
   failedPaymentsTable: FailedPaymentTablePage;
   faq?: Maybe<Faq>;
@@ -36649,12 +37242,20 @@ export type Query = {
   /** Full audit of one payment: what it charged, what it created, and what failed. */
   paymentDetail: PaymentDetail;
   paymentInvoicePdfBase64: Scalars['String']['output'];
+  /**
+   * The Payment Logs table as a PDF the reader can print or share: the rows the
+   * query selects (search, filters, sort), capped, with a totals line. Pass shop
+   * for one shop's log. Same read roles as the table.
+   */
+  paymentLogsPdfBase64: Scalars['String']['output'];
   paymentReleaseRequests: Array<PaymentReleaseRequest>;
   paymentReleaseRequestsTable: PaymentReleaseRequestTablePage;
   /** Payments whose bill was rounded up, with filter-wide totals. Accepts a derived 'source' filter (PaymentSource values). */
   paymentRoundOffsTable: PaymentRoundOffTablePage;
   /** Aggregated totals over EVERY payment matching the filter (no row cap), SUCCESS only. */
   paymentTotals: PaymentTotals;
+  /** Finance › Payment Trace: every payment an id (DPAY- ref, invoice no, payment document id, Razorpay pay_/order_/rfnd_) belongs to and every log it appears in. Exact match only. */
+  paymentTrace: PaymentTrace;
   payments: Array<Payment>;
   paymentsTable: PaymentTablePage;
   /** The money-out audit trail, newest first. Withdrawal Logs reads kind WITHDRAWAL. */
@@ -36872,6 +37473,16 @@ export type Query = {
   portalMode: PortalModePublic;
   portalModes: Array<PortalMode>;
   portalModesTable: PortalModeTablePage;
+  /** The Security Verification screen's content. Console sign-ins that owe the screen only. */
+  portalSecurityChallenge: PortalSecurityChallenge;
+  /** Where this person's alternative-verification request stands, if they made one. */
+  portalSecurityException?: Maybe<PortalSecurityExceptionStatus>;
+  /** Alternative-verification requests, newest first. SUPER_ADMIN and TECH_MANAGER only. */
+  portalSecurityExceptionsTable: PortalSecurityExceptionPage;
+  /** One verification in full, with the address and coordinates. Opening it is logged. */
+  portalSecurityLog: PortalSecurityLogDetail;
+  /** The verification log (Tech > Security > Login verifications). SUPER_ADMIN and TECH_MANAGER only. */
+  portalSecurityLogsTable: PortalSecurityLogPage;
   post?: Maybe<Post>;
   posts: Array<Post>;
   potentialPodEarnings: PodEarningsProjection;
@@ -39243,6 +39854,11 @@ export type QueryFailedPaymentEvidenceLinkArgs = {
 };
 
 
+export type QueryFailedPaymentRefundPreviewArgs = {
+  case_id: Scalars['ID']['input'];
+};
+
+
 export type QueryFailedPaymentsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
@@ -40426,6 +41042,12 @@ export type QueryPaymentInvoicePdfBase64Args = {
 };
 
 
+export type QueryPaymentLogsPdfBase64Args = {
+  query?: InputMaybe<TableQueryInput>;
+  shop?: InputMaybe<PaymentShop>;
+};
+
+
 export type QueryPaymentReleaseRequestsArgs = {
   filter?: InputMaybe<PaymentReleaseFilterInput>;
 };
@@ -40444,6 +41066,11 @@ export type QueryPaymentRoundOffsTableArgs = {
 export type QueryPaymentTotalsArgs = {
   filter?: InputMaybe<PaymentFilterInput>;
   shop?: InputMaybe<PaymentShop>;
+};
+
+
+export type QueryPaymentTraceArgs = {
+  ref: Scalars['String']['input'];
 };
 
 
@@ -40927,6 +41554,21 @@ export type QueryPortalModeArgs = {
 
 
 export type QueryPortalModesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryPortalSecurityExceptionsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryPortalSecurityLogArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryPortalSecurityLogsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -43451,6 +44093,21 @@ export type ReferralTopReferrer = {
   joined: Scalars['Int']['output'];
   name: Scalars['String']['output'];
   user_id: Scalars['ID']['output'];
+};
+
+/**
+ * Send one owed refund back to the payment's own source (the same Razorpay
+ * payment, never anywhere else), with the note Finance wants on record.
+ */
+export type RefundPaymentToSourceInput = {
+  /** Makes a double click answer once. Optional: one is derived from the entry when absent. */
+  client_request_id?: InputMaybe<Scalars['String']['input']>;
+  /** The PaymentRefundEntry.id to send. */
+  entry_id: Scalars['ID']['input'];
+  kind: PaymentRefundKind;
+  /** Why Finance is sending it (3 to 500 characters). Saved on the payment's trail. */
+  note: Scalars['String']['input'];
+  payment_doc_id: Scalars['ID']['input'];
 };
 
 export type RefundStatus =

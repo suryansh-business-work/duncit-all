@@ -914,6 +914,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       teamStructure: 'Team Structure',
       ssl: 'SSL',
       cloudflare: 'Cloudflare',
+      loginVerifications: 'Login verifications',
+      verificationRequests: 'Verification requests',
       googleAnalytics: 'Google Analytics',
       docker: 'Docker',
       documents: 'Documents',
@@ -1048,6 +1050,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       partners: 'Partners',
       paymentLogs: 'Payment Logs',
       failedPayments: 'Failed Payments',
+      paymentTrace: 'Payment Trace',
       // Finance keeps the two shops apart: each group holds that shop's own
       // payment log and order-level refunds. Round Offs spans every checkout.
       roundOffs: 'Round Offs',
@@ -1630,6 +1633,97 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       lastName: 'Last name',
       languageSaveFailed: 'Could not save your language',
     },
+    /**
+     * Security Verification & Location Tracking: the screen every internal console
+     * shows between sign-in and the console (@duncit/shell security-verification).
+     * The long policy wording itself is served by the server and versioned there.
+     */
+    securityVerification: {
+      title: 'Security Verification & Location Tracking',
+      subtitle: 'Before you open {portal}, confirm who you are and review how access to this portal is protected.',
+      loading: 'Loading security verification',
+      loadFailed: 'We could not load the security verification. Please try again.',
+      noSession: 'We could not start your session. Please try again.',
+      retry: 'Try again',
+      reverify: 'Duncit has updated its security terms since you last verified. Please review them and confirm again.',
+      warning: {
+        label: 'SECURITY WARNING:',
+        body: "Your IP address, location, device details, and login activity are recorded and securely stored on Duncit's servers for security, monitoring, and unauthorized-access investigations. Duncit internal portals are restricted to authorized employees and explicitly approved personnel only. If you are not authorized to access this portal and have obtained credentials through password sharing, accidental disclosure, password leaks, hacking, or any other unauthorized means, you must immediately close this page and discontinue access. Unauthorized access may result in account suspension, security investigation, and legal action under applicable laws.",
+      },
+      detected: {
+        title: 'What we can see about this sign-in',
+        person: 'Signed in as',
+        ip: 'Your public IP address',
+        approxLocation: 'Approximate location (from IP)',
+        approxBadge: 'Approximate',
+        approxNote:
+          "This place is worked out from your IP address. It is only an approximation, often your internet provider's region, and it is not your GPS position.",
+        device: 'Device type',
+        browser: 'Browser',
+        os: 'Operating system',
+        loginTime: 'Sign-in time',
+        unknown: 'Not available',
+      },
+      location: {
+        title: 'Your current location',
+        why: 'Your browser will ask for permission. The location is stored with this sign-in for security checks and unauthorized-access investigations, and is used for nothing else.',
+        request: 'Share my current location',
+        refresh: 'Update my location',
+        retry: 'Try sharing again',
+        requesting: 'Waiting for your browser…',
+        granted: 'Your location was captured. Check that the pin is where you are.',
+        denied: 'Location access was blocked. Allow location for this site in your browser settings, then try again.',
+        unavailable: 'Your device could not work out your location. Check that location services are on, then try again.',
+        timeout: 'Finding your location took too long. Try again.',
+        unsupported: 'This browser cannot share a location.',
+        restriction:
+          'You cannot open this portal without location verification. Allow location access in your browser and try again, or ask an administrator for another way to verify below. Nothing on this page skips the check.',
+      },
+      map: {
+        title: 'Map of your current location',
+        placeholder: 'Your location will appear here once you share it.',
+        coordinates: 'Coordinates {lat}, {lng}',
+        coordinatesAccuracy: 'Coordinates {lat}, {lng} · accurate to about {meters} m',
+        open: 'Open in Google Maps',
+      },
+      policies: {
+        title: 'Security, access and privacy policies',
+        linksTitle: 'Full policies',
+      },
+      consent: {
+        title: 'Your confirmations',
+        authorized:
+          'I confirm that I am an authorized Duncit employee or explicitly approved personnel and am permitted to access this portal',
+        credentials: 'I confirm that I have not shared my login credentials or password with anyone and will keep them confidential',
+        policies:
+          "I understand and acknowledge Duncit's security monitoring, IP logging, location collection, and applicable privacy policies",
+        location: 'I voluntarily consent to sharing my current location for the stated security purposes',
+        locationNotNeeded: 'An administrator approved another way for you to verify, so you do not need to share your location.',
+      },
+      proceed: 'Proceed & Store IP and Location',
+      proceeding: 'Storing…',
+      blocked: {
+        acknowledgements: 'Complete the confirmations above to continue.',
+        location: 'Share your current location and give your location consent to continue, or use an administrator-approved alternative.',
+      },
+      signOut: 'Sign out',
+      signOutHint: 'Not authorized to use this portal? Sign out and close this page.',
+      alternative: {
+        title: 'Cannot share your location?',
+        body: 'You can ask an administrator for another way to verify. Your request is recorded, and the portal stays closed until an administrator approves it.',
+        reasonLabel: 'Why can you not share your location?',
+        reasonHint: 'The administrator reads this.',
+        reasonTooShort: 'Tell the administrator why in at least {min} characters',
+        reasonTooLong: 'Keep it within {max} characters',
+        submit: 'Ask an administrator',
+        sending: 'Sending…',
+        pending: 'Your request is with an administrator. This page updates by itself when it is decided.',
+        approved: 'An administrator approved another way for you to verify. Confirm the statements above and continue. Valid until {until}.',
+        rejected: 'An administrator did not approve this request.',
+        rejectedWithNote: 'An administrator did not approve this request: {note}',
+        over: 'The earlier approval has been used or has run out. You can ask again.',
+      },
+    },
     /** Authenticator-app sign-in: Profile > Security and the console sign-in's second step. */
     twoFactor: {
       title: 'Authenticator app',
@@ -1685,6 +1779,15 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       deniedHint: 'Your last request was declined — you can ask again.',
       notRequestable: 'Granted personally by a super admin.',
       requestFailed: 'Could not send the request. Please try again.',
+    },
+    /** The header's role info: the dialog behind the (i) next to the avatar. */
+    userRoles: {
+      open: 'Your roles and portals',
+      title: 'Your roles',
+      subtitle: 'Every role on your account and the portals each one opens.',
+      close: 'Close',
+      noRoles: 'No roles are assigned to your account yet.',
+      noPortals: 'No portal link for this role.',
     },
     /** The apps drawer itself — the nine dots in every console's header. */
     appsDrawer: {

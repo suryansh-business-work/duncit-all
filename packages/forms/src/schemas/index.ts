@@ -66,6 +66,14 @@ export {
 } from './two-factor';
 
 export {
+  makeSecurityExceptionSchema,
+  securityExceptionDefaults,
+  SECURITY_EXCEPTION_REASON_MAX,
+  SECURITY_EXCEPTION_REASON_MIN,
+  type SecurityExceptionValues,
+} from './security-exception';
+
+export {
   cleanProfileLinks,
   makeProfileBioSchema,
   makeProfileLinksSchema,

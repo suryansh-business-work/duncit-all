@@ -2725,6 +2725,9 @@ importers:
       '@duncit/app-settings':
         specifier: workspace:*
         version: link:../app-settings
+      '@duncit/location':
+        specifier: workspace:*
+        version: link:../location
       '@duncit/media-picker':
         specifier: workspace:*
         version: link:../media-picker

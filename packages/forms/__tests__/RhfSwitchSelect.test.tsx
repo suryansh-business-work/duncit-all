@@ -31,7 +31,32 @@ function Harness({ onValues }: Readonly<{ onValues: (v: Values) => void }>) {
   );
 }
 
+interface Sparse {
+  quiet: boolean;
+  region?: string;
+  tags: string[];
+}
+
+/** A form whose single select starts empty and whose list holds a value no option describes any more. */
+function SparseHarness() {
+  const { control } = useForm<Sparse, unknown, Sparse>({ defaultValues: { quiet: true, tags: ['GITHUB', 'NOTION'] } });
+  return (
+    <>
+      <RhfSwitch control={control as Control<Sparse>} name="quiet" label="Quiet mode" />
+      <RhfSelect control={control as Control<Sparse>} name="region" label="Region" options={[{ value: 'IN', label: 'India' }]} />
+      <RhfSelect control={control as Control<Sparse>} name="tags" label="Tags" multiple options={OPTIONS} />
+    </>
+  );
+}
+
 describe('RhfSwitch', () => {
+  it('has no description when no hint is given', () => {
+    render(<SparseHarness />);
+    const toggle = screen.getByRole('switch', { name: 'Quiet mode' });
+    expect(toggle).toBeChecked();
+    expect(toggle).not.toHaveAttribute('aria-describedby');
+  });
+
   it('is named by its label, described by its hint, and toggles the boolean', async () => {
     let seen: Values | null = null;
     render(<Harness onValues={(v) => (seen = v)} />);
@@ -61,6 +86,18 @@ describe('RhfSelect', () => {
     await userEvent.click(within(screen.getByRole('listbox')).getByRole('option', { name: 'Production' }));
     await userEvent.click(screen.getByRole('button', { name: 'read' }));
     expect(seen?.env).toBe('PRODUCTION');
+  });
+
+  it('renders an empty single select when the field has no value yet', () => {
+    render(<SparseHarness />);
+    const combo = screen.getByRole('combobox', { name: 'Region' });
+    expect(combo).not.toHaveTextContent('India');
+    expect(combo.parentElement?.querySelector('input')).toHaveValue('');
+  });
+
+  it('shows a saved value that no option describes by its raw value, so it is never silently hidden', () => {
+    render(<SparseHarness />);
+    expect(screen.getByRole('combobox', { name: 'Tags' })).toHaveTextContent('GitHub, NOTION');
   });
 
   it('lists the chosen labels and adds a value in multiple mode, but never a disabled option', async () => {

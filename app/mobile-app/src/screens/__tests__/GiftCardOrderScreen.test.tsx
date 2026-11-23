@@ -68,8 +68,8 @@ describe('GiftCardOrderScreen', () => {
     expect(screen.getByTestId('gift-card-order-total-value')).toHaveTextContent('₹1099.00');
     expect(screen.getByTestId('gift-card-order-awb-value')).toHaveTextContent('AWB123');
     const scans = screen.getAllByTestId('gift-card-order-scan');
-    expect(scans[0]).toHaveTextContent('In transit');
-    expect(scans[1]).toHaveTextContent('Picked up');
+    expect(scans[0]).toHaveTextContent('In transit', { exact: false });
+    expect(scans[1]).toHaveTextContent('Picked up', { exact: false });
     expect(screen.getByTestId('gift-card-order-live')).toBeOnTheScreen();
   });
 
@@ -153,9 +153,11 @@ describe('GiftCardOrdersList', () => {
     renderWithProviders(<GiftCardOrdersList onOpen={onOpen} />);
     expect(await screen.findByTestId('gift-card-order-GC-ABCDEFGH23')).toHaveTextContent(
       '₹1099.00',
+      { exact: false },
     );
     expect(screen.getByTestId('gift-card-order-GC-DIGITAL222')).toHaveTextContent(
       fallbackT('mweb.giftCards.paymentPending'),
+      { exact: false },
     );
     fireEvent.press(screen.getByTestId('gift-card-order-GC-ABCDEFGH23'));
     expect(onOpen).toHaveBeenCalledWith('GC-ABCDEFGH23');

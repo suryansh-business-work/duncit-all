@@ -429,12 +429,16 @@ describe('giftcardService.syncIndexes', () => {
     await giftcardService.syncIndexes();
     const txnIndexes = await GiftCardTransactionModel.collection.indexes();
     const cardIndexes = await GiftCardModel.collection.indexes();
+    // One payment may buy several cards: each card holds one PURCHASE row, and
+    // each (payment, line) holds one card. Nothing unique stays on payment alone.
     expect(txnIndexes).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ key: { payment_id: 1, source: 1 }, unique: true }),
-        expect.objectContaining({ key: { gift_card_id: 1, source: 1 }, unique: true }),
-      ])
+      expect.arrayContaining([expect.objectContaining({ key: { gift_card_id: 1, source: 1 }, unique: true })])
     );
-    expect(cardIndexes).toEqual(expect.arrayContaining([expect.objectContaining({ key: { payment_id: 1 }, unique: true })]));
+    expect(cardIndexes).toEqual(
+      expect.arrayContaining([expect.objectContaining({ key: { payment_id: 1, line_index: 1 }, unique: true })])
+    );
+    const uniqueKeys = [...txnIndexes, ...cardIndexes].filter((i) => i.unique).map((i) => JSON.stringify(i.key));
+    expect(uniqueKeys).not.toContain(JSON.stringify({ payment_id: 1 }));
+    expect(uniqueKeys).not.toContain(JSON.stringify({ payment_id: 1, source: 1 }));
   });
 });

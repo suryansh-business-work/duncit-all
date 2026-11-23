@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { EM_DASH } from './shared';
@@ -8,8 +9,17 @@ export interface LabeledId {
   value: string | null | undefined;
 }
 
+/** An id that has a value, as `renderValue` receives it. */
+export type PresentLabeledId = { label: string; value: string };
+
 const present = (ids: readonly LabeledId[]) =>
-  ids.filter((id): id is { label: string; value: string } => Boolean(id.value?.trim()));
+  ids.filter((id): id is PresentLabeledId => Boolean(id.value?.trim()));
+
+const plainValue = (id: PresentLabeledId) => (
+  <Typography variant="caption" component="span" sx={{ fontFamily: 'monospace' }}>
+    {id.value}
+  </Typography>
+);
 
 /**
  * Several ids for one row, each under its own name — "Razorpay payment pay_…",
@@ -19,9 +29,16 @@ const present = (ids: readonly LabeledId[]) =>
  * unlabelled stack: a person comparing against the other system's dashboard
  * reads the first id as "the" id and concludes the two disagree. Every value
  * is monospace, ids without a value are left out, and a row with none shows
- * an em-dash.
+ * an em-dash. The same label may repeat (one row per refund id).
+ *
+ * `renderValue` replaces how a value is drawn — a portal passes one to turn
+ * each id into a link to wherever it traces the id. The package stays free of
+ * any router: the caller owns the link.
  */
-export function LabeledIds({ ids }: Readonly<{ ids: readonly LabeledId[] }>) {
+export function LabeledIds({
+  ids,
+  renderValue = plainValue,
+}: Readonly<{ ids: readonly LabeledId[]; renderValue?: (id: PresentLabeledId) => ReactNode }>) {
   const shown = present(ids);
   if (shown.length === 0) {
     return (
@@ -33,13 +50,11 @@ export function LabeledIds({ ids }: Readonly<{ ids: readonly LabeledId[] }>) {
   return (
     <Stack component="span" sx={{ lineHeight: 1.2, minWidth: 0 }}>
       {shown.map((id) => (
-        <Typography key={id.label} variant="caption" component="span" noWrap>
+        <Typography key={`${id.label}:${id.value}`} variant="caption" component="span" noWrap>
           <Typography variant="caption" component="span" sx={{ color: 'text.secondary' }}>
             {id.label}{' '}
           </Typography>
-          <Typography variant="caption" component="span" sx={{ fontFamily: 'monospace' }}>
-            {id.value}
-          </Typography>
+          {renderValue(id)}
         </Typography>
       ))}
     </Stack>

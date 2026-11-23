@@ -2187,6 +2187,26 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
         ],
       },
       {
+        name: 'Refund a case with no evidence',
+        description: 'A capture the checkout could not book (FINALIZE_FAILED) or a cancelled sheet: Refund asks Razorpay live first.',
+        steps: [
+          ['Open a FINALIZE_FAILED case with no claim as FINANCE_MANAGER', 'The row is uncoloured but offers Refund; the case page says Razorpay is checked live before any money moves'],
+          ['Click Refund', 'The dialog shows "Checking with Razorpay", then the exact amount and Razorpay payment id; Confirm is enabled'],
+          ['Click Refund on a case whose money Razorpay never captured', 'The dialog explains why there is nothing to refund and Confirm stays disabled'],
+          ['Call initiateFailedPaymentRefund on a case whose evidence still waits for Review', 'Server refuses "Approve the evidence in Review before refunding."'],
+        ],
+      },
+      {
+        name: 'AI refund note',
+        description: 'ChatGPT note on the case page: refund, do not refund or needs review, with reasons and relevant links.',
+        steps: [
+          ['Open a case and click "Get AI recommendation"', 'The card shows the verdict chip, a short summary, two to four reasons, and links to Payment Trace, the payment log, Razorpay and the member'],
+          ['Reload the page', 'The same note shows without calling the AI again'],
+          ['Review or refund the case, then reopen it', 'The note is marked out of date; Refresh writes a new one'],
+          ['Switch the AI feature finance.failed_payment_summary off and ask again', 'The card shows the AI is unavailable; the Refund dialog still works'],
+        ],
+      },
+      {
         name: 'Review, reject and bank reversal',
         description: 'Yellow cases and never-captured payments.',
         steps: [
@@ -2203,6 +2223,25 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
           ['POST a payment.failed event with a wrong signature', 'HTTP 400 and nothing is recorded'],
           ['POST a correctly signed payment.failed event', 'HTTP 200; the case shows the Razorpay error and a WEBHOOK_PAYMENT_FAILED timeline row'],
           ['Redeliver the same event id', 'HTTP 200 marked duplicate; nothing changes'],
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Finance: Payment Trace',
+    description: 'Every payment an id belongs to and every log it appears in, at /payment-trace?ref=… — opened from any payment id in the Finance portal.',
+    sub_flows: [
+      {
+        name: 'Trace a payment id',
+        description: 'DPAY- ref, invoice no, Razorpay pay_/order_/rfnd_ id.',
+        steps: [
+          ['Click a Razorpay payment id on Payment Logs or Failed Payments', '/payment-trace?ref=pay_… opens with the payment card (checkout, amount, every id, "Matched on Razorpay payment")'],
+          ['Scroll the page', 'Checkout steps, payment events, Razorpay webhooks, failed-payment case, Razorpay refunds, shop orders and venue food orders each show their count; empty ones say so'],
+          ['Click an order id inside a webhook entry', 'The trace for that order opens; Back returns to the payment id'],
+          ['Trace a Razorpay id of a venue food order', 'The Venue food orders section lists the order with its venue'],
+          ['Trace an id nothing carries', 'The page says the id was not found anywhere'],
+          ['Submit an empty id', 'Error "Enter an id to trace."'],
+          ['Call paymentTrace as a member without a finance role', 'Server refuses with FORBIDDEN'],
         ],
       },
     ],

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { REFUND_KINDS } from './payment.refundSections';
 import { PHONE_EXTENSION_REGEX, PHONE_NUMBER_REGEX } from '@utils/phone';
 import {
   arr,
@@ -283,3 +284,22 @@ export const dummyGiftCardCheckoutSchema = obj(
 
 /** Live Razorpay gift card order — same fields, no simulate_failure. */
 export const giftCardCheckoutSchema = obj(shape(giftCardCheckoutFields, billingRule));
+
+/**
+ * Finance sending an owed refund back to its source (refundPaymentToSource): which
+ * refund, and why. The note is mandatory — it is what the payment's audit trail
+ * shows next to the press.
+ */
+export const refundPaymentToSourceSchema = obj(
+  shape({
+    payment_doc_id: required('Payment is required'),
+    kind: str(z.enum(REFUND_KINDS), { oneOf: REFUND_KINDS, required: 'Refund kind is required' }),
+    entry_id: required('Refund is required'),
+    note: required(
+      'A note is required',
+      minLen(3, 'The note must be at least 3 characters'),
+      maxLen(500, 'The note must be at most 500 characters')
+    ),
+    client_request_id: trimmedUpTo(100),
+  })
+);

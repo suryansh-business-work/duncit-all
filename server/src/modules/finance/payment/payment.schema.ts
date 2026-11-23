@@ -269,6 +269,100 @@ export const paymentTypeDefs = /* GraphQL */ `
     coins_redeemed: Float!
     "Coins this payment earned the buyer back."
     coins_earned: Float!
+    """
+    Every refund this payment has seen, one section per kind of refund (pod
+    payment, coins, pod shop, failed payment, ...). Empty when nothing was ever
+    refunded or is owed. Read lazily: only a query that selects it pays for it.
+    """
+    refunds: [PaymentRefundSection!]
+  }
+
+  "Which kind of refund a section of the payment's Refund area is."
+  enum PaymentRefundKind {
+    "A pod booking's money going back: a cancellation, a Finance refund, a Backout, or a held cancellation refund."
+    POD_PAYMENT
+    "A refund of a payment that is not a pod booking (a shop cart or gift card Finance refunded)."
+    PAYMENT
+    "A pod-shop order cancelled or a return refunded."
+    POD_SHOP
+    "An e-commerce store order refund. Separate from the pod shop, never mixed with it."
+    ECOMM
+    "A captured payment that bought nothing and was refunded through Failed Payments."
+    FAILED_PAYMENT
+    "A rented item's deposit or rent going back."
+    RENTAL
+    "Duncit Coins returned to the buyer's wallet."
+    COIN
+  }
+
+  "Where a refund stands, in three buckets the page colours: owed, done, or refused."
+  enum PaymentRefundState {
+    "Money is owed or on its way and not yet confirmed back (yellow)."
+    PENDING
+    "The money (or coins) are back with the buyer."
+    COMPLETED
+    "Razorpay refused it or the retries are used up; somebody must act (red)."
+    FAILED
+  }
+
+  "One refund inside a section: one gateway refund, one order, one return, one case, or one coin ledger row."
+  type PaymentRefundEntry {
+    id: ID!
+    "The business reference: an order or return number, a booking, a Duncit payment reference. Null when it has none."
+    ref: String
+    "Why it was sent: FINANCE_REFUND, POD_CANCELLATION, BACKOUT, RENTAL, HELD, RECORDED, CANCELLATION, RETURN, CASE, LEDGER."
+    source: String!
+    "The refund engine's own status (QUEUED, PROCESSING, SUCCEEDED, FAILED, HELD, PROCESSED, RECORDED ...), for the label."
+    status: String!
+    state: PaymentRefundState!
+    "Cash going back, in the payment's currency (0 for a coins-only row)."
+    amount: Float!
+    "Duncit Coins going back."
+    coins: Int!
+    "The Razorpay refund id (rfnd_…) of this row; the first of razorpay_refund_ids. Null when none was sent."
+    razorpay_refund_id: String
+    "Every Razorpay refund id behind this row (an older recorded refund can carry more than one)."
+    razorpay_refund_ids: [String!]!
+    razorpay_payment_id: String
+    "Who set it off: an admin, SYSTEM, a pod-cancel initiator."
+    initiated_by: String
+    reason: String
+    "The last error Razorpay or the engine reported."
+    error: String
+    attempts: Int!
+    requested_at: String
+    processed_at: String
+    "When a held cancellation refund is released."
+    due_at: String
+    "True when the caller may press Refund on this row now: it is owed, it is safe to send and the caller's role may."
+    can_refund: Boolean!
+  }
+
+  "One kind of refund on a payment, with what happened to it."
+  type PaymentRefundSection {
+    kind: PaymentRefundKind!
+    "FAILED when any row needs somebody, else PENDING when any row is owed, else COMPLETED."
+    state: PaymentRefundState!
+    amount: Float!
+    coins: Int!
+    entries: [PaymentRefundEntry!]!
+    "This kind's refund activity, oldest first (the payment's audit trail)."
+    events: [PaymentEvent!]!
+  }
+
+  """
+  Send one owed refund back to the payment's own source (the same Razorpay
+  payment, never anywhere else), with the note Finance wants on record.
+  """
+  input RefundPaymentToSourceInput {
+    payment_doc_id: ID!
+    kind: PaymentRefundKind!
+    "The PaymentRefundEntry.id to send."
+    entry_id: ID!
+    "Why Finance is sending it (3 to 500 characters). Saved on the payment's trail."
+    note: String!
+    "Makes a double click answer once. Optional: one is derived from the entry when absent."
+    client_request_id: String
   }
 
   "Server-side table page for the shared table engine (paymentsTable)."
@@ -852,6 +946,12 @@ export const paymentTypeDefs = /* GraphQL */ `
     recurringCheckoutQuote(input: RecurringCheckoutQuoteInput!): RecurringCheckoutQuote!
       @deprecated(reason: "Recurring pods are retired.")
     paymentInvoicePdfBase64(payment_doc_id: ID!): String!
+    """
+    The Payment Logs table as a PDF the reader can print or share: the rows the
+    query selects (search, filters, sort), capped, with a totals line. Pass shop
+    for one shop's log. Same read roles as the table.
+    """
+    paymentLogsPdfBase64(query: TableQueryInput, shop: PaymentShop): String!
     "Live ShipRocket delivery estimate for a product cart (preview only; the charged amount is recomputed server-side at checkout)."
     productShippingQuote(input: ProductShippingQuoteInput!): ProductShippingQuote!
   }
@@ -861,6 +961,12 @@ export const paymentTypeDefs = /* GraphQL */ `
     createRazorpayOrder(input: RazorpayOrderInput!): RazorpayOrder!
     verifyRazorpayPayment(input: VerifyRazorpayInput!): Payment!
     refundPayment(payment_doc_id: ID!, reason: String): Payment!
+    """
+    Send one owed refund back to the payment's own source, with a note on record.
+    Only a refund that is owed and safe to repeat is accepted; the answer is the
+    payment's fresh audit, so the page refreshes from its own reply.
+    """
+    refundPaymentToSource(input: RefundPaymentToSourceInput!): PaymentDetail!
     """
     Re-run the checkout work that did not land, and answer with the fresh audit.
 

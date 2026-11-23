@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import Link from '@mui/material/Link';
 import {
   DuncitTable,
   LabeledIds,
@@ -7,6 +8,7 @@ import {
   labeledIdsText,
   rowMenuColumn,
   type DuncitColumn,
+  type PresentLabeledId,
 } from '@duncit/table';
 
 export interface PayoutRowMock {
@@ -39,13 +41,23 @@ const payoutIds = (row: PayoutRowMock) => [
   { label: 'Duncit ref', value: row.payout_no },
 ];
 
+/**
+ * Each id as a link, the way a portal points ids at its trace page. The demo
+ * links to an in-page anchor; a portal passes its router link instead.
+ */
+const idLink = (id: PresentLabeledId) => (
+  <Link href={`#trace-${id.value}`} variant="caption" sx={{ fontFamily: 'monospace' }}>
+    {id.value}
+  </Link>
+);
+
 const PAYOUT_COLUMNS: DuncitColumn<PayoutRowMock>[] = [
   {
     field: 'payout_no',
     headerName: 'IDs',
     type: 'text',
     minWidth: 230,
-    cellRenderer: (row) => <LabeledIds ids={payoutIds(row)} />,
+    cellRenderer: (row) => <LabeledIds ids={payoutIds(row)} renderValue={idLink} />,
     valueGetter: (row) => labeledIdsText(payoutIds(row)),
   },
   { field: 'host_name', headerName: 'Host', type: 'text', flex: 1, minWidth: 150 },

@@ -8,7 +8,7 @@ export type { DateColumnOptions } from './dateColumn';
 export { entityIdColumn } from './entityIdColumn';
 export type { EntityIdColumnOptions } from './entityIdColumn';
 export { LabeledIds, labeledIdsText } from './labeledIds';
-export type { LabeledId } from './labeledIds';
+export type { LabeledId, PresentLabeledId } from './labeledIds';
 export { activeChipColumn } from './activeChipColumn';
 export type { ActiveChipColumnOptions } from './activeChipColumn';
 export { actionsColumn } from './actionsColumn';

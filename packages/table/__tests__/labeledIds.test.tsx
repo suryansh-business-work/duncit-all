@@ -25,6 +25,28 @@ describe('LabeledIds', () => {
     expect(screen.getByText('pay_U39hOwzQiUFqHT')).toHaveStyle({ fontFamily: 'monospace' });
   });
 
+  it('draws each present value through renderValue, so a portal can turn ids into links', () => {
+    render(<LabeledIds ids={ids} renderValue={(id) => <a href={`/trace/${id.value}`}>{id.value}</a>} />);
+    expect(screen.getByRole('link', { name: 'pay_U39hOwzQiUFqHT' })).toHaveAttribute('href', '/trace/pay_U39hOwzQiUFqHT');
+    expect(screen.getByRole('link', { name: 'DPAY-MWRKSGXI1EE90B59' })).toHaveAttribute('href', '/trace/DPAY-MWRKSGXI1EE90B59');
+    // A missing id is never handed to renderValue.
+    expect(screen.getAllByRole('link')).toHaveLength(3);
+  });
+
+  it('lists the same label once per value, e.g. one line per refund id', () => {
+    render(
+      <LabeledIds
+        ids={[
+          { label: 'Razorpay refund', value: 'rfnd_A' },
+          { label: 'Razorpay refund', value: 'rfnd_B' },
+        ]}
+      />
+    );
+    expect(screen.getByText('rfnd_A')).toBeInTheDocument();
+    expect(screen.getByText('rfnd_B')).toBeInTheDocument();
+    expect(screen.getAllByText(/Razorpay refund/)).toHaveLength(2);
+  });
+
   it('shows an em-dash for a row with no ids at all (blank or whitespace-only values count as none)', () => {
     render(<LabeledIds ids={[{ label: 'Razorpay payment', value: '  ' }, { label: 'Razorpay order', value: undefined }]} />);
     expect(screen.getByText(EM_DASH)).toBeInTheDocument();

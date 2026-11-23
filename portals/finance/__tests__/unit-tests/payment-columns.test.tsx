@@ -7,6 +7,7 @@
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import type { DuncitColumn } from '@duncit/table';
 import { buildPaymentColumns } from '../../src/pages/finance/payment-logs-page/paymentColumns';
 import type { PaymentRow } from '../../src/pages/finance/payment-logs-page/queries';
@@ -53,7 +54,8 @@ const valueOf = (field: string, row: PaymentRow, shop?: 'POD_SHOP' | 'ECOMM') =>
 const draw = (field: string, row: PaymentRow, shop?: 'POD_SHOP' | 'ECOMM') => {
   const renderer = column(field, shop).cellRenderer;
   if (!renderer) throw new Error(`no cellRenderer on ${field}`);
-  return render(<>{renderer(row) as ReactNode}</>);
+  // Ids render as Payment Trace links, which need a router.
+  return render(<>{renderer(row) as ReactNode}</>, { wrapper: MemoryRouter });
 };
 
 describe('buildPaymentColumns — the Pod Shop checkout column', () => {
@@ -144,17 +146,99 @@ describe('buildPaymentColumns — the shared columns', () => {
     });
     expect(valueOf('payment_id', paid)).toBe(
       'finance.payment.idRazorpayPayment: pay_U39hOwzQiUFqHT · finance.payment.idRazorpayOrder: order_U39IVJblWttbgN · ' +
-        'finance.payment.idRazorpayRefund: rfnd_A1, rfnd_B2 · finance.payment.idDuncitRef: DUN-PAY-4821 · ' +
+        'finance.payment.idRazorpayRefund: rfnd_A1 · finance.payment.idRazorpayRefund: rfnd_B2 · ' +
+        'finance.payment.idDuncitRef: DUN-PAY-4821 · ' +
         'finance.payment.idInvoice: INV-2026-0042',
     );
     draw('payment_id', paid);
-    expect(screen.getByText('pay_U39hOwzQiUFqHT')).toBeInTheDocument();
-    expect(screen.getByText('DUN-PAY-4821')).toBeInTheDocument();
+    // Every id opens Payment Trace; each refund id on its own line, so each can be traced.
+    for (const id of ['pay_U39hOwzQiUFqHT', 'order_U39IVJblWttbgN', 'rfnd_A1', 'rfnd_B2', 'DUN-PAY-4821', 'INV-2026-0042']) {
+      expect(screen.getByRole('link', { name: `Trace ${id}` })).toHaveAttribute('href', `/payment-trace?ref=${encodeURIComponent(id)}`);
+    }
   });
 
   it('never passes the Duncit reference off as a Razorpay id when the payment did not go through Razorpay', () => {
     const text = valueOf('payment_id', payment({ gateway: 'COD', invoice_no: null }));
     expect(text).toBe('finance.payment.idDuncitRef: DUN-PAY-4821');
     expect(text).not.toContain('idRazorpay');
+  });
+});
+
+describe('buildPaymentColumns — a log a person can read at a glance', () => {
+  it('hides the accounting columns until asked for, and keeps what a reader looks for in view', () => {
+    for (const accounting of ['subtotal', 'platform_fee_amount', 'gst_amount']) {
+      expect(column(accounting).hide).toBe(true);
+      expect(column(accounting, 'POD_SHOP').hide).toBe(true);
+    }
+    for (const shown of ['created_at', 'user_name', 'description', 'total', 'status', 'refund_status', 'payment_id']) {
+      expect(column(shown).hide).toBeFalsy();
+    }
+  });
+
+  it('keeps the hidden columns in the grid, so the column chooser can still bring them back', () => {
+    const fields = columnsFor().map((c) => c.field);
+    expect(fields).toEqual(expect.arrayContaining(['subtotal', 'platform_fee_amount', 'gst_amount']));
+  });
+
+  it('puts the refund right after the status it explains', () => {
+    const fields = columnsFor().map((c) => c.field);
+    expect(fields.indexOf('refund_status')).toBe(fields.indexOf('status') + 1);
+  });
+
+  it('reads the status in plain words: a successful payment is "Paid"', () => {
+    expect(valueOf('status', payment({ status: 'SUCCESS' }))).toBe('finance.payment.statusPaid');
+    expect(valueOf('status', payment({ status: 'PENDING' }))).toBe('finance.payment.statusPending');
+    expect(valueOf('status', payment({ status: 'FAILED' }))).toBe('finance.payment.statusFailed');
+    expect(valueOf('status', payment({ status: 'REFUNDED' }))).toBe('finance.payment.statusRefunded');
+    // A status the table does not know is shown as it is, never blank.
+    expect(valueOf('status', payment({ status: 'ON_HOLD' }))).toBe('ON_HOLD');
+  });
+
+  it('filters by the real status value but labels it in the same plain words', () => {
+    expect(column('status').options).toEqual([
+      { value: 'PENDING', label: 'finance.payment.statusPending' },
+      { value: 'SUCCESS', label: 'finance.payment.statusPaid' },
+      { value: 'FAILED', label: 'finance.payment.statusFailed' },
+      { value: 'REFUNDED', label: 'finance.payment.statusRefunded' },
+    ]);
+  });
+
+  it('draws the status chip with the plain word, not the raw code', () => {
+    draw('status', payment({ status: 'SUCCESS' }));
+    expect(screen.getByText('finance.payment.statusPaid').closest('.MuiChip-root')).toHaveClass('MuiChip-colorSuccess');
+    expect(screen.queryByText('SUCCESS')).not.toBeInTheDocument();
+  });
+});
+
+describe('buildPaymentColumns — the Refund column', () => {
+  it.each([
+    ['a refund Razorpay confirmed', { status: 'REFUNDED', refund_status: 'SUCCEEDED' }, 'finance.payment.refundStateRefunded', 'Success'],
+    ['part of a payment given back', { status: 'SUCCESS', refund_status: 'SUCCEEDED' }, 'finance.payment.refundStatePart', 'Info'],
+    ['a refund the bank has not confirmed', { status: 'REFUNDED', refund_status: 'PROCESSING' }, 'finance.payment.refundStateProcessing', 'Warning'],
+    ['a refund waiting to be sent', { status: 'REFUNDED', refund_status: 'REQUESTED' }, 'finance.payment.refundStatePending', 'Warning'],
+    ['money still owed after a capture that booked nothing', { status: 'SUCCESS', needs_refund: true }, 'finance.payment.refundStatePending', 'Warning'],
+    ['a refund Razorpay refused', { status: 'REFUNDED', refund_status: 'FAILED' }, 'finance.payment.refundStateAttention', 'Error'],
+    ['a refund whose retries are used up', { status: 'REFUNDED', refund_status: 'RECONCILIATION_REQUIRED' }, 'finance.payment.refundStateAttention', 'Error'],
+    ['an older refund with no engine record', { status: 'REFUNDED', refund_status: null }, 'finance.payment.refundStateRefunded', 'Success'],
+    ['a refund with no gateway money to send', { status: 'REFUNDED', refund_status: 'NOT_APPLICABLE' }, 'finance.payment.refundStateRefunded', 'Success'],
+  ] as const)('says %s in words and in the matching colour', (_label, facts, word, colour) => {
+    const row = payment({ ...facts });
+    expect(valueOf('refund_status', row)).toBe(word);
+    draw('refund_status', row);
+    expect(screen.getByText(word).closest('.MuiChip-root')).toHaveClass(`MuiChip-color${colour}`);
+  });
+
+  it('shows a dash, and no chip, for a payment with no refund', () => {
+    const row = payment({ status: 'SUCCESS', refund_status: null, needs_refund: false });
+    expect(valueOf('refund_status', row)).toBe('—');
+    const drawn = draw('refund_status', row);
+    expect(drawn.container.querySelector('.MuiChip-root')).toBeNull();
+    expect(drawn.container).toHaveTextContent('—');
+  });
+
+  it('is derived, so it cannot be sorted or filtered on the server', () => {
+    const refund = column('refund_status');
+    expect(refund.sortable).toBe(false);
+    expect(refund.filterable).toBe(false);
   });
 });

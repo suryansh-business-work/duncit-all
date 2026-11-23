@@ -7,6 +7,11 @@ import { paymentRoundOffService } from './payment.roundoff.service';
 import { orderRefundService } from './payment.orderRefund.service';
 import type { PaymentShop } from './payment.source';
 import { paymentUserSummaryService } from './payment.userSummary.service';
+import { PAYMENT_WRITE_ROLES } from './payment.roles';
+import { GATEWAY_REFUND_KINDS } from './payment.refundSections';
+import { paymentRefundSections, refundViewerFor } from './payment.refundSections.service';
+import { refundToSource, type RefundToSourceInput } from './payment.refundAction';
+import { paymentLogsPdf } from './payment.logsPdf';
 import { COIN_LOG_READ } from '../coin/coin.resolver';
 import { assertCheckoutEligible } from './checkout-eligibility';
 import { loadPodSummary } from '@modules/pods/pod/pod.loaders';import type { IdLike } from '@utils/request-cache';
@@ -24,10 +29,11 @@ import {
   productCheckoutSchema,
   productShippingQuoteSchema,
   razorpayOrderSchema,
+  refundPaymentToSourceSchema,
   verifyRazorpaySchema,
 } from './payment.validator';
 
-const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
+const ADMIN_RW = PAYMENT_WRITE_ROLES;
 // Read-only payment views. ZONAL_ADMIN opens the Admin pod-details page, whose
 // Payments section lists a pod's transactions — same read scope it already has
 // on podFinanceBreakdown and adminPodAttendees. Mutations stay on ADMIN_RW.
@@ -51,6 +57,11 @@ export const paymentResolvers = {
   },
   PaymentTotals: {
     ticket_discount_total: retiredTicketDiscount,
+  },
+  PaymentDetail: {
+    // Lazy: the audit read does not pay for the Refund area unless the page selects it.
+    refunds: (parent: { payment: { id: string } }, _a: unknown, ctx: GraphQLContext) =>
+      paymentRefundSections(parent.payment.id, refundViewerFor(requireAuth(ctx))),
   },
   CheckoutQuote: {
     ticket_discount_amount: retiredTicketDiscount,
@@ -129,6 +140,10 @@ export const paymentResolvers = {
       requireAuth(ctx);
       throw multiDateCheckoutRetired();
     },
+    paymentLogsPdfBase64: (_p: unknown, args: { query?: TableQueryInput | null; shop?: PaymentShop | null }, ctx: GraphQLContext) => {
+      requireRole(ctx, LOG_READ);
+      return paymentLogsPdf(args);
+    },
     paymentInvoicePdfBase64: (_p: unknown, args: { payment_doc_id: string }, ctx: GraphQLContext) => {
       // The buyer can download their own invoice; admins (support/finance) any.
       const u = requireAuth(ctx);
@@ -177,6 +192,20 @@ export const paymentResolvers = {
       // A city admin refunds bookings of their own city's pods only.
       await assertPodFinanceScope(ctx, ADMIN_RW, () => financeTargets.payment(args.payment_doc_id));
       return paymentService.refund(args.payment_doc_id, args.reason, admin.id);
+    },
+    refundPaymentToSource: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
+      const admin = requireRole(ctx, ADMIN_RW);
+      const input: RefundToSourceInput = await validate(refundPaymentToSourceSchema, args.input);
+      // The same city/zone limit as refundPayment, for the kinds that go back through the pod payment's own gateway.
+      if (GATEWAY_REFUND_KINDS.has(input.kind)) {
+        await assertPodFinanceScope(ctx, ADMIN_RW, () => financeTargets.payment(input.payment_doc_id));
+      }
+      await refundToSource(input, admin);
+      const detail = await paymentDetailService.detail(input.payment_doc_id);
+      if (!detail) {
+        throw new GraphQLError('Payment not found', { extensions: { code: 'NOT_FOUND' } });
+      }
+      return detail;
     },
     retryPaymentSteps: async (
       _p: unknown,

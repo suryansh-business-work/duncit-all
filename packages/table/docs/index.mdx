@@ -839,6 +839,22 @@ labeledIdsText([{ label: 'Razorpay payment', value: 'pay_U39hOwzQiUFqHT' }, { la
 Every id the cell shows must also be in the server table's `searchFields`, so the id a person
 pastes from the other dashboard finds the row.
 
+`renderValue` draws each present value instead of the plain monospace text — a portal passes
+one to make every id a link to wherever it traces ids (Finance links each to its Payment
+Trace page). The package never imports a router; the caller owns the link, and should stop
+the click from also triggering the row's own `onRowClick`. The same label may appear more
+than once (one line per refund id):
+
+```tsx
+<LabeledIds
+  ids={ids(p)}
+  renderValue={(id) => (
+    <Link component={RouterLink} to={`/payment-trace?ref=${encodeURIComponent(id.value)}`}
+      onClick={(e) => e.stopPropagation()}>{id.value}</Link>
+  )}
+/>
+```
+
 Dates go through `date-fns` (a peer dependency), never `toLocaleDateString` — rule 11.
 
 ## Peer dependencies and AG Grid registration

@@ -35,6 +35,7 @@ export type {
   DateColumnOptions,
   EntityIdColumnOptions,
   LabeledId,
+  PresentLabeledId,
   RowActionOptions,
   RowMenuColumnOptions,
   RowMenuItem,

@@ -286,6 +286,15 @@ export const SURFACES: readonly Surface[] = [
       'The console for testing and quality: the confidence score and coverage dashboard, unit test runs (every test row by row, coverage, what each file mocks, the Cypress specs), E2E runs and flows, stress runs, regression reports between runs, the manual test board (drag-and-drop cases with rich-text steps, comments and history), SonarQube, and the platform monitoring that moved from Tech — telemetry, error boundaries and the GraphQL monitor.',
   },
   {
+    key: 'intel',
+    name: 'Duncit Intel',
+    kind: 'PORTAL',
+    host: 'intel.duncit.com',
+    dev_port: 2049,
+    summary:
+      'Internal business intelligence: a private AI chat over company knowledge — uploaded PDFs, images and text, GitHub code and issues, Slack, Gmail, live MongoDB data and MCP tools — with sources cited, staging/production/both scopes, per-person chat history, a Media Manager, sync and index dashboards, connector settings and approvals for every production change.',
+  },
+  {
     key: 'ecomm',
     name: 'Duncit Pet Store',
     kind: 'WEBSITE',

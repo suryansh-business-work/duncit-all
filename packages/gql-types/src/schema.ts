@@ -12182,12 +12182,15 @@ export type EnvCategory =
   | 'EMAIL'
   | 'GEMINI'
   | 'GITHUB'
+  | 'GMAIL'
   | 'GODADDY'
   | 'GOOGLE_DRIVE'
   | 'GOOGLE_MAPS'
   | 'GOOGLE_OAUTH'
   | 'GOOGLE_PLAY'
   | 'IMAGEKIT'
+  | 'MCP_SERVER'
+  | 'MONGODB'
   | 'MSG91'
   | 'OPENAI'
   | 'PEXELS'
@@ -15543,6 +15546,403 @@ export type InstantBookingInput = {
   pets?: InputMaybe<Scalars['Boolean']['input']>;
   space_label?: InputMaybe<Scalars['String']['input']>;
   start_at: Scalars['String']['input'];
+};
+
+export type IntelApproval = {
+  __typename?: 'IntelApproval';
+  action: Scalars['String']['output'];
+  collection: Scalars['String']['output'];
+  connector_name: Scalars['String']['output'];
+  conversation_id: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  database: Scalars['String']['output'];
+  decided_at?: Maybe<Scalars['String']['output']>;
+  decided_by?: Maybe<Scalars['ID']['output']>;
+  decision_note: Scalars['String']['output'];
+  environment: Scalars['String']['output'];
+  error: Scalars['String']['output'];
+  expires_at: Scalars['String']['output'];
+  four_eyes: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  impact: Scalars['String']['output'];
+  kind: Scalars['String']['output'];
+  preview: Scalars['String']['output'];
+  reason: Scalars['String']['output'];
+  request: Scalars['String']['output'];
+  requested_by: Scalars['ID']['output'];
+  result: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  tool_class: Scalars['String']['output'];
+};
+
+export type IntelAuditPage = {
+  __typename?: 'IntelAuditPage';
+  rows: Array<IntelAuditRow>;
+  total: Scalars['Int']['output'];
+};
+
+export type IntelAuditRow = {
+  __typename?: 'IntelAuditRow';
+  action: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  detail: Scalars['String']['output'];
+  environment: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  level: Scalars['String']['output'];
+  sealed: Scalars['Boolean']['output'];
+  status: Scalars['String']['output'];
+  target: Scalars['String']['output'];
+  type: Scalars['String']['output'];
+  user_id?: Maybe<Scalars['ID']['output']>;
+};
+
+export type IntelBootstrap = {
+  __typename?: 'IntelBootstrap';
+  app_title: Scalars['String']['output'];
+  default_environment: Scalars['String']['output'];
+  default_model: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  me: IntelMe;
+  models: Array<IntelModelOption>;
+  pending_approvals: Scalars['Int']['output'];
+  sources: Array<IntelSourceCard>;
+  /** Media Manager limits from Settings › Media & Uploads. */
+  upload_max_mb: Scalars['Int']['output'];
+  upload_types: Array<Scalars['String']['output']>;
+};
+
+export type IntelCitation = {
+  __typename?: 'IntelCitation';
+  environment: Scalars['String']['output'];
+  line_end?: Maybe<Scalars['Int']['output']>;
+  line_start?: Maybe<Scalars['Int']['output']>;
+  page?: Maybe<Scalars['Int']['output']>;
+  ref: Scalars['String']['output'];
+  snippet: Scalars['String']['output'];
+  source: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
+export type IntelCollectionHealth = {
+  __typename?: 'IntelCollectionHealth';
+  dimension_mismatch: Scalars['Boolean']['output'];
+  dimensions?: Maybe<Scalars['Int']['output']>;
+  exists: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  points: Scalars['Int']['output'];
+  scope: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+};
+
+export type IntelConnector = {
+  __typename?: 'IntelConnector';
+  config: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  enabled: Scalars['Boolean']['output'];
+  env_entry_id: Scalars['ID']['output'];
+  env_entry_name: Scalars['String']['output'];
+  environment: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  indexed_count: Scalars['Int']['output'];
+  kind: Scalars['String']['output'];
+  last_error: Scalars['String']['output'];
+  last_success_at?: Maybe<Scalars['String']['output']>;
+  last_sync_at?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  sync_paused: Scalars['Boolean']['output'];
+  tools: Array<IntelTool>;
+  updated_at: Scalars['String']['output'];
+};
+
+export type IntelConnectorError = {
+  __typename?: 'IntelConnectorError';
+  error: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  kind: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+};
+
+export type IntelConnectorInput = {
+  /** Kind-specific options as JSON (collections, channels, repositories…). */
+  config: Scalars['String']['input'];
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  env_entry_id: Scalars['ID']['input'];
+  environment: Scalars['String']['input'];
+  kind: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+};
+
+export type IntelConversation = {
+  __typename?: 'IntelConversation';
+  archived: Scalars['Boolean']['output'];
+  created_at: Scalars['String']['output'];
+  environment: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  last_message_at: Scalars['String']['output'];
+  message_count: Scalars['Int']['output'];
+  model: Scalars['String']['output'];
+  pinned: Scalars['Boolean']['output'];
+  sources: Array<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+export type IntelConversationCounts = {
+  __typename?: 'IntelConversationCounts';
+  all: Scalars['Int']['output'];
+  archived: Scalars['Int']['output'];
+  pinned: Scalars['Int']['output'];
+  recent: Scalars['Int']['output'];
+};
+
+export type IntelConversationPage = {
+  __typename?: 'IntelConversationPage';
+  rows: Array<IntelConversation>;
+  total: Scalars['Int']['output'];
+};
+
+export type IntelConversationPatch = {
+  archived?: InputMaybe<Scalars['Boolean']['input']>;
+  environment?: InputMaybe<Scalars['String']['input']>;
+  model?: InputMaybe<Scalars['String']['input']>;
+  pinned?: InputMaybe<Scalars['Boolean']['input']>;
+  sources?: InputMaybe<Array<Scalars['String']['input']>>;
+  title?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type IntelEntryOption = {
+  __typename?: 'IntelEntryOption';
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_default: Scalars['Boolean']['output'];
+  last_test_ok?: Maybe<Scalars['Boolean']['output']>;
+  name: Scalars['String']['output'];
+};
+
+export type IntelHealth = {
+  __typename?: 'IntelHealth';
+  collections: Array<IntelCollectionHealth>;
+  connector_errors: Array<IntelConnectorError>;
+  failed_runs_24h: Scalars['Int']['output'];
+  openai_configured: Scalars['Boolean']['output'];
+  openai_entry_selected: Scalars['Boolean']['output'];
+  pending_approvals: Scalars['Int']['output'];
+  qdrant_configured: Scalars['Boolean']['output'];
+  qdrant_reachable: Scalars['Boolean']['output'];
+  queue_configured: Scalars['Boolean']['output'];
+};
+
+export type IntelIndexDocument = {
+  __typename?: 'IntelIndexDocument';
+  chunk_count: Scalars['Int']['output'];
+  connector_id: Scalars['String']['output'];
+  error: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  indexed_at?: Maybe<Scalars['String']['output']>;
+  scope: Scalars['String']['output'];
+  source: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+  version: Scalars['Int']['output'];
+};
+
+export type IntelIndexPage = {
+  __typename?: 'IntelIndexPage';
+  rows: Array<IntelIndexDocument>;
+  total: Scalars['Int']['output'];
+};
+
+export type IntelIndexStat = {
+  __typename?: 'IntelIndexStat';
+  chunks: Scalars['Int']['output'];
+  documents: Scalars['Int']['output'];
+  failed: Scalars['Int']['output'];
+  scope: Scalars['String']['output'];
+  source: Scalars['String']['output'];
+};
+
+export type IntelMe = {
+  __typename?: 'IntelMe';
+  can_admin: Scalars['Boolean']['output'];
+  can_request_writes: Scalars['Boolean']['output'];
+  can_super: Scalars['Boolean']['output'];
+  environments: Array<Scalars['String']['output']>;
+  level: Scalars['String']['output'];
+  sources: Array<Scalars['String']['output']>;
+  user_id: Scalars['ID']['output'];
+};
+
+export type IntelMedia = {
+  __typename?: 'IntelMedia';
+  archived: Scalars['Boolean']['output'];
+  chunk_count: Scalars['Int']['output'];
+  created_at: Scalars['String']['output'];
+  deleted: Scalars['Boolean']['output'];
+  favorite: Scalars['Boolean']['output'];
+  folder: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  index_method: Scalars['String']['output'];
+  index_status: Scalars['String']['output'];
+  index_warning: Scalars['String']['output'];
+  indexed_at?: Maybe<Scalars['String']['output']>;
+  mime: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  owner_id: Scalars['ID']['output'];
+  page_count: Scalars['Int']['output'];
+  size: Scalars['Int']['output'];
+  updated_at: Scalars['String']['output'];
+  visibility: Scalars['String']['output'];
+};
+
+export type IntelMediaPage = {
+  __typename?: 'IntelMediaPage';
+  rows: Array<IntelMedia>;
+  total: Scalars['Int']['output'];
+};
+
+export type IntelMediaPatch = {
+  favorite?: InputMaybe<Scalars['Boolean']['input']>;
+  folder?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  visibility?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type IntelMessage = {
+  __typename?: 'IntelMessage';
+  approval_ids: Array<Scalars['String']['output']>;
+  citations: Array<IntelCitation>;
+  content: Scalars['String']['output'];
+  conversation_id: Scalars['ID']['output'];
+  created_at: Scalars['String']['output'];
+  edited: Scalars['Boolean']['output'];
+  error_code?: Maybe<Scalars['String']['output']>;
+  error_message?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  model: Scalars['String']['output'];
+  role: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  tool_calls: Array<IntelToolCall>;
+};
+
+export type IntelModelOption = {
+  __typename?: 'IntelModelOption';
+  enabled: Scalars['Boolean']['output'];
+  id: Scalars['String']['output'];
+  is_default: Scalars['Boolean']['output'];
+  label: Scalars['String']['output'];
+};
+
+export type IntelSendInput = {
+  conversation_id?: InputMaybe<Scalars['ID']['input']>;
+  edit_message_id?: InputMaybe<Scalars['ID']['input']>;
+  environment?: InputMaybe<Scalars['String']['input']>;
+  message?: InputMaybe<Scalars['String']['input']>;
+  model?: InputMaybe<Scalars['String']['input']>;
+  regenerate?: InputMaybe<Scalars['Boolean']['input']>;
+  sources?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+export type IntelSendResult = {
+  __typename?: 'IntelSendResult';
+  assistant_message_id: Scalars['ID']['output'];
+  conversation_id: Scalars['ID']['output'];
+  user_message_id: Scalars['ID']['output'];
+};
+
+export type IntelSettingsPayload = {
+  __typename?: 'IntelSettingsPayload';
+  json: Scalars['String']['output'];
+  revision: Scalars['Int']['output'];
+};
+
+export type IntelSlackChannel = {
+  __typename?: 'IntelSlackChannel';
+  id: Scalars['ID']['output'];
+  is_private: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+};
+
+export type IntelSourceCard = {
+  __typename?: 'IntelSourceCard';
+  connectors: Scalars['Int']['output'];
+  detail: Scalars['String']['output'];
+  indexed: Scalars['Int']['output'];
+  last_sync_at?: Maybe<Scalars['String']['output']>;
+  source: Scalars['String']['output'];
+  state: Scalars['String']['output'];
+};
+
+export type IntelSyncRun = {
+  __typename?: 'IntelSyncRun';
+  connector_id: Scalars['ID']['output'];
+  connector_name: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  error: Scalars['String']['output'];
+  finished_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  kind: Scalars['String']['output'];
+  log: Array<Scalars['String']['output']>;
+  mode: Scalars['String']['output'];
+  started_at?: Maybe<Scalars['String']['output']>;
+  stats: IntelSyncStats;
+  status: Scalars['String']['output'];
+  trigger: Scalars['String']['output'];
+};
+
+export type IntelSyncStats = {
+  __typename?: 'IntelSyncStats';
+  deleted: Scalars['Int']['output'];
+  failed: Scalars['Int']['output'];
+  indexed: Scalars['Int']['output'];
+  seen: Scalars['Int']['output'];
+  unchanged: Scalars['Int']['output'];
+};
+
+export type IntelTestResult = {
+  __typename?: 'IntelTestResult';
+  details: Array<Scalars['String']['output']>;
+  message: Scalars['String']['output'];
+  ok: Scalars['Boolean']['output'];
+};
+
+export type IntelTool = {
+  __typename?: 'IntelTool';
+  class: Scalars['String']['output'];
+  description: Scalars['String']['output'];
+  effective: Scalars['String']['output'];
+  input_schema: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  override?: Maybe<Scalars['String']['output']>;
+};
+
+export type IntelToolCall = {
+  __typename?: 'IntelToolCall';
+  name: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  summary: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type IntelUsage = {
+  __typename?: 'IntelUsage';
+  by_day: Array<IntelUsageRow>;
+  by_model: Array<IntelUsageRow>;
+  by_task: Array<IntelUsageRow>;
+  days: Scalars['Int']['output'];
+  total_calls: Scalars['Int']['output'];
+  total_cost_usd: Scalars['Float']['output'];
+  total_tokens: Scalars['Int']['output'];
+};
+
+export type IntelUsageRow = {
+  __typename?: 'IntelUsageRow';
+  calls: Scalars['Int']['output'];
+  cost_usd: Scalars['Float']['output'];
+  key: Scalars['String']['output'];
+  tokens: Scalars['Int']['output'];
 };
 
 export type Interview = {
@@ -19687,6 +20087,30 @@ export type Mutation = {
   incrementPodHits: Pod;
   /** Refund the captured amount not yet refunded through Razorpay, at most once. FINANCE_MANAGER / SUPER_ADMIN. */
   initiateFailedPaymentRefund: FailedPaymentDetail;
+  intelArchiveMedia: IntelMedia;
+  intelCreateConnector: IntelConnector;
+  intelCreateFolder: Scalars['String']['output'];
+  intelDecideApproval: IntelApproval;
+  intelDeleteConnector: Scalars['Boolean']['output'];
+  intelDeleteConversation: Scalars['Boolean']['output'];
+  intelDiscoverTools: IntelConnector;
+  intelPurgeMedia: Scalars['Boolean']['output'];
+  intelRebuildIndex: Scalars['Int']['output'];
+  intelReindexMedia: IntelMedia;
+  intelRestoreMedia: IntelMedia;
+  intelSend: IntelSendResult;
+  intelSessionStart: Scalars['Boolean']['output'];
+  intelSetConnectorEnabled: IntelConnector;
+  intelSetConnectorPaused: IntelConnector;
+  intelSetToolClass: IntelConnector;
+  intelStop: Scalars['Boolean']['output'];
+  intelSyncConnector: Scalars['ID']['output'];
+  intelTestConnector: IntelTestResult;
+  intelTrashMedia: IntelMedia;
+  intelUpdateConnector: IntelConnector;
+  intelUpdateConversation: IntelConversation;
+  intelUpdateMedia: IntelMedia;
+  intelUpdateSettings: IntelSettingsPayload;
   /** Primary host invites a co-host. Enforces the sub-category's allow_co_hosts + max_co_hosts. */
   inviteCoHost: Pod;
   /**
@@ -24297,6 +24721,134 @@ export type MutationIncrementPodHitsArgs = {
 export type MutationInitiateFailedPaymentRefundArgs = {
   case_id: Scalars['ID']['input'];
   client_request_id: Scalars['String']['input'];
+};
+
+
+export type MutationIntelArchiveMediaArgs = {
+  archived: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationIntelCreateConnectorArgs = {
+  input: IntelConnectorInput;
+};
+
+
+export type MutationIntelCreateFolderArgs = {
+  path: Scalars['String']['input'];
+};
+
+
+export type MutationIntelDecideApprovalArgs = {
+  approve: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationIntelDeleteConnectorArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationIntelDeleteConversationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationIntelDiscoverToolsArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationIntelPurgeMediaArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationIntelRebuildIndexArgs = {
+  scope?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationIntelReindexMediaArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationIntelRestoreMediaArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationIntelSendArgs = {
+  input: IntelSendInput;
+};
+
+
+export type MutationIntelSetConnectorEnabledArgs = {
+  enabled: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationIntelSetConnectorPausedArgs = {
+  id: Scalars['ID']['input'];
+  paused: Scalars['Boolean']['input'];
+};
+
+
+export type MutationIntelSetToolClassArgs = {
+  class?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  tool: Scalars['String']['input'];
+};
+
+
+export type MutationIntelStopArgs = {
+  message_id: Scalars['ID']['input'];
+};
+
+
+export type MutationIntelSyncConnectorArgs = {
+  full?: InputMaybe<Scalars['Boolean']['input']>;
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationIntelTestConnectorArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationIntelTrashMediaArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationIntelUpdateConnectorArgs = {
+  id: Scalars['ID']['input'];
+  input: IntelConnectorInput;
+};
+
+
+export type MutationIntelUpdateConversationArgs = {
+  id: Scalars['ID']['input'];
+  patch: IntelConversationPatch;
+};
+
+
+export type MutationIntelUpdateMediaArgs = {
+  id: Scalars['ID']['input'];
+  patch: IntelMediaPatch;
+};
+
+
+export type MutationIntelUpdateSettingsArgs = {
+  revision: Scalars['Int']['input'];
+  section: Scalars['String']['input'];
+  value: Scalars['String']['input'];
 };
 
 
@@ -36730,6 +37282,29 @@ export type Query = {
   igLeadSettings: IgLeadSettings;
   /** Instagram leads, server-paged. due: true keeps only those with a follow-up due now. */
   igLeadsTable: IgLeadTablePage;
+  intelApproval: IntelApproval;
+  intelApprovals: Array<IntelApproval>;
+  intelAudit: IntelAuditPage;
+  intelBootstrap: IntelBootstrap;
+  intelConnector: IntelConnector;
+  intelConnectors: Array<IntelConnector>;
+  intelConversation: IntelConversation;
+  intelConversationCounts: IntelConversationCounts;
+  intelConversations: IntelConversationPage;
+  intelEntryOptions: Array<IntelEntryOption>;
+  intelGithubBranches: Array<Scalars['String']['output']>;
+  intelHealth: IntelHealth;
+  intelIndexDocuments: IntelIndexPage;
+  intelIndexStats: Array<IntelIndexStat>;
+  intelMedia: IntelMediaPage;
+  intelMediaFile: IntelMedia;
+  intelMediaFolders: Array<Scalars['String']['output']>;
+  intelMessages: Array<IntelMessage>;
+  intelMongoCollections: Array<Scalars['String']['output']>;
+  intelSettings: IntelSettingsPayload;
+  intelSlackChannels: Array<IntelSlackChannel>;
+  intelSyncRuns: Array<IntelSyncRun>;
+  intelUsage: IntelUsage;
   interview?: Maybe<Interview>;
   interviews: Array<Interview>;
   inventoryActivityLogs: Array<InventoryActivityLog>;
@@ -40166,6 +40741,114 @@ export type QueryHostsTableArgs = {
 export type QueryIgLeadsTableArgs = {
   due?: InputMaybe<Scalars['Boolean']['input']>;
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryIntelApprovalArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryIntelApprovalsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  mine?: InputMaybe<Scalars['Boolean']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryIntelAuditArgs = {
+  page?: InputMaybe<Scalars['Int']['input']>;
+  page_size?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryIntelConnectorArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryIntelConnectorsArgs = {
+  kind?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryIntelConversationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryIntelConversationsArgs = {
+  page?: InputMaybe<Scalars['Int']['input']>;
+  page_size?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<Scalars['String']['input']>;
+  view?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryIntelEntryOptionsArgs = {
+  kind: Scalars['String']['input'];
+};
+
+
+export type QueryIntelGithubBranchesArgs = {
+  entry_id: Scalars['ID']['input'];
+  owner: Scalars['String']['input'];
+  repo: Scalars['String']['input'];
+};
+
+
+export type QueryIntelIndexDocumentsArgs = {
+  page?: InputMaybe<Scalars['Int']['input']>;
+  page_size?: InputMaybe<Scalars['Int']['input']>;
+  scope?: InputMaybe<Scalars['String']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  source?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryIntelMediaArgs = {
+  folder?: InputMaybe<Scalars['String']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  page_size?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  view?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryIntelMediaFileArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryIntelMessagesArgs = {
+  conversation_id: Scalars['ID']['input'];
+};
+
+
+export type QueryIntelMongoCollectionsArgs = {
+  database?: InputMaybe<Scalars['String']['input']>;
+  entry_id: Scalars['ID']['input'];
+};
+
+
+export type QueryIntelSlackChannelsArgs = {
+  entry_id: Scalars['ID']['input'];
+};
+
+
+export type QueryIntelSyncRunsArgs = {
+  connector_id?: InputMaybe<Scalars['ID']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryIntelUsageArgs = {
+  days?: InputMaybe<Scalars['Int']['input']>;
 };
 
 

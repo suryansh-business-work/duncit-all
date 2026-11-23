@@ -202,4 +202,5 @@ export const STAFF_ROLES = [
   'MCP_MANAGER',
   'LOYALTY_MANAGER',
   'TESTS_MANAGER',
+  'INTEL_MANAGER',
 ] as const;

@@ -64,6 +64,7 @@ describe('Admin · Console Access & Setup (run account, password CHANGED)', { te
     switchAdminRoles(run, [], ['CITY_ADMIN']);
     uiSignIn(run);
     cy.wait('@AdminLogin').its('response.body.errors').should('be.undefined');
+    cy.completeSecurityVerification();
     cy.location('pathname').should('eq', '/hub');
     cy.byTestId('shell-user-menu-button').should('be.visible');
     cy.byTestId('admin-hub-tile-dashboard').should('be.visible');

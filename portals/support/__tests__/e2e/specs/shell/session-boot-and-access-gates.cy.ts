@@ -46,6 +46,7 @@ describe('Portal Shell · Session, boot and access gates (Support, run account)'
       // Tokens are stamped to the second (iat); a new one needs the clock to move.
       cy.wait(1100);
       submitPassword(account.email, runPasswordNow(account));
+      cy.completeSecurityVerification();
       cy.location('pathname').should('eq', '/');
       storedToken('support').should('be.a', 'string').and('not.equal', first);
     });

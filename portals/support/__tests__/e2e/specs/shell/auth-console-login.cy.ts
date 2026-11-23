@@ -35,6 +35,7 @@ describe('Portal Shell · Auth (console login) (Support, run account)', () => {
     cy.location('search').should('eq', `?redirect=${encodeURIComponent(target)}`);
     cy.byTestId('login-screen').should('be.visible');
     submitPassword(account.email, runPasswordNow(account));
+    cy.completeSecurityVerification();
     cy.location('pathname').should('eq', '/tickets');
     cy.location('search').should('eq', '?status=OPEN');
   });

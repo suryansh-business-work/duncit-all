@@ -23,8 +23,14 @@ export function submitPassword(email: string, password: string): void {
   cy.wait('@ConsoleLogin').its('response.body.errors').should('be.undefined');
 }
 
-/** The dashboard at `/`, inside the shell's chrome, with the session saved where the portal reads it. */
+/**
+ * The dashboard at `/`, inside the shell's chrome, with the session saved where the portal reads it.
+ *
+ * Called right after a sign-in on the screen, so it first completes Security Verification: a console
+ * sign-in is not a session until that screen is done.
+ */
 export function assertInsideShell(portal: StaffPortal): void {
+  cy.completeSecurityVerification();
   cy.location('pathname').should('eq', '/');
   cy.byTestId('shell-user-menu-button').should('be.visible');
   cy.window().its('localStorage').invoke('getItem', portalTokenKey(portal)).should('be.a', 'string').and('not.be.empty');

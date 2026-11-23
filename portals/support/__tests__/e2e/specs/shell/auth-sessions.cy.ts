@@ -70,6 +70,7 @@ describe('Portal Shell · Auth (sessions) (Support, run account)', () => {
     cy.clearAuth();
     cy.visitPortal('support', '/login?redirect=%2Fprofile%3Fselectedtab%3Dsecurity');
     submitPassword(account.email, runPasswordNow(account));
+    cy.completeSecurityVerification();
     cy.location('pathname').should('eq', '/profile');
     cy.byTestId('profile-last-sign-in').should('contain.text', 'Last signed in').and('contain.text', '· with password');
     apiToken('support', account).then((token) =>

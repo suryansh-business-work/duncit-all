@@ -62,6 +62,7 @@ import { serverPulseMiddleware, startServerPulse } from './observability/serverP
 import { startAccountDeletionScheduler } from '@modules/access/accountDeletion/accountDeletion.scheduler';
 import { startAccountLockRefresh } from '@modules/access/accountDeletion/accountDeletion.lock';
 import { startSessionSealRefresh } from '@modules/access/auth/session-seal';
+import { startPolicyVersionRefresh } from '@modules/portals/portalSecurity/portalSecurity.policy';
 import { buildDbBackupRouter } from '@modules/platform/dbBackup/dbBackup.router';
 import { buildTicketRouter } from '@modules/pods/ticket/ticket.router';
 import { buildEmailAssetsRouter } from '@services/email/emailAssets.router';
@@ -474,6 +475,15 @@ async function bootstrap() {
     const { loadSessionSeals } = await import('@modules/access/auth/session-seal');
     await loadSessionSeals();
   });
+  /*
+    The consent version console sessions are checked against. Loaded before the
+    first request for the same reason as the seals above: until it is known a
+    session verified under older terms is accepted, never locked out.
+  */
+  await safeSeed('portalSecurityPolicy', async () => {
+    const { refreshPolicyVersion } = await import('@modules/portals/portalSecurity/portalSecurity.policy');
+    await refreshPolicyVersion();
+  });
   // Builds the gift card unique indexes (code, payment_id, the once-only
   // redeem guard) — new unique indexes only land through syncIndexes at boot.
   await safeSeed('giftCardIndexes', async () => {
@@ -843,6 +853,8 @@ async function bootstrap() {
   startAccountLockRefresh();
   // The same safety net for the password-reset session seals.
   startSessionSealRefresh();
+  // And the console consent version, re-read each minute so a Legal edit reaches it.
+  startPolicyVersionRefresh();
 
   // WhatsApp: the scenarios no domain event can fire — the pod reminder, the
   // nudge to complete a finished pod, an unanswered slot request, a released

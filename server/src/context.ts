@@ -6,6 +6,10 @@ import { isSessionSealed } from '@modules/access/auth/session-seal';
 import { effectiveRoles } from '@modules/access/auth/current-roles';
 import { consentFromRequest, type TrackingConsent } from '@utils/consent';
 import { platformFromRequest, trackUserActivity } from '@modules/access/user/user.activity';
+import {
+  isPortalSessionPending,
+  type PortalSessionClaim,
+} from '@modules/portals/portalSecurity/portalSecurity.claims';
 
 export interface AuthUser {
   id: string;
@@ -19,6 +23,13 @@ export interface GraphQLContext {
   req: Request;
   res: Response;
   user: AuthUser | null;
+  /**
+   * A console sign-in that has not yet completed the Security Verification
+   * screen (or owes it again after a policy change). It is NOT a session:
+   * `user` stays null for it, so every resolver reads it as signed out. Only the
+   * verification operations read this, to know whose screen it is.
+   */
+  portalSecurity?: PendingPortalSession | null;
   device_id: string | null;
   /**
    * What the caller allowed us to store (`x-consent`, see utils/consent.ts).
@@ -52,6 +63,19 @@ export interface CallerClient {
   app: string;
 }
 
+/** Who a not-yet-verified console token belongs to, and which console it is for. */
+export interface PendingPortalSession {
+  userId: string;
+  /** The console's `appConfig.key`, read from the signed token. */
+  portal: string;
+  /** True when the person did verify once, but the policy has changed since. */
+  reverify: boolean;
+  /** The token's issue time in seconds — a re-verification is never older than it. */
+  issuedAt?: number;
+}
+
+type SessionClaims = AuthUser & { iat?: number; psv?: PortalSessionClaim };
+
 /**
  * The verified account behind an `Authorization: Bearer …` header, or null.
  *
@@ -61,6 +85,30 @@ export interface CallerClient {
  * authenticated reads as a bug in the telemetry rather than in the header.
  */
 export function decodeAuthUser(authorization?: string | null): AuthUser | null {
+  const claims = verifySession(authorization);
+  // A console sign-in that still owes the Security Verification screen is not a
+  // session: refusing it HERE is what keeps it out of every resolver, the
+  // notification stream, the voice route and the rate limiter at once.
+  return claims && !isPortalSessionPending(claims) ? claims : null;
+}
+
+/**
+ * The console sign-in behind a header that has NOT completed Security
+ * Verification — or null for a verified session, a legacy token and a bad one.
+ * Read only by the verification operations.
+ */
+export function decodePendingPortalSession(authorization?: string | null): PendingPortalSession | null {
+  const claims = verifySession(authorization);
+  if (!claims?.psv || !isPortalSessionPending(claims)) return null;
+  return {
+    userId: claims.id,
+    portal: claims.psv.portal,
+    reverify: claims.psv.verified === true,
+    issuedAt: claims.iat,
+  };
+}
+
+function verifySession(authorization?: string | null): SessionClaims | null {
   if (!authorization?.startsWith('Bearer ')) return null;
   try {
     // Fallback MUST match `signToken` (user.service.ts). If they diverge, a
@@ -69,7 +117,7 @@ export function decodeAuthUser(authorization?: string | null): AuthUser | null {
     const user = jwt.verify(
       authorization.slice(7),
       process.env.JWT_SECRET || 'dev-secret'
-    ) as AuthUser & { iat?: number };
+    ) as SessionClaims;
     /*
       A valid signature is no longer the whole answer.
 
@@ -120,6 +168,9 @@ export async function buildContext({
   res: Response;
 }): Promise<GraphQLContext> {
   const user: AuthUser | null = await resolveAuthUser(req.headers.authorization);
+  // Null for a signed-out caller and for a verified session alike; set only for
+  // a console token that owes the Security Verification screen.
+  const portalSecurity = user ? null : decodePendingPortalSession(req.headers.authorization);
   // Admin > Users "Last Activity" and "Platforms Used": throttled and never awaited.
   if (user) trackUserActivity(user.id, platformFromRequest(req));
   const rawDuid = req.headers['x-duid'];
@@ -137,6 +188,7 @@ export async function buildContext({
     req,
     res,
     user,
+    portalSecurity,
     device_id,
     consent: consentFromRequest(req),
     noRedis,

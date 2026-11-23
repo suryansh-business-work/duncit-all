@@ -28,6 +28,20 @@ describe('account deletion retention', () => {
     }
   });
 
+  it('keeps the trail of who read a location, and the requests reviewers decided, when either person leaves', () => {
+    for (const model of ['PortalSecurityAccessLog', 'PortalSecurityException']) {
+      expect(isRetainedModel(model)).toBe(true);
+      expect(retentionReason(model)).not.toBe('');
+    }
+    expect(redactionFor('PortalSecurityAccessLog', 'actor_id')).toEqual({ actor_name: DELETED_USER_NAME });
+    expect(redactionFor('PortalSecurityException', 'decided_by')).toEqual({ decided_by_name: DELETED_USER_NAME });
+    expect(redactionFor('PortalSecurityException', 'user_id')).toEqual({ user_name: DELETED_USER_NAME, reason: '' });
+  });
+
+  it("lets a person's own verification rows go with the account — they are theirs", () => {
+    expect(isRetainedModel('PortalSecurityVerification')).toBe(false);
+  });
+
   it('leaves everything else deletable', () => {
     expect(isRetainedModel('AddressBook')).toBe(false);
     expect(retentionReason('AddressBook')).toBe('');

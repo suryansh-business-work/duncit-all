@@ -1,5 +1,6 @@
 import {
   BrandAnalyticsReport,
+  SecurityLocationMap,
   deriveSearchItems,
   formatGmtOffset,
   trendBarPercents,
@@ -23,6 +24,14 @@ interface NavMock {
     children?: { label: string; to?: string; children?: { label: string; to: string }[] }[];
   }[];
   query: string;
+}
+
+interface SecurityMapMock {
+  /** A position as the browser's location API reports it. */
+  latitude: number;
+  longitude: number;
+  /** The radius, in metres, the browser says the fix could be off by; null when unknown. */
+  accuracyMeters: number | null;
 }
 
 interface ClockMock {
@@ -160,6 +169,21 @@ export default defineDemos('shell', [
       'Busiest day (orders)': trendPeak(mock.trend),
       'Bar heights (% of the busiest day)': trendBarPercents(mock.trend),
     }),
+  }),
+  defineDemo<SecurityMapMock>({
+    id: 'security-location-map',
+    title: 'The map on the Security Verification screen pins a position and writes the accuracy beside it',
+    note:
+      'SecurityLocationMap, as the screen and the Tech portal\'s Login verifications detail view both render it. Drag the map to look around; change accuracyMeters to see the zoom follow it (50 m or better zooms right in, 5 km or worse zooms out), or set it to null for a position with no accuracy known.',
+    mock: { latitude: 12.9716, longitude: 77.5946, accuracyMeters: 18.5 },
+    render: (mock) => (
+      <SecurityLocationMap
+        latitude={mock.latitude}
+        longitude={mock.longitude}
+        accuracyMeters={mock.accuracyMeters}
+        title="Map of your current location"
+      />
+    ),
   }),
   defineDemo<ScrollUpHistoryMock>({
     id: 'scroll-up-history',

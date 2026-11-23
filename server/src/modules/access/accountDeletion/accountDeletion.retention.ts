@@ -52,6 +52,9 @@ export const RETAINED_MODELS: Readonly<Record<string, string>> = {
   UserChangeLog: 'Audit trail — including of changes made to OTHER accounts.',
   PodAuditLog: 'Audit trail for pods that still exist.',
   FailedPaymentCase: 'Refund decision for money Razorpay captured — the other side of a refund already sent.',
+  PortalSecurityAccessLog: 'Audit trail of who read a person’s address and location in the login verification log.',
+  PortalSecurityException:
+    'An alternative-verification request and who decided it — it names the requester AND the reviewer, and either leaving must not erase the other’s record.',
 };
 
 export function isRetainedModel(modelName: string): boolean {
@@ -97,6 +100,19 @@ export const REDACTIONS: Readonly<Record<string, Readonly<Record<string, unknown
     'snapshot.user_name': DELETED_USER_NAME,
     'snapshot.user_email': '',
     qr_token: '',
+  },
+  // The reviewer left: the trail stays, the name on it does not.
+  'PortalSecurityAccessLog.actor_id': {
+    actor_name: DELETED_USER_NAME,
+  },
+  // The requester left: what they asked, and why, goes with them.
+  'PortalSecurityException.user_id': {
+    user_name: DELETED_USER_NAME,
+    reason: '',
+  },
+  // The reviewer left: someone else's request must not lose its decision.
+  'PortalSecurityException.decided_by': {
+    decided_by_name: DELETED_USER_NAME,
   },
   'WalletWithdrawal.user_id': {
     beneficiary_name: DELETED_USER_NAME,

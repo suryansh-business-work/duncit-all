@@ -39,7 +39,7 @@ import {
   type SocialProvider,
   type SocialProviderSpec,
 } from '@modules/access/auth/auth.social';
-import { assertPortalLogin } from '@modules/portals';
+import { assertPortalLogin, pendingClaimFor } from '@modules/portals';
 import { noteSignIn, type SignInContext } from './user.signin';
 import { authPayload } from './user.public';
 import { twoFactorService } from '@modules/access/auth/two-factor/two-factor.service';
@@ -294,7 +294,9 @@ export const userAuthMethods = {
       }
     );
     const fresh = await UserModel.findById(user._id).select('+auth.password');
-    const payload = await authPayload(fresh);
+    // A console sign-in mints a token that is not a session until the Security
+    // Verification screen is completed (see portals/portalSecurity).
+    const payload = await authPayload(fresh, pendingClaimFor(input.portal_key));
     // Console portals: correct credentials are not enough — the account must
     // also hold a role the admin has granted for the requesting portal.
     assertPortalLogin(input.portal_key, payload.user.roles);
@@ -460,7 +462,7 @@ export const userAuthMethods = {
     if (!user.profile?.profile_photo && info.picture) set['profile.profile_photo'] = info.picture;
     await UserModel.updateOne({ _id: user._id }, { $set: set });
     const fresh = await UserModel.findById(user._id);
-    const payload = await authPayload(fresh);
+    const payload = await authPayload(fresh, pendingClaimFor(portalKey));
     assertPortalLogin(portalKey, payload.user.roles);
     noteSignIn(fresh as any, signIn ?? {}).catch(() => undefined);
     return payload;
@@ -558,7 +560,7 @@ export const userAuthMethods = {
     // After the link is written: linking grants no session by itself, and every
     // later provider sign-in meets this same gate.
     await twoFactorService.requireForPortal(fresh, { provider, portalKey });
-    const payload = await authPayload(fresh);
+    const payload = await authPayload(fresh, pendingClaimFor(portalKey));
     assertPortalLogin(portalKey, payload.user.roles);
     return payload;
   },

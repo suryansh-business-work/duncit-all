@@ -4,6 +4,7 @@ import type {
   EnvEntry,
   EnvFieldDef,
 } from '../../src/pages/environment/queries';
+import type { EnvEntryMessages } from '../../src/pages/environment/env-entry/env-entry.types';
 import type { PortalListItem } from '../../src/pages/environment/portal-env-queries';
 import type { PortalRow } from '../../src/pages/environment/portal-mapping/PortalMappingTable';
 
@@ -31,6 +32,20 @@ export const makeEnvEntry = (over: Partial<SchemaEnvEntry> = {}): EnvEntry => ({
   updated_at: null,
   ...over,
 });
+
+/**
+ * The env form's validation copy for schema-level tests: the English the
+ * bundle ships, so an assertion reads like what the operator sees.
+ */
+export const envEntryTestMessages: EnvEntryMessages = {
+  nameRequired: 'Name is required',
+  required: (label) => `${label} is required`,
+  problem: ({ problem, bound }, label) => {
+    if (problem === 'phone') return `${label} must be in E.164 format, e.g. +14155552671`;
+    if (problem === 'min' || problem === 'max') return `${label} ${problem} ${bound}`;
+    return `${label} fails ${problem}`;
+  },
+};
 
 /* ---- Category field / definition factories ---- */
 

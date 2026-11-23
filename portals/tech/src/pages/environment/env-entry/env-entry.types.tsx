@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { EnvCategoryDef, EnvEntry } from '../queries';
+import { findEnvProblem, isRequiredOnCreate, type EnvFinding } from './env-validation';
 
 export interface EnvEntryFormValues {
   name: string;
@@ -40,49 +41,44 @@ export const toConfigPairs = (def: EnvCategoryDef, values: EnvEntryFormValues) =
   return pairs;
 };
 
-/** E.164 phone number: leading +, country code, up to 15 digits total. */
+/** E.164 phone number: leading +, country code, up to 15 digits total (the call test's "number to call"). */
 export const PHONE_RE = /^\+[1-9]\d{6,14}$/;
 
+/** The copy the schema speaks; the form builds it from its translations. */
+export interface EnvEntryMessages {
+  nameRequired: string;
+  required: (label: string) => string;
+  problem: (finding: EnvFinding, label: string) => string;
+}
+
 /**
- * Validation:
+ * Validation, from each field's `validation` in env-registry.json (the same
+ * rules the server enforces on save):
  *  - name required;
- *  - first secret field required on create;
- *  - any `phone` field, when filled, must be a valid E.164 number.
+ *  - each field marked `required` must be filled on create;
+ *  - a filled value must match its type (URL, host, email, E.164 phone,
+ *    number within bounds, JSON, key file, list, SHA-256 fingerprints).
  */
-export const envEntrySchema = (def: EnvCategoryDef, isEdit: boolean) =>
+export const envEntrySchema = (def: EnvCategoryDef, isEdit: boolean, messages: EnvEntryMessages) =>
   z
     .object({
-      name: z.string().trim().min(1, 'Name is required'),
+      name: z.string().trim().min(1, messages.nameRequired),
       description: z.string().default(''),
       is_default: z.boolean().default(false),
       is_active: z.boolean().default(true),
       config: z.record(z.string(), z.string()).default({}),
     })
     .superRefine((values, ctx) => {
-      const config = values.config;
-
-      if (!isEdit) {
-        const secret = def.fields.find((f) => f.secret);
-        if (secret) {
-          const value = config[secret.name];
-          if (!value?.trim()) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              path: ['config', secret.name],
-              message: `${secret.label} is required`,
-            });
+      for (const field of def.fields) {
+        const value = (values.config[field.name] ?? '').toString();
+        const path = ['config', field.name];
+        if (value.trim() === '') {
+          if (!isEdit && isRequiredOnCreate(field, def.fields)) {
+            ctx.addIssue({ code: 'custom', path, message: messages.required(field.label) });
           }
+          continue;
         }
-      }
-
-      for (const field of def.fields.filter((f) => f.phone)) {
-        const value = (config[field.name] ?? '').toString().trim();
-        if (value && !PHONE_RE.test(value)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ['config', field.name],
-            message: `${field.label} must be E.164, e.g. +14155552671`,
-          });
-        }
+        const finding = findEnvProblem(field, value);
+        if (finding) ctx.addIssue({ code: 'custom', path, message: messages.problem(finding, field.label) });
       }
     });

@@ -5,6 +5,7 @@ import EnvEntryForm from '../../src/pages/environment/env-entry/env-entry.form';
 import { valuesFromEntry, toConfigPairs, envEntrySchema } from '../../src/pages/environment/env-entry/env-entry.types';
 import type { EnvCategoryDef } from '../../src/pages/environment/queries';
 import {
+  envEntryTestMessages,
   makeEnvCategoryDef,
   makeEnvEntry,
   makeEnvFieldDef,
@@ -47,13 +48,13 @@ describe('env-entry.types helpers', () => {
   });
 
   const schemaErrors = (def: EnvCategoryDef, isEdit: boolean, values: Record<string, unknown>) => {
-    const result = envEntrySchema(def, isEdit).safeParse(values);
+    const result = envEntrySchema(def, isEdit, envEntryTestMessages).safeParse(values);
     return result.success ? '' : result.error.issues.map((i) => i.message).join(' ');
   };
 
   it('validates phone fields on create and edit', () => {
     expect(schemaErrors(twilioDef, false, { name: 'X', config: { auth_token: 't', phone_number: 'bad' } })).toMatch(/E\.164/i);
-    expect(envEntrySchema(twilioDef, false).safeParse({ name: 'X', config: { auth_token: 't', phone_number: '+14155552671' } }).success).toBe(true);
+    expect(envEntrySchema(twilioDef, false, envEntryTestMessages).safeParse({ name: 'X', config: { auth_token: 't', phone_number: '+14155552671' } }).success).toBe(true);
   });
 
   it('valuesFromEntry coerces a null config value to an empty string', () => {
@@ -66,11 +67,11 @@ describe('env-entry.types helpers', () => {
   });
 
   it('passes a category with no secret field on create', () => {
-    expect(envEntrySchema(noSecretDef, false).safeParse({ name: 'X', config: {} }).success).toBe(true);
+    expect(envEntrySchema(noSecretDef, false, envEntryTestMessages).safeParse({ name: 'X', config: {} }).success).toBe(true);
   });
 
   it('tolerates a missing config object during phone validation (edit)', () => {
-    expect(envEntrySchema(twilioDef, true).safeParse({ name: 'X' }).success).toBe(true);
+    expect(envEntrySchema(twilioDef, true, envEntryTestMessages).safeParse({ name: 'X' }).success).toBe(true);
   });
 });
 

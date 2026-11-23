@@ -3,19 +3,16 @@ FROM node:24-alpine AS builder
 WORKDIR /repo
 
 ARG VITE_GRAPHQL_URL
-ARG VITE_GOOGLE_CLIENT_ID
-ARG VITE_GOOGLE_MAP_API
 ENV VITE_GRAPHQL_URL=${VITE_GRAPHQL_URL}
-ENV VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
-ENV VITE_GOOGLE_MAP_API=${VITE_GOOGLE_MAP_API}
 
 # Signing identity for the app-link association files (scripts/generate-app-links.mjs),
-# written into public/.well-known during the build. Unset means those files are
-# not written at all, and an mWeb link opens the browser instead of the app.
+# written into public/.well-known during the build. The Android fingerprints and
+# the Apple Team ID come from the Tech portal through the server's
+# publicClientConfig; MWEB_ANDROID_CERT_SHA256 only overrides the fingerprints
+# while that entry is being filled. Nothing found means the file is not written,
+# and an mWeb link opens the browser instead of the app.
 ARG MWEB_ANDROID_CERT_SHA256
-ARG MWEB_IOS_TEAM_ID
 ENV MWEB_ANDROID_CERT_SHA256=${MWEB_ANDROID_CERT_SHA256}
-ENV MWEB_IOS_TEAM_ID=${MWEB_IOS_TEAM_ID}
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY server/package.json ./server/

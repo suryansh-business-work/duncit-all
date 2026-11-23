@@ -4,7 +4,14 @@ import EnvEntryForm from '../../src/pages/environment/env-entry/env-entry.form';
 import ConfigField from '../../src/pages/environment/env-entry/ConfigField';
 import { PHONE_RE, envEntrySchema, toConfigPairs } from '../../src/pages/environment/env-entry/env-entry.types';
 import type { EnvCategoryDef } from '../../src/pages/environment/queries';
-import { makeEnvEntry, makeEnvFieldDef, makeImagekitCategoryDef, makeTwilioCategoryDef } from '../mocks/env-entry.mock';
+import {
+  envEntryTestMessages,
+  makeEnvCategoryDef,
+  makeEnvEntry,
+  makeEnvFieldDef,
+  makeImagekitCategoryDef,
+  makeTwilioCategoryDef,
+} from '../mocks/env-entry.mock';
 
 const imagekitDef = makeImagekitCategoryDef();
 const twilioDef = makeTwilioCategoryDef();
@@ -21,14 +28,14 @@ const entry = makeEnvEntry({
 
 describe('EnvEntryForm', () => {
   const errorsOf = (def: EnvCategoryDef, isEdit: boolean, values: Record<string, unknown>) => {
-    const result = envEntrySchema(def, isEdit).safeParse(values);
+    const result = envEntrySchema(def, isEdit, envEntryTestMessages).safeParse(values);
     return result.success ? '' : result.error.issues.map((i) => i.message).join(' ');
   };
 
   it('requires the primary secret on create but not on edit', () => {
     expect(errorsOf(imagekitDef, false, { name: 'X', config: {} })).toMatch(/required/i);
-    expect(envEntrySchema(imagekitDef, false).safeParse({ name: 'X', config: { private_key: 'k' } }).success).toBe(true);
-    expect(envEntrySchema(imagekitDef, true).safeParse({ name: 'X', config: {} }).success).toBe(true);
+    expect(envEntrySchema(imagekitDef, false, envEntryTestMessages).safeParse({ name: 'X', config: { private_key: 'k' } }).success).toBe(true);
+    expect(envEntrySchema(imagekitDef, true, envEntryTestMessages).safeParse({ name: 'X', config: {} }).success).toBe(true);
   });
 
   it('drops blank secrets from the config pairs', () => {
@@ -66,7 +73,46 @@ describe('EnvEntryForm', () => {
 
     it('flags a bad TWILIO phone_number via the schema', () => {
       expect(errorsOf(twilioDef, true, { name: 'T', config: { phone_number: '12345' } })).toMatch(/E\.164/i);
-      expect(envEntrySchema(twilioDef, true).safeParse({ name: 'T', config: { phone_number: '+14155552671' } }).success).toBe(true);
+      expect(envEntrySchema(twilioDef, true, envEntryTestMessages).safeParse({ name: 'T', config: { phone_number: '+14155552671' } }).success).toBe(true);
+    });
+  });
+
+  describe('registry-driven validation', () => {
+    const v = (type: string, extra: Record<string, unknown> = {}) => ({ type, required: false, ...extra });
+    const emailDef = makeEnvCategoryDef({
+      fields: [
+        makeEnvFieldDef({ name: 'host', label: 'SMTP Host', validation: v('hostname') }),
+        makeEnvFieldDef({ name: 'port', label: 'Port', number: true, validation: v('number', { min: 1, max: 65535 }) }),
+        makeEnvFieldDef({ name: 'password', label: 'Password', secret: true, validation: v('text', { required: true }) }),
+        makeEnvFieldDef({ name: 'from_address', label: 'From Address', validation: v('email') }),
+      ],
+    });
+
+    it('requires exactly the fields the registry marks required, and only on create', () => {
+      expect(errorsOf(emailDef, false, { name: 'X', config: { host: 'smtp.example.com' } })).toBe('Password is required');
+      expect(errorsOf(emailDef, true, { name: 'X', config: {} })).toBe('');
+    });
+
+    it('checks each filled value against its type, naming the field', () => {
+      const errors = errorsOf(emailDef, true, {
+        name: 'X',
+        config: { host: 'https://smtp.example.com', port: '70000', from_address: 'not-an-email' },
+      });
+      expect(errors).toContain('SMTP Host fails hostname');
+      expect(errors).toContain('Port max 65535');
+      expect(errors).toContain('From Address fails email');
+    });
+
+    it('accepts values that match their types, including a named sender', () => {
+      expect(
+        errorsOf(emailDef, true, { name: 'X', config: { host: 'smtp.example.com', port: '587', from_address: 'Duncit <no-reply@duncit.com>' } })
+      ).toBe('');
+    });
+
+    it('marks the registry-required field as required in the create dialog', () => {
+      render(<EnvEntryForm open def={emailDef} initial={null} onSubmit={vi.fn()} onClose={vi.fn()} />);
+      expect(screen.getByLabelText(/Password/)).toBeRequired();
+      expect(screen.getByLabelText(/SMTP Host/)).not.toBeRequired();
     });
   });
 

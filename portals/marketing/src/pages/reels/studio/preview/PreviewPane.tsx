@@ -7,7 +7,7 @@ import { useTranslation } from '@duncit/shell';
 import { frameOf } from '../../composition/aspect';
 import { ReelComposition } from '../../composition/ReelComposition';
 import { reelDurationInFrames, sceneTimings } from '../../composition/timing';
-import { remotionLicenseKey } from '../../license';
+import { useRemotionLicenseKey } from '../../license';
 import type { ReelProject } from '../../types';
 import SafeZones from './SafeZones';
 
@@ -49,6 +49,7 @@ export default function PreviewPane({
   const inputProps = useMemo(() => ({ spec, assets }), [spec, assets]);
   const frame = frameOf(spec);
   const [guides, setGuides] = useState(false);
+  const licenseKey = useRemotionLicenseKey();
 
   return (
     <Stack component="section" aria-label={t('ai.reels.preview.title')} sx={{ height: '100%', minHeight: 0 }} data-testid="reel-preview-pane">
@@ -81,7 +82,7 @@ export default function PreviewPane({
               fps={spec.fps}
               controls
               loop
-              acknowledgeRemotionLicense={remotionLicenseKey !== null}
+              acknowledgeRemotionLicense={licenseKey !== null}
               style={{
                 height: '100%',
                 width: '100%',

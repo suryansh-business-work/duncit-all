@@ -79,15 +79,18 @@ The 17 MUI portals read the same runtime value: `mountPortal` (`@duncit/shell`) 
 bakes one in. With nothing configured there, the portal mounts no `GoogleOAuthProvider`
 and the sign-in button renders its "not configured" tile.
 
-> **Bundled env is a fallback only.** `VITE_GOOGLE_CLIENT_ID` / `VITE_GOOGLE_MAP_API`
-> (mWeb) and `EXPO_PUBLIC_GOOGLE_CLIENT_ID` / `EXPO_PUBLIC_GOOGLE_MAP_API` (native) are
-> used only for local dev / offline before the server responds. The server value wins
-> whenever it is non-empty, so production reads everything from the Tech portal.
+> **Nothing is baked into a build.** CI passes no Google client id or Maps key to any
+> image: mWeb, every portal, the ecomm store (its sign-in dialog) and the map previews
+> (`useGoogleMapsApiKey` from `@duncit/location`) read them from `publicClientConfig`, so
+> each stack — production and staging — must have its own GOOGLE_OAUTH and GOOGLE_MAPS
+> entries in its Tech portal. `VITE_GOOGLE_CLIENT_ID` / `VITE_GOOGLE_MAP_API` in a local
+> mWeb `.env` and `EXPO_PUBLIC_GOOGLE_CLIENT_ID` / `EXPO_PUBLIC_GOOGLE_MAP_API` (native)
+> are only a local-dev / offline fallback before the server responds.
 
 ## 3. Verify end-to-end
 
 1. **mWeb** (`localhost:2003` / `mweb.duncit.com`): "Sign in with Google" shows the
-   Google logo (once `VITE_GOOGLE_CLIENT_ID` is set), the popup completes, you land
+   Google logo (once the GOOGLE_OAUTH entry is set in the Tech portal), the popup completes, you land
    signed in. No redirect occurs.
 2. **Expo web** (`localhost:2022` / `native.duncit.com`): the button redirects to Google
    and back to the page origin, then you're signed in.

@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { fireEvent, render, screen } from '@testing-library/react';
 import ConfigField from '../../src/pages/environment/env-entry/ConfigField';
 import FieldInfo from '../../src/pages/environment/env-entry/FieldInfo';
 import { makeEnvFieldDef } from '../mocks/env-entry.mock';
@@ -22,9 +21,11 @@ describe('FieldInfo', () => {
   it('is a keyboard-reachable button whose tooltip says why the value is used, its env key and its readers', async () => {
     render(<FieldInfo field={smtpHost} />);
     const button = screen.getByRole('button', { name: /About SMTP Host/ });
-    await userEvent.tab();
+    // A native button is in the tab order (tabIndex 0) and takes focus.
+    expect(button).toHaveProperty('tabIndex', 0);
+    button.focus();
     expect(button).toHaveFocus();
-    await userEvent.hover(button);
+    fireEvent.mouseOver(button);
     expect(await screen.findByText('The SMTP server every product email is handed to.')).toBeInTheDocument();
     expect(screen.getByText('SMTP_HOST')).toBeInTheDocument();
     expect(screen.getByText('Read by')).toBeInTheDocument();
@@ -34,7 +35,7 @@ describe('FieldInfo', () => {
   it('falls back to the category readers when nothing reads the field by its env key', async () => {
     const secure = makeEnvFieldDef({ name: 'secure', label: 'Use TLS', description: 'TLS from the first byte.', usedIn: [] });
     render(<FieldInfo field={secure} categoryUsedIn={['server/src/services/email/email.provider.ts']} />);
-    await userEvent.hover(screen.getByRole('button', { name: /About Use TLS/ }));
+    fireEvent.mouseOver(screen.getByRole('button', { name: /About Use TLS/ }));
     expect(await screen.findByText('Read by (through its category)')).toBeInTheDocument();
     expect(screen.getByText('server/src/services/email/email.provider.ts')).toBeInTheDocument();
   });

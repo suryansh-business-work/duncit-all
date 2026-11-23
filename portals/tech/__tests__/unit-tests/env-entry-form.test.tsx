@@ -111,7 +111,8 @@ describe('EnvEntryForm', () => {
 
     it('marks the registry-required field as required in the create dialog', () => {
       render(<EnvEntryForm open def={emailDef} initial={null} onSubmit={vi.fn()} onClose={vi.fn()} />);
-      expect(screen.getByLabelText(/Password/)).toBeRequired();
+      // The eye toggle is labelled "Show Password" too, so ask for the input itself.
+      expect(screen.getByLabelText(/Password/, { selector: 'input' })).toBeRequired();
       expect(screen.getByLabelText(/SMTP Host/)).not.toBeRequired();
     });
   });

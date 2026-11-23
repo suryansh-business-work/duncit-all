@@ -132,6 +132,11 @@ export function createCiClient({ url, retryWindowMs = 0 }) {
     if (!email || !password) return null;
     // undefined (not null): JSON.stringify drops the key, and the server's yup
     // schema rejects an explicit null portal_key.
+    //
+    // Leave DUNCIT_RELEASE_PORTAL_KEY unset. A console key now returns a token
+    // that is not a session until a person completes Security Verification on
+    // screen (docs/portal-security-verification.md), so a CI reporter holding
+    // one would be refused on every call. A sign-in with no key is unchanged.
     const data = await gql(
       'mutation($input: LoginInput!){ login(input:$input){ token } }',
       { input: { email, password, portal_key: process.env.DUNCIT_RELEASE_PORTAL_KEY || undefined } }

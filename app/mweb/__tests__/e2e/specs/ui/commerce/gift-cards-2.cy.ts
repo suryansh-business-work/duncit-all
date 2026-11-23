@@ -7,10 +7,10 @@ import { runAccount } from '../../../support/run-account';
  * Nothing is bought: the Buy tab's validation is walked up to an enabled
  * "Continue to payment" and left there, and My cards is checked empty for the
  * run account, which has never bought or received a card. The amount limits
- * are Finance > Gift Cards' own, read from `publicGiftCardSettings`.
+ * are Loyalty > Gift Cards' own, read from the storefront the Buy tab reads.
  */
 
-const SETTINGS = `query E2eUiGiftCardSettings { publicGiftCardSettings { denominations min_amount max_amount } }`;
+const SETTINGS = `query E2eUiGiftCardStorefront { giftCardStorefront { settings { denominations min_amount max_amount } } }`;
 const MY_CARDS = `query E2eUiMyGiftCards { myGiftCards { owned { id } gifted { id } } }`;
 
 interface Settings {
@@ -33,15 +33,15 @@ describe('Gift cards', { testIsolation: false }, () => {
 
   before(() => {
     signInRunMember();
-    cy.gql<{ publicGiftCardSettings: Settings }>(SETTINGS).then(({ publicGiftCardSettings }) => {
-      settings = publicGiftCardSettings;
+    cy.gql<{ giftCardStorefront: { settings: Settings } }>(SETTINGS).then(({ giftCardStorefront }) => {
+      settings = giftCardStorefront.settings;
     });
   });
 
   it('GC-01 Continue stays disabled until the amount is in range and, for a gift, the email is valid', () => {
-    cy.interceptOperation('PublicGiftCardSettings');
+    cy.interceptOperation('GiftCardStorefront');
     cy.visitApp('/gift-cards');
-    cy.wait('@PublicGiftCardSettings');
+    cy.wait('@GiftCardStorefront');
     cy.byTestId('gift-cards-tab-buy').should('have.attr', 'aria-selected', 'true');
     continueButton().should('have.text', 'Continue to payment').and('be.disabled');
 

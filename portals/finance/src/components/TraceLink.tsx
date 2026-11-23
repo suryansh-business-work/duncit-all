@@ -1,4 +1,3 @@
-import type { MouseEvent } from 'react';
 import { Link as RouterLink } from 'react-router';
 import { Link } from '@mui/material';
 import type { PresentLabeledId } from '@duncit/table';
@@ -10,13 +9,11 @@ interface Props {
   variant?: 'caption' | 'body2';
 }
 
-/** A link inside a clickable table row must not also open the row. */
-const stopRowClick = (event: MouseEvent) => event.stopPropagation();
-
 /**
  * One payment id as a link to Payment Trace, which lists every payment and log
  * the id appears in. Monospace like every id, and it breaks anywhere so a long
- * Razorpay id never pushes a card wider than the screen.
+ * Razorpay id never pushes a card wider than the screen. A table row ignores a
+ * click that starts on a link (ROW_CLICK_IGNORE), so no handler is needed here.
  */
 export default function TraceLink({ value, variant = 'caption' }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -24,7 +21,6 @@ export default function TraceLink({ value, variant = 'caption' }: Readonly<Props
     <Link
       component={RouterLink}
       to={paymentTracePath(value)}
-      onClick={stopRowClick}
       variant={variant}
       aria-label={t('finance.paymentTrace.traceId', { vars: { id: value } })}
       data-testid="payment-trace-link"

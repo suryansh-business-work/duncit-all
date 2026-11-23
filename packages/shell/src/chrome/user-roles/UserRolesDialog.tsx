@@ -9,6 +9,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Link,
   Stack,
   Typography,
 } from '@mui/material';
@@ -65,20 +66,17 @@ export function UserRolesDialog({ open, onClose, roles }: Readonly<Props>) {
                 <Typography sx={{ fontWeight: 700 }}>{roleLabel(role)}</Typography>
                 <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1, mt: 0.5 }}>
                   {portals.map((portal) => (
-                    <Chip
+                    <Link
                       key={portal.key}
-                      size="small"
-                      variant="outlined"
-                      color="primary"
-                      clickable
-                      component="a"
                       href={portal.url}
                       target="_blank"
                       rel="noopener"
-                      icon={<LaunchIcon />}
-                      label={portal.name}
+                      underline="none"
+                      sx={{ '&:hover .MuiChip-root': { bgcolor: 'action.hover' } }}
                       data-testid={`user-roles-open-${role}-${portal.key}`}
-                    />
+                    >
+                      <Chip size="small" variant="outlined" color="primary" icon={<LaunchIcon />} label={portal.name} />
+                    </Link>
                   ))}
                   {data && portals.length === 0 && (
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t('shell.userRoles.noPortals')}</Typography>

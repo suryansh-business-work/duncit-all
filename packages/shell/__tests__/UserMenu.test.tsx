@@ -55,11 +55,26 @@ describe('UserMenu', () => {
     expect(onLogout).not.toHaveBeenCalled();
   });
 
-  it('shows the assigned role in the header and opens the roles dialog from the info icon', async () => {
+  it('keeps the role out of the header and shows it at the top of the account menu', async () => {
     const u = userEvent.setup();
     const withRoles = { ...user, roles: ['FINANCE_MANAGER', 'HR_MANAGER'] } as DuncitUser;
     render(<UserMenu user={withRoles} fallbackName="Portal" onLogout={vi.fn()} />);
-    expect(screen.getByTestId('shell-user-menu-role')).toHaveTextContent('FINANCE MANAGER +1');
+    const header = screen.getByTestId('shell-user-menu-button');
+    expect(header).toHaveTextContent('Ada Lovelace');
+    expect(header).toHaveTextContent('ada@x.test');
+    expect(header).not.toHaveTextContent('FINANCE MANAGER');
+    expect(screen.queryByTestId('shell-user-menu-role')).not.toBeInTheDocument();
+    await u.click(screen.getByLabelText('account menu'));
+    const role = screen.getByTestId('shell-user-menu-role');
+    expect(role).toHaveTextContent('FINANCE MANAGER +1');
+    expect(screen.getByRole('menu')).toContainElement(role);
+    expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual(['Logout']);
+  });
+
+  it('opens the roles dialog from the info icon', async () => {
+    const u = userEvent.setup();
+    const withRoles = { ...user, roles: ['FINANCE_MANAGER', 'HR_MANAGER'] } as DuncitUser;
+    render(<UserMenu user={withRoles} fallbackName="Portal" onLogout={vi.fn()} />);
     expect(screen.queryByTestId('roles-dialog')).not.toBeInTheDocument();
     await u.click(screen.getByTestId('shell-user-roles-info'));
     expect(screen.getByTestId('roles-dialog')).toHaveTextContent('FINANCE_MANAGER,HR_MANAGER');
@@ -77,8 +92,12 @@ describe('UserMenu', () => {
     expect(screen.getByTestId('roles-dialog')).toHaveTextContent('FINANCE_MANAGER');
   });
 
-  it('shows no role line when the account has no roles', () => {
+  it('shows no role line in the menu when the account has no roles', async () => {
+    const u = userEvent.setup();
     render(<UserMenu user={user} fallbackName="Portal" onLogout={vi.fn()} />);
+    await u.click(screen.getByLabelText('account menu'));
+    expect(screen.getByText('Logout')).toBeInTheDocument();
     expect(screen.queryByTestId('shell-user-menu-role')).not.toBeInTheDocument();
+    expect(screen.queryByRole('separator')).not.toBeInTheDocument();
   });
 });

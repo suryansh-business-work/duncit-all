@@ -8,7 +8,7 @@ export interface RolePortals {
 /** `FINANCE_MANAGER` → `FINANCE MANAGER`, the same casing the dashboard chips used. */
 export const roleLabel = (role: string): string => role.replaceAll('_', ' ');
 
-/** The header's one-line summary: the first role, then how many more there are. */
+/** The account menu's one-line role summary: the first role, then how many more there are. */
 export const roleSummary = (roles: readonly string[] | undefined): string => {
   if (!roles?.length) return '';
   const [first = '', ...rest] = roles;

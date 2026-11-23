@@ -47,6 +47,8 @@ export type WelcomeDashboardProps = Readonly<{
    * below it — the finance layout (its KPI "overview" section goes here).
    */
   children?: ReactNode;
+  /** Show the role chips under the greeting. The header's role info covers them where off. */
+  showRoles?: boolean;
 }>;
 
 /**
@@ -63,6 +65,7 @@ export function WelcomeDashboard({
   tagline,
   modules,
   children,
+  showRoles = true,
 }: WelcomeDashboardProps) {
   const { t } = useTranslation();
   const { data, loading, error } = useQuery<any>(DASHBOARD_ME, { fetchPolicy: 'cache-and-network' });
@@ -161,11 +164,13 @@ export function WelcomeDashboard({
           }}>
             {tagline}
           </Typography>
-          <Stack direction="row" spacing={1} sx={{ mt: 1.25, flexWrap: 'wrap', gap: 1 }}>
-            {(me?.roles ?? []).map((role: string) => (
-              <Chip key={role} label={role.replaceAll('_', ' ')} color="primary" variant="outlined" size="small" />
-            ))}
-          </Stack>
+          {showRoles && (
+            <Stack direction="row" spacing={1} sx={{ mt: 1.25, flexWrap: 'wrap', gap: 1 }}>
+              {(me?.roles ?? []).map((role: string) => (
+                <Chip key={role} label={role.replaceAll('_', ' ')} color="primary" variant="outlined" size="small" />
+              ))}
+            </Stack>
+          )}
         </Box>
       }
       widgets={widgets}

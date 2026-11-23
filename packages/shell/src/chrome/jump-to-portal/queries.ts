@@ -9,6 +9,8 @@ export interface PortalAccessEntry {
   url: string;
   has_access: boolean;
   can_request: boolean;
+  /** Roles that open this console; SUPER_ADMIN opens every one. */
+  required_roles: string[];
   request_status?: PortalRequestStatus | null;
 }
 
@@ -20,6 +22,7 @@ export const MY_PORTAL_ACCESS = gql`
       url
       has_access
       can_request
+      required_roles
       request_status
     }
   }
@@ -33,6 +36,7 @@ export const REQUEST_PORTAL_ACCESS = gql`
       url
       has_access
       can_request
+      required_roles
       request_status
     }
   }

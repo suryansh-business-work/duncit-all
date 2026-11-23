@@ -10,6 +10,8 @@ export const portalAccessTypeDefs = gql`
     has_access: Boolean!
     "False where access is not granted through this flow (the Admin console, ungated surfaces)."
     can_request: Boolean!
+    "Roles that open this console (SUPER_ADMIN opens every one). Empty for ungated surfaces."
+    required_roles: [String!]!
     "The user's latest PORTAL_ACCESS request outcome for this console, if any."
     request_status: ApprovalStatus
   }

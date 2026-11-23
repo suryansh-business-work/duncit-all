@@ -4,6 +4,10 @@ import userEvent from '@testing-library/user-event';
 import type { DuncitUser } from '@duncit/user-context';
 import { UserMenu } from '../src/chrome/UserMenu';
 
+vi.mock('../src/chrome/user-roles/UserRolesDialog', () => ({
+  UserRolesDialog: ({ roles }: { roles: string[] }) => <div data-testid="roles-dialog">{roles.join(',')}</div>,
+}));
+
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock('react-router', () => ({ useNavigate: () => navigate }));
 
@@ -42,5 +46,20 @@ describe('UserMenu', () => {
     await u.keyboard('{Escape}');
     expect(navigate).not.toHaveBeenCalled();
     expect(onLogout).not.toHaveBeenCalled();
+  });
+
+  it('shows the assigned role in the header and opens the roles dialog from the info icon', async () => {
+    const u = userEvent.setup();
+    const withRoles = { ...user, roles: ['FINANCE_MANAGER', 'HR_MANAGER'] } as DuncitUser;
+    render(<UserMenu user={withRoles} fallbackName="Portal" onLogout={vi.fn()} />);
+    expect(screen.getByTestId('shell-user-menu-role')).toHaveTextContent('FINANCE MANAGER +1');
+    expect(screen.queryByTestId('roles-dialog')).not.toBeInTheDocument();
+    await u.click(screen.getByTestId('shell-user-roles-info'));
+    expect(screen.getByTestId('roles-dialog')).toHaveTextContent('FINANCE_MANAGER,HR_MANAGER');
+  });
+
+  it('shows no role line when the account has no roles', () => {
+    render(<UserMenu user={user} fallbackName="Portal" onLogout={vi.fn()} />);
+    expect(screen.queryByTestId('shell-user-menu-role')).not.toBeInTheDocument();
   });
 });

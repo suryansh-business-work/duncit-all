@@ -409,12 +409,25 @@ describe('createPodSchema — free pods and free venues', () => {
   });
 
   it('holds a free venue to a free pod: a paid ticket is refused at the type', () => {
-    const paid = valid({ ...freeVenueOffer, ...justified, pod_type: 'PAID', pod_amount_text: '500' });
+    const paid = valid({
+      ...freeVenueOffer,
+      ...justified,
+      pod_type: 'PAID',
+      pod_amount_text: '500',
+    });
     expect(issuesOf(paid)).toEqual(['pod_type']);
     expect(messageOn(paid, 'pod_type')).toBe('A free venue booking is for a free pod. Pick Free.');
     // A priced offer leaves the ticket to the host.
     expect(
-      issuesOf(valid({ ...freeVenueOffer, venue_offer_model: 'FLAT', venue_offer_rate: '900', pod_type: 'PAID', pod_amount_text: '500' })),
+      issuesOf(
+        valid({
+          ...freeVenueOffer,
+          venue_offer_model: 'FLAT',
+          venue_offer_rate: '900',
+          pod_type: 'PAID',
+          pod_amount_text: '500',
+        }),
+      ),
     ).toEqual([]);
   });
 

@@ -67,7 +67,9 @@ describe('BookingOffersForm', () => {
     const toggle = screen.getByTestId('venue-offer-settings-free-booking-switch');
     expect(toggle.props.value).toBe(false);
     expect(
-      screen.getByText(/A free booking is ₹0: no venue charges, no Duncit commission and no earnings/),
+      screen.getByText(
+        /A free booking is ₹0: no venue charges, no Duncit commission and no earnings/,
+      ),
     ).toBeOnTheScreen();
     fireEvent(toggle, 'valueChange', true);
     fireEvent.press(screen.getByTestId('venue-offer-settings-save'));

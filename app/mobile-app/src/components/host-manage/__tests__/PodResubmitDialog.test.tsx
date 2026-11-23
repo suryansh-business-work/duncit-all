@@ -319,7 +319,13 @@ describe('PodResubmitDialog', () => {
     view.unmount();
     routeRequests({ terms: termsWith(false) });
     view = await pickVenue({ ...pod, pod_type: 'FREE' });
-    await waitFor(() => expect(mockRequest).toHaveBeenCalledWith(ResubmitVenueTermsDocument, expect.anything(), expect.anything()));
+    await waitFor(() =>
+      expect(mockRequest).toHaveBeenCalledWith(
+        ResubmitVenueTermsDocument,
+        expect.anything(),
+        expect.anything(),
+      ),
+    );
     expect(screen.queryByTestId('create-pod-offer-model-FREE')).toBeNull();
     view.unmount();
   });
@@ -335,7 +341,10 @@ describe('PodResubmitDialog', () => {
       space_label: '',
       pets: false,
     };
-    const mount = (target: Parameters<typeof PodResubmitDialog>[0]['pod'], freeBooking: boolean) => {
+    const mount = (
+      target: Parameters<typeof PodResubmitDialog>[0]['pod'],
+      freeBooking: boolean,
+    ) => {
       routeRequests({ terms: termsWith(freeBooking) });
       return renderWithProviders(
         <PodResubmitDialog
@@ -356,7 +365,10 @@ describe('PodResubmitDialog', () => {
     view.unmount();
     // A free pod at an open venue keeps it, and asks no amount.
     mount({ ...pod, pod_type: 'FREE' }, true);
-    expect(await screen.findByTestId('create-pod-offer-model-FREE')).toHaveProp('aria-checked', true);
+    expect(await screen.findByTestId('create-pod-offer-model-FREE')).toHaveProp(
+      'aria-checked',
+      true,
+    );
     expect(screen.queryByTestId('field-venue_offer_rate')).toBeNull();
   });
 
@@ -364,7 +376,11 @@ describe('PodResubmitDialog', () => {
     routeRequests({ terms: termsWith(true) });
     const onSaved = jest.fn();
     renderWithProviders(
-      <PodResubmitDialog pod={{ ...pod, pod_type: 'FREE' }} onClose={jest.fn()} onSaved={onSaved} />,
+      <PodResubmitDialog
+        pod={{ ...pod, pod_type: 'FREE' }}
+        onClose={jest.fn()}
+        onSaved={onSaved}
+      />,
     );
     await waitFor(() => expect(screen.getByTestId('resubmit-venue-v1')).toBeOnTheScreen());
     fireEvent.press(screen.getByTestId('resubmit-venue-v1'));

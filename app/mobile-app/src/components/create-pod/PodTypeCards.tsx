@@ -6,6 +6,7 @@ import { createPodOffersFreeVenue } from '@duncit/utils';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodForm } from './create-pod.types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** The pod turned free: ₹0, and never a Smart Incentive. */
 function makeFree(form: CreatePodForm) {
@@ -14,7 +15,6 @@ function makeFree(form: CreatePodForm) {
   form.setValue('smart_incentive_enabled', false, { shouldDirty: true });
   form.setValue('smart_incentive_pct', '', { shouldDirty: true });
 }
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = keyof typeof MaterialIcons.glyphMap;
 

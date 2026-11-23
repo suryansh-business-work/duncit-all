@@ -497,7 +497,9 @@ describe('Money for a free physical pod', () => {
     expect(await screen.findByTestId('create-pod-free-venue-ticket')).toHaveTextContent(
       'Your venue booking is free, so this pod is free too. Free is the only ticket.',
     );
-    await waitFor(() => expect(screen.getByTestId('create-pod-free')).toHaveProp('aria-checked', true));
+    await waitFor(() =>
+      expect(screen.getByTestId('create-pod-free')).toHaveProp('aria-checked', true),
+    );
     expect(screen.queryByTestId('create-pod-paid')).toBeNull();
     // No price to type, and no earnings: the free note stands in their place.
     expect(screen.queryByTestId('field-pod_amount_text')).toBeNull();

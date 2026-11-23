@@ -518,7 +518,9 @@ describe('CreatePodStepper', () => {
   });
 
   it('asks a venue open to free bookings for the window free: no amount, a free pod, the policy and a reason, then offers it at ₹0', async () => {
-    const { onPublish } = setup({ venues: [{ ...venues[0], offer_free_booking: true }, venues[1]] });
+    const { onPublish } = setup({
+      venues: [{ ...venues[0], offer_free_booking: true }, venues[1]],
+    });
     await pickClub();
     await pickWindow();
     // The free venue is asked for on Money, not beside the window.

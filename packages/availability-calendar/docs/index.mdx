@@ -122,6 +122,8 @@ exports:
   - 'useMarkReadWhileVisible'
   - 'OfferImages'
   - 'MinBusinessFields'
+  - 'MinSpendField'
+  - 'FreeBookingField'
   - 'VenueMinBusinessNote'
 ---
 
@@ -641,7 +643,9 @@ which the counter dialog shows as "Free booking — it can only be accepted or d
 countered" in the reader's language. On a free booking (`isFreeArrangement(offer)` from `@duncit/utils`):
 
 - the terms read "Free venue" (`offerTermsLabel` → `venueOfferTermsLine`), in `OfferHistory` too;
-  `OfferTermsPanel` and the chat's move quote no money — never "₹0";
+  `OfferTermsPanel` and the chat's move quote no money breakdown; a free venue reads one line instead,
+  naming it a ₹0 booking with no venue charges, no Duncit commission and no earnings
+  (`availability.offers.freeVenue` for the venue, `availability.offers.hostAnswer.freeVenue` for the host);
 - `FreeJustificationNote` — "Requested free — Promotional offer: launch week" — sits under the terms
   in `OfferTermsPanel` and on the free offer's own chat line (read off the live offer, which carries
   the justification; the chat line does not), so the venue weighs the reason before it answers;
@@ -693,8 +697,11 @@ reacts, edits, deletes and marks read, and `VenueChatLineDialogs` asks for the e
 page is in view.
 
 The venue's Booking offers settings draw `MinBusinessFields` (the business it hopes each booking
-brings — at least one amount, one per basis), and Create Pod shows the picked venue's amounts with
-`VenueMinBusinessNote`.
+brings — at least one amount, one per basis), `MinSpendField` (the minimum spend per booking) and
+`FreeBookingField` — the switch that opens the venue to free bookings for initiatives
+(`free_booking`): only then does Create Pod offer hosts the Free option, a ₹0 booking with no
+charges, commission or earnings that makes the pod free; the server refuses a free ask otherwise
+(`FREE_BOOKING_OFF`). Create Pod shows the picked venue's amounts with `VenueMinBusinessNote`.
 
 ```tsx
 const offers = useChatVenueOffer(room.pod_id, lines, !loading);

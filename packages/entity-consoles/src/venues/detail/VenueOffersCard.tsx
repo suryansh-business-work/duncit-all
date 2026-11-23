@@ -24,7 +24,7 @@ const valueLine = (value: string, ownValue: number | undefined, t: Translate) =>
  * host's offer may be for and the hours either side has to answer, each as it
  * is in effect, saying when that is Duncit's default rather than the venue's own —
  * the least it takes on each basis and its minimum spend per booking (rules a
- * host's offer must meet).
+ * host's offer must meet), and whether it is open to free bookings for initiatives.
  */
 export default function VenueOffersCard({ own, effective }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -56,6 +56,10 @@ export default function VenueOffersCard({ own, effective }: Readonly<Props>) {
         <InfoRow
           label={t('venueSettings.offers.minSpend')}
           value={own?.min_spend ? money(own.min_spend) : t('availability.offers.minBusiness.notSet')}
+        />
+        <InfoRow
+          label={t('venueSettings.offers.freeBooking')}
+          value={own?.free_booking ? t('venueSettings.offers.freeBookingOn') : t('venueSettings.offers.freeBookingOff')}
         />
       </Stack>
     </SectionCard>

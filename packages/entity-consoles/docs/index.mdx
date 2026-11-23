@@ -549,7 +549,9 @@ reads both sides of that back, read-only:
 - **Operations → Booking offers** (`VenueOffersCard`): the fewest guests a host's
   offer may be for and the hours either side has to answer, each as it is in
   effect (`Venue.offer_min_guests` / `offer_response_hours`), saying "Duncit's
-  default" when the venue left its own (`settings.offers`) at 0. The owner edits
+  default" when the venue left its own (`settings.offers`) at 0, its business
+  amounts and minimum spend, and whether it is open to free bookings for
+  initiatives (`free_booking`: On / Off). The owner edits
   them in Partners (and mWeb) > Venue settings; the defaults live in Admin >
   Settings > Venue offers. Copy: `venueSettings.offers.*`.
 - **Pods → Agreed terms** (`booking-terms/VenueBookingTermsCard`): each booking's

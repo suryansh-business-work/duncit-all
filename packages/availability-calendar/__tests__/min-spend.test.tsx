@@ -13,7 +13,7 @@ function MinSpendForm({ minSpend, disabled, onSubmit }: Readonly<{ minSpend: str
   const schema = useMemo(() => makeBookingOffersSchema(t), [t]);
   const { control, handleSubmit } = useForm<BookingOffersValues>({
     resolver: zodResolver(schema),
-    defaultValues: { min_guests: '', response_hours: '', min_business: [{ model: 'FLAT', amount: '900' }], min_spend: minSpend },
+    defaultValues: { min_guests: '', response_hours: '', min_business: [{ model: 'FLAT', amount: '900' }], min_spend: minSpend, free_booking: false },
   });
   return (
     <form noValidate onSubmit={handleSubmit((values) => onSubmit(values))}>

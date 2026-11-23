@@ -45,6 +45,14 @@ export type HostOfferModel = VenueOfferModel | typeof FREE_VENUE_OFFER_MODEL;
 /** The opening offer's options, in picker order. */
 export const HOST_OFFER_MODELS: readonly HostOfferModel[] = [...VENUE_OFFER_MODELS, FREE_VENUE_OFFER_MODEL];
 
+/**
+ * The opening offer's options for one venue: the priced three, and Free only
+ * while the venue is open to free bookings for initiatives (`offer_free_booking`,
+ * Fees & Minimum Spend). Server twin: `assertVenueTakesFreeBookings` (FREE_BOOKING_OFF).
+ */
+export const hostOfferModelsFor = (freeBooking: boolean | null | undefined): readonly HostOfferModel[] =>
+  freeBooking === true ? HOST_OFFER_MODELS : VENUE_OFFER_MODELS;
+
 /** The free option's name and its one line on what it means. */
 export const FREE_VENUE_OFFER_KEY = { label: 'mweb.createPod.offer.model.free', help: 'mweb.createPod.offer.help.free' } as const;
 
@@ -330,6 +338,8 @@ export function minSpendShortfallText(short: Readonly<VenueMinSpendShortfall>, t
 export interface MinSpendVenue extends VenueSpaceSource {
   offer_min_spend?: number | null;
   offer_min_guests?: number | null;
+  /** Open to free bookings for initiatives: only then may the host ask for it free. Absent from older servers (closed). */
+  offer_free_booking?: boolean | null;
 }
 
 /** Create Pod's opening offer as the form holds it. */

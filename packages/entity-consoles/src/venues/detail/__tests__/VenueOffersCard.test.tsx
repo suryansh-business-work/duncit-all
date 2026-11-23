@@ -29,6 +29,15 @@ describe('VenueOffersCard', () => {
     expect(screen.getByText('Business you expect per booking')).toBeInTheDocument();
     // Neither the amounts per basis nor the minimum spend.
     expect(screen.getAllByText('Not set yet')).toHaveLength(2);
+    // Nor free bookings, which stay off until the venue turns them on.
+    expect(screen.getByText('Your venue is open for free venue booking for initiatives')).toBeInTheDocument();
+    expect(screen.getByText('Off')).toBeInTheDocument();
+  });
+
+  it('says when the venue is open to free bookings for initiatives', () => {
+    render(<VenueOffersCard own={{ ...EFFECTIVE, free_booking: true }} effective={EFFECTIVE} />);
+    expect(screen.getByText('On')).toBeInTheDocument();
+    expect(screen.queryByText('Off')).not.toBeInTheDocument();
   });
 });
 

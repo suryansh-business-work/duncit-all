@@ -37,6 +37,15 @@ export interface CreatePodStepScope {
 export const createPodSendsOffer = (scope: Readonly<CreatePodStepScope>): boolean =>
   scope.pod_mode === 'PHYSICAL' && !scope.partner_request_id && !scope.venue_slot_id;
 
+/**
+ * Whether the pod asks its venue for the window free (offer model FREE). A free
+ * venue carries no charges, no commission and no earnings, so the pod sells no
+ * tickets either: Money then offers the Free ticket alone, already picked. The
+ * server refuses a free venue for a paid pod (FREE_VENUE_NEEDS_FREE_POD).
+ */
+export const createPodOffersFreeVenue = (scope: Readonly<CreatePodStepScope & { venue_offer_model?: string | null }>): boolean =>
+  createPodSendsOffer(scope) && scope.venue_offer_model === 'FREE';
+
 const wholeStep = (step: number | null | undefined) => Math.floor(Number(step)) || 0;
 
 /** `step` held to the steps that exist. */

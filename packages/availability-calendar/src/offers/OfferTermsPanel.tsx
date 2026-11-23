@@ -40,10 +40,21 @@ function termsHeading(t: Translate, side: OfferSide, by: string): string {
 
 const OPEN_STATUSES: ReadonlySet<string> = new Set(['SENT', 'COUNTERED']);
 
-/** The money the terms come to — none for a free venue (the terms line says so), the free-pod notice for a free pod. */
+/**
+ * The money the terms come to: for a free venue, one line that it is ₹0 with
+ * no charges, commission or earnings (checked first — a free venue's pod is
+ * free too, and its venue settles nothing with the host); the free-pod notice
+ * for a free pod on priced terms; else the quote.
+ */
 function TermsMoney({ terms, podIsFree, side }: Readonly<{ terms: CurrentOfferTerms<PriceBreakdown>; podIsFree: boolean; side: OfferSide }>) {
   const { t } = useTranslation();
-  if (isFreeVenueOfferModel(terms.model)) return null;
+  if (isFreeVenueOfferModel(terms.model)) {
+    return (
+      <Alert severity="info" data-testid="offer-free-venue">
+        {side === 'HOST' ? t('availability.offers.hostAnswer.freeVenue') : t('availability.offers.freeVenue')}
+      </Alert>
+    );
+  }
   if (!podIsFree) return <OfferQuoteView side={side} quote={terms.quote} quoteMin={terms.quoteMin} />;
   return <Alert severity="info">{side === 'HOST' ? t('availability.offers.hostAnswer.freePod') : t('availability.offers.freePod')}</Alert>;
 }

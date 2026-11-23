@@ -88,7 +88,15 @@ describe('createApolloClient', () => {
     expect(client).toEqual({ __client: true });
     // The counted fetch behind the console-wide loading bar rides on the HTTP link.
     expect(cap.httpArgs).toEqual({ uri: 'https://api.test/graphql', fetch: trackingFetch });
-    expect(cap.fromArg).toEqual([{ __err: true }, { __retry: true }, { __auth: true }, { __http: true }]);
+    // Friendly network errors, then the Security Verification recheck link (also an
+    // error link), then retry, auth and the counted HTTP link.
+    expect(cap.fromArg).toEqual([
+      { __err: true },
+      { __err: true },
+      { __retry: true },
+      { __auth: true },
+      { __http: true },
+    ]);
     expect(cap.cacheArgs).toEqual({ typePolicies: { User: { keyFields: ['user_id'] } } });
   });
 

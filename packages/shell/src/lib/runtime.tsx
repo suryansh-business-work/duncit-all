@@ -32,6 +32,16 @@ export function useShellRuntime(): ShellRuntime | null {
   return useContext(RuntimeContext);
 }
 
+/** Forget the token this portal signed in with. Quiet when there is no runtime or storage is unavailable. */
+export function clearToken(runtime: ShellRuntime | null): void {
+  if (!runtime) return;
+  try {
+    globalThis.localStorage.removeItem(runtime.tokenKey);
+  } catch {
+    /* storage unavailable — nothing to clear */
+  }
+}
+
 /** The token this portal signed in with, or null. */
 export function readToken(runtime: ShellRuntime | null): string | null {
   if (!runtime) return null;

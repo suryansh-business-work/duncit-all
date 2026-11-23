@@ -5,7 +5,7 @@
 import { renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { readToken, useShellRuntime, ShellRuntimeProvider } from '../src/lib/runtime';
+import { clearToken, readToken, useShellRuntime, ShellRuntimeProvider } from '../src/lib/runtime';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -56,6 +56,44 @@ describe('readToken', () => {
 
     try {
       expect(readToken({ graphqlUrl: 'https://api.test/graphql', tokenKey: 'tok_key' })).toBeNull();
+    } finally {
+      if (original) Object.defineProperty(globalThis, 'localStorage', original);
+    }
+  });
+});
+
+describe('clearToken', () => {
+  const runtime = { graphqlUrl: 'https://api.test/graphql', tokenKey: 'tok_key' };
+
+  it('does nothing with no runtime at all', () => {
+    localStorage.setItem('tok_key', 'jwt');
+    expect(() => clearToken(null)).not.toThrow();
+    expect(localStorage.getItem('tok_key')).toBe('jwt');
+    localStorage.removeItem('tok_key');
+  });
+
+  it("forgets the portal's own token and no other", () => {
+    localStorage.setItem('tok_key', 'jwt');
+    localStorage.setItem('other_portal_token', 'keep');
+    clearToken(runtime);
+    expect(localStorage.getItem('tok_key')).toBeNull();
+    expect(localStorage.getItem('other_portal_token')).toBe('keep');
+    localStorage.removeItem('other_portal_token');
+  });
+
+  it('does not throw when localStorage itself is unavailable', () => {
+    const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: {
+        removeItem: () => {
+          throw new Error('storage is disabled');
+        },
+      },
+    });
+
+    try {
+      expect(() => clearToken(runtime)).not.toThrow();
     } finally {
       if (original) Object.defineProperty(globalThis, 'localStorage', original);
     }

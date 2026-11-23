@@ -607,8 +607,8 @@ describe('VenueOfferStep', () => {
     expect(screen.getByTestId('field-venue_offer_rate')).toBeOnTheScreen();
   });
 
-  it('offers a free venue last, which asks no amount and shows the free policy', () => {
-    renderWithProviders(<OfferHarness />);
+  it('offers a free venue last at a venue open to free bookings, which asks no amount and shows the free policy', () => {
+    renderWithProviders(<OfferHarness venues={[{ ...venue, offer_free_booking: true }]} />);
     expect(screen.queryByTestId('create-pod-venue-free-arrangement')).toBeNull();
     fireEvent.press(screen.getByTestId('create-pod-offer-model-FREE'));
     expect(screen.getByTestId('create-pod-offer-model-FREE')).toHaveProp('aria-checked', true);
@@ -621,6 +621,24 @@ describe('VenueOfferStep', () => {
     fireEvent.press(screen.getByTestId('create-pod-offer-model-PER_HOUR'));
     expect(screen.getByTestId('field-venue_offer_rate')).toBeOnTheScreen();
     expect(screen.queryByTestId('create-pod-venue-free-arrangement')).toBeNull();
+  });
+
+  it('lists no free venue at a venue closed to free bookings, and drops a Free a draft kept for it', async () => {
+    const { unmount } = renderWithProviders(<OfferHarness />);
+    expect(screen.getByTestId('create-pod-offer-model-FLAT')).toBeOnTheScreen();
+    expect(screen.queryByTestId('create-pod-offer-model-FREE')).toBeNull();
+    unmount();
+
+    renderWithProviders(<OfferHarness initial={{ venue_offer_model: 'FREE' }} />);
+    // Dropped: a price is asked again and the free policy goes.
+    expect(await screen.findByTestId('field-venue_offer_rate')).toBeOnTheScreen();
+    expect(screen.queryByTestId('create-pod-venue-free-arrangement')).toBeNull();
+  });
+
+  it('keeps a Free a draft holds while the picked venue is not known yet', () => {
+    renderWithProviders(<OfferHarness initial={{ venue_id: 'gone', venue_offer_model: 'FREE' }} />);
+    expect(screen.queryByTestId('field-venue_offer_rate')).toBeNull();
+    expect(screen.getByTestId('create-pod-venue-free-arrangement')).toBeOnTheScreen();
   });
 
   it("shows the server's quote for the offer, read-only", () => {

@@ -138,6 +138,14 @@ describe('a free venue in the venue chat', () => {
     expect(card.getByTestId('counter-allowance-venue')).toHaveTextContent(NO_COUNTERS);
   });
 
+  it('tells the host on their own free offer line that the venue is paid nothing, so the pod is free', () => {
+    withApollo([], <OfferChatCard move={freeMove({ by: 'HOST' })} viewer="HOST" newest answering={{ live: liveFree(), subject, onAnswered: vi.fn() }} />);
+    expect(screen.getByTestId('offer-move-free')).toHaveTextContent(
+      'Free venue: ₹0. The venue is paid nothing and Duncit takes no commission, so your pod is free.'
+    );
+    expect(screen.queryByTestId('offer-money')).not.toBeInTheDocument();
+  });
+
   it('keeps the reason to the offer line itself, and to the live offer it belongs to', () => {
     withApollo([], <OfferChatCard move={freeMove({ event: 'ACCEPTED', by: 'VENUE' })} viewer="VENUE" newest answering={{ live: liveFree({ status: 'ACCEPTED', awaiting: null }), subject, onAnswered: vi.fn() }} />);
     expect(screen.queryByTestId('offer-free-reason')).not.toBeInTheDocument();

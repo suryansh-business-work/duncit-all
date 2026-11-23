@@ -324,6 +324,42 @@ describe('PodResubmitDialog', () => {
     view.unmount();
   });
 
+  it('drops a Free carried over from a declined offer when the pod is paid, or the venue is closed to it', async () => {
+    const declinedFree = {
+      model: 'FREE',
+      rate: 0,
+      offerings: ['A projector'],
+      note: '',
+      start_at: START,
+      end_at: END,
+      space_label: '',
+      pets: false,
+    };
+    const mount = (target: Parameters<typeof PodResubmitDialog>[0]['pod'], freeBooking: boolean) => {
+      routeRequests({ terms: termsWith(freeBooking) });
+      return renderWithProviders(
+        <PodResubmitDialog
+          pod={target}
+          offerPrefill={{ ...declinedFree }}
+          onClose={jest.fn()}
+          onSaved={jest.fn()}
+        />,
+      );
+    };
+    // A paid pod never takes a free venue: the amount is asked again.
+    let view = mount({ ...pod, pod_type: 'PAID' }, true);
+    expect(await screen.findByTestId('field-venue_offer_rate')).toBeOnTheScreen();
+    view.unmount();
+    // A free pod at a venue closed to free bookings, once the venue is read.
+    view = mount({ ...pod, pod_type: 'FREE' }, false);
+    expect(await screen.findByTestId('field-venue_offer_rate')).toBeOnTheScreen();
+    view.unmount();
+    // A free pod at an open venue keeps it, and asks no amount.
+    mount({ ...pod, pod_type: 'FREE' }, true);
+    expect(await screen.findByTestId('create-pod-offer-model-FREE')).toHaveProp('aria-checked', true);
+    expect(screen.queryByTestId('field-venue_offer_rate')).toBeNull();
+  });
+
   it('asks a new venue for the window free, with the reason and the policy accepted', async () => {
     routeRequests({ terms: termsWith(true) });
     const onSaved = jest.fn();

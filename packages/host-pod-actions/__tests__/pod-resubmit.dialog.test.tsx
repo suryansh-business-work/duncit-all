@@ -278,6 +278,37 @@ describe('PodResubmitDialog', () => {
     expect(await options([venuesMock, calendarMock('v-1'), open], pod({ pod_type: 'PAID' }))).not.toContain(labels.offerModelFree);
   });
 
+  it('drops a Free carried over from a declined offer when the pod is paid, or the venue is closed to it', async () => {
+    const declinedFree: VenueOfferPrefill = {
+      model: 'FREE',
+      rate: 0,
+      offerings: ['Two courts'],
+      note: '',
+      start_at: START,
+      end_at: END,
+      space_label: '',
+      pets: false,
+    };
+    const open = termsMock('v-1', { capacity: 40, offer_min_guests: 0, offer_free_booking: true });
+    const closed = termsMock('v-1', { capacity: 40, offer_min_guests: 0, offer_free_booking: false });
+    const rate = () => screen.queryByTestId('pod-resubmit-offer-rate');
+
+    // A paid pod never takes a free venue: the amount is asked again.
+    let view = dialog([venuesMock, calendarMock('v-1'), open], pod({ venue_id: 'v-1', pod_type: 'PAID' }), declinedFree);
+    await settle();
+    expect(rate()).toBeInTheDocument();
+    view.unmount();
+    // A free pod at a venue closed to free bookings, once the venue is read.
+    view = dialog([venuesMock, calendarMock('v-1'), closed], pod({ venue_id: 'v-1', pod_type: 'FREE', pod_amount: 0 }), declinedFree);
+    await settle();
+    expect(rate()).toBeInTheDocument();
+    view.unmount();
+    // A free pod at an open venue keeps it, and asks no amount.
+    dialog([venuesMock, calendarMock('v-1'), open], pod({ venue_id: 'v-1', pod_type: 'FREE', pod_amount: 0 }), declinedFree);
+    await settle();
+    expect(rate()).not.toBeInTheDocument();
+  });
+
   // A free venue is paid nothing: no amount, but why it is free and the policy accepted.
   it('asks a free venue for no amount, and sends why it is free once the host says so', async () => {
     const sent: Record<string, any>[] = [];

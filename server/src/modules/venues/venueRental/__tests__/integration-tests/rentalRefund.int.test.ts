@@ -9,6 +9,7 @@ jest.mock('@services/notify/staffAlert', () => ({ alertStaff: jest.fn().mockReso
 
 import { Types } from 'mongoose';
 import type { GraphQLContext } from '@context';
+import { FINANCE_READER } from '@middleware/rbac';
 import { createRazorpayRefund, listRazorpayRefunds } from '@modules/finance/payment/razorpay.gateway';
 import { notifyEvent } from '@services/notify/notify.service';
 import { alertStaff } from '@services/notify/staffAlert';
@@ -213,7 +214,7 @@ describe('sendRentalRefundByFinance', () => {
     const held = await makeBooking(payment, { refund_status: 'PAID', refund_ref: 'sd' });
     const call = (roles: string[]) =>
       venueRentalResolvers.Mutation.sendRentalRefund({}, { id: String(held._id), note: 'Checked: never refunded' }, asCtx('b'.repeat(24), roles));
-    await expect(call(['FINANCE_READER'])).rejects.toThrow(/Access Denied/);
+    await expect(call([FINANCE_READER])).rejects.toThrow(/Access Denied/);
     await expect(call(['CITY_ADMIN'])).rejects.toThrow(/Access Denied/);
   });
 });
@@ -265,7 +266,7 @@ describe('rentalBookingDetail and proofs', () => {
     const asFinance = await venueRentalResolvers.Query.rentalBookingDetail(
       {},
       { id: String(booking._id) },
-      asCtx('d'.repeat(24), ['FINANCE_READER'])
+      asCtx('d'.repeat(24), [FINANCE_READER])
     );
     expect(asFinance.viewer).toBe('FINANCE');
     expect(asFinance.payment?.razorpay_payment_id).toMatch(/^pay_rent/);

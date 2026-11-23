@@ -108,6 +108,44 @@ server {
     # Node rather than spooling the whole file to its own disk first. The server
     # already spools it once (see upload.router.ts); doing it twice doubles the
     # latency and the disk churn and buys nothing.
+    # Duncit Intel Media Manager uploads (Intel › Settings › Media caps them at 100 MB).
+    location /intel/media/upload {
+        if ($request_method = OPTIONS) {
+            add_header Access-Control-Allow-Origin      $cors_allow_origin     always;
+            add_header Access-Control-Allow-Credentials $cors_allow_credentials always;
+            add_header Access-Control-Allow-Methods     "GET, POST, OPTIONS, PUT, DELETE, PATCH, HEAD" always;
+            add_header Access-Control-Allow-Headers     "Authorization, Content-Type, X-Requested-With, Apollo-Require-Preflight, X-Apollo-Operation-Name, X-Apollo-Operation-Id, Apollographql-Client-Name, Apollographql-Client-Version, X-DUID, X-Consent, X-No-Redis, X-Duncit-Surface, X-Duncit-App, X-Auth, X-CSRF-Token, Accept, Accept-Language, Cache-Control, Pragma, Origin, User-Agent, Range" always;
+            add_header Access-Control-Max-Age           "600"                  always;
+            add_header Vary                             "Origin"               always;
+            add_header Content-Length 0;
+            add_header Content-Type "text/plain; charset=utf-8";
+            return 204;
+        }
+
+        client_max_body_size    110m;
+        proxy_request_buffering off;
+
+        proxy_pass         http://127.0.0.1:2001;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+
+        proxy_hide_header Access-Control-Allow-Origin;
+        proxy_hide_header Access-Control-Allow-Credentials;
+        proxy_hide_header Access-Control-Allow-Methods;
+        proxy_hide_header Access-Control-Allow-Headers;
+        proxy_hide_header Access-Control-Expose-Headers;
+        proxy_hide_header Access-Control-Max-Age;
+
+        # A 100 MB file over a slow office link takes minutes; the server stores it in GridFS.
+        proxy_connect_timeout 60s;
+        proxy_send_timeout    900s;
+        proxy_read_timeout    900s;
+        send_timeout          900s;
+    }
+
     location /upload {
         if ($request_method = OPTIONS) {
             add_header Access-Control-Allow-Origin      $cors_allow_origin     always;
@@ -937,6 +975,27 @@ server {
 
     location / {
         proxy_pass         http://127.0.0.1:2042;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
+# --- Duncit Intel: intel.duncit.com (SPA on :2049) ---
+server {
+    listen 80;
+    listen [::]:80;
+    http2 on;
+    server_name intel.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2049;
         proxy_http_version 1.1;
         proxy_set_header   Host              $host;
         proxy_set_header   X-Real-IP         $remote_addr;

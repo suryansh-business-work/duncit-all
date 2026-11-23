@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { MockedProvider } from '@apollo/client/testing/react';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 import { UserRolesDialog } from '../src/chrome/user-roles/UserRolesDialog';
 import { portalsByRole, roleSummary } from '../src/chrome/user-roles/roles-for-portals';
@@ -95,5 +95,29 @@ describe('UserRolesDialog', () => {
     renderDialog([]);
     await settle();
     expect(screen.getByText('No roles are assigned to your account yet.')).toBeInTheDocument();
+  });
+
+  it('returns to the roles list when Jump to Portal is closed', async () => {
+    renderDialog(['FINANCE_MANAGER']);
+    await settle();
+    fireEvent.click(screen.getByTestId('user-roles-jump'));
+    await settle();
+    const jump = screen.getByTestId('jump-to-portal-dialog');
+    fireEvent.click(within(jump).getByLabelText('Close'));
+    await waitFor(() => expect(screen.queryByTestId('jump-to-portal-dialog')).not.toBeInTheDocument());
+    expect(screen.getByTestId('user-roles-dialog')).toBeInTheDocument();
+    expect(screen.getByTestId('user-roles-open-FINANCE_MANAGER-finance')).toBeInTheDocument();
+  });
+
+  it('says the portal list could not load, and offers no portal links, when the request fails', async () => {
+    render(
+      <MockedProvider mocks={[{ request: { query: MY_PORTAL_ACCESS }, error: new Error('offline') }]}>
+        <UserRolesDialog open onClose={() => undefined} roles={['FINANCE_MANAGER']} />
+      </MockedProvider>,
+    );
+    expect(await screen.findByTestId('user-roles-load-error')).toHaveTextContent('Could not load the portal list. Please try again.');
+    expect(screen.getByTestId('user-roles-role-FINANCE_MANAGER')).toBeInTheDocument();
+    expect(screen.queryByTestId('user-roles-open-FINANCE_MANAGER-finance')).not.toBeInTheDocument();
+    expect(screen.queryByText('No portal link for this role.')).not.toBeInTheDocument();
   });
 });

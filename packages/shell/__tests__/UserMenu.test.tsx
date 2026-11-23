@@ -5,7 +5,14 @@ import type { DuncitUser } from '@duncit/user-context';
 import { UserMenu } from '../src/chrome/UserMenu';
 
 vi.mock('../src/chrome/user-roles/UserRolesDialog', () => ({
-  UserRolesDialog: ({ roles }: { roles: string[] }) => <div data-testid="roles-dialog">{roles.join(',')}</div>,
+  UserRolesDialog: ({ roles, onClose }: { roles: string[]; onClose: () => void }) => (
+    <div data-testid="roles-dialog">
+      {roles.join(',')}
+      <button type="button" data-testid="roles-dialog-close" onClick={onClose}>
+        close
+      </button>
+    </div>
+  ),
 }));
 
 const navigate = vi.hoisted(() => vi.fn());
@@ -56,6 +63,18 @@ describe('UserMenu', () => {
     expect(screen.queryByTestId('roles-dialog')).not.toBeInTheDocument();
     await u.click(screen.getByTestId('shell-user-roles-info'));
     expect(screen.getByTestId('roles-dialog')).toHaveTextContent('FINANCE_MANAGER,HR_MANAGER');
+  });
+
+  it('unmounts the roles dialog when it asks to be closed, and opens a fresh one from the icon again', async () => {
+    const u = userEvent.setup();
+    const withRoles = { ...user, roles: ['FINANCE_MANAGER'] } as DuncitUser;
+    render(<UserMenu user={withRoles} fallbackName="Portal" onLogout={vi.fn()} />);
+    await u.click(screen.getByTestId('shell-user-roles-info'));
+    expect(screen.getByTestId('roles-dialog')).toBeInTheDocument();
+    await u.click(screen.getByTestId('roles-dialog-close'));
+    expect(screen.queryByTestId('roles-dialog')).not.toBeInTheDocument();
+    await u.click(screen.getByTestId('shell-user-roles-info'));
+    expect(screen.getByTestId('roles-dialog')).toHaveTextContent('FINANCE_MANAGER');
   });
 
   it('shows no role line when the account has no roles', () => {

@@ -20,6 +20,7 @@ export const POD_FORM_VENUE_OFFER_TERMS = gql`
         model
         amount
       }
+      offer_free_booking
     }
   }
 `;
@@ -34,6 +35,8 @@ export interface VenueOfferTerms {
   capacity: number | null;
   /** What the venue hopes each booking brings, one amount per basis; empty while unknown or unset. */
   minBusiness: VenueMinBusinessRow[];
+  /** The venue takes free bookings for initiatives — only then is Free offered. Null while unknown. */
+  freeBooking: boolean | null;
 }
 
 interface TermsAnswer {
@@ -42,6 +45,7 @@ interface TermsAnswer {
     capacity?: number | null;
     offer_min_guests?: number | null;
     offer_min_business?: VenueMinBusinessRow[] | null;
+    offer_free_booking?: boolean | null;
   } | null;
 }
 
@@ -59,5 +63,6 @@ export function useVenueOfferTerms(venueId: string): VenueOfferTerms {
     minGuests: offerGuestFloor(venue?.offer_min_guests, capacity),
     capacity: capacity > 0 ? capacity : null,
     minBusiness: venue?.offer_min_business ?? [],
+    freeBooking: venue ? venue.offer_free_booking === true : null,
   };
 }

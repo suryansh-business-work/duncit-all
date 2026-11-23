@@ -104,6 +104,14 @@ const offersVenue = (values: PodFormValues, config: PodFormConfig) =>
   !keepsExistingBooking(values);
 
 /**
+ * The pod sends its venue an offer asking for the window free — which makes
+ * the pod free too: a free venue carries no charges, commission or earnings
+ * (server: FREE_VENUE_NEEDS_FREE_POD).
+ */
+export const offersFreeVenue = (values: PodFormValues, config: PodFormConfig) =>
+  offersVenue(values, config) && isFreeVenueOfferModel(values.venue_offer_model);
+
+/**
  * What the host asks of the venue beside the price — the shared rules
  * (`makeVenueOfferAskSchema`: at least one point, each and the note within the
  * server's bounds), pinned on this form's own fields. mWeb's twin.
@@ -156,10 +164,13 @@ function refineFreeJustification(
   config: PodFormConfig,
   t: Translate,
 ) {
-  const freeVenue = offersVenue(values, config) && isFreeVenueOfferModel(values.venue_offer_model);
+  const freeVenue = offersFreeVenue(values, config);
   const freePod =
     isFreePodType(values.pod_type) && (!!config.requireFreeJustification || startedFreeJustification(values));
   if (freeVenue || freePod) addFreeJustificationIssues(values, ctx, t);
+  if (freeVenue && !isFreePodType(values.pod_type)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pod_type'], message: t('podForm.validation.freeVenueNeedsFreePod') });
+  }
 }
 
 /** Meeting-link rules — only a VIRTUAL pod has one. */

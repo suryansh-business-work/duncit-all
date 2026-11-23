@@ -332,8 +332,12 @@ Parsing `{ ...blankPodFormValues, pod_title: 'Su', club_id: '…a3b', pod_descri
 The venue rule is conditional in a way worth knowing. A physical pod (with `showVenueSlot`) offers
 its venue a **window and terms**: it needs `pod_date_time` and `pod_end_date_time` (reported on
 `venue_slot_id`, "Pick an available slot"), an option in `venue_offer_model` (`PER_GUEST`,
-`PER_HOUR`, `FLAT` or `FREE` — `HOST_OFFER_MODELS`), a positive `venue_offer_rate` (not asked for
-`FREE`, which needs the free justification instead — see "Free justification"), and what the host needs from the
+`PER_HOUR`, `FLAT` or `FREE` — `hostOfferModelsFor(freeBooking)`: `FREE` is listed only while the venue is
+open to free bookings for initiatives, read as `useVenueOfferTerms().freeBooking`, and a `FREE` kept for a
+venue that reads as closed is dropped), a positive `venue_offer_rate` (not asked for
+`FREE`, which needs the free justification instead — see "Free justification"). A free venue makes the pod
+free: `PodTypeSelect` offers Free alone and picks it, and the schema refuses another type on `pod_type`
+(`offersFreeVenue`; the server's `FREE_VENUE_NEEDS_FREE_POD`). The offer also needs what the host needs from the
 venue in `venue_offer_offerings` (one point per line, at least one; each point and the optional
 `venue_offer_note` within the server's bounds — the shared `makeVenueOfferAskSchema` from
 `@duncit/forms/schemas`, pinned on these two fields). An edited pod that keeps the slot it already

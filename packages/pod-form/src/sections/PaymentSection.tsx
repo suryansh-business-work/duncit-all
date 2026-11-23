@@ -1,5 +1,6 @@
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { Box, MenuItem, Slider, Stack, Switch, TextField, Typography } from '@mui/material';
+import PodTypeSelect from '../components/PodTypeSelect';
 import { payableSpots } from '@duncit/utils';
 import { useSpotsBounds, useSpotsFloor } from '../useSpotsBounds';
 import EarningsProjection from '../components/EarningsProjection';
@@ -7,8 +8,8 @@ import FreeJustificationField from '../components/FreeJustificationField';
 import PlaceChargesField from '../components/PlaceChargesField';
 import { getProductRequestTotal } from '../build-input';
 import { usePodFormData } from '../context';
-import { isFreePodType, normalizePodType } from '../pod-type';
-import { OCCURRENCES, POD_TYPES, type PodFormValues } from '../types';
+import { isFreePodType } from '../pod-type';
+import { OCCURRENCES, type PodFormValues } from '../types';
 import { useTranslation } from '../i18n/useTranslation';
 
 export default function PaymentSection() {
@@ -59,24 +60,7 @@ export default function PaymentSection() {
     <Stack spacing={2}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         {/* An Auto Pod is physical and never free — its type is fixed, not chosen. */}
-        {!config.autoPod && (
-          <TextField
-            select
-            label={t('podForm.paymentSection.podType')}
-            value={normalizePodType(podType)}
-            onChange={(event) => {
-              setValue('pod_type', event.target.value, { shouldValidate: true });
-              if (isFreePodType(event.target.value)) setValue('pod_amount', 0);
-            }}
-            fullWidth
-          >
-            {POD_TYPES.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {t(option.labelKey)}
-              </MenuItem>
-            ))}
-          </TextField>
-        )}
+        {!config.autoPod && <PodTypeSelect />}
         <TextField
           select
           label={t('podForm.paymentSection.occurrence')}

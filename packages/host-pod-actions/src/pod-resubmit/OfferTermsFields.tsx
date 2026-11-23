@@ -1,6 +1,6 @@
 import { Controller, useWatch, type Control } from 'react-hook-form';
 import { MenuItem, Stack, TextField } from '@mui/material';
-import { HOST_OFFER_MODELS, isFreeVenueOfferModel, type HostOfferModel } from '@duncit/utils';
+import { hostOfferModelsFor, isFreeVenueOfferModel, type HostOfferModel } from '@duncit/utils';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import type { PodResubmitValues } from './pod-resubmit.form';
 
@@ -15,11 +15,15 @@ const MODEL_LABEL: Readonly<Record<HostOfferModel, ModelLabelKey>> = {
 
 /**
  * How the host offers to pay the new venue — per guest, per hour, a flat
- * price, or asking for it free — and the amount (none for a free venue). The
- * venue accepts, rejects or counters a priced offer; a free one it accepts or
- * declines.
+ * price, or (`allowFree`: a free pod at a venue open to free bookings for
+ * initiatives) asking for it free — and the amount (none for a free venue).
+ * The venue accepts, rejects or counters a priced offer; a free one it accepts
+ * or declines.
  */
-export default function OfferTermsFields({ control }: Readonly<{ control: Control<PodResubmitValues> }>) {
+export default function OfferTermsFields({
+  control,
+  allowFree,
+}: Readonly<{ control: Control<PodResubmitValues>; allowFree: boolean }>) {
   const { labels } = useHostPodActionsConfig();
   const model = useWatch({ control, name: 'venue_offer_model' });
   return (
@@ -39,7 +43,7 @@ export default function OfferTermsFields({ control }: Readonly<{ control: Contro
             error={!!fieldState.error}
             helperText={fieldState.error?.message}
           >
-            {HOST_OFFER_MODELS.map((option) => (
+            {hostOfferModelsFor(allowFree).map((option) => (
               <MenuItem key={option} value={option}>
                 {labels[MODEL_LABEL[option]]}
               </MenuItem>

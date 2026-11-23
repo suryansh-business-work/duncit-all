@@ -156,6 +156,48 @@ describe('PaymentSection', () => {
     expect(ref.current?.getValues('free_accepted')).toBe(true);
   });
 
+  // A pod asking its venue for the window free (an offer, no held slot) is free too.
+  const freeVenueOffer = {
+    pod_mode: 'PHYSICAL' as const,
+    venue_id: 'v1',
+    venue_slot_id: '',
+    venue_offer_model: 'FREE',
+  };
+
+  it('makes a pod asking its venue for it free a free pod, with Free the only type', async () => {
+    const user = userEvent.setup();
+    const ref = renderPayment(makeData({ config: makeConfig({ showVenueSlot: true }) }), {
+      ...freeVenueOffer,
+      pod_type: 'PAID',
+      pod_amount: 500,
+    });
+    expect(ref.current?.getValues('pod_type')).toBe('FREE');
+    expect(ref.current?.getValues('pod_amount')).toBe(0);
+    expect(screen.getByText('The venue booking is free, so this pod is free too.')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Amount/)).not.toBeInTheDocument();
+    await user.click(screen.getByLabelText(/Pod type/));
+    const options = await screen.findAllByRole('option');
+    expect(options.map((option) => option.textContent)).toEqual(['Free']);
+  });
+
+  it('leaves the type to the admin for a priced offer, or a form that books no venue', async () => {
+    const user = userEvent.setup();
+    const ref = renderPayment(makeData({ config: makeConfig({ showVenueSlot: true }) }), {
+      ...freeVenueOffer,
+      venue_offer_model: 'FLAT',
+      pod_type: 'PAID',
+      pod_amount: 500,
+    });
+    expect(ref.current?.getValues('pod_type')).toBe('PAID');
+    await user.click(screen.getByLabelText(/Pod type/));
+    expect((await screen.findAllByRole('option')).map((option) => option.textContent)).toEqual(['Free', 'Paid']);
+    cleanup();
+    // Without the venue slot section there is no offer, whatever a draft holds.
+    const plain = renderPayment(makeData(), { ...freeVenueOffer, pod_type: 'PAID', pod_amount: 500 });
+    expect(plain.current?.getValues('pod_type')).toBe('PAID');
+    expect(screen.queryByText('The venue booking is free, so this pod is free too.')).not.toBeInTheDocument();
+  });
+
   it('asks a paid pod nothing about why it is free', () => {
     renderPayment(makeData(), { pod_type: 'PAID', pod_amount: 300 });
     expect(screen.queryByTestId('pod-form-free-arrangement')).not.toBeInTheDocument();

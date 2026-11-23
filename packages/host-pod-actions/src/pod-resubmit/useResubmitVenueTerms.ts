@@ -13,6 +13,7 @@ export const RESUBMIT_VENUE_TERMS = gql`
         capacity
       }
       offer_min_guests
+      offer_free_booking
     }
   }
 `;
@@ -23,6 +24,7 @@ interface TermsAnswer {
     capacity?: number | null;
     capacity_items?: { label: string; capacity: number }[] | null;
     offer_min_guests?: number | null;
+    offer_free_booking?: boolean | null;
   } | null;
 }
 
@@ -35,6 +37,11 @@ export interface ResubmitVenueTerms {
   minGuests: number;
   /** What the offered space holds; 0 while unknown or unset. */
   capacity: number;
+  /**
+   * Whether the venue takes free bookings for initiatives — only then may a
+   * free pod ask it for the window free. Null while unknown.
+   */
+  freeBooking: boolean | null;
 }
 
 /**
@@ -53,5 +60,9 @@ export function useResubmitVenueTerms(venueId: string, spaceLabel: string): Resu
   // The named space's capacity, else (the whole venue) the venue's own.
   const space = venueSpaces(venue).find((item) => item.slotSpaceLabel === spaceLabel);
   const capacity = Math.max(0, Math.floor(Number(space?.capacity ?? venue?.capacity) || 0));
-  return { minGuests: offerGuestFloor(venue?.offer_min_guests, capacity), capacity };
+  return {
+    minGuests: offerGuestFloor(venue?.offer_min_guests, capacity),
+    capacity,
+    freeBooking: venue ? venue.offer_free_booking === true : null,
+  };
 }

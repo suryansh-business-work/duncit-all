@@ -1,11 +1,12 @@
+import { useEffect } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { Alert, InputAdornment, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { VenueOfferAskFields } from '@duncit/forms';
 import {
-  HOST_OFFER_MODELS,
   VENUE_OFFER_ASK_LIMITS,
   formatStatementMoney,
+  hostOfferModelsFor,
   isFreeVenueOfferModel,
   isHostOfferModel,
   offerBelowFloor,
@@ -33,7 +34,7 @@ interface QuoteAnswer {
 
 /**
  * How the host offers to pay the venue — per guest, per hour, a flat price or
- * a free venue (no amount; why it is free and the free policy accepted instead,
+ * (only at a venue open to free bookings for initiatives) a free venue (no amount; why it is free and the free policy accepted instead,
  * and the venue accepts or declines it), with a line on how the picked option
  * pays — the amount, and what they need
  * from the venue (one point per line) with an optional note. The venue's
@@ -48,13 +49,13 @@ interface QuoteAnswer {
 export default function OfferTermsField({ venueId }: Readonly<{ venueId: string }>) {
   const { t } = useTranslation();
   const { finance } = usePodFormData();
-  const { control, formState: { errors } } = useFormContext<PodFormValues>();
+  const { control, setValue, formState: { errors } } = useFormContext<PodFormValues>();
   const [start, end, model, rate, spots] = useWatch({
     control,
     name: ['pod_date_time', 'pod_end_date_time', 'venue_offer_model', 'venue_offer_rate', 'no_of_spots'],
   });
   const settledRate = useDebouncedValue(rate, QUOTE_DEBOUNCE_MS);
-  const { minGuests, minBusiness } = useVenueOfferTerms(venueId);
+  const { minGuests, minBusiness, freeBooking } = useVenueOfferTerms(venueId);
   // The price only: the points and the note are left out, so typing them asks nothing.
   const offer = venueOfferInput({
     start: start ? start.toISOString() : null,
@@ -74,6 +75,10 @@ export default function OfferTermsField({ venueId }: Readonly<{ venueId: string 
   const currency = finance?.currency_symbol ?? '';
   const modelHelp = isHostOfferModel(model) ? t(PODFORM_OFFER_HELP_KEY[model]) : t('podForm.offer.modelHint');
   const freeVenue = isFreeVenueOfferModel(model);
+  // A Free kept for a venue that turns out closed to free bookings is dropped, so a price must be picked.
+  useEffect(() => {
+    if (freeVenue && freeBooking === false) setValue('venue_offer_model', '', { shouldValidate: true });
+  }, [freeVenue, freeBooking, setValue]);
   const money = (value: number) => formatStatementMoney(value, currency);
   const expects = venueMinBusinessLines(minBusiness, t, money);
   const floor = venueOfferFloor(minBusiness, model, t, money);
@@ -99,7 +104,7 @@ export default function OfferTermsField({ venueId }: Readonly<{ venueId: string 
             error={!!errors.venue_offer_model}
             helperText={errors.venue_offer_model?.message || modelHelp}
           >
-            {HOST_OFFER_MODELS.map((option) => (
+            {hostOfferModelsFor(freeBooking).map((option) => (
               <MenuItem key={option} value={option}>
                 {t(PODFORM_OFFER_MODEL_KEY[option])}
               </MenuItem>

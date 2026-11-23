@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FormProvider, useForm, type UseFormReturn } from 'react-hook-form';
 import WhenWhereSection from '../../src/sections/WhenWhereSection';
@@ -481,13 +481,28 @@ describe('WhenWhereSection (offer terms)', () => {
     expect(screen.queryByTestId('pod-form-venue-min-business')).not.toBeInTheDocument();
   });
 
-  it('offers the ways a venue can be paid — per guest, per hour or a flat price — then a free venue', async () => {
+  it('offers the ways a venue can be paid — per guest, per hour or a flat price — then a free venue at a venue open to it', async () => {
     const user = userEvent.setup();
-    routeQueries();
+    routeQueries({ terms: termsQuery({ id: 'v1', capacity: 40, offer_min_guests: 0, offer_free_booking: true }) });
     renderWW(termsData(), WINDOW);
     await user.click(screen.getByLabelText(/How you pay the venue/));
     const options = await screen.findAllByRole('option');
     expect(options.map((option) => option.textContent)).toEqual(['Per guest', 'Per hour', 'Flat price', 'Free venue']);
+  });
+
+  it('lists no free venue for a venue closed to free bookings, or not known yet', async () => {
+    const user = userEvent.setup();
+    routeQueries({ terms: termsQuery({ id: 'v1', capacity: 40, offer_min_guests: 0, offer_free_booking: false }) });
+    renderWW(termsData(), WINDOW);
+    await user.click(screen.getByLabelText(/How you pay the venue/));
+    expect((await screen.findAllByRole('option')).map((option) => option.textContent)).toEqual(['Per guest', 'Per hour', 'Flat price']);
+  });
+
+  it('drops a Free kept for a venue closed to free bookings, so a price must be picked', async () => {
+    routeQueries({ terms: termsQuery({ id: 'v1', capacity: 40, offer_min_guests: 0, offer_free_booking: false }) });
+    const ref = renderWW(termsData(), { ...WINDOW, pod_type: 'FREE', venue_offer_model: 'FREE' });
+    await waitFor(() => expect(ref.current?.getValues('venue_offer_model')).toBe(''));
+    expect(screen.getByLabelText(/Amount you offer/)).toBeInTheDocument();
   });
 
   // A free venue is offered no amount; on a paid pod the host says here why it is free.

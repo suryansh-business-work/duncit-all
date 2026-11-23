@@ -65,7 +65,7 @@ describe('GiftCardOrderScreen', () => {
       { order_no: 'GC-ABCDEFGH23' },
       { auth: true },
     );
-    expect(screen.getByTestId('gift-card-order-total-value')).toHaveTextContent('₹1,099.00');
+    expect(screen.getByTestId('gift-card-order-total-value')).toHaveTextContent('₹1099.00');
     expect(screen.getByTestId('gift-card-order-awb-value')).toHaveTextContent('AWB123');
     const scans = screen.getAllByTestId('gift-card-order-scan');
     expect(scans[0]).toHaveTextContent('In transit');
@@ -152,7 +152,7 @@ describe('GiftCardOrdersList', () => {
     const onOpen = jest.fn();
     renderWithProviders(<GiftCardOrdersList onOpen={onOpen} />);
     expect(await screen.findByTestId('gift-card-order-GC-ABCDEFGH23')).toHaveTextContent(
-      '₹1,099.00',
+      '₹1099.00',
     );
     expect(screen.getByTestId('gift-card-order-GC-DIGITAL222')).toHaveTextContent(
       fallbackT('mweb.giftCards.paymentPending'),

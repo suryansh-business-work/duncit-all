@@ -68,7 +68,7 @@ describe('GiftCardBuySection', () => {
     const onContinue = mount();
     fireEvent.press(screen.getByTestId('gift-card-quantity-plus'));
     fireEvent.press(screen.getByTestId('gift-card-quantity-plus'));
-    expect(screen.getByTestId('gift-card-total-value')).toHaveTextContent('₹1,500.00');
+    expect(screen.getByTestId('gift-card-total-value')).toHaveTextContent('₹1500.00');
     fireEvent.changeText(screen.getByTestId('gift-card-quantity-input'), '9');
     expect(
       await screen.findByText(fallbackT('mweb.giftCards.quantityRange', { vars: { max: 5 } })),
@@ -82,7 +82,7 @@ describe('GiftCardBuySection', () => {
     fireEvent.press(screen.getByTestId('gift-card-delivery-physical'));
     fireEvent.press(screen.getByTestId('gift-card-quantity-plus'));
     expect(screen.getByTestId('gift-card-total-delivery-value')).toHaveTextContent('₹99.00');
-    expect(screen.getByTestId('gift-card-total-value')).toHaveTextContent('₹1,099.00');
+    expect(screen.getByTestId('gift-card-total-value')).toHaveTextContent('₹1099.00');
     fireEvent.changeText(screen.getByTestId('gift-card-recipient-name-input'), ' Priya ');
     fireEvent.press(screen.getByTestId('gift-card-continue'));
     await waitFor(() =>

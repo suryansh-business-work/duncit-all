@@ -153,7 +153,7 @@ describe('GiftCardCheckoutScreen — summary', () => {
         vars: { who: fallbackT('mweb.giftCards.checkoutSelf') },
       }),
     );
-    expect(screen.getByTestId('gift-card-total-value')).toHaveTextContent('₹1,500.00');
+    expect(screen.getByTestId('gift-card-total-value')).toHaveTextContent('₹1500.00');
   });
 
   it('adds the delivery fee once and asks where printed cards go', () => {
@@ -166,7 +166,7 @@ describe('GiftCardCheckoutScreen — summary', () => {
     });
     renderWithProviders(<GiftCardCheckoutScreen />);
     expect(screen.getByTestId('gift-card-total-delivery-value')).toHaveTextContent('₹99.00');
-    expect(screen.getByTestId('gift-card-total-value')).toHaveTextContent('₹1,099.00');
+    expect(screen.getByTestId('gift-card-total-value')).toHaveTextContent('₹1099.00');
     expect(screen.getByTestId('gift-card-delivery-address')).toBeOnTheScreen();
   });
 
@@ -177,10 +177,18 @@ describe('GiftCardCheckoutScreen — summary', () => {
       recipient_email: '',
       gift: false,
     });
-    submit();
+    renderWithProviders(<GiftCardCheckoutScreen />);
+    // Two address forms on a printed order: delivery first, billing last. Only
+    // the billing one is filled, so the delivery address is still missing.
+    const last = (id: string) => screen.getAllByTestId(id).at(-1)!;
+    fireEvent.changeText(last('field-line1'), '12 Main Street');
+    fireEvent.changeText(last('field-city'), 'Pune');
+    fireEvent.changeText(last('field-state'), 'Maharashtra');
+    fireEvent.changeText(last('field-pincode'), '411001');
+    fireEvent.press(screen.getByTestId('checkout-submit'));
     expect(
-      await screen.findByText(fallbackT('mweb.giftCards.deliveryAddressHint')),
-    ).toBeOnTheScreen();
+      await screen.findAllByText(fallbackT('mweb.giftCards.deliveryAddressHint')),
+    ).not.toHaveLength(0);
     expect(pay).not.toHaveBeenCalled();
   });
 

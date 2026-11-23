@@ -212,7 +212,7 @@ describe('printableRow', () => {
 
   it('clips a very long description so one row cannot take a whole page', () => {
     const printed = printableRow(row(1, { description: 'x'.repeat(500) }));
-    expect(printed.what.length).toBe(140);
+    expect(printed.what).toHaveLength(140);
     expect(printed.what.endsWith('...')).toBe(true);
   });
 

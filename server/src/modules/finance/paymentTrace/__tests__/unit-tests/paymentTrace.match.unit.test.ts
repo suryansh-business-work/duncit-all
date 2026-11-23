@@ -52,7 +52,7 @@ describe('paymentRefFilter', () => {
   it('adds the document id only for a 24-hex id', () => {
     const or = (paymentRefFilter('65aa00000000000000000002').$or as Record<string, unknown>[]);
     expect(or.at(-1)).toEqual({ _id: DOC_ID });
-    expect((paymentRefFilter('65aa0000000000000000000z').$or as unknown[]).length).toBe(6);
+    expect(paymentRefFilter('65aa0000000000000000000z').$or as unknown[]).toHaveLength(6);
   });
 
   it('treats a pattern-looking id as plain text, never as a regex', () => {

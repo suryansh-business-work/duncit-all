@@ -50,17 +50,19 @@ const slug = (dir) => dir.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
 
 /** Transcript folders for this checkout and every worktree of it (a session can run in either). */
 function transcriptDirs(projectsDir) {
-  const roots = run('git', ['worktree', 'list', '--porcelain'])
-    .split('\n')
-    .filter((line) => line.startsWith('worktree '))
-    .map((line) => slug(line.slice('worktree '.length)));
+  const roots = new Set(
+    run('git', ['worktree', 'list', '--porcelain'])
+      .split('\n')
+      .filter((line) => line.startsWith('worktree '))
+      .map((line) => slug(line.slice('worktree '.length))),
+  );
   const top = slug(run('git', ['rev-parse', '--show-toplevel']).trim());
   return fs
     .readdirSync(projectsDir, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .filter((entry) => {
       const name = entry.name.toLowerCase();
-      return roots.includes(name) || name.startsWith(`${top}-`);
+      return roots.has(name) || name.startsWith(`${top}-`);
     })
     .map((entry) => path.join(projectsDir, entry.name));
 }

@@ -194,7 +194,7 @@ export function parseEnvRegistry(raw: unknown): { categories: ReadonlyMap<EnvCat
   const envKeys = [...categories.values()].flatMap((entry) => entry.fields.flatMap((field) => (field.envKey ? [field.envKey] : [])));
   const duplicate = envKeys.find((key, index) => envKeys.indexOf(key) !== index);
   if (duplicate) fail('categories', `map env key ${duplicate} twice`);
-  return { categories, groups: raw.groups.map(readGroup) };
+  return { categories, groups: raw.groups.map((group, index) => readGroup(group, index)) };
 }
 
 const REGISTRY = parseEnvRegistry(registry);

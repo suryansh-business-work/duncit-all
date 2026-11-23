@@ -58,7 +58,7 @@ export function useSecurityVerification({ onVerified = reloadHere }: Readonly<Op
   const { t } = useTranslation();
   const { data, loading, error, refetch } = useQuery(PORTAL_SECURITY_CHALLENGE, { fetchPolicy: 'network-only' });
   const [submitMutation, { loading: submitting }] = useMutation(SUBMIT_PORTAL_SECURITY_VERIFICATION);
-  const [consent, setConsentState] = useState<ConsentState>(NO_CONSENT);
+  const [consentState, setConsentState] = useState<ConsentState>(NO_CONSENT);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const geo = useGeolocation();
 
@@ -70,8 +70,9 @@ export function useSecurityVerification({ onVerified = reloadHere }: Readonly<Op
 
   const setConsent = (key: ConsentKey, value: boolean) => setConsentState((current) => ({ ...current, [key]: value }));
 
-  const acknowledged = consent.authorized_person && consent.credentials_not_shared && consent.policies_acknowledged;
-  const locationReady = usingException || (geo.status === 'granted' && geo.fix !== null && consent.location_consent);
+  const acknowledged =
+    consentState.authorized_person && consentState.credentials_not_shared && consentState.policies_acknowledged;
+  const locationReady = usingException || (geo.status === 'granted' && geo.fix !== null && consentState.location_consent);
   const canProceed = challenge !== null && !submitting && acknowledged && locationReady;
 
   const blockers = useMemo(
@@ -89,7 +90,7 @@ export function useSecurityVerification({ onVerified = reloadHere }: Readonly<Op
         variables: {
           input: {
             policy_version: challenge.policy_version,
-            consent,
+            consent: consentState,
             location: fix ? { latitude: fix.latitude, longitude: fix.longitude, accuracy_meters: fix.accuracy } : null,
             exception_id: approved ? approved.id : null,
             client: clientFacts(),
@@ -100,13 +101,13 @@ export function useSecurityVerification({ onVerified = reloadHere }: Readonly<Op
       if (!token) throw new Error(t('shell.securityVerification.noSession'));
       globalThis.localStorage.setItem(runtime.tokenKey, token);
       onVerified();
-    } catch (failure) {
-      if (firstGraphQLError(failure)?.extensions?.code === POLICY_CHANGED) {
+    } catch (error_) {
+      if (firstGraphQLError(error_)?.extensions?.code === POLICY_CHANGED) {
         // The wording moved under them: show the new one, and ask again.
         setConsentState(NO_CONSENT);
         await refetch();
       }
-      setSubmitError(parseApiError(failure));
+      setSubmitError(parseApiError(error_));
     }
   };
 
@@ -115,7 +116,7 @@ export function useSecurityVerification({ onVerified = reloadHere }: Readonly<Op
     loading,
     loadError: error ? parseApiError(error) : null,
     reload: () => refetch(),
-    consent,
+    consent: consentState,
     setConsent,
     geo,
     alternative,

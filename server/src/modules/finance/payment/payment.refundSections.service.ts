@@ -58,7 +58,8 @@ const asKind = (value: unknown): RefundKind | null =>
   typeof value === 'string' && KIND_SET.has(value) ? (value as RefundKind) : null;
 
 interface RawEvent {
-  case_id?: unknown;
+  /** An ObjectId or its string form: either one prints as the id. */
+  case_id?: { toString(): string } | null;
   data?: Record<string, unknown> | null;
   type: string;
 }
@@ -71,8 +72,63 @@ interface RawEvent {
 function kindOfEvent(event: RawEvent, gatewayKinds: Map<string, RefundKind>, caseIds: Set<string>): RefundKind | null {
   const gatewayId = event.data?.gateway_refund_id;
   if (typeof gatewayId === 'string' && gatewayKinds.has(gatewayId)) return gatewayKinds.get(gatewayId) ?? null;
-  if (event.case_id && caseIds.has(String(event.case_id))) return 'FAILED_PAYMENT';
+  if (event.case_id && caseIds.has(event.case_id.toString())) return 'FAILED_PAYMENT';
   return asKind(event.data?.kind);
+}
+
+const findOrders = (paymentId: Types.ObjectId) =>
+  ProductOrderModel.find({ payment_id: paymentId, 'refund.status': { $ne: '' } }).select('order_no channel refund');
+const findReturns = (paymentId: Types.ObjectId) =>
+  PodShopReturnModel.find({ payment_id: paymentId, 'refund.status': { $ne: '' } }).select('return_no order_no refund');
+type OrderDoc = Awaited<ReturnType<typeof findOrders>>[number];
+type ReturnDoc = Awaited<ReturnType<typeof findReturns>>[number];
+
+/** Cancelled orders and returned items, each with the refund its own engine keeps. */
+function addOrderEntries(
+  entries: Bucket,
+  orders: OrderDoc[],
+  returns: ReturnDoc[],
+  razorpayPaymentId: ReturnType<typeof refundTargetOf>,
+  now: Date
+) {
+  for (const order of orders) {
+    // The e-commerce store's orders carry the PET_STORE channel; the pod shop's carry POD_SHOP.
+    const ecomm = order.channel === 'PET_STORE';
+    add(
+      entries,
+      ecomm ? 'ECOMM' : 'POD_SHOP',
+      orderRefundEntry(
+        { id: String(order._id), ref: order.order_no, source: 'CANCELLATION', refund: order.refund, razorpayPaymentId, retryable: !ecomm },
+        now
+      )
+    );
+  }
+  for (const ret of returns) {
+    add(
+      entries,
+      'POD_SHOP',
+      orderRefundEntry(
+        { id: String(ret._id), ref: ret.return_no, source: 'RETURN', refund: ret.refund, razorpayPaymentId, retryable: true },
+        now
+      )
+    );
+  }
+}
+
+/** Each refund event under the section it belongs to; payment-level ones go to `home`. */
+function groupEvents(
+  events: Awaited<ReturnType<typeof listPaymentEvents>>,
+  gatewayKinds: Map<string, RefundKind>,
+  caseIds: Set<string>,
+  home: RefundKind | null
+): Map<RefundKind, RefundEventOut[]> {
+  const byKind = new Map<RefundKind, RefundEventOut[]>();
+  for (const event of events) {
+    if (!isRefundEvent(event.type)) continue;
+    const kind = kindOfEvent(event, gatewayKinds, caseIds) ?? home;
+    if (kind) byKind.set(kind, [...(byKind.get(kind) ?? []), toEventOut(event)]);
+  }
+  return byKind;
 }
 
 export async function paymentRefundSections(
@@ -86,8 +142,8 @@ export async function paymentRefundSections(
 
   const [gateway, orders, returns, cases, coins, events] = await Promise.all([
     PaymentGatewayRefundModel.find({ payment_doc_id: payment._id }).sort({ created_at: 1 }),
-    ProductOrderModel.find({ payment_id: payment._id, 'refund.status': { $ne: '' } }).select('order_no channel refund'),
-    PodShopReturnModel.find({ payment_id: payment._id, 'refund.status': { $ne: '' } }).select('return_no order_no refund'),
+    findOrders(payment._id),
+    findReturns(payment._id),
     FailedPaymentCaseModel.find({ payment_doc_id: payment._id }),
     CoinTransactionModel.find({ payment_id: payment.payment_id, source: 'PAYMENT_REFUND' }).sort({ created_at: 1 }),
     listPaymentEvents(payment._id),
@@ -105,28 +161,7 @@ export async function paymentRefundSections(
   const held = heldEntry(payment);
   add(entries, payment.pod_id ? 'POD_PAYMENT' : 'PAYMENT', held);
 
-  for (const order of orders) {
-    // The e-commerce store's orders carry the PET_STORE channel; the pod shop's carry POD_SHOP.
-    const ecomm = order.channel === 'PET_STORE';
-    add(
-      entries,
-      ecomm ? 'ECOMM' : 'POD_SHOP',
-      orderRefundEntry(
-        { id: String(order._id), ref: order.order_no, source: 'CANCELLATION', refund: order.refund, razorpayPaymentId: target, retryable: !ecomm },
-        now
-      )
-    );
-  }
-  for (const ret of returns) {
-    add(
-      entries,
-      'POD_SHOP',
-      orderRefundEntry(
-        { id: String(ret._id), ref: ret.return_no, source: 'RETURN', refund: ret.refund, razorpayPaymentId: target, retryable: true },
-        now
-      )
-    );
-  }
+  addOrderEntries(entries, orders, returns, target, now);
 
   const caseIds = new Set<string>();
   for (const kase of cases) {
@@ -144,12 +179,7 @@ export async function paymentRefundSections(
 
   // Payment-level activity with no record of its own belongs to the payment's own refund.
   const home = REFUND_KINDS.find((kind) => entries.has(kind) && kind !== 'COIN') ?? null;
-  const byKind = new Map<RefundKind, RefundEventOut[]>();
-  for (const event of events) {
-    if (!isRefundEvent(event.type)) continue;
-    const kind = kindOfEvent(event, gatewayKinds, caseIds) ?? home;
-    if (kind) byKind.set(kind, [...(byKind.get(kind) ?? []), toEventOut(event)]);
-  }
+  const byKind = groupEvents(events, gatewayKinds, caseIds, home);
 
   return REFUND_KINDS.flatMap((kind) => {
     const section = buildSection(kind, entries.get(kind) ?? [], byKind.get(kind) ?? [], viewer.can(kind));

@@ -79,13 +79,15 @@ export async function fetchPaymentLogRows(
 ): Promise<{ rows: PaymentLogRow[]; total: number }> {
   const rows: PaymentLogRow[] = [];
   let total = 0;
-  for (let page = 1; rows.length < PAYMENT_LOGS_PDF_MAX_ROWS; page += 1) {
+  let page = 1;
+  while (rows.length < PAYMENT_LOGS_PDF_MAX_ROWS) {
     const input = { ...query, page, page_size: PAGE_SIZE };
     const result = shop ? await paymentService.tableForShop(shop, input) : await paymentService.table(input);
     total = result.total;
     if (result.rows.length === 0) break;
     rows.push(...result.rows);
     if (rows.length >= total) break;
+    page += 1;
   }
   return { rows: rows.slice(0, PAYMENT_LOGS_PDF_MAX_ROWS), total };
 }

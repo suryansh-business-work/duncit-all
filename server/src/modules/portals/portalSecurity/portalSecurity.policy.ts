@@ -3,6 +3,7 @@ import { getUrlConfigs } from '@config/url-configs';
 import { PolicyModel } from '@modules/content/policy/policy.model';
 import { policyContentHash } from '@modules/content/policyAcceptance/policyAcceptance.model';
 import { logs } from '@observability/log';
+import { joinUrl } from '@utils/url';
 import {
   PORTAL_SECURITY_LINKED_POLICY_TYPES,
   PORTAL_SECURITY_NOTICE_VERSION,
@@ -100,7 +101,7 @@ export function noticeSections(supportEmail: string): PolicySection[] {
   ];
 }
 
-const policyUrl = (mwebUrl: string, slug: string): string => `${mwebUrl.replace(/\/+$/, '')}/policies/${slug}`;
+const policyUrl = (mwebUrl: string, slug: string): string => joinUrl(mwebUrl, `/policies/${slug}`);
 
 interface LinkedPolicyRow {
   slug: string;
@@ -109,7 +110,7 @@ interface LinkedPolicyRow {
   content: string;
 }
 
-async function loadLinkedPolicies(): Promise<LinkedPolicyRow[]> {
+function loadLinkedPolicies() {
   return PolicyModel.find({
     is_active: true,
     policy_type: { $in: [...PORTAL_SECURITY_LINKED_POLICY_TYPES] },

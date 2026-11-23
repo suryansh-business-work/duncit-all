@@ -80,7 +80,7 @@ const stepsOf = (payments: readonly TracedPayment[]) =>
   );
 
 /** The Razorpay webhook deliveries that mention any of the ids. */
-async function webhooksFor(sets: ReturnType<typeof razorpayIdSets>) {
+function webhooksFor(sets: ReturnType<typeof razorpayIdSets>) {
   const or = [
     ...(sets.paymentIds.length ? [{ 'summary.payment_id': { $in: sets.paymentIds } }] : []),
     ...(sets.orderIds.length ? [{ 'summary.order_id': { $in: sets.orderIds } }] : []),
@@ -91,7 +91,7 @@ async function webhooksFor(sets: ReturnType<typeof razorpayIdSets>) {
 }
 
 /** A venue's food orders the id names (only a Razorpay-shaped id can). */
-async function foodOrdersFor(ref: string) {
+function foodOrdersFor(ref: string) {
   if (!isRazorpayIdTerm(ref)) return [];
   return VenueFoodOrderModel.find({ $or: [{ razorpay_payment_id: ref }, { razorpay_order_id: ref }, { razorpay_refund_id: ref }] })
     .sort({ created_at: -1 })

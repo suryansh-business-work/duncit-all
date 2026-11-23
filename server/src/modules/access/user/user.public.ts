@@ -96,7 +96,14 @@ export async function loadRelationIds(userId: string): Promise<RelationIds> {
  * a token for the signed-in admin — a second signer would be a second chance to
  * disagree with the fallback secret below, and a token that verifies nowhere.
  */
-export async function signToken(payload: AuthUser, psv?: PortalSessionClaim): Promise<string> {
+export function signToken(payload: AuthUser, psv?: PortalSessionClaim): Promise<string> {
+  // Built inside the promise so a throw from `jwt.sign` still rejects, as it did when this was `async`.
+  return new Promise((resolve) => {
+    resolve(signedToken(payload, psv));
+  });
+}
+
+function signedToken(payload: AuthUser, psv?: PortalSessionClaim): string {
   const secret = process.env.JWT_SECRET || 'dev-secret';
   // Intentionally NO `expiresIn`: Duncit sessions do not expire on their own.
   // The same fallback secret is used by every `jwt.verify` site (context.ts,

@@ -17,7 +17,7 @@ interface Props {
   onRequestAlternative: (reason: string) => Promise<void>;
 }
 
-const FAILED: readonly GeolocationStatus[] = ['denied', 'unavailable', 'timeout', 'unsupported'];
+const FAILED: ReadonlySet<GeolocationStatus> = new Set(['denied', 'unavailable', 'timeout', 'unsupported']);
 
 /**
  * The person's current location on a map, and what happens when there is none.
@@ -36,7 +36,7 @@ export function LocationPanel({
   onRequestAlternative,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const failed = FAILED.includes(status);
+  const failed = FAILED.has(status);
   return (
     <Paper variant="outlined" sx={{ p: 2 }} data-testid="security-location">
       <Stack spacing={1.5}>
@@ -118,6 +118,6 @@ function locationFailureMessage(status: GeolocationStatus, t: (key: string) => s
 function locationButtonLabel(status: GeolocationStatus, t: (key: string) => string): string {
   if (status === 'requesting') return t('shell.securityVerification.location.requesting');
   if (status === 'granted') return t('shell.securityVerification.location.refresh');
-  if (FAILED.includes(status)) return t('shell.securityVerification.location.retry');
+  if (FAILED.has(status)) return t('shell.securityVerification.location.retry');
   return t('shell.securityVerification.location.request');
 }

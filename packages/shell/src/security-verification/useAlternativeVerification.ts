@@ -41,9 +41,9 @@ export function useAlternativeVerification(initial: ExceptionStatus | null, loca
         variables: { input: { reason, location_error: locationErrorFor(locationStatus) } },
       });
       setRequested(res.data?.requestPortalSecurityException ?? null);
-    } catch (failure) {
-      setError(parseApiError(failure));
-      throw failure;
+    } catch (error_) {
+      setError(parseApiError(error_));
+      throw error_;
     }
   };
 

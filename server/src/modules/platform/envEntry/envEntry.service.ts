@@ -387,17 +387,17 @@ export const envEntryService = {
     const updated: string[] = [];
     const skipped: string[] = [];
 
-    for (const entry of entries) {
+    const importOne = async (entry: (typeof entries)[number]) => {
       const name = entry.name.trim();
       if (!name || !ENV_CATEGORIES.includes(entry.category)) {
         skipped.push(`${entry.name || '(unnamed)'} (${entry.category})`);
-        continue;
+        return;
       }
       // A bad value skips just that entry (with the reason) instead of aborting the file half-way.
       const [issue] = validateEnvConfig(CATEGORY_FIELDS[entry.category], entry.config, { creating: false });
       if (issue) {
         skipped.push(`${entry.category} · ${name} — ${issue.message}`);
-        continue;
+        return;
       }
       const existing = await EnvEntryModel.findOne({ category: entry.category, name });
       if (existing) {
@@ -407,7 +407,11 @@ export const envEntryService = {
         await this.create({ ...entry, name }, { enforceRequired: false });
         created.push(`${entry.category} · ${name}`);
       }
-    }
+    };
+
+    // One entry after the other, never together: a later row can update the entry an
+    // earlier one just created, and two creates would race the unique-name check.
+    await entries.reduce<Promise<void>>((previous, entry) => previous.then(() => importOne(entry)), Promise.resolve());
 
     return { created, updated, skipped };
   },

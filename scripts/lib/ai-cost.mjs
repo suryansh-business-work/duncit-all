@@ -167,7 +167,7 @@ export function buildWindows(commits, parentCommittedMs) {
 /** Marker comments already on the PR → the commits they covered and what they cost. */
 export function parseReported(commentBodies) {
   const costBySha = new Map();
-  const pattern = new RegExp(`<!-- ${MARKER} (\\{.*?\\}) -->`);
+  const pattern = new RegExp(String.raw`<!-- ${MARKER} (\{.*?\}) -->`);
   for (const body of commentBodies) {
     const found = pattern.exec(body);
     if (!found) continue;
@@ -182,7 +182,7 @@ export function parseReported(commentBodies) {
 
 const fmtInt = (value) => value.toLocaleString('en-US');
 const fmtUsd = (value) => `$${value.toFixed(value >= 1 ? 2 : 3)}`;
-const cell = (text) => text.replaceAll('|', '\\|').replaceAll('\n', ' ');
+const cell = (text) => text.replaceAll('|', String.raw`\|`).replaceAll('\n', ' ');
 
 function modelsCell(totals, pricing) {
   if (totals.models.size === 0) return '—';
@@ -195,7 +195,7 @@ function modelsCell(totals, pricing) {
 function editorsCell(totals) {
   if (totals.editors.size === 0) return '—';
   return [...totals.editors]
-    .map(([editor, versions]) => (versions.size ? `${editor} (Claude Code ${[...versions].sort().join(', ')})` : editor))
+    .map(([editor, versions]) => (versions.size ? `${editor} (Claude Code ${[...versions].sort((a, b) => a.localeCompare(b)).join(', ')})` : editor))
     .join('<br>');
 }
 

@@ -89,8 +89,9 @@ function filesReadingCategory(code, category, entry) {
 /** `alsoReadBy` is hand-written, so each file it names must exist. */
 function checkAlsoReadBy(category, entry, code, problems) {
   for (const path of entry.alsoReadBy ?? []) {
-    const file = code.find((candidate) => candidate.path === path);
-    if (!file) problems.push(`${category}: alsoReadBy names ${path}, which does not exist`);
+    if (!code.some((candidate) => candidate.path === path)) {
+      problems.push(`${category}: alsoReadBy names ${path}, which does not exist`);
+    }
   }
 }
 

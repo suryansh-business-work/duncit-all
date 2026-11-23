@@ -1,6 +1,5 @@
 import { gql } from '@apollo/client';
 import type {
-  FailedPaymentAiSummary,
   FailedPaymentDetail,
   FailedPaymentEvidenceLink,
   FailedPaymentRefundPreview,
@@ -9,7 +8,8 @@ import type {
   PaymentEvent,
 } from '@duncit/gql-types';
 
-export type { FailedPaymentAiSummary, FailedPaymentDetail, FailedPaymentRefundPreview, FailedPaymentRow, PaymentEvent };
+export type { FailedPaymentAiSummary } from '@duncit/gql-types';
+export type { FailedPaymentDetail, FailedPaymentRefundPreview, FailedPaymentRow, PaymentEvent };
 
 /** Finance › Failed Payments: one page of cases, with the colour and action hints the server works out. */
 export const FAILED_PAYMENTS_TABLE = gql`

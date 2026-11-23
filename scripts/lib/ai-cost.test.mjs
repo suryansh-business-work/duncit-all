@@ -245,7 +245,7 @@ describe('parseReported + renderComment', () => {
   it('shows a dash for a commit with no recorded usage and escapes pipes in the subject', () => {
     const empty = totalsFor(0, { messages: 0, models: new Map(), editors: new Map() });
     const body = renderComment({ rows: [{ sha: 'abc1234567', subject: 'a | b', totals: empty }], priorUsd: 0, pricing });
-    assert.ok(body.includes('a \\| b'));
+    assert.ok(body.includes(String.raw`a \| b`));
     assert.ok(body.includes('| — | — | — | — | — | — |'));
   });
 

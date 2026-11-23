@@ -197,9 +197,10 @@ async function designFacts(
   amount: number
 ): Promise<GiftCardPurchaseFacts> {
   const design = await designFor(input.design_id);
-  const quantity = Math.floor(Number(input.quantity ?? 1));
+  // A whole number of cards only: 2.5 is refused, never quietly rounded down.
+  const quantity = Number(input.quantity ?? 1);
   const maxQuantity = settings.max_quantity ?? 10;
-  if (!Number.isFinite(quantity) || quantity < 1 || quantity > maxQuantity) {
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > maxQuantity) {
     badInput(`Choose between 1 and ${maxQuantity} cards`, 'quantity');
   }
   const mode: GiftCardDeliveryMode = input.delivery_mode === 'PHYSICAL' ? 'PHYSICAL' : 'DIGITAL';

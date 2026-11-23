@@ -172,11 +172,12 @@ export const giftCardOrderAdminService = {
     const order = await giftCardOrderService.findById(id);
     if (order.delivery_mode !== 'PHYSICAL') badInput('A digital order has no delivery address');
     if (order.shipment?.order_id) badInput('The courier is already booked — change the address in ShipRocket');
-    const current = order.shipping_address ?? ({} as IGiftCardShippingAddress);
-    const next = { ...current } as IGiftCardShippingAddress;
+    // Field by field: spreading a Mongoose subdocument copies none of its fields.
+    const current = order.shipping_address;
+    const next = {} as IGiftCardShippingAddress;
     for (const key of ADDRESS_FIELDS) {
       const value = input[key];
-      if (value != null) next[key] = String(value).trim().slice(0, 200);
+      next[key] = value == null ? String(current?.[key] ?? '') : String(value).trim().slice(0, 200);
     }
     if (!next.country) next.country = 'India';
     if (!next.name) badInput('Enter who the cards are delivered to', 'name');

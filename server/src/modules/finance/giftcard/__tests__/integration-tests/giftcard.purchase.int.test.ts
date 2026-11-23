@@ -320,20 +320,18 @@ describe('giftcardService.issueForPayment', () => {
     expect(await GiftCardTransactionModel.countDocuments({ payment_id: 'pay_gc_004' })).toBe(1);
   });
 
-  it('still returns the card when its ISSUE row already exists from an earlier, interrupted run', async () => {
-    await GiftCardTransactionModel.create({
-      gift_card_id: new Types.ObjectId(),
-      code: 'AAAA-BBBB-CCCC-DDDD',
-      user_id: new Types.ObjectId(purchaserId),
-      type: 'ISSUE',
-      amount: 1500,
-      balance_after: 1500,
-      source: 'PURCHASE',
-      payment_id: 'pay_gc_005',
-    });
-    const card = await giftcardService.issueForPayment({ paymentId: 'pay_gc_005', purchaserId, facts: shopFacts() });
-    expect(card.payment_id).toBe('pay_gc_005');
-    expect(await GiftCardTransactionModel.countDocuments({ payment_id: 'pay_gc_005' })).toBe(1);
+  it('settles the ISSUE row a run that died after creating the card left owed, exactly once', async () => {
+    const first = await giftcardService.issueForPayment({ paymentId: 'pay_gc_005', purchaserId, facts: shopFacts() });
+    // The crash: the card exists, its ledger row never landed.
+    await GiftCardTransactionModel.deleteMany({ payment_id: 'pay_gc_005' });
+
+    const replay = await giftcardService.issueForPayment({ paymentId: 'pay_gc_005', purchaserId, facts: shopFacts() });
+    await giftcardService.issueForPayment({ paymentId: 'pay_gc_005', purchaserId, facts: shopFacts() });
+
+    expect(String(replay._id)).toBe(String(first._id));
+    const rows = await GiftCardTransactionModel.find({ payment_id: 'pay_gc_005' }).lean();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ gift_card_id: first._id, type: 'ISSUE', source: 'PURCHASE', amount: 1500 });
   });
 
   it('stores empty artwork for facts frozen before artwork existed', async () => {
@@ -386,7 +384,7 @@ describe('giftcardService.emailForPayment', () => {
 
     const out = await giftcardService.emailForPayment({ payment_id: 'pay_gc_mail_1', ...buyer });
 
-    expect(out).toEqual({ to: 'priya@example.com', cardId: String(card._id) });
+    expect(out).toEqual({ to: 'priya@example.com', cardId: String(card._id), cardIds: [String(card._id)] });
     expect(mockSend).toHaveBeenCalledWith({
       to: 'priya@example.com',
       recipient_name: 'Priya Menon',

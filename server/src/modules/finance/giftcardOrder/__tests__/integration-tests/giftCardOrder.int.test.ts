@@ -302,10 +302,14 @@ describe('giftCardOrderService — member reads', () => {
 });
 
 describe('giftCardOrderAdminService — fulfilment before the courier', () => {
-  const paidPhysical = async () => {
+  // The shop (one default design, printed cards on) is set up once per test;
+  // each call then places one more paid printed order against it.
+  const paidPhysical = async (shopReady = false) => {
     const user = await seedUser();
-    await seedDesign();
-    await enablePhysical();
+    if (!shopReady) {
+      await seedDesign();
+      await enablePhysical();
+    }
     const facts = await giftcardService.purchaseFacts({ amount: 500, quantity: 2, delivery_mode: 'PHYSICAL', shipping_address: ADDRESS });
     return (await giftCardOrderService.onPaid(await seedPayment(user._id, facts), facts)).order;
   };
@@ -340,7 +344,7 @@ describe('giftCardOrderAdminService — fulfilment before the courier', () => {
 
   it('counts the book by what each order waits on', async () => {
     const order = await paidPhysical();
-    await paidPhysical();
+    await paidPhysical(true);
     await giftCardOrderAdminService.markPrinted(String(order._id), admin);
     expect(await giftCardOrderAdminService.stats()).toMatchObject({
       paid_orders: 2,

@@ -167,7 +167,12 @@ async function issueLine(opts: IssueOptions, lineIndex: number, expiresAt: Date)
     const existing = await GiftCardModel.findOne(lineFilter(opts.paymentId, lineIndex)).session(
       opts.session ?? null
     );
-    if (existing) return existing;
+    if (existing) {
+      // A run that died between the card and its ledger row left the row
+      // owed; the write is idempotent per card, so a replay simply settles it.
+      await writeIssueRow(existing, opts);
+      return existing;
+    }
     try {
       const card = await createLine(opts, lineIndex, expiresAt);
       await writeIssueRow(card, opts);

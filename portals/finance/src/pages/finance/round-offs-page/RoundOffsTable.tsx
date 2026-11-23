@@ -5,21 +5,10 @@ import { formatDateTime, useTranslation, type Translator } from '@duncit/app-set
 import { StatusChip } from '@duncit/ui';
 import { STATUS_COLORS, fmt } from '../payment-logs-page/helpers';
 import { renderPaymentCustomer, paymentIdsText, renderPaymentIds } from '../payment-logs-page/cells';
-import type { PaymentSource, RoundOffRow } from './queries';
+import { PAYMENT_SOURCES, paymentSourceLabels } from '../payment-logs-page/paymentSource';
+import type { RoundOffRow } from './queries';
 
 type T = Translator['t'];
-
-/** The four places a payment can come from. The keys are the server's
- * PaymentSource — what it filters on — and only the labels are copy. Each key
- * is written out as a literal so the localization gate can see it rendered. */
-const sourceLabels = (t: T): Record<PaymentSource, string> => ({
-  POD_BOOKING: t('finance.roundOffs.sourcePodBooking'),
-  POD_SHOP: t('finance.roundOffs.sourcePodShop'),
-  ECOMM: t('finance.roundOffs.sourceEcomm'),
-  OTHER: t('finance.roundOffs.sourceOther'),
-});
-
-const SOURCES: PaymentSource[] = ['POD_BOOKING', 'POD_SHOP', 'ECOMM', 'OTHER'];
 
 const statusOptions = (t: T) => [
   { value: 'PENDING', label: t('finance.payment.statusPending') },
@@ -48,7 +37,7 @@ interface Props {
 export default function RoundOffsTable({ fetchRows, refetchRef, onOpen }: Readonly<Props>) {
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<RoundOffRow>[]>(() => {
-    const labels = sourceLabels(t);
+    const labels = paymentSourceLabels(t);
     const sourceLabel = (r: RoundOffRow) => labels[r.source];
     return [
       {
@@ -83,7 +72,7 @@ export default function RoundOffsTable({ fetchRows, refetchRef, onOpen }: Readon
         width: 170,
         type: 'enum',
         sortable: false,
-        options: SOURCES.map((value) => ({ value, label: labels[value] })),
+        options: PAYMENT_SOURCES.map((value) => ({ value, label: labels[value] })),
         cellRenderer: makeRenderSource(sourceLabel),
         valueGetter: sourceLabel,
       },

@@ -1,6 +1,7 @@
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import {
   PDF_PALETTE,
+  drawPdfFooters,
   loadPdfImage,
   pdfCurrency,
   pdfCurrencyNote,
@@ -296,24 +297,13 @@ function drawTotals(page: Page, data: PaymentLogsPdfData, startY: number): void 
 /** Written last, once every page exists, so each one can state the total. */
 function drawFooters(page: Page, branding: PaymentLogsBranding, generatedAt: Date): void {
   const { doc, left, right } = page;
-  const range = doc.bufferedPageRange();
-  const support = [branding.support_email, branding.support_phone].filter(Boolean).join('   ·   ');
-  for (let index = 0; index < range.count; index += 1) {
-    doc.switchToPage(range.start + index);
-    const y = doc.page.height - FOOTER_ZONE + 14;
-    doc
-      .moveTo(left, y - 8)
-      .lineTo(right, y - 8)
-      .strokeColor(line)
-      .stroke();
-    doc.fillColor(muted).fontSize(8).font('Helvetica');
-    doc.text(`${pdfSafeText(branding.business_name)}  ·  Payment Logs  ·  ${appDateTime(generatedAt)}`, left, y, {
-      width: right - left - 90,
-      lineBreak: false,
-    });
-    if (support) doc.text(support, left, y + 11, { width: right - left - 90, lineBreak: false });
-    doc.text(`Page ${index + 1} of ${range.count}`, right - 90, y, { width: 90, align: 'right', lineBreak: false });
-  }
+  drawPdfFooters(doc, {
+    left,
+    right,
+    zone: FOOTER_ZONE,
+    note: `${pdfSafeText(branding.business_name)}  ·  Payment Logs  ·  ${appDateTime(generatedAt)}`,
+    support: [branding.support_email, branding.support_phone].filter(Boolean).join('   ·   '),
+  });
 }
 
 /** Draw the document from rows already fetched. `options` lets a test ask for an uncompressed file. */

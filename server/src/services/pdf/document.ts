@@ -136,3 +136,40 @@ export async function loadPdfImage(url?: string): Promise<Buffer | null> {
     return null;
   }
 }
+
+export interface PdfFooterOptions {
+  /** Left and right edges of the printable width. */
+  left: number;
+  right: number;
+  /** Height reserved at the foot of every page for the footer. */
+  zone: number;
+  /** Printed at the left of every page. */
+  note: string;
+  /** Contact line under the note; nothing is printed when it is empty. */
+  support?: string;
+}
+
+/**
+ * The footer a multi-page statement ends on: a rule, a note and the support
+ * contacts at the left, and "Page x of y" at the right on every page.
+ *
+ * Written last, once every page exists, so each one can state the total — which
+ * is why the document must be opened with `bufferPages`. The wallet statement
+ * and the Payment Logs export each had their own copy of this loop (rule 40).
+ */
+export function drawPdfFooters(doc: PDFKit.PDFDocument, { left, right, zone, note, support }: PdfFooterOptions): void {
+  const range = doc.bufferedPageRange();
+  for (let index = 0; index < range.count; index += 1) {
+    doc.switchToPage(range.start + index);
+    const y = doc.page.height - zone + 14;
+    doc
+      .moveTo(left, y - 8)
+      .lineTo(right, y - 8)
+      .strokeColor(PDF_PALETTE.line)
+      .stroke();
+    doc.fillColor(PDF_PALETTE.muted).fontSize(8).font('Helvetica');
+    doc.text(note, left, y, { width: right - left - 90, lineBreak: false });
+    if (support) doc.text(support, left, y + 12, { width: right - left - 90, lineBreak: false });
+    doc.text(`Page ${index + 1} of ${range.count}`, right - 90, y, { width: 90, align: 'right', lineBreak: false });
+  }
+}

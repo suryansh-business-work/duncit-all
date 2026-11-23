@@ -52,9 +52,9 @@ export default function ContactsField({ name }: Readonly<Props>) {
               )}
             </Stack>
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1 }}>
-              <FormField name={`${name}.${index}.name`} label={t('shell.common.name')} size="small" required={isPrimary} />
+              <FormField name={`${name}.${index}.name`} label={t('shell.common.name')} size="small" />
               <FormField name={`${name}.${index}.role`} label={t('crm.forms.roleDesignation')} size="small" />
-              <PhoneField name={`${name}.${index}.mobile_number`} label={t('crm.forms.mobileNumber')} required={isPrimary} />
+              <PhoneField name={`${name}.${index}.mobile_number`} label={t('crm.forms.mobileNumber')} />
               <PhoneField name={`${name}.${index}.whatsapp_number`} label={t('crm.forms.whatsappNumber')} />
               <FormField name={`${name}.${index}.email`} label={t('shell.common.email')} size="small" />
             </Box>

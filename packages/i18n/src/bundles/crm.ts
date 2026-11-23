@@ -1089,6 +1089,8 @@ export const CRM_BUNDLE: NestedCatalogue = {
       openLead: 'Open {name} in a new tab',
       rowLabel: 'Duplicate',
       rowHint: 'Shares a phone number, email or website with another lead',
+      phoneRepeated: 'This number is already on another contact of this lead',
+      emailRepeated: 'This email is already on another contact of this lead',
     },
 
     ecommLeads: {

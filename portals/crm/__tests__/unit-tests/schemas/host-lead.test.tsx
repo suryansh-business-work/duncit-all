@@ -31,10 +31,13 @@ describe('hostLeadSchema', () => {
     expect(messages({ ...valid, host_name: '' })).toMatch(/host name/i);
   });
 
-  it('requires the primary contact mobile number', () => {
-    expect(messages({ ...valid, contacts: [{ ...valid.contacts[0], mobile_number: '' }] })).toMatch(
-      /primary contact mobile/i
-    );
+  it('accepts a host lead whose primary contact has no name or mobile', () => {
+    expect(hostLeadSchema.safeParse({ ...valid, contacts: [{ ...valid.contacts[0], name: '', mobile_number: '' }] }).success).toBe(true);
+  });
+
+  it('refuses the same mobile on two contacts of the lead', () => {
+    const second = { ...valid.contacts[0], name: 'Ravi 2', email: '', mobile_number: '+91 98111 22233' };
+    expect(messages({ ...valid, contacts: [valid.contacts[0], second] })).toBe('This number is already on another contact of this lead');
   });
 
   it('rejects non-numeric community size', () => {

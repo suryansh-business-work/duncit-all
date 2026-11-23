@@ -50,6 +50,15 @@ describe('creatorLeadSchema', () => {
     expect(issues(creatorSchema.safeParse({ ...validCreator, creator_name: 'R' }))).toContain('crm.creatorLeads.nameTooShort');
   });
 
+  it('accepts a blank primary contact but not one number on two contacts', () => {
+    const blank = { name: '', role: '', mobile_number: '', whatsapp_number: '', email: '' };
+    expect(creatorSchema.safeParse({ ...validCreator, contacts: [blank] }).success).toBe(true);
+    const repeated = { ...blank, mobile_number: '+91 98111 00001' };
+    expect(issues(creatorSchema.safeParse({ ...validCreator, contacts: [...validCreator.contacts, repeated] }))).toEqual([
+      'crm.duplicates.phoneRepeated',
+    ]);
+  });
+
   it.each(['12.5', 'many', '-3'])('rejects followers "%s" that is not a whole number', (followers) => {
     expect(creatorSchema.safeParse({ ...validCreator, followers_count: followers }).success).toBe(false);
   });

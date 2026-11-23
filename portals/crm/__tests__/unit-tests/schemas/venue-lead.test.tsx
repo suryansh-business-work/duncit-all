@@ -40,10 +40,14 @@ describe('venueLeadSchema', () => {
     expect(messages({ ...valid, venue_types: [] })).toMatch(/venue type/i);
   });
 
-  it('requires the primary contact mobile number', () => {
-    expect(messages({ ...valid, contacts: [{ ...valid.contacts[0], mobile_number: '' }] })).toMatch(
-      /primary contact mobile/i
-    );
+  it('accepts a venue lead with a blank primary contact', () => {
+    const blank = { name: '', role: '', mobile_number: '', whatsapp_number: '', email: '' };
+    expect(venueLeadSchema.safeParse({ ...valid, contacts: [blank] }).success).toBe(true);
+  });
+
+  it('refuses the same email on two contacts of the lead', () => {
+    const second = { ...valid.contacts[0], mobile_number: '9123456780', email: 'ASHA@example.com ' };
+    expect(messages({ ...valid, contacts: [valid.contacts[0], second] })).toBe('This email is already on another contact of this lead');
   });
 
   it('rejects non-numeric capacity', () => {

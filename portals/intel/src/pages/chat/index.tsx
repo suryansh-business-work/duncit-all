@@ -74,7 +74,9 @@ export default function ChatPage() {
             streaming={chat.streaming}
             draft={draft}
             onDraft={setDraft}
-            onSend={(text) => send({ message: text })}
+            onSend={(text, attachmentIds) => send(attachmentIds.length > 0 ? { message: text, attachment_ids: attachmentIds } : { message: text })}
+            uploadMaxMb={boot?.upload_max_mb ?? 0}
+            uploadTypes={boot?.upload_types ?? []}
             onStop={() => streamingId && chat.stop(streamingId)}
           />
           <Typography variant="caption" color="text.secondary" component="p" sx={{ textAlign: 'center', mt: 0.75 }}>

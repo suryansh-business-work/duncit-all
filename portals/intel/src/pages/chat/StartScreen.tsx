@@ -4,6 +4,10 @@ import { useBootstrap } from '../../components/IntelBootstrap';
 import { ENV_LABEL_KEYS } from '../../components/sources';
 import SourceCard from './SourceCard';
 
+/** Both section headings look the same: small, muted, upper case. */
+const HEADING_SX = { mb: 1.5, textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700 } as const;
+const CARD_SIZE = { xs: 12, sm: 6, md: 3 } as const;
+
 /** Suggestion chips — catalogue keys, so the wording is editable in Localization. */
 const PROMPT_KEYS = ['intel.start.prompts.podPerformance', 'intel.start.prompts.hostApi', 'intel.start.prompts.hostLeads', 'intel.start.prompts.slackSummary'] as const;
 
@@ -35,18 +39,18 @@ export default function StartScreen({ environment, onPrompt }: Readonly<Props>) 
       </Box>
 
       <Box component="section" aria-labelledby="intel-sources-heading">
-        <Typography id="intel-sources-heading" variant="subtitle2" color="text.secondary" sx={{ mb: 1, textTransform: 'uppercase', letterSpacing: 1 }}>
+        <Typography id="intel-sources-heading" variant="subtitle2" color="text.secondary" sx={HEADING_SX}>
           {t('intel.start.sourcesHeading')}
         </Typography>
-        <Grid container spacing={1.5}>
+        <Grid container spacing={2}>
           {loading && !data
             ? Array.from({ length: 8 }, (_, i) => (
-                <Grid key={i} size={{ xs: 6, sm: 4, md: 3 }}>
-                  <Skeleton variant="rounded" height={96} />
+                <Grid key={i} size={CARD_SIZE}>
+                  <Skeleton variant="rounded" height={84} />
                 </Grid>
               ))
             : (data?.sources ?? []).map((card) => (
-                <Grid key={card.source} size={{ xs: 6, sm: 4, md: 3 }}>
+                <Grid key={card.source} size={CARD_SIZE}>
                   <SourceCard card={card} />
                 </Grid>
               ))}
@@ -54,7 +58,7 @@ export default function StartScreen({ environment, onPrompt }: Readonly<Props>) 
       </Box>
 
       <Box component="section" aria-labelledby="intel-prompts-heading">
-        <Typography id="intel-prompts-heading" variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+        <Typography id="intel-prompts-heading" variant="subtitle2" color="text.secondary" sx={HEADING_SX}>
           {t('intel.start.tryAsking')}
         </Typography>
         <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>

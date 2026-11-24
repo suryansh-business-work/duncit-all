@@ -19,7 +19,7 @@ export function SlackFields({ control }: Ctl) {
   return (
     <>
       {picker.error && <Alert severity="warning">{t('intel.settings.connectors.channelsFailed')}</Alert>}
-      <TagsField control={control} name="config.channels" label={t('intel.settings.connectors.channels')} hint={t('intel.settings.connectors.channelsHint')} options={options} loading={picker.loading} asObjects />
+      <TagsField control={control} name="config.channels" label={t('intel.settings.connectors.channels')} hint={t('intel.settings.connectors.channelsHint')} options={options} loading={picker.loading} asObjects allLabel={t('intel.settings.connectors.channelsAll')} />
       <RhfSwitch control={control} name="config.include_threads" label={t('intel.settings.connectors.threads')} />
       <RhfSwitch control={control} name="config.index_attachments" label={t('intel.settings.connectors.attachments')} hint={t('intel.settings.connectors.attachmentsHint')} />
       <RhfTextField control={control} name="config.history_days" label={t('intel.settings.connectors.historyDays')} {...NUMERIC} />

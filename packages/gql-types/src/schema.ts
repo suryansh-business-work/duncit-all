@@ -15720,11 +15720,33 @@ export type IntelConversationPatch = {
 
 export type IntelEntryOption = {
   __typename?: 'IntelEntryOption';
+  /** This server's own database or MCP — no Tech portal entry behind it. */
+  builtin: Scalars['Boolean']['output'];
   description: Scalars['String']['output'];
+  /** The one environment a built-in source serves (this server's database or MCP); null for a Tech portal entry. */
+  environment?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   is_default: Scalars['Boolean']['output'];
   last_test_ok?: Maybe<Scalars['Boolean']['output']>;
   name: Scalars['String']['output'];
+};
+
+/** A repository the GitHub entry's token can read. */
+export type IntelGithubRepo = {
+  __typename?: 'IntelGithubRepo';
+  default_branch: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  owner: Scalars['String']['output'];
+};
+
+/** A Gmail mailbox connected with Google (read-only) and the connector that indexes it. */
+export type IntelGmailAccount = {
+  __typename?: 'IntelGmailAccount';
+  connected_at?: Maybe<Scalars['String']['output']>;
+  connector_id?: Maybe<Scalars['ID']['output']>;
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
 };
 
 export type IntelHealth = {
@@ -15736,6 +15758,8 @@ export type IntelHealth = {
   openai_entry_selected: Scalars['Boolean']['output'];
   pending_approvals: Scalars['Int']['output'];
   qdrant_configured: Scalars['Boolean']['output'];
+  /** Why the vector index is not reachable ('' when it is). */
+  qdrant_error: Scalars['String']['output'];
   qdrant_reachable: Scalars['Boolean']['output'];
   queue_configured: Scalars['Boolean']['output'];
 };
@@ -15819,6 +15843,8 @@ export type IntelMediaPatch = {
 export type IntelMessage = {
   __typename?: 'IntelMessage';
   approval_ids: Array<Scalars['String']['output']>;
+  /** Images and PDFs attached to a question. */
+  attachments: Array<IntelMessageAttachment>;
   citations: Array<IntelCitation>;
   content: Scalars['String']['output'];
   conversation_id: Scalars['ID']['output'];
@@ -15833,6 +15859,13 @@ export type IntelMessage = {
   tool_calls: Array<IntelToolCall>;
 };
 
+export type IntelMessageAttachment = {
+  __typename?: 'IntelMessageAttachment';
+  id: Scalars['ID']['output'];
+  mime: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+};
+
 export type IntelModelOption = {
   __typename?: 'IntelModelOption';
   enabled: Scalars['Boolean']['output'];
@@ -15842,6 +15875,8 @@ export type IntelModelOption = {
 };
 
 export type IntelSendInput = {
+  /** Up to five images or PDFs from the asker's Media library (uploaded first). */
+  attachment_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   conversation_id?: InputMaybe<Scalars['ID']['input']>;
   edit_message_id?: InputMaybe<Scalars['ID']['input']>;
   environment?: InputMaybe<Scalars['String']['input']>;
@@ -20099,7 +20134,9 @@ export type Mutation = {
   intelDecideApproval: IntelApproval;
   intelDeleteConnector: Scalars['Boolean']['output'];
   intelDeleteConversation: Scalars['Boolean']['output'];
+  intelDisconnectGmail: Scalars['Boolean']['output'];
   intelDiscoverTools: IntelConnector;
+  intelGmailConnectUrl: Scalars['String']['output'];
   intelPurgeMedia: Scalars['Boolean']['output'];
   intelRebuildIndex: Scalars['Int']['output'];
   intelReindexMedia: IntelMedia;
@@ -24760,6 +24797,11 @@ export type MutationIntelDeleteConnectorArgs = {
 
 
 export type MutationIntelDeleteConversationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationIntelDisconnectGmailArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -37300,6 +37342,8 @@ export type Query = {
   intelConversations: IntelConversationPage;
   intelEntryOptions: Array<IntelEntryOption>;
   intelGithubBranches: Array<Scalars['String']['output']>;
+  intelGithubRepos: Array<IntelGithubRepo>;
+  intelGmailAccounts: Array<IntelGmailAccount>;
   intelHealth: IntelHealth;
   intelIndexDocuments: IntelIndexPage;
   intelIndexStats: Array<IntelIndexStat>;
@@ -37308,6 +37352,7 @@ export type Query = {
   intelMediaFolders: Array<Scalars['String']['output']>;
   intelMessages: Array<IntelMessage>;
   intelMongoCollections: Array<Scalars['String']['output']>;
+  intelOpenAiModels: Array<Scalars['String']['output']>;
   intelSettings: IntelSettingsPayload;
   intelSlackChannels: Array<IntelSlackChannel>;
   intelSyncRuns: Array<IntelSyncRun>;
@@ -40805,6 +40850,11 @@ export type QueryIntelGithubBranchesArgs = {
   entry_id: Scalars['ID']['input'];
   owner: Scalars['String']['input'];
   repo: Scalars['String']['input'];
+};
+
+
+export type QueryIntelGithubReposArgs = {
+  entry_id: Scalars['ID']['input'];
 };
 
 

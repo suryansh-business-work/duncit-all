@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import type { IntelAuditPage, IntelConnector, IntelEntryOption, IntelHealth, IntelIndexPage, IntelIndexStat, IntelSettingsPayload, IntelSlackChannel, IntelSyncRun, IntelTestResult, IntelUsage } from '@duncit/gql-types';
+import type { IntelAuditPage, IntelConnector, IntelEntryOption, IntelGithubRepo, IntelGmailAccount, IntelHealth, IntelIndexPage, IntelIndexStat, IntelSettingsPayload, IntelSlackChannel, IntelSyncRun, IntelTestResult, IntelUsage } from '@duncit/gql-types';
 
 /** Settings, connectors, sync, index, health, audit and usage documents (Admin and above). */
 
@@ -29,6 +29,8 @@ export const INTEL_ENTRY_OPTIONS = gql`
       description
       is_default
       last_test_ok
+      environment
+      builtin
     }
   }
 `;
@@ -169,6 +171,45 @@ export const INTEL_PICKERS_BRANCHES = gql`
   }
 `;
 
+export const INTEL_PICKERS_REPOS = gql`
+  query IntelGithubRepos($entry_id: ID!) {
+    intelGithubRepos(entry_id: $entry_id) {
+      owner
+      name
+      default_branch
+    }
+  }
+`;
+
+export const INTEL_OPENAI_MODELS = gql`
+  query IntelOpenAiModels {
+    intelOpenAiModels
+  }
+`;
+
+export const INTEL_GMAIL_ACCOUNTS = gql`
+  query IntelGmailAccounts {
+    intelGmailAccounts {
+      id
+      email
+      connected_at
+      connector_id
+    }
+  }
+`;
+
+export const INTEL_GMAIL_CONNECT_URL = gql`
+  mutation IntelGmailConnectUrl {
+    intelGmailConnectUrl
+  }
+`;
+
+export const INTEL_DISCONNECT_GMAIL = gql`
+  mutation IntelDisconnectGmail($id: ID!) {
+    intelDisconnectGmail(id: $id)
+  }
+`;
+
 export const INTEL_SYNC_RUNS = gql`
   query IntelSyncRuns($connector_id: ID, $limit: Int) {
     intelSyncRuns(connector_id: $connector_id, limit: $limit) {
@@ -234,6 +275,7 @@ export const INTEL_HEALTH = gql`
     intelHealth {
       qdrant_configured
       qdrant_reachable
+      qdrant_error
       queue_configured
       openai_configured
       openai_entry_selected
@@ -322,6 +364,18 @@ export interface ConnectorsData {
 }
 export interface TestConnectorData {
   intelTestConnector: IntelTestResult;
+}
+export interface GithubReposData {
+  intelGithubRepos: IntelGithubRepo[];
+}
+export interface OpenAiModelsData {
+  intelOpenAiModels: string[];
+}
+export interface GmailAccountsData {
+  intelGmailAccounts: IntelGmailAccount[];
+}
+export interface GmailConnectUrlData {
+  intelGmailConnectUrl: string;
 }
 export interface SlackChannelsData {
   intelSlackChannels: IntelSlackChannel[];

@@ -16,7 +16,7 @@ import {
   INTEL_UPDATE_CONNECTOR,
   type TestConnectorData,
 } from '../../../graphql/admin';
-import type { ConnectorKind, ConnectorValues } from './connector-form';
+import { toConnectorInput, type ConnectorKind, type ConnectorValues } from './connector-form';
 
 /** Every connector action, each reporting the server's answer (no silent failures). */
 export function useConnectorActions(kind: ConnectorKind, refetch: () => void) {
@@ -43,7 +43,10 @@ export function useConnectorActions(kind: ConnectorKind, refetch: () => void) {
     }
   };
 
-  const input = (values: ConnectorValues) => ({ kind, name: values.name, environment: values.environment, env_entry_id: values.env_entry_id, enabled: values.enabled, config: JSON.stringify(values.config) });
+  const input = (values: ConnectorValues) => {
+    const sent = toConnectorInput(kind, values);
+    return { kind, name: sent.name, environment: sent.environment, env_entry_id: sent.env_entry_id, enabled: sent.enabled, config: JSON.stringify(sent.config) };
+  };
 
   return {
     formError,

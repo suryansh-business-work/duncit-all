@@ -62,6 +62,8 @@ export const analyticsTypeDefs = /* GraphQL */ `
     checkout_url: String!
     metadata_json: String!
     occurred_at: String!
+    "The platform the event came from (mWeb and the native web build are WEB); null on events from before it was recorded."
+    platform: UserPlatform
   }
 
   input RecordAppEventInput {

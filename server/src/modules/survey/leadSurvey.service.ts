@@ -8,6 +8,8 @@ import { surveyService } from './survey.service';
 import { SurveyModel, SurveyResponseModel, type SurveyKind } from './survey.model';
 import { LeadSurveyEntryModel, type LeadSurveyEntity } from './leadSurveyEntry.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import type { CacheCarrier } from '@utils/request-cache';
+import { matchedUserForLead } from '@modules/crm/leadUserMatch/leadUserMatch';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 // Returned as `any` — the lead models have structurally different docs, so
@@ -238,27 +240,12 @@ export const leadSurveyService = {
     }
   },
 
-  /** Live email/phone match between a lead's contacts and a Duncit user. */
-  async matchedUserForLead(lead: any) {
-    const emails = (lead?.contacts ?? []).map((c: any) => c.email).filter(Boolean);
-    const phones = (lead?.contacts ?? [])
-      .flatMap((c: any) => [c.mobile_number, c.whatsapp_number])
-      .filter(Boolean);
-    if (emails.length === 0 && phones.length === 0) return null;
-    const or: any[] = [];
-    if (emails.length) or.push({ 'auth.email': { $in: emails.map((e: string) => e.toLowerCase()) } });
-    if (phones.length) or.push({ 'auth.phone.number': { $in: phones } });
-    const user: any = await UserModel.findOne({ $or: or, 'metadata.deleted_at': null }).lean();
-    if (!user) return null;
-    const matched_on = user.auth?.email && emails.map((e: string) => e.toLowerCase()).includes(user.auth.email) ? 'EMAIL' : 'PHONE';
-    return {
-      user_id: String(user._id),
-      full_name: [user.profile?.first_name, user.profile?.last_name].filter(Boolean).join(' ').trim(),
-      email: user.auth?.email ?? null,
-      phone: user.auth?.phone?.number ?? null,
-      profile_photo: user.profile?.profile_photo ?? null,
-      matched_on,
-    };
+  /**
+   * Live email/phone match between a lead's contacts and a Duncit user. Pass
+   * the request context as `carrier` so a table page batches into one query.
+   */
+  matchedUserForLead(lead: any, carrier: CacheCarrier = {}) {
+    return matchedUserForLead(carrier, lead);
   },
 };
 

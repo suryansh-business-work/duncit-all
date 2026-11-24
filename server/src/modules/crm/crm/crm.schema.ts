@@ -207,6 +207,10 @@ export const crmTypeDefs = gql`
     phone: String
     profile_photo: String
     matched_on: String!
+    "Every platform the account has used Duncit from while signed in, in display order (ANDROID, IOS, WEB)."
+    platforms_used: [UserPlatform!]!
+    "ISO time of the account's last signed-in request, or null when none was seen."
+    last_activity_at: String
   }
 
   type VenueLead {

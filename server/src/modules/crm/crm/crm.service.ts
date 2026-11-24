@@ -26,6 +26,7 @@ import { LEAD_MODELS } from './leadModels';
 import { leadUpdate, type LeadGeoKind } from '@modules/crm/leadGeo/leadGeo.place';
 import { nearbyLeadTable, type LeadNearInput } from '@modules/crm/leadGeo/leadGeo.nearby';
 import { leadQualityService } from '@modules/crm/leadQuality/leadQuality.service';
+import { leadPlatformFilter, splitPlatformFilter } from '@modules/crm/leadUserMatch/leadUserMatch';
 
 // Re-exported: leadMedia.service and older callers import LEAD_MODELS from here.
 export { LEAD_MODELS } from './leadModels';
@@ -273,9 +274,12 @@ export async function leadTablePage(
   input?: TableQueryInput | null,
   near?: LeadNearInput | null
 ) {
+  // The Devices filter is resolved against the matched accounts here, not by the table engine.
+  const { input: tableInput, platforms } = splitPlatformFilter(input);
+  const base = platforms ? await leadPlatformFilter(LEAD_MODELS[entity_type], platforms) : {};
   const { docs, total, page, page_size, unplaced } = near
-    ? await nearbyLeadTable<unknown>(entity_type, near, input, config)
-    : { ...(await runTableQuery<unknown>(LEAD_MODELS[entity_type], {}, input, config)), unplaced: null };
+    ? await nearbyLeadTable<unknown>(entity_type, near, tableInput, config, base)
+    : { ...(await runTableQuery<unknown>(LEAD_MODELS[entity_type], base, tableInput, config)), unplaced: null };
   const rows = await withDuplicateFlags(entity_type, docs.map(pub).filter((row) => row !== null));
   return { rows, total, page, page_size, unplaced };
 }

@@ -1778,6 +1778,8 @@ export type AppAnalyticsEvent = {
   metadata_json: Scalars['String']['output'];
   occurred_at: Scalars['String']['output'];
   path: Scalars['String']['output'];
+  /** The platform the event came from (mWeb and the native web build are WEB); null on events from before it was recorded. */
+  platform?: Maybe<UserPlatform>;
   pod_id?: Maybe<Scalars['ID']['output']>;
   route: Scalars['String']['output'];
   super_category_slug?: Maybe<Scalars['String']['output']>;
@@ -9849,8 +9851,12 @@ export type CrmMatchedUser = {
   __typename?: 'CrmMatchedUser';
   email?: Maybe<Scalars['String']['output']>;
   full_name?: Maybe<Scalars['String']['output']>;
+  /** ISO time of the account's last signed-in request, or null when none was seen. */
+  last_activity_at?: Maybe<Scalars['String']['output']>;
   matched_on: Scalars['String']['output'];
   phone?: Maybe<Scalars['String']['output']>;
+  /** Every platform the account has used Duncit from while signed in, in display order (ANDROID, IOS, WEB). */
+  platforms_used: Array<UserPlatform>;
   profile_photo?: Maybe<Scalars['String']['output']>;
   user_id: Scalars['ID']['output'];
 };

@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 import { ActiveUserPingModel } from './activeUser.model';
-import { AppEventModel, type IAppEvent } from './appEvent.model';
+import { AppEventModel, type AppEventPlatform, type IAppEvent } from './appEvent.model';
+import { userPlatformOfEvent } from './appEvent.platform';
 import type { ProductEventDTO, RecordAppEventDTO } from './analytics.validator';
 import { ingestProductEvents } from './analytics.ingest';
 import { CategoryModel } from '@modules/pods/category/category.model';
@@ -54,6 +55,7 @@ const toEventPub = (event: IAppEvent) => ({
   checkout_url: event.checkout_url ?? '',
   metadata_json: JSON.stringify(event.metadata ?? {}),
   occurred_at: event.occurred_at?.toISOString?.() ?? '',
+  platform: userPlatformOfEvent(event.platform),
 });
 
 function parseMetadata(value?: string | null) {
@@ -100,6 +102,8 @@ export const analyticsService = {
     input: RecordAppEventDTO;
     user_id: string;
     device_id?: string | null;
+    /** Where the request came from (`appEventPlatformFromRequest`); '' when unknown. */
+    platform?: AppEventPlatform;
   }) {
     const occurredAt = args.input.occurred_at ? new Date(args.input.occurred_at) : new Date();
     const userId = new Types.ObjectId(args.user_id);
@@ -129,6 +133,7 @@ export const analyticsService = {
       checkout_url: args.input.checkout_url ?? '',
       metadata: parseMetadata(args.input.metadata_json),
       occurred_at: occurredAt,
+      platform: args.platform ?? '',
     });
     await recordActiveDay({ device_id: deviceId, user_id: args.user_id, super_category_slug: slug });
     return true;

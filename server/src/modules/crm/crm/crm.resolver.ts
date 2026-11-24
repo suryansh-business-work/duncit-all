@@ -61,17 +61,17 @@ export const crmResolvers = {
     super_category: (parent: any) =>
       parent?.super_category_id ? crmService.superCategoryById(String(parent.super_category_id)) : null,
     linked_hosts: (parent: any) => crmService.linkedHostsFor(parent?.linked_host_ids ?? []),
-    matched_user: (parent: any) => leadSurveyService.matchedUserForLead(parent),
+    matched_user: (parent: any, _a: unknown, ctx: GraphQLContext) => leadSurveyService.matchedUserForLead(parent, ctx),
   },
   HostLead: {
     super_category: (parent: any) =>
       parent?.super_category_id ? crmService.superCategoryById(String(parent.super_category_id)) : null,
-    matched_user: (parent: any) => leadSurveyService.matchedUserForLead(parent),
+    matched_user: (parent: any, _a: unknown, ctx: GraphQLContext) => leadSurveyService.matchedUserForLead(parent, ctx),
   },
   EcommLead: {
     super_category: (parent: any) =>
       parent?.super_category_id ? crmService.superCategoryById(String(parent.super_category_id)) : null,
-    matched_user: (parent: any) => leadSurveyService.matchedUserForLead(parent),
+    matched_user: (parent: any, _a: unknown, ctx: GraphQLContext) => leadSurveyService.matchedUserForLead(parent, ctx),
   },
   Query: {
     crmLeadConfig: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {

@@ -120,7 +120,8 @@ describe('VenueLeadEditorPage', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Update venue lead' }));
 
-    expect(await screen.findByText('Venue lead is locked')).toBeInTheDocument();
+    // The whole form renders before the save can fail; under v8 coverage that outlasts the 1 s default.
+    expect(await screen.findByText('Venue lead is locked', {}, { timeout: 3000 })).toBeInTheDocument();
     expect(screen.getByTestId('location')).toHaveTextContent('/venue-leads/venue-1');
   });
 
@@ -188,7 +189,8 @@ describe('VenueLeadEditorPage', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Create & Continue' }));
 
     await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^\/venue-leads\/venue-1$/), { timeout: 3000 });
-    expect(await screen.findByText('Lead created. You can keep adding details.')).toBeInTheDocument();
+    // The edit route mounts a new editor; the notice must survive that, not die with the /new one.
+    expect(await screen.findByText('Lead created. You can keep adding details.', {}, { timeout: 3000 })).toBeInTheDocument();
     expect(await screen.findByRole('heading', { level: 1, name: 'Edit Grand Hall' })).toBeInTheDocument();
 
     // The follow-up save updates the lead just created and still returns to the original list view.

@@ -2,9 +2,15 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useTranslation } from '@duncit/shell';
 
-/** Router state the lead editor reads: the page it was opened from. */
+/** Router state the lead editor reads: the page it was opened from, and a message to show on arrival. */
 export interface LeadEditorState {
   from?: string;
+  /**
+   * Shown once the editor mounts. "Create & Continue" moves from the /new route
+   * to the lead's own edit route, which mounts a NEW editor, so a notice held in
+   * the old editor's state would be thrown away with it.
+   */
+  notice?: string;
 }
 
 /**
@@ -30,8 +36,9 @@ export function useLeadEditorFlow<T>(basePath: string, id: string | undefined, s
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as LeadEditorState | null)?.from;
-  const [notice, setNotice] = useState<string | null>(null);
+  const arrival = location.state as LeadEditorState | null;
+  const from = arrival?.from;
+  const [notice, setNotice] = useState<string | null>(arrival?.notice ?? null);
 
   const exit = () => navigate(from ?? (id ? `${basePath}/${id}/view` : basePath));
 
@@ -46,8 +53,10 @@ export function useLeadEditorFlow<T>(basePath: string, id: string | undefined, s
       setNotice(t('crm.forms.leadUpdated'));
       return;
     }
-    setNotice(t('crm.forms.leadCreated'));
-    navigate(`${basePath}/${saved.id}`, { replace: true, state: { from } satisfies LeadEditorState });
+    navigate(`${basePath}/${saved.id}`, {
+      replace: true,
+      state: { from, notice: t('crm.forms.leadCreated') } satisfies LeadEditorState,
+    });
   };
 
   return { exit, submit, submitAndContinue, notice, clearNotice: () => setNotice(null) };

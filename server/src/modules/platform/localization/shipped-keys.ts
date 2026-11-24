@@ -5410,6 +5410,8 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "askDuncit.alerts.healthRed": "Your account health is low ({score}/100).",
   "askDuncit.alerts.healthYellow": "Your account health needs attention ({score}/100).",
   "askDuncit.alerts.pendingApprovals": "{count} change(s) are waiting for your approval.",
+  "askDuncit.beta": "Beta",
+  "askDuncit.betaHint": "Ask Duncit is experimental. Answers can be wrong, so check anything important.",
   "askDuncit.cancel": "Cancel",
   "askDuncit.close": "Close",
   "askDuncit.composer.attach": "Attach a file",

@@ -26,9 +26,12 @@ export default function AskDuncitHeader({ roleKey, showHistory, canHandOver, onH
     <Stack direction="row" spacing={1} sx={{ alignItems: 'center', px: 1.5, py: 1, borderBottom: 1, borderColor: 'divider' }}>
       <AssistantIcon color="primary" aria-hidden />
       <Stack sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="h6" component="h1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-          {t('askDuncit.title')}
-        </Typography>
+        <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
+          <Typography variant="h6" component="h1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+            {t('askDuncit.title')}
+          </Typography>
+          <Chip data-testid="ask-duncit-beta" size="small" color="warning" label={t('askDuncit.beta')} title={t('askDuncit.betaHint')} />
+        </Stack>
         {roleKey && (
           <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>

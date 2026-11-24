@@ -37,9 +37,24 @@ export function AskHeader({
     >
       <MaterialIcons name="assistant" size={24} color={primary} />
       <YStack flex={1} minWidth={0}>
-        <Text fontSize={18} fontWeight="700" color="$color" role="heading">
-          {t('askDuncit.title')}
-        </Text>
+        <XStack alignItems="center" gap={6}>
+          <Text fontSize={18} fontWeight="700" color="$color" role="heading">
+            {t('askDuncit.title')}
+          </Text>
+          <Text
+            testID="ask-duncit-beta"
+            accessibilityLabel={t('askDuncit.betaHint')}
+            fontSize={11}
+            fontWeight="700"
+            color="$warning"
+            borderWidth={1}
+            borderColor="$warning"
+            borderRadius={999}
+            paddingHorizontal={8}
+          >
+            {t('askDuncit.beta')}
+          </Text>
+        </XStack>
         {roleKey ? (
           <XStack alignItems="center" gap={6}>
             <Text fontSize={12} color="$muted">

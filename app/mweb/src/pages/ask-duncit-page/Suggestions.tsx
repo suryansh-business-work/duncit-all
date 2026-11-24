@@ -67,6 +67,9 @@ export function EmptyState() {
       <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 420 }}>
         {t('askDuncit.empty.body')}
       </Typography>
+      <Typography data-testid="ask-duncit-beta-hint" variant="caption" sx={{ color: 'text.secondary', maxWidth: 420 }}>
+        {t('askDuncit.betaHint')}
+      </Typography>
     </Stack>
   );
 }

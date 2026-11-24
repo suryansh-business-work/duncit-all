@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { KeyboardAvoidingView, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Spinner, Text, YStack } from 'tamagui';
@@ -16,6 +16,7 @@ import {
   AskSuggestionBubbles,
 } from '@/components/ask-duncit/AskSuggestions';
 import { DuncitButton } from '@/components/DuncitButton';
+import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { useAskDuncit } from '@/hooks/useAskDuncit';
 import { useAskDuncitVoice } from '@/hooks/useAskDuncitVoice';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -80,99 +81,105 @@ export function AskDuncitScreen() {
   const streaming = Boolean(thread.streamingId);
   const { features } = bootstrap;
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <YStack flex={1} backgroundColor="$background" testID="ask-duncit-screen">
-        <AskHeader
-          roleKey={bootstrap.role_key}
-          showHistory={features.chat_history}
-          canHandOver={features.handover && Boolean(thread.conversationId)}
-          onHistory={() => setHistoryOpen(true)}
-          onNew={() => openConversation(null)}
-          onHandOver={() => setHandoverOpen(true)}
-        />
-        {bootstrap.available ? (
-          <>
-            <AskAlertsBar alerts={bootstrap.alerts} onAsk={send} />
-            {ai.loadError && (
-              <Text color="$danger" padding={12} role="alert">
-                {t('askDuncit.errors.INTERNAL')}
-              </Text>
-            )}
-            <AskMessageList
-              messages={thread.messages}
-              hasMore={thread.hasMore}
-              loadingOlder={ai.loading}
-              canRollback={features.rollback}
-              voice={features.voice}
-              speakingId={voice.speakingId}
-              empty={<AskEmptyState />}
-              onLoadOlder={() => fireAndForget(ai.loadOlder())}
-              onDecide={(id, approve) => fireAndForget(ai.decide(id, approve))}
-              onRollback={(id) => fireAndForget(ai.rollback(id))}
-              onRate={(id, rating) => fireAndForget(ai.rate(id, rating))}
-              onSpeak={speak}
-            />
-            {ai.errorText ? (
-              <Text
-                color="$danger"
-                fontSize={13}
-                paddingHorizontal={12}
-                paddingBottom={6}
-                role="alert"
-                onPress={ai.clearError}
-              >
-                {t(ai.errorText)}
-              </Text>
-            ) : null}
-            {!streaming && (
-              <AskSuggestionBubbles
-                suggestions={
-                  thread.messages.length ? bootstrap.suggestions.slice(0, 3) : bootstrap.suggestions
-                }
-                disabled={ai.sending}
-                onPick={send}
+    // A pushed screen with no tab bar: reserve the status bar AND the navigation
+    // bar (Android draws edge-to-edge since Expo SDK 54), then lift the composer
+    // above the keyboard with the shared KeyboardScreen — RN's
+    // KeyboardAvoidingView does nothing on Android here and left the input
+    // behind the keyboard.
+    <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
+      <KeyboardScreen>
+        <YStack flex={1} backgroundColor="$background" testID="ask-duncit-screen">
+          <AskHeader
+            roleKey={bootstrap.role_key}
+            showHistory={features.chat_history}
+            canHandOver={features.handover && Boolean(thread.conversationId)}
+            onHistory={() => setHistoryOpen(true)}
+            onNew={() => openConversation(null)}
+            onHandOver={() => setHandoverOpen(true)}
+          />
+          {bootstrap.available ? (
+            <>
+              <AskAlertsBar alerts={bootstrap.alerts} onAsk={send} />
+              {ai.loadError && (
+                <Text color="$danger" padding={12} role="alert">
+                  {t('askDuncit.errors.INTERNAL')}
+                </Text>
+              )}
+              <AskMessageList
+                messages={thread.messages}
+                hasMore={thread.hasMore}
+                loadingOlder={ai.loading}
+                canRollback={features.rollback}
+                voice={features.voice}
+                speakingId={voice.speakingId}
+                empty={<AskEmptyState />}
+                onLoadOlder={() => fireAndForget(ai.loadOlder())}
+                onDecide={(id, approve) => fireAndForget(ai.decide(id, approve))}
+                onRollback={(id) => fireAndForget(ai.rollback(id))}
+                onRate={(id, rating) => fireAndForget(ai.rate(id, rating))}
+                onSpeak={speak}
               />
-            )}
-            <AskComposer
-              streaming={streaming}
-              sending={ai.sending}
-              maxChars={bootstrap.limits.max_input_chars}
-              maxAttachments={features.uploads ? bootstrap.limits.max_attachments : 0}
-              voiceEnabled={features.voice}
-              recording={voice.recording}
-              transcribing={voice.transcribing}
-              onSend={send}
-              onStop={ai.stop}
-              onRecordStart={voice.start}
-              onRecordStop={voice.stop}
-            />
-          </>
-        ) : (
-          <Text testID="ask-duncit-unavailable" padding={24} color="$muted" textAlign="center">
-            {t(unavailableKey(bootstrap.unavailable_reason))}
-          </Text>
-        )}
-        <AskHistorySheet
-          open={historyOpen}
-          activeId={thread.conversationId}
-          showMemory={features.memory}
-          onClose={() => setHistoryOpen(false)}
-          onOpenConversation={(id) => {
-            setHistoryOpen(false);
-            openConversation(id);
-          }}
-          onDeletedActive={() => openConversation(null)}
-        />
-        <AskHandoverSheet
-          open={handoverOpen}
-          busy={ai.handingOver}
-          onClose={() => setHandoverOpen(false)}
-          onSubmit={ai.handover}
-        />
-      </YStack>
-    </KeyboardAvoidingView>
+              {ai.errorText ? (
+                <Text
+                  color="$danger"
+                  fontSize={13}
+                  paddingHorizontal={12}
+                  paddingBottom={6}
+                  role="alert"
+                  onPress={ai.clearError}
+                >
+                  {t(ai.errorText)}
+                </Text>
+              ) : null}
+              {!streaming && (
+                <AskSuggestionBubbles
+                  suggestions={
+                    thread.messages.length
+                      ? bootstrap.suggestions.slice(0, 3)
+                      : bootstrap.suggestions
+                  }
+                  disabled={ai.sending}
+                  onPick={send}
+                />
+              )}
+              <AskComposer
+                streaming={streaming}
+                sending={ai.sending}
+                maxChars={bootstrap.limits.max_input_chars}
+                maxAttachments={features.uploads ? bootstrap.limits.max_attachments : 0}
+                voiceEnabled={features.voice}
+                recording={voice.recording}
+                transcribing={voice.transcribing}
+                onSend={send}
+                onStop={ai.stop}
+                onRecordStart={voice.start}
+                onRecordStop={voice.stop}
+              />
+            </>
+          ) : (
+            <Text testID="ask-duncit-unavailable" padding={24} color="$muted" textAlign="center">
+              {t(unavailableKey(bootstrap.unavailable_reason))}
+            </Text>
+          )}
+          <AskHistorySheet
+            open={historyOpen}
+            activeId={thread.conversationId}
+            showMemory={features.memory}
+            onClose={() => setHistoryOpen(false)}
+            onOpenConversation={(id) => {
+              setHistoryOpen(false);
+              openConversation(id);
+            }}
+            onDeletedActive={() => openConversation(null)}
+          />
+          <AskHandoverSheet
+            open={handoverOpen}
+            busy={ai.handingOver}
+            onClose={() => setHandoverOpen(false)}
+            onSubmit={ai.handover}
+          />
+        </YStack>
+      </KeyboardScreen>
+    </SafeAreaView>
   );
 }

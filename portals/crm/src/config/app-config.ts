@@ -94,6 +94,17 @@ export const appConfig = {
         { label: 'Dynamic Fields', labelKey: 'shell.nav.dynamicFields', to: '/settings/dynamic-fields', icon: 'analytics' },
       ],
     },
+    // The Duncit CRM Android app: its own block at the foot of the sidebar —
+    // the newest APK, and which Slack channel each build is published to.
+    {
+      label: 'CRM Mobile App', labelKey: 'shell.nav.crmMobileApp',
+      icon: 'android',
+      pinBottom: true,
+      children: [
+        { label: 'Download CRM App', labelKey: 'shell.nav.downloadCrmApp', to: '/download-app', icon: 'android' },
+        { label: 'Settings', labelKey: 'shell.nav.settings', to: '/download-app/settings', icon: 'settings' },
+      ],
+    },
   ],
   modules: [],
 } satisfies AppConfig;

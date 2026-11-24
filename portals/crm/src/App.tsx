@@ -31,6 +31,8 @@ import EmailVerifierPage from './pages/tools/email-verifier';
 import PublicSurveyPage from './pages/public-survey';
 import AmenitiesPage from './pages/data/venues/AmenitiesPage';
 import EventSuitabilityPage from './pages/data/venues/EventSuitabilityPage';
+import DownloadAppPage from './pages/download-app';
+import CrmAppSettingsPage from './pages/download-app/settings';
 import AppShell from './components/AppShell';
 import { ExtractionProvider, ExtractionWidget } from './pages/tools/whatsapp/extraction';
 import { EmailStatusProvider } from './components/email-status';
@@ -92,6 +94,8 @@ export default function App() {
       <Route path="/settings/lead-quality" element={authed(<LeadQualitySettingsPage />)} />
       <Route path="/lead-research" element={authed(<LeadResearchPage />)} />
       <Route path="/lead-quality/analytics" element={authed(<LeadQualityAnalyticsPage />)} />
+      <Route path="/download-app" element={authed(<DownloadAppPage />)} />
+      <Route path="/download-app/settings" element={authed(<CrmAppSettingsPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <ExtractionWidget />

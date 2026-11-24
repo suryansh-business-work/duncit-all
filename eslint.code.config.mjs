@@ -49,6 +49,9 @@ export default [
       '**/*.cy.*',
       '**/*.{test,spec}.*',
       'app/mobile-app/**',
+      // The Duncit CRM Android app: a standalone npm project with its own
+      // eslint 8 config and zero-warning gate, exactly like the member app.
+      'app/crm-app/**',
       'portals/crm/open-wa-server/**',
       // Generated data, not code.
       'server/src/modules/platform/localization/shipped-keys.ts',

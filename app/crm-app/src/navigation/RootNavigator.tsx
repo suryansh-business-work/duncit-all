@@ -1,0 +1,48 @@
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Spinner, YStack, useTheme } from 'tamagui';
+
+import { useTranslation } from '@/hooks/useTranslation';
+import { useAuthStore } from '@/stores/auth.store';
+import { LoginScreen } from '@/screens/auth/LoginScreen';
+import { TwoFactorScreen } from '@/screens/auth/TwoFactorScreen';
+import { SecurityVerificationScreen } from '@/screens/auth/SecurityVerificationScreen';
+import { LeadDetailScreen } from '@/screens/lead/LeadDetailScreen';
+import { AddNoteScreen } from '@/screens/lead/AddNoteScreen';
+import { AddReminderScreen } from '@/screens/reminders/AddReminderScreen';
+import { PostCallScreen } from '@/screens/post-call/PostCallScreen';
+import { MainTabs } from './MainTabs';
+import { screenLayout } from './screenLayout';
+import type { AppStackParamList } from './types';
+
+const Stack = createNativeStackNavigator<AppStackParamList>();
+
+/** Signed out → the sign-in steps; signed in → the app. The auth store decides which. */
+export function RootNavigator() {
+  const { t } = useTranslation();
+  const theme = useTheme();
+  const status = useAuthStore((s) => s.status);
+
+  if (status === 'loading') {
+    return (
+      <YStack flex={1} alignItems="center" justifyContent="center" backgroundColor="$background" aria-busy>
+        <Spinner size="large" color="$primary" />
+      </YStack>
+    );
+  }
+  if (status === 'signedOut') return <LoginScreen />;
+  if (status === 'twoFactor') return <TwoFactorScreen />;
+  if (status === 'security') return <SecurityVerificationScreen />;
+
+  return (
+    <Stack.Navigator
+      screenLayout={screenLayout}
+      screenOptions={{ headerStyle: { backgroundColor: theme.primary?.val }, headerTintColor: theme.onPrimary?.val }}
+    >
+      <Stack.Screen name="Tabs" component={MainTabs} options={{ headerShown: false }} />
+      <Stack.Screen name="LeadDetail" component={LeadDetailScreen} options={{ title: t('crmApp.lead.overview') }} />
+      <Stack.Screen name="AddNote" component={AddNoteScreen} options={{ title: t('crmApp.note.title') }} />
+      <Stack.Screen name="AddReminder" component={AddReminderScreen} options={{ title: t('crmApp.reminder.title') }} />
+      <Stack.Screen name="PostCall" component={PostCallScreen} options={{ title: t('crmApp.postCall.title') }} />
+    </Stack.Navigator>
+  );
+}

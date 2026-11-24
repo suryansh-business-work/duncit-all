@@ -1,0 +1,41 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Caller ID: who is ringing (the number needs READ_CALL_LOG on Android 9+). -->
+  <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+  <uses-permission android:name="android.permission.READ_CALL_LOG" />
+  <!-- The CRM dialer places a normal SIM call. -->
+  <uses-permission android:name="android.permission.CALL_PHONE" />
+  <!-- The caller ID card over the incoming call screen. -->
+  <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+  <!-- The phone's own call recordings, read to attach them to the CRM call log. -->
+  <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+
+  <!-- No backups (a session token and lead phone numbers live here) and HTTPS only. -->
+  <application android:allowBackup="false" android:usesCleartextTraffic="false">
+    <!--
+      PHONE_STATE is on Android's implicit-broadcast exemption list, so a
+      manifest receiver still hears it with the app closed. Only a sender that
+      holds READ_PHONE_STATE (the system) can reach it.
+    -->
+    <receiver
+      android:name=".CallStateReceiver"
+      android:exported="true"
+      android:permission="android.permission.READ_PHONE_STATE">
+      <intent-filter>
+        <action android:name="android.intent.action.PHONE_STATE" />
+      </intent-filter>
+    </receiver>
+
+    <receiver
+      android:name=".CrmWidgetProvider"
+      android:exported="false">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+      </intent-filter>
+      <meta-data
+        android:name="android.appwidget.provider"
+        android:resource="@xml/crm_widget_info" />
+    </receiver>
+  </application>
+</manifest>

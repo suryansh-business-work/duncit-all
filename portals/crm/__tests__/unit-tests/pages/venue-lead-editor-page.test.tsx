@@ -188,11 +188,14 @@ describe('VenueLeadEditorPage', () => {
       capture(UPDATE_VENUE_LEAD, 'updateVenueLead', updated),
     ]);
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Create & Continue' }));
-
     // Two full editor mounts and two saves: under v8 coverage on CI the create has landed after
     // 3 s, so each step gets 10 s of the file's 30 s test budget.
     const slow = { timeout: 10_000 };
+    // Press only once the AI draft is in the form. Under coverage on CI the button rendered before
+    // the prefill landed, the submit stopped at validation and the URL stayed on /venue-leads/new.
+    expect(await screen.findByDisplayValue('Sky Lounge', {}, slow)).toBeInTheDocument();
+    fireEvent.click(await screen.findByRole('button', { name: 'Create & Continue' }));
+    await waitFor(() => expect(created).toHaveLength(1), slow);
     await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^\/venue-leads\/venue-1$/), slow);
     // The edit route mounts a new editor; the notice must survive that, not die with the /new one.
     expect(await screen.findByText('Lead created. You can keep adding details.', {}, slow)).toBeInTheDocument();

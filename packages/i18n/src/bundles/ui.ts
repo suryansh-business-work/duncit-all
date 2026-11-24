@@ -33,6 +33,19 @@ export const UI_BUNDLE: NestedCatalogue = {
     language: {
       label: 'Language',
     },
+    /**
+     * The Android / Apple / globe icons that say where an account uses Duncit
+     * from: Admin's Users table and User Details, and the CRM's matched user.
+     */
+    platforms: {
+      label: 'Platforms used',
+      android: 'Android',
+      ios: 'iOS',
+      web: 'Web',
+      used: '{platform}: used',
+      notUsed: '{platform}: not used',
+      none: 'None recorded yet',
+    },
     /** The searchable MUI icon list on the Admin and Duncit Lite category forms. */
     iconPicker: {
       loading: 'Loading icons…',

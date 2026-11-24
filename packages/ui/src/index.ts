@@ -14,6 +14,8 @@ export type { ChipListProps } from './ChipList';
 export { VenueChatThreadList } from './venue-chat/VenueChatThreadList';
 export type { VenueChatThreadListProps, VenueChatThreadListRow } from './venue-chat/VenueChatThreadList';
 export { InfoRow } from './InfoRow';
+export { PlatformIcons, USER_PLATFORMS, orderedPlatforms, platformLabel, usePlatformText } from './platform-icons';
+export type { PlatformIconsProps, PlatformText, UserPlatformKey } from './platform-icons';
 export { IntegrationLogo } from './IntegrationLogo';
 export type { IntegrationLogoProps, IntegrationVendor } from './IntegrationLogo';
 export type { InfoRowProps, InfoRowVariant } from './InfoRow';

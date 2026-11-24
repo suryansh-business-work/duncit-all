@@ -976,6 +976,34 @@ const base = lineTrendOptions(theme, single);
 
 The list's words are `ui.sidebarList.*` in `UI_BUNDLE`.
 
+## `PlatformIcons` — where an account uses Duncit from
+
+Android, Apple (iOS) and a globe (the web), side by side, from the server's `platforms_used`
+(`ANDROID` / `IOS` / `WEB`). Two variants:
+
+| Variant | Shows | Used on |
+|---|---|---|
+| `used` (default) | Only the platforms used, or "None recorded yet" | Admin › Users table, User Details header, CRM lead tables |
+| `all` | All three; used ones in `text.primary`, the rest in `text.disabled` | User Details summary card and Activity tab, the CRM matched user |
+
+Each icon is `role="img"`; its tooltip and accessible name are the platform's name, plus
+"used" / "not used" in the `all` variant, so the state never rests on colour alone. The icons
+are not focusable — they do nothing.
+
+```tsx
+<PlatformIcons platforms={user.platforms_used} variant="all" testId="admin-user-platforms" />
+```
+
+Tables that filter by platform take the options and the export text from `usePlatformText()`:
+
+```tsx
+const platformText = usePlatformText();
+// { field: 'platforms_used', type: 'enum', options: platformText.options,
+//   valueGetter: (row) => platformText.valueText(row.platforms_used) }
+```
+
+The words are `ui.platforms.*` in `UI_BUNDLE`.
+
 ## `IntegrationLogo` — the vendor tile on an integration card
 
 A square tile naming a third-party service a partner brand connects. `RAZORPAY` draws Razorpay's mark

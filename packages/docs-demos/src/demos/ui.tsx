@@ -4,6 +4,7 @@ import {
   ErrorFallback,
   InfoRow,
   IntegrationLogo,
+  PlatformIcons,
   PodSeatsCell,
   ScrollRail,
   categoryAxis,
@@ -47,6 +48,10 @@ interface SeatsMock {
 
 interface IntegrationLogoMock {
   size: number;
+}
+
+interface PlatformIconsMock {
+  platforms: string[];
 }
 
 interface RailMock {
@@ -112,6 +117,20 @@ export default defineDemos('ui', [
       <Paper sx={{ p: 2, display: 'flex', gap: 2 }}>
         <IntegrationLogo vendor="RAZORPAY" label="Razorpay" size={mock.size} />
         <IntegrationLogo vendor="SHIPROCKET" label="ShipRocket" size={mock.size} />
+      </Paper>
+    ),
+  }),
+
+  defineDemo<PlatformIconsMock>({
+    id: 'platform-icons',
+    title: 'PlatformIcons — where an account uses Duncit from',
+    note:
+      'Top row: the "used" variant a table cell shows, only the platforms used. Bottom row: the "all" variant on User Details, every platform with the unused ones dimmed. Empty the list to see "None recorded yet".',
+    mock: { platforms: ['ANDROID', 'WEB'] },
+    render: (mock) => (
+      <Paper sx={{ p: 2, display: 'grid', gap: 2 }}>
+        <PlatformIcons platforms={mock.platforms} testId="demo-platforms-used" />
+        <PlatformIcons platforms={mock.platforms} variant="all" testId="demo-platforms-all" />
       </Paper>
     ),
   }),

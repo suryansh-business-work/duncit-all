@@ -580,6 +580,15 @@ export const CRM_BUNDLE: NestedCatalogue = {
       noMatches: 'No CRM team member matches that name',
       loadError: 'The team list could not be loaded. Try again in a moment.',
     },
+    // A lead whose contact is also a Duncit account: the platforms that account uses Duncit from
+    // and when it last did — beside the lead's name, in the "Also a Duncit user" box and as
+    // the Devices / Last activity columns of the venue, host and ecomm lead tables.
+    matchedUser: {
+      devices: 'Devices',
+      lastActivity: 'Last activity',
+      noActivity: 'Not recorded yet',
+      notOnDuncit: 'Not on Duncit',
+    },
     // Leads listing › Nearby leads: leads around a position or a picked city/area, within a radius.
     nearby: {
       button: 'Nearby leads',

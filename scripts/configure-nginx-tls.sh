@@ -51,6 +51,15 @@ HOST_LOCK_WAIT_SECONDS=900
 CERTBOT_LOCK_ATTEMPTS=30
 CERTBOT_LOCK_WAIT_SECONDS=10
 CERTBOT_LOCKED='Another instance of Certbot is already running'
+# How long certbot waits after reloading nginx with its challenge config before
+# asking Let's Encrypt to validate. Its default is 1s. The production vhost is
+# ~1800 lines on a busy 2-vCPU box, and on 2026-11-23 the reload was still
+# rolling when validation began: nine names (admin.duncit.com among them) got a
+# 404 or a stale challenge token, the full set failed, and the core-only
+# fallback left 24 hostnames HTTP-only — they answered with another site's
+# default server ("Infinity MQTT broker"). certbot also saves this value in the
+# renewal config, so the auto-renew timer gets the same wait.
+CERTBOT_NGINX_SLEEP_SECONDS=10
 
 reload_nginx() {
   $SUDO nginx -t
@@ -69,7 +78,7 @@ run_certbot() {
   for domain in "$@"; do flags+=(-d "$domain"); done
   for attempt in $(seq 1 "$CERTBOT_LOCK_ATTEMPTS"); do
     if output=$($SUDO certbot --nginx --non-interactive --agree-tos --redirect --expand \
-      --cert-name "$CERT_NAME" -m admin@duncit.com "${flags[@]}" 2>&1); then
+      --nginx-sleep-seconds "$CERTBOT_NGINX_SLEEP_SECONDS" --cert-name "$CERT_NAME" -m admin@duncit.com "${flags[@]}" 2>&1); then
       echo "$output"
       return 0
     fi

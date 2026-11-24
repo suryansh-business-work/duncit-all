@@ -12,6 +12,20 @@ import { venueLead } from '../fixtures/leads';
 
 const SUPER = '64a000000000000000000001';
 
+/**
+ * Records whether `text` ever appeared in the page. The editor's notice is a Snackbar that hides
+ * itself after 4 s; under coverage on CI one remount can block the thread longer than that, so a
+ * query run afterwards finds it already gone. Call `stop()` when done.
+ */
+function watchForText(text: string) {
+  let seen = document.body.textContent?.includes(text) ?? false;
+  const observer = new MutationObserver(() => {
+    if (!seen && document.body.textContent?.includes(text)) seen = true;
+  });
+  observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+  return { seen: () => seen, stop: () => observer.disconnect() };
+}
+
 function LocationProbe() {
   const location = useLocation();
   return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
@@ -194,11 +208,14 @@ describe('VenueLeadEditorPage', () => {
     // Press only once the AI draft is in the form. Under coverage on CI the button rendered before
     // the prefill landed, the submit stopped at validation and the URL stayed on /venue-leads/new.
     expect(await screen.findByDisplayValue('Sky Lounge', {}, slow)).toBeInTheDocument();
+    // The notice is only ever set by the navigation onto the edit URL, so seeing it at all proves
+    // it survived the remount instead of dying with the /new editor.
+    const notice = watchForText('Lead created. You can keep adding details.');
     fireEvent.click(await screen.findByRole('button', { name: 'Create & Continue' }));
     await waitFor(() => expect(created).toHaveLength(1), slow);
     await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^\/venue-leads\/venue-1$/), slow);
-    // The edit route mounts a new editor; the notice must survive that, not die with the /new one.
-    expect(await screen.findByText('Lead created. You can keep adding details.', {}, slow)).toBeInTheDocument();
+    await waitFor(() => expect(notice.seen()).toBe(true), slow);
+    notice.stop();
     expect(await screen.findByRole('heading', { level: 1, name: 'Edit Grand Hall' }, slow)).toBeInTheDocument();
 
     // The follow-up save updates the lead just created and still returns to the original list view.

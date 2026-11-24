@@ -54,6 +54,10 @@ export function LivePodActions({
   // Only the spent-attempts case has something to say. Backout is also dead
   // while the mutation is in flight, and "you have used them all" is a lie there.
   const onBackoutDisabled = backoutMaxed ? onBackoutBlocked : undefined;
+  // The file holds the invoice only when something was paid — same words as mWeb.
+  const ticketLabel = item.payment_id
+    ? t('mweb.ticket.download')
+    : t('mweb.ticket.downloadTicketOnly');
   return (
     <>
       <ActionButton
@@ -111,7 +115,7 @@ export function LivePodActions({
         <ActionButton
           testID="ph-ticket"
           icon="confirmation-number"
-          label={ticketBusy ? t('mweb.podHistory.downloading') : t('mweb.podHistory.ticket')}
+          label={ticketBusy ? t('mweb.podHistory.downloading') : ticketLabel}
           variant="contained"
           disabled={item.status !== 'JOINED' || !item.pod?.id || ticketBusy}
           onPress={onTicket}

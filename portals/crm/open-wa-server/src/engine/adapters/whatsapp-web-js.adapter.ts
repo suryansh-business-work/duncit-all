@@ -229,6 +229,10 @@ export class WhatsAppWebJsAdapter implements IWhatsAppEngine {
       getClient: () => this.client,
       setClient: client => (this.lifecycle.client = client),
       setStatus: status => this.lifecycle.setStatus(status),
+      isTearingDown: () => this.tearingDown,
+      isDisconnectReported: () => this.disconnectReported,
+      markCredentialTeardownStarted: () => this.lifecycle.markCredentialTeardownStarted(),
+      clearTimersAndTransientState: () => this.lifecycle.clearTimersAndTransientState(),
       getCallbacks: () => this.callbacks,
     });
     this.calls = new WwebjsCalls({
@@ -748,7 +752,7 @@ export class WhatsAppWebJsAdapter implements IWhatsAppEngine {
   // method reads as the 501 it is, and TypeScript accepts the narrower signature for the interface.
   // eslint-disable-next-line @typescript-eslint/require-await
   async clickButton(): Promise<MessageResult> {
-    throw new EngineNotSupportedError('clickButton');
+    throw markNothingSent(new EngineNotSupportedError('clickButton'));
   }
 
   unpinMessage(chatId: string, messageId: string): Promise<void> {

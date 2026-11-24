@@ -26,6 +26,7 @@ const common = {
   dynamic_values_json: '{}',
   lead_source: 'Instagram',
   assigned_to: 'Priya',
+  assigned_user_id: null,
   lead_status: 'New',
   priority: 'High',
   next_follow_up_date: '2026-09-25T00:00:00.000Z',

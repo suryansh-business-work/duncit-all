@@ -1,4 +1,4 @@
-import type { AppNavItem } from '@duncit/shell';
+import type { AppNavItem, NavBadge } from '@duncit/shell';
 import {
   STUDIO_OPTIONS_ENTRY,
   studioOptionGroups,
@@ -113,7 +113,13 @@ export interface BuildNavOptions {
   /** The `auto_pods` feature flag. Off by default, so a studio that lists its
    * options in the sidebar leaves Auto Pods out, as its Options page does. */
   autoPods?: boolean;
+  /** Work waiting behind a studio option, by its catalogue key (e.g.
+   * `slot-requests`): the entry's red count in the sidebar. */
+  badges?: OptionBadges;
 }
+
+/** Waiting work per studio option key; a missing key shows no badge. */
+export type OptionBadges = Readonly<Record<string, NavBadge | null | undefined>>;
 
 /** Withdrawal for a partner with no studio to show it (see buildNav). */
 const WITHDRAWAL_NAV: AppNavItem = { label: 'Withdrawal', labelKey: 'shell.nav.withdrawal', to: '/wallet', icon: 'wallet' };
@@ -167,12 +173,16 @@ const OPTION_NAV_ICON: Readonly<Record<StudioOptionIcon, string>> = {
   chat: 'chat',
 };
 
-const optionNavItem = (option: StudioOptionItem): AppNavItem => ({
-  label: option.labelKey,
-  labelKey: option.labelKey,
-  to: option.portal,
-  icon: OPTION_NAV_ICON[option.icon],
-});
+const optionNavItem = (option: StudioOptionItem, badges?: OptionBadges): AppNavItem => {
+  const badge = badges?.[option.key];
+  return {
+    label: option.labelKey,
+    labelKey: option.labelKey,
+    to: option.portal,
+    icon: OPTION_NAV_ICON[option.icon],
+    ...(badge ? { badge } : {}),
+  };
+};
 
 /**
  * Under the Food group the word "Food" is already said, so its dashboard and
@@ -235,18 +245,19 @@ const pick = (options: readonly StudioOptionItem[], keys: readonly string[]) =>
  * Options page does; an empty category, or a studio with no food desk, gets
  * no group.
  */
-export function studioNestedNavItems(section: PartnerSection, autoPods: boolean): AppNavItem[] {
+export function studioNestedNavItems(section: PartnerSection, autoPods: boolean, badges?: OptionBadges): AppNavItem[] {
   const entry = STUDIO_OPTIONS_ENTRY[section.mode];
   const { main, food } = studioOptionGroups(studioOptionsFor(section.mode, [section.role], { autoPods, console: true }));
   const allOptions: AppNavItem = { label: 'All options', labelKey: 'shell.nav.allOptions', to: entry.portal, icon: 'widgets' };
   const named = new Set([...VENUE_TOP_KEYS, ...VENUE_NAV_CATEGORIES.flatMap((category) => category.keys)]);
   const unnamed = main.filter((option) => !named.has(option.key));
-  const top = uniqueSiblings([allOptions, ...pick(main, VENUE_TOP_KEYS).map(optionNavItem)]);
+  const toItem = (option: StudioOptionItem) => optionNavItem(option, badges);
+  const top = uniqueSiblings([allOptions, ...pick(main, VENUE_TOP_KEYS).map(toItem)]);
   const groups: AppNavItem[] = VENUE_NAV_CATEGORIES.map((category, index) => ({
     label: category.label,
     labelKey: category.labelKey,
     icon: category.icon,
-    children: uniqueSiblings([...pick(main, category.keys), ...(index === 0 ? unnamed : [])].map(optionNavItem)),
+    children: uniqueSiblings([...pick(main, category.keys), ...(index === 0 ? unnamed : [])].map(toItem)),
   })).filter((group) => group.children.length > 0);
   if (food.length > 0) {
     groups.splice(groups.length - 1, 0, {
@@ -261,8 +272,8 @@ export function studioNestedNavItems(section: PartnerSection, autoPods: boolean)
 
 /** What the studio the user is in puts in the sidebar: its ONE Options entry,
  * or — for a `nestedNav` studio — its options under their groups. */
-function studioNav(section: PartnerSection, autoPods: boolean): AppNavItem[] {
-  return section.nestedNav ? studioNestedNavItems(section, autoPods) : [studioOptionsNavItem(section)];
+function studioNav(section: PartnerSection, autoPods: boolean, badges?: OptionBadges): AppNavItem[] {
+  return section.nestedNav ? studioNestedNavItems(section, autoPods, badges) : [studioOptionsNavItem(section)];
 }
 
 /**
@@ -281,7 +292,7 @@ export function buildNav(
   const products = options?.products === true;
   const active = activeSection(roles, products, options?.activeRole);
   const studio = active
-    ? studioNav(active, options?.autoPods === true)
+    ? studioNav(active, options?.autoPods === true, options?.badges)
     : PARTNER_SECTIONS.filter((section) => products || !section.products)
         .map((section) => section.onboarding)
         .filter((item): item is AppNavItem => item !== undefined);

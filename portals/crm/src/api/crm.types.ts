@@ -116,6 +116,10 @@ export interface CrmMatchedUser {
   phone?: string | null;
   profile_photo?: string | null;
   matched_on: 'EMAIL' | 'PHONE';
+  /** Where the account uses Duncit from, in display order (ANDROID, IOS, WEB). */
+  platforms_used?: ('ANDROID' | 'IOS' | 'WEB')[] | null;
+  /** ISO time of the account's last signed-in request. */
+  last_activity_at?: string | null;
 }
 
 export interface VenueLead {

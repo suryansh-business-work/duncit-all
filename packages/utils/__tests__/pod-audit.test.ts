@@ -25,7 +25,7 @@ const t: ClubAdminTranslate = (key) => key;
 
 describe('the audit vocabulary', () => {
   it('lists every action, source and risk exactly once', () => {
-    expect(new Set(POD_AUDIT_ACTION_ORDER).size).toBe(9);
+    expect(new Set(POD_AUDIT_ACTION_ORDER).size).toBe(10);
     expect(new Set(POD_AUDIT_SOURCE_ORDER).size).toBe(5);
     expect(new Set(POD_AUDIT_RISK_ORDER).size).toBe(4);
   });
@@ -35,6 +35,7 @@ describe('the audit vocabulary', () => {
     expect(Object.keys(POD_AUDIT_RISK_COLORS)).toHaveLength(POD_AUDIT_RISK_ORDER.length);
     expect(POD_AUDIT_ACTION_COLORS.DELETE).toBe('error');
     expect(POD_AUDIT_ACTION_COLORS.REJECTED).toBe('error');
+    expect(POD_AUDIT_ACTION_COLORS.ATTENDANCE_FORCED).toBe('warning');
     expect(POD_AUDIT_RISK_COLORS.PENDING).toBe('default');
     expect(POD_AUDIT_RISK_COLORS.HIGH).toBe('error');
   });
@@ -55,6 +56,7 @@ describe('podAuditActionLabel', () => {
     expect(podAuditActionLabel('VENUE_DECLINED', t)).toBe('clubAdmin.audit.action.venueDeclined');
     expect(podAuditActionLabel('COMPLETE', t)).toBe('clubAdmin.audit.action.complete');
     expect(podAuditActionLabel('REJECTED', t)).toBe('clubAdmin.audit.action.rejected');
+    expect(podAuditActionLabel('ATTENDANCE_FORCED', t)).toBe('clubAdmin.audit.action.attendanceForced');
   });
 });
 

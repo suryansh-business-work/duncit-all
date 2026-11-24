@@ -242,3 +242,25 @@ describe('landingPath', () => {
     expect(landingPath(null)).toBe('/earn');
   });
 });
+
+describe('waiting-work badges on the Venue Studio sidebar', () => {
+  const waiting = { count: 4, labelKey: 'shell.nav.waitingForYourAction' };
+  const requestsRow = (nav: readonly AppNavItem[]) =>
+    group(nav, 'shell.nav.requests')?.children?.find((child) => child.to === '/venues/requests');
+
+  it('puts the count on Workshop & Event Requests, by its option key', () => {
+    expect(requestsRow(venueNav({ badges: { 'slot-requests': waiting } }))?.badge).toEqual(waiting);
+  });
+
+  it('puts it on no other row', () => {
+    const badged = venueNav({ badges: { 'slot-requests': waiting } })
+      .flatMap((item) => [item, ...(item.children ?? [])])
+      .filter((item) => item.badge);
+    expect(badged.map((item) => item.to)).toEqual(['/venues/requests']);
+  });
+
+  it('shows no badge without one, or when the count is not there', () => {
+    expect(requestsRow(venueNav())?.badge).toBeUndefined();
+    expect(requestsRow(venueNav({ badges: { 'slot-requests': null } }))?.badge).toBeUndefined();
+  });
+});

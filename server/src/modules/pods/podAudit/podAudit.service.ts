@@ -115,6 +115,8 @@ export function heuristicRisk(action: PodAuditAction, changes: IPodAuditChange[]
   if (action === 'REJECTED') return 'HIGH';
   if (action === 'DELETE') return 'HIGH';
   if (action === 'VENUE_DECLINED') return 'MEDIUM';
+  // No scan behind the mark, and the host's payout is priced off attendance.
+  if (action === 'ATTENDANCE_FORCED') return 'MEDIUM';
   const amount = changed(changes, 'pod_amount');
   if (amount) {
     const from = Number(amount.from) || 0;

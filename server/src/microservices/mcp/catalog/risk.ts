@@ -99,6 +99,17 @@ const CONFIRM_FIELDS = new Set([
   'sendMoney',
   // Rescores every CRM lead of a type with the new scoring model.
   'publishCrmLeadQualityConfig',
+  // Reel Studio's AI calls run on Duncit's own model and voice keys. A chat
+  // with its own subscription can make the same reel without them (writing the
+  // spec itself and saving it with saveReelSpec), so the person must choose
+  // which one pays before any of these runs — see REEL_ENGINE_RULE.
+  'sendReelMessage',
+  'generateReelIdeas',
+  'generateReelScript',
+  'generateReelVariants',
+  'generateReelVoiceover',
+  'generateReelSubtitles',
+  'recommendNextReel',
 ]);
 
 /** Words that mean a mutation reaches people or systems outside Duncit. */

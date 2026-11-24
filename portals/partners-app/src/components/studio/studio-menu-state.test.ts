@@ -3,6 +3,8 @@ import { STUDIO_OPTION_LIST } from '@duncit/utils';
 import { sectionByRole } from '../../config/partner-sections';
 import {
   activeStudioOption,
+  localizedBadge,
+  optionTooltip,
   readStudioMenuCollapsed,
   showsStudioMenu,
   STUDIO_MENU_COLLAPSED_KEY,
@@ -93,5 +95,34 @@ describe('the remembered minimised choice', () => {
     });
     expect(readStudioMenuCollapsed()).toBeNull();
     expect(() => writeStudioMenuCollapsed(true)).not.toThrow();
+  });
+});
+
+describe('the studio menu badge', () => {
+  const t = (key: string, options?: { vars?: Record<string, string | number> }) => `${options?.vars?.count} ${key}`;
+
+  it('fills the count into the hover words', () => {
+    expect(localizedBadge({ count: 3, labelKey: 'shell.nav.waitingForYourAction' }, t)).toEqual({
+      count: 3,
+      labelKey: 'shell.nav.waitingForYourAction',
+      label: '3 shell.nav.waitingForYourAction',
+    });
+  });
+
+  it('keeps a badge that already has its words, and drops one with nothing waiting', () => {
+    expect(localizedBadge({ count: 2, label: 'two' }, t)).toEqual({ count: 2, label: 'two' });
+    expect(localizedBadge({ count: 0, labelKey: 'k' }, t)).toBeNull();
+    expect(localizedBadge(null, t)).toBeNull();
+    expect(localizedBadge(undefined, t)).toBeNull();
+  });
+
+  it('names the entry on the icon rail, with what waits behind it', () => {
+    expect(optionTooltip('Requests', '3 waiting', true)).toEqual({ title: 'Requests (3 waiting)', describes: false });
+    expect(optionTooltip('Requests', undefined, true)).toEqual({ title: 'Requests', describes: false });
+  });
+
+  it('only says what waits while the words show, describing the link rather than renaming it', () => {
+    expect(optionTooltip('Requests', '3 waiting', false)).toEqual({ title: '3 waiting', describes: true });
+    expect(optionTooltip('Requests', undefined, false)).toEqual({ title: '', describes: true });
   });
 });

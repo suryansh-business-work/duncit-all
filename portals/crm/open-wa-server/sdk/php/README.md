@@ -1,6 +1,6 @@
 # rmyndharis/openwa
 
-This document describes SDK 0.12.1. The `linkPreview` key of a session's config requires OpenWA 0.30.3 or later. `messages->receipts` requires OpenWA 0.28.0 or later. `contacts->lid` requires OpenWA 0.27.1 or later. `groups->setMemberLabel` and the `match` search key require OpenWA 0.27.0 or later. Send idempotency, webhook failure redrive, message-window filters, poll choices, last-message types, and the `event.response` webhook event name require OpenWA 0.25.0 or later.
+This document describes SDK 0.13.0. The `phone` key of a chat summary requires OpenWA 0.31.0 or later. The `linkPreview` key of a session's config requires OpenWA 0.30.3 or later. `messages->receipts` requires OpenWA 0.28.0 or later. `contacts->lid` requires OpenWA 0.27.1 or later. `groups->setMemberLabel` and the `match` search key require OpenWA 0.27.0 or later. Send idempotency, webhook failure redrive, message-window filters, poll choices, last-message types, and the `event.response` webhook event name require OpenWA 0.25.0 or later.
 
 Official PHP SDK for [OpenWA](https://github.com/rmyndharis/OpenWA), the open-source WhatsApp API Gateway. OpenWA is an independent project, not affiliated with or endorsed by WhatsApp or Meta.
 
@@ -141,13 +141,15 @@ if (!WebhookSignature::verify($raw, $_SERVER['HTTP_X_OPENWA_SIGNATURE'] ?? null,
     exit;
 }
 $delivery = json_decode($raw, true);
-// Process $delivery['event'] and $delivery['data'] here.
+// Route on $delivery['event'] and deduplicate on $delivery['idempotencyKey'] (headers are unsigned).
 ```
 
-The signature covers the body only and carries no timestamp, so a captured delivery still verifies
-when it is sent again. Dedupe on `$delivery['idempotencyKey']` (also the `X-OpenWA-Idempotency-Key`
-header): the gateway's own retries and an operator's redrive of a failed delivery reuse it, so a key
-you have already handled is the same event arriving again.
+The signature covers the raw JSON body only (not `X-OpenWA-*` headers, which are unsigned) and
+carries no timestamp, so a captured delivery still verifies when it is sent again. Always
+deduplicate on `$delivery['idempotencyKey']` and route on `$delivery['event']` from the verified
+JSON payload rather than trusting the unsigned `X-OpenWA-Idempotency-Key` or `X-OpenWA-Event`
+headers: the gateway's own retries and an operator's redrive of a failed delivery reuse
+`$delivery['idempotencyKey']`, so a key you have already handled is the same event arriving again.
 
 ## Notes
 
@@ -164,7 +166,7 @@ you have already handled is the same event arriving again.
   a redirect target). Path segments are percent-encoded; a base-URL path prefix (e.g. behind a
   reverse proxy) is preserved.
 - Escape hatch for endpoints the SDK does not wrap:
-  `$client->request($method, $path, $query, $body)`. A path with a `.` or `..` segment (also after an encoded
+  `$client->request($method, $path, $query = [], $body = null, ?string $idempotencyKey = null)`. Pass a non-null `$idempotencyKey` to forward `Idempotency-Key` (empty or invalid values throw `InvalidArgumentException`). A path with a `.` or `..` segment (also after an encoded
   slash, as in `..%2F`), or one that does not begin with `/`, throws `InvalidArgumentException` before anything
   is sent. An id with a `.` or `..` part between slashes, such as `../x`, is refused the same way.
 
@@ -194,7 +196,7 @@ Cutting a release:
 1. If the minor line changes, update `extra.branch-alias.dev-main` in
    `composer.json` (e.g. `0.1.x-dev` → `0.2.x-dev`) and land it on `main`. The
    release workflow refuses to publish when the alias does not match the tag.
-2. Tag that commit `php-sdk-v<version>` (e.g. `php-sdk-v0.12.1`) and push the
+2. Tag that commit `php-sdk-v<version>` (e.g. `php-sdk-v0.13.0`) and push the
    tag. The SDK has its own version line — the monorepo's `v*` tags are the app
    version and never trigger an SDK release.
 3. The workflow runs the test suite, then tags the mirror `<version>` (no `v`
@@ -225,4 +227,4 @@ Supply a unique caller-owned key for one logical send and reuse it when retrying
 $client->messages->sendText($sessionId, ['chatId' => '628123@c.us', 'text' => 'Hello'], 'order-123');
 ```
 
-The gateway supports text, image, video, audio, document, sticker, location, contact, template, poll, reply and forward sends. Completed calls replay their response; a 409 whose `getErrorCode()` is `IDEMPOTENCY_KEY_IN_PROGRESS` means the first request is still running, so retry with the same key later; a 409 `IDEMPOTENCY_OUTCOME_UNKNOWN` means the message may have been sent, so check the chat and, if it did not arrive, send again with a new key (`getErrorCode()` tells them apart from the 409 for a session that is not connected). A changed request with the same key returns 422. The gateway retains keys for 24 hours. Bulk, product and button operations have no such guarantee. Omit the key to preserve existing behavior.
+The gateway supports text, image, video, audio, document, sticker, location, contact, template, poll, reply, forward and `clickButton` sends. Completed calls replay their response; a 409 whose `getErrorCode()` is `IDEMPOTENCY_KEY_IN_PROGRESS` means the first request is still running, so retry with the same key later; a 409 `IDEMPOTENCY_OUTCOME_UNKNOWN` means the message may have been sent, so check the chat and, if it did not arrive, send again with a new key (`getErrorCode()` tells them apart from the 409 for a session that is not connected). A changed request with the same key returns 422. The gateway retains keys for 24 hours. Bulk and product operations have no such guarantee. Omit the key to preserve existing behavior.

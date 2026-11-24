@@ -71,10 +71,12 @@ beforeEach(() => {
   envValue.mockResolvedValue(' pexels-fake-key ');
 });
 
+// The media import also takes the stock libraries Reel Studio copies from, and
+// any kind of file, so its refusals name those hosts and say "file".
 describe.each([
-  ['importRemoteImage', importRemoteImage],
-  ['importRemoteMedia', importRemoteMedia],
-])('%s — the allowlist', (_name, importFn) => {
+  ['importRemoteImage', importRemoteImage, 'Only Pexels / Unsplash / ImageKit URLs may be imported', 'image'],
+  ['importRemoteMedia', importRemoteMedia, 'Only Pexels / Unsplash / Pixabay / Jamendo / ImageKit URLs may be imported', 'file'],
+] as const)('%s — the allowlist', (_name, importFn, allowlistMessage, noun) => {
   it('rejects a string that is not a URL', async () => {
     await expect(importFn({ remoteUrl: 'not a url' })).rejects.toMatchObject({
       message: 'Invalid remote URL',
@@ -90,7 +92,7 @@ describe.each([
 
   it('rejects a host outside the media allowlist (no SSRF)', async () => {
     await expect(importFn({ remoteUrl: 'https://internal.example.test/a.jpg' })).rejects.toMatchObject({
-      message: 'Only Pexels / Unsplash / ImageKit URLs may be imported (got internal.example.test)',
+      message: `${allowlistMessage} (got internal.example.test)`,
     });
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -103,7 +105,7 @@ describe.each([
     arrangeImport(remote('image/jpeg', '', { ok: false, status: 404, statusText: 'Not Found' }));
 
     await expect(importFn({ remoteUrl: url })).rejects.toMatchObject({
-      message: `${service} could not send that image (404 Not Found).`,
+      message: `${service} could not send that ${noun} (404 Not Found).`,
       extensions: { code: 'UPSTREAM_ERROR', reason: '404 Not Found' },
     });
     expect(fetchMock).toHaveBeenCalledWith(service, url);
@@ -165,12 +167,32 @@ describe('importRemoteImage', () => {
 });
 
 describe('importRemoteMedia', () => {
-  it('refuses a response that is neither image nor video (missing type reads as binary)', async () => {
+  it('refuses a response that is neither image, video nor sound (missing type reads as binary)', async () => {
     arrangeImport(remote(null));
     await expect(importRemoteMedia({ remoteUrl: 'https://videos.pexels.com/v' })).rejects.toMatchObject({
-      message: 'Remote URL must be image or video (got application/octet-stream)',
+      message: 'Remote URL must be an image, a video or a sound file (got application/octet-stream)',
       extensions: { code: 'BAD_USER_INPUT' },
     });
+  });
+
+  it('imports a Jamendo track as an MP3, untouched and held to the video ceiling', async () => {
+    settings.mockResolvedValue(fakeSetting({ max_video_mb: 1 }));
+    arrangeImport(remote('audio/mpeg', 'track-bytes'));
+    await importRemoteMedia({ remoteUrl: 'https://prod-1.storage.jamendo.com/download/track/9/mp32/', fileName: 'jamendo-9' });
+    expect(fetchMock).toHaveBeenCalledWith('Jamendo', 'https://prod-1.storage.jamendo.com/download/track/9/mp32/');
+    expect(uploadedName()).toBe('jamendo-9.mp3');
+    expect(processBytes).not.toHaveBeenCalled();
+
+    fetchMock.mockClear();
+    arrangeImport(remote('audio/mpeg', 't'.repeat(MB + 1)));
+    await expect(importRemoteMedia({ remoteUrl: 'https://prod-1.storage.jamendo.com/x' })).rejects.toMatchObject({ message: 'Video is too large (max 1 MB)' });
+  });
+
+  it('copies a Pixabay clip, naming Pixabay when it refuses, and keeps a video/mpeg file\'s own name', async () => {
+    arrangeImport(remote('video/mpeg', 'clip'));
+    await importRemoteMedia({ remoteUrl: 'https://cdn.pixabay.com/video/7_medium.mp4', fileName: 'pixabay-7' });
+    expect(fetchMock).toHaveBeenCalledWith('Pixabay', 'https://cdn.pixabay.com/video/7_medium.mp4');
+    expect(uploadedName()).toBe('pixabay-7.mpeg');
   });
 
   it('imports a video untouched, even with Upload Settings present', async () => {

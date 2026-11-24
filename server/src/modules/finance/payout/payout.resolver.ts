@@ -17,6 +17,7 @@ import {
   withdrawalReview,
 } from './payout.queries';
 import type { SendMoneyCategory, PayoutSubjectKind } from './payout.model';
+import type { CustomAccountInput } from './payout.accounts';
 
 /**
  * Who may do what with money going OUT:
@@ -45,7 +46,9 @@ interface SendMoneyArgs {
   input: {
     request_id: string;
     recipient_user_id: string;
-    account_id: string;
+    account_id?: string | null;
+    custom_account?: CustomAccountInput | null;
+    acknowledge_custom_account?: boolean | null;
     payout_method?: 'IMPS' | 'NEFT' | 'UPI' | null;
     amount: number;
     category: SendMoneyCategory;
@@ -113,6 +116,8 @@ export const payoutResolvers = {
         requestId: input.request_id,
         recipientUserId: input.recipient_user_id,
         accountId: input.account_id,
+        customAccount: input.custom_account,
+        acknowledgeCustomAccount: input.acknowledge_custom_account === true,
         payoutMethod: input.payout_method === 'UPI' ? null : input.payout_method,
         amount: input.amount,
         category: input.category,

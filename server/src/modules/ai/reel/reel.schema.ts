@@ -12,10 +12,35 @@ export const reelTypeDefs = gql`
     DRIVE
     "A picture or clip from the media store — attached in the chat or picked from the library."
     UPLOAD
-    "A Pexels photo or video, kept by its CDN address with its licence line."
+    "A stock library file with its licence line: a Pexels photo or video kept by its CDN address, or a Pixabay photo or video or a Jamendo track copied into the media store."
     STOCK
     "Sound made here — a voiceover."
     GENERATED
+  }
+
+  "The stock libraries Reel Studio searches. Pexels and Pixabay have photos and videos; Jamendo has music."
+  enum ReelStockProvider {
+    PEXELS
+    PIXABAY
+    JAMENDO
+  }
+
+  "A part of the Reel Studio screen that can be resized, popped out into its own window or closed."
+  enum ReelStudioPaneId {
+    "Footage, stock, music, uploads and voice — the left pane."
+    SOURCES
+    "The player — the middle pane."
+    PREVIEW
+    "Chat, Create and Edit — the right pane."
+    SIDE
+    "The timeline along the bottom."
+    TIMELINE
+  }
+
+  enum ReelStudioPaneMode {
+    DOCKED
+    POPPED
+    CLOSED
   }
 
   enum ReelDriveEntryKind {
@@ -225,7 +250,38 @@ export const reelTypeDefs = gql`
     restorable: Boolean!
     "ASSISTANT: true when the editor could not be reached or read."
     failed: Boolean!
+    "ASSISTANT, failed: the Tech portal page where the missing AI key is added, when a missing key is why; null otherwise."
+    fix_url: String
     at: String!
+  }
+
+  "One pane of the studio as its owner left it. Sizes are CSS pixels."
+  type ReelStudioPane {
+    id: ReelStudioPaneId!
+    mode: ReelStudioPaneMode!
+    "DOCKED: the pane's width, or the timeline's height."
+    size: Int!
+    "POPPED: where the window floats and how big it is."
+    x: Int!
+    y: Int!
+    width: Int!
+    height: Int!
+  }
+
+  "The signed-in person's saved Reel Studio arrangement."
+  type ReelStudioLayout {
+    panes: [ReelStudioPane!]!
+    updated_at: String
+  }
+
+  input ReelStudioPaneInput {
+    id: ReelStudioPaneId!
+    mode: ReelStudioPaneMode!
+    size: Int!
+    x: Int!
+    y: Int!
+    width: Int!
+    height: Int!
   }
 
   "The words that go with the reel on one network, written within that network's ceiling."
@@ -323,7 +379,7 @@ export const reelTypeDefs = gql`
     truncated: Boolean!
   }
 
-  "One stock photo or video as the library lists it."
+  "One stock photo, video or track as the library lists it."
   type ReelMediaItem {
     id: ID!
     kind: ReelAssetKind!
@@ -338,6 +394,8 @@ export const reelTypeDefs = gql`
     licence: String!
     attribution: String!
     provider_id: String!
+    "The library that listed it; pass it back with the pick."
+    provider: ReelStockProvider!
   }
 
   type ReelMediaPage {
@@ -441,6 +499,8 @@ export const reelTypeDefs = gql`
     duration_ms: Int
     licence: String!
     attribution: String!
+    "The library reelMediaSearch named; PEXELS when absent. Pixabay and Jamendo picks are copied into the media store."
+    provider: ReelStockProvider
   }
 
   input ReelMessageInput {
@@ -474,8 +534,14 @@ export const reelTypeDefs = gql`
     reelDriveStatus: ReelDriveStatus!
     "The videos, pictures, sound files and sub-folders of a Drive folder. folder is a link or a folder id."
     reelDriveFolder(folder: String!): ReelDriveFolder!
-    "Stock photos or videos from Pexels for a reel; portrait unless another orientation is asked for. Pages start at 1."
-    reelMediaSearch(query: String!, kind: ReelAssetKind!, orientation: ReelAspect, page: Int): ReelMediaPage!
+    """
+    Stock for a reel: photos or videos from Pexels (the default) or Pixabay, or
+    music (kind AUDIO) from Jamendo — only tracks a marketing reel may use.
+    Portrait unless another orientation is asked for. Pages start at 1.
+    """
+    reelMediaSearch(query: String!, kind: ReelAssetKind!, orientation: ReelAspect, page: Int, provider: ReelStockProvider): ReelMediaPage!
+    "The signed-in person's saved Reel Studio arrangement, or null when they have never saved one."
+    myReelStudioLayout: ReelStudioLayout
     """
     Check a reel against the networks it is going to: length within each
     network's reel limit, a portrait frame where the network wants one, sound,
@@ -493,20 +559,30 @@ export const reelTypeDefs = gql`
     deleteReelProject(id: ID!): Boolean!
     "Add Drive files to a reel's footage. Files it already holds are skipped."
     addReelDriveAssets(project_id: ID!, file_ids: [ID!]!): ReelProject!
-    "Add stock photos or videos as the library listed them. Items the reel already holds are skipped."
+    "Add stock photos, videos or music as the library listed them. Items the reel already holds are skipped; at most 6 Pixabay or Jamendo files at a time, as each is copied into the media store."
     addReelStockAssets(project_id: ID!, items: [ReelStockAssetInput!]!): ReelProject!
+    "Save how the signed-in person has Reel Studio arranged, replacing what they saved before."
+    saveReelStudioLayout(panes: [ReelStudioPaneInput!]!): ReelStudioLayout!
+    "Forget the signed-in person's Reel Studio arrangement so the default view returns. True whether or not one was saved."
+    resetReelStudioLayout: Boolean!
     "Add pictures, clips or sound files from the media store; the kind is read off the address."
     addReelUploadAssets(project_id: ID!, uploads: [ReelUploadInput!]!): ReelProject!
     "Remove footage from a reel. Scenes that used it are dropped from the edit."
     removeReelAsset(project_id: ID!, asset_id: ID!): ReelProject!
-    "One chat turn: the request (and any attached pictures) goes to the editor, and the reel comes back as it now stands."
+    """
+    One chat turn: the request (and any attached pictures) goes to the editor, and the reel comes back as it now stands.
+    Runs on Reel Studio's own AI key, billed to Duncit. From an AI chat, first ask the person whether to use Reel
+    Studio's key or the chat's own subscription; for the second, write the edit yourself and save it with saveReelSpec.
+    """
     sendReelMessage(input: ReelMessageInput!): ReelProject!
     "Put back the edit an earlier reply produced."
     restoreReelVersion(project_id: ID!, message_id: ID!): ReelProject!
     """
     Save an edit made by hand on the timeline. spec_json is the whole ReelSpec as
     JSON; it is sanitized against the project's footage exactly as the editor's
-    answers are, and the reel comes back as it now stands.
+    answers are, and the reel comes back as it now stands. This is also how an AI
+    chat builds a reel on its own subscription: read the reel with reelProject,
+    write the whole spec, and save it here — no Reel Studio AI call is made.
     """
     saveReelSpec(project_id: ID!, spec_json: String!): ReelProject!
     "Concepts for a reel from a brief (1-10, five when not given). One marketing run, its cost on it."

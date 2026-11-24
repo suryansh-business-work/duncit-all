@@ -18,7 +18,7 @@ function renderComposer(props: Partial<Parameters<typeof Composer>[0]> = {}) {
   const onSend = vi.fn();
   const onDraft = vi.fn();
   const onStop = vi.fn();
-  renderWithProviders(<Composer settings={settings} onSettings={vi.fn()} models={boot.models} environments={['STAGING', 'PRODUCTION']} allowedSources={boot.me.sources} busy={false} streaming={false} draft="" onDraft={onDraft} onSend={onSend} onStop={onStop} {...props} />);
+  renderWithProviders(<Composer settings={settings} onSettings={vi.fn()} models={boot.models} environments={['STAGING', 'PRODUCTION']} allowedSources={boot.me.sources} busy={false} streaming={false} draft="" onDraft={onDraft} onSend={onSend} onStop={onStop} uploadMaxMb={25} uploadTypes={['application/pdf', 'image/png', 'text/plain']} {...props} />);
   return { onSend, onDraft, onStop, input: screen.getByRole('textbox', { name: 'intel.composer.placeholder' }) };
 }
 
@@ -28,7 +28,7 @@ describe('Composer', () => {
     fireEvent.keyDown(input, { key: 'Enter', shiftKey: true });
     expect(onSend).not.toHaveBeenCalled();
     fireEvent.keyDown(input, { key: 'Enter' });
-    expect(onSend).toHaveBeenCalledWith('pod revenue');
+    expect(onSend).toHaveBeenCalledWith('pod revenue', []);
     expect(onDraft).toHaveBeenCalledWith('');
   });
 
@@ -70,6 +70,7 @@ const message = (over: Partial<IntelMessage> = {}): IntelMessage => ({
   error_code: null,
   error_message: null,
   edited: false,
+  attachments: [],
   created_at: new Date().toISOString(),
   ...over,
 });

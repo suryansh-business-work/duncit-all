@@ -173,7 +173,7 @@ describe('StockTab', () => {
     expect(queryOptions.get(REEL_MEDIA_SEARCH)?.skip).toBe(true);
 
     searchFor('  sunset court ');
-    expect(queryOptions.get(REEL_MEDIA_SEARCH)?.variables).toEqual({ query: 'sunset court', kind: 'VIDEO', orientation: 'SQUARE', page: 1 });
+    expect(queryOptions.get(REEL_MEDIA_SEARCH)?.variables).toEqual({ query: 'sunset court', kind: 'VIDEO', orientation: 'SQUARE', page: 1, provider: 'PEXELS' });
     expect(screen.getByTestId('reel-stock-item-px-1')).toHaveTextContent('Pexels Licence · Ana Ruiz');
     expect(screen.getByTestId('reel-stock-item-px-1')).toHaveTextContent('0:12');
     // Each add button names its file: by its credit, or by its provider id when it has none.

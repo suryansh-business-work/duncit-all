@@ -10,6 +10,7 @@ import {
   type BrandAnalytics,
 } from '@duncit/shell';
 import { defineDemo, defineDemos } from '../types';
+import { floatingWindowDemo } from './shell/FloatingWindowDemo';
 import {
   SCROLL_UP_HISTORY_MOCK,
   ScrollUpHistoryDemo,
@@ -193,4 +194,5 @@ export default defineDemos('shell', [
     mock: SCROLL_UP_HISTORY_MOCK,
     render: (mock) => <ScrollUpHistoryDemo {...mock} />,
   }),
+  floatingWindowDemo,
 ]);

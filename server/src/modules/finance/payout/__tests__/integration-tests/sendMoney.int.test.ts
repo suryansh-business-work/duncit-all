@@ -163,6 +163,67 @@ describe('sendMoney', () => {
   });
 });
 
+describe('sendMoney to an account typed in by Finance', () => {
+  const typed = (user: { _id: unknown }, custom: Record<string, string>, patch: Partial<SendMoneyInput> = {}) =>
+    input(user, '', { accountId: null, customAccount: custom, acknowledgeCustomAccount: true, ...patch });
+
+  it('pays a typed UPI ID to a person with no verified account, recorded as CUSTOM', async () => {
+    const user = await UserModel.create({ auth: { email: 'staff@example.com' }, profile: { first_name: 'Asha', last_name: 'Rao' } });
+    const transfer = await sendMoney(typed(user, { payout_method: 'UPI', upi_id: 'asha@okicici' }));
+
+    expect(transfer).toMatchObject({ account_source: 'CUSTOM', payout_method: 'UPI', upi_id: 'asha@okicici', account_number: '' });
+    expect(gateway.createFundAccount).toHaveBeenCalledWith('cont_1', { kind: 'UPI', name: 'Asha Rao', upi_id: 'asha@okicici' });
+    expect(gateway.createPayout).toHaveBeenCalledWith(expect.objectContaining({ mode: 'UPI', amountPaise: 1500000 }));
+    expect(await auditActions(transfer.transfer_id)).toEqual(['TRANSFER_CREATED', 'PAYOUT_SENT']);
+  });
+
+  it('pays a typed bank account by the method typed with it, ignoring the verified-account method field', async () => {
+    const { user } = await seedRecipient();
+    const transfer = await sendMoney(
+      typed(
+        user,
+        { payout_method: 'NEFT', account_holder_name: 'Meera N', account_number: '999988887777', ifsc_code: 'sbin0000123' },
+        { payoutMethod: 'IMPS' }
+      )
+    );
+    expect(transfer).toMatchObject({ account_source: 'CUSTOM', payout_method: 'NEFT', ifsc_code: 'SBIN0000123', account_holder_name: 'Meera N' });
+    expect(gateway.createFundAccount).toHaveBeenCalledWith('cont_1', { kind: 'BANK', name: 'Meera N', account_number: '999988887777', ifsc: 'SBIN0000123' });
+    expect(gateway.createPayout).toHaveBeenCalledWith(expect.objectContaining({ mode: 'NEFT' }));
+  });
+
+  it('records a typed account that is really one of the person’s verified accounts under that record', async () => {
+    const { user } = await seedRecipient();
+    const transfer = await sendMoney(
+      typed(user, { payout_method: 'IMPS', account_holder_name: 'Meera Nair', account_number: '123456789012', ifsc_code: 'HDFC0001234' })
+    );
+    expect(transfer.account_source).toBe('HOST');
+  });
+
+  it('refuses a typed account that was not acknowledged, or is malformed, without creating or sending anything', async () => {
+    const { user } = await seedRecipient();
+    await expect(
+      sendMoney(typed(user, { payout_method: 'UPI', upi_id: 'asha@okicici' }, { acknowledgeCustomAccount: false }))
+    ).rejects.toMatchObject({ extensions: { field: 'acknowledge_custom_account' } });
+    await expect(sendMoney(typed(user, { payout_method: 'UPI', upi_id: 'not-a-upi' }))).rejects.toMatchObject({
+      extensions: { field: 'upi_id' },
+    });
+    await expect(
+      sendMoney(typed(user, { payout_method: 'IMPS', account_holder_name: 'Meera', account_number: '12', ifsc_code: 'HDFC0001234' }))
+    ).rejects.toMatchObject({ extensions: { field: 'account_number' } });
+    await expect(
+      sendMoney(typed(user, { payout_method: 'IMPS', account_holder_name: 'Meera', account_number: '123456789012', ifsc_code: 'BAD' }))
+    ).rejects.toMatchObject({ extensions: { field: 'ifsc_code' } });
+    expect(await SendMoneyTransferModel.countDocuments()).toBe(0);
+    expect(gateway.createPayout).not.toHaveBeenCalled();
+  });
+
+  it('shows the source in the Send Money Logs rows', async () => {
+    const user = await UserModel.create({ auth: { email: 'logs@example.com' }, profile: { first_name: 'Asha' } });
+    await sendMoney(typed(user, { payout_method: 'UPI', upi_id: 'asha@okicici' }));
+    expect((await sendMoneyTransfersTable({})).rows[0]).toMatchObject({ account_source: 'CUSTOM', upi_id: 'asha@okicici' });
+  });
+});
+
 describe('a Send Money payout settling and retrying', () => {
   it('marks it PAID once, notifies the recipient once, and ignores a repeat', async () => {
     const { user, accountId } = await seedRecipient();

@@ -954,6 +954,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       spotsLeftOne: '1 spot left',
       spotsLeftMany: '{count} spots left',
       joiningNow: '{count} joining now',
+      // A pod that is over: who actually turned up (scanned in), then its status.
+      attendedCount: '{count} Attended',
+      podCompleted: 'Completed',
       podsNearbyOne: '1 pod nearby',
       podsNearbyMany: '{count} pods nearby',
       hostCtaTitle: 'Host your own pod',
@@ -1285,9 +1288,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       },
     },
     // The booking document. One file: the ticket, then the invoice for what
-    // paid for it — a free pod has no payment, so that one is the ticket alone.
+    // paid for it — a free pod has no payment, so that one is the ticket alone
+    // and its button says so.
     ticket: {
       download: 'Ticket & invoice',
+      downloadTicketOnly: 'Ticket',
       downloading: 'Downloading…',
     },
     // The booking deep link (`/booking/:bookingId`) — the receipt email's
@@ -1519,6 +1524,20 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       inclusiveOfGst: 'Price is inclusive of GST.',
       // mWeb only — the native charges section only renders when there are any.
       noVenueCharges: 'No additional venue charges listed.',
+      // Asked before Join / Book on a pod that lists place charges. They are
+      // paid to the venue at the venue, and Duncit plays no part in them:
+      // that is the one thing this copy has to make unmistakable.
+      placeChargesConfirmTitle: 'This pod has place charges',
+      placeChargesConfirmIntro: 'You pay these charges directly to the venue, at the venue.',
+      placeChargesConfirmNoRole:
+        'Duncit does not collect these charges and has no role in them. They are not part of any payment you make on Duncit.',
+      placeChargesTotal: 'Total place charges',
+      placeChargesConfirmAccept: "I'm OK, continue",
+      placeChargesWrongPrompt: 'Charges look wrong or not relevant?',
+      placeChargesReport: 'Report to support',
+      placeChargesReporting: 'Reporting…',
+      placeChargesReported: 'Ticket {ticketNo} raised. Our support team will check these charges.',
+      placeChargesReportFailed: 'Could not raise the ticket. Please try again.',
       // The booking bar — host state.
       goToDashboard: 'Go to Dashboard',
       // Native only — its bar pairs every CTA with a caption on the left.
@@ -2308,13 +2327,18 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // list, so the label names where it actually goes.
       myProfile: 'My Profile',
       myOrders: 'My orders',
-      // mWeb only — passes to a wallet are a browser affordance.
+      // Both apps — each button shows only once its wallet is set up in the
+      // Tech portal, so neither ever has to apologise.
       appleWallet: 'Add to Apple Wallet',
       googleWallet: 'Add to Google Wallet',
+      // Deprecated, these three: read by app versions from before real wallet
+      // passes (Apple said "not yet", Google opened a calendar event).
       appleWalletUnavailable:
         'Apple Wallet pass is not available yet. Invoice download is separate below.',
       calendarEventFallback: 'Duncit Pod',
       calendarDetails: 'Your Duncit booking is confirmed.',
+      // Opening a wallet link failed (no browser, or the OS refused the URL).
+      walletOpenFailed: 'Could not open your wallet. Please try again.',
       // What went wrong. A buyer reads these instead of the payable, so they
       // say what happened to the money and what to do next.
       errorFailed: 'Payment failed. Please try again.',
@@ -3339,6 +3363,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       scanClosed: 'This pod has ended — tickets can no longer be scanned.',
       scanNotOpen: 'Scanning opens {minutes} minutes before the pod starts.',
       completePod: 'Complete pod',
+      completeNotOpen: 'Complete pod opens {minutes} minutes before the pod ends.',
       editPod: 'Edit pod',
       cancelPod: 'Cancel pod',
       close: 'Close',

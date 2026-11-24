@@ -5,7 +5,7 @@ import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { outboundFetch } from '@utils/outboundFetch';
-import { isTrustedMediaHost } from '@utils/url';
+import { isStockLibraryHost, isTrustedMediaHost } from '@utils/url';
 import { getUrlConfigs } from '../../../config/url-configs';
 import { issueUploadTicket } from './uploadTicket';
 import { isPrivateUploadFolder, resolveUploadFolder } from './uploadFolder';
@@ -517,6 +517,8 @@ function remoteImageServiceName(hostname: string): string {
   if (host.includes('pexels')) return 'Pexels';
   if (host.includes('unsplash')) return 'Unsplash';
   if (host.includes('imagekit')) return 'ImageKit';
+  if (host.includes('pixabay')) return 'Pixabay';
+  if (host.includes('jamendo')) return 'Jamendo';
   return 'The image host';
 }
 
@@ -735,7 +737,9 @@ export async function pexelsSearchVideos(opts: {
 }
 
 /**
- * Fetch a remote image OR video (whitelisted hosts) and upload to ImageKit.
+ * Fetch a remote image, video or sound file (whitelisted hosts) and upload it
+ * to ImageKit. The stock libraries Reel Studio copies from (Pixabay, Jamendo)
+ * are allowed here and only here: their files are imported, never hotlinked.
  */
 export async function importRemoteMedia(opts: {
   remoteUrl: string;
@@ -758,9 +762,9 @@ export async function importRemoteMedia(opts: {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }
-  if (!isTrustedMediaHost(parsed.hostname)) {
+  if (!isTrustedMediaHost(parsed.hostname) && !isStockLibraryHost(parsed.hostname)) {
     throw new GraphQLError(
-      `Only Pexels / Unsplash / ImageKit URLs may be imported (got ${parsed.hostname})`,
+      `Only Pexels / Unsplash / Pixabay / Jamendo / ImageKit URLs may be imported (got ${parsed.hostname})`,
       { extensions: { code: 'BAD_USER_INPUT' } }
     );
   }
@@ -771,23 +775,26 @@ export async function importRemoteMedia(opts: {
   const remote = await outboundFetch(service, parsed.toString());
   if (!remote.ok)
     throw new GraphQLError(
-      `${service} could not send that image (${remote.status} ${remote.statusText}).`,
+      `${service} could not send that file (${remote.status} ${remote.statusText}).`,
       { extensions: { code: 'UPSTREAM_ERROR', reason: `${remote.status} ${remote.statusText}` } }
     );
   const mime = remote.headers.get('content-type') || 'application/octet-stream';
   const isImage = /^image\//i.test(mime);
   const isVideo = /^video\//i.test(mime);
-  if (!isImage && !isVideo)
-    throw new GraphQLError(`Remote URL must be image or video (got ${mime})`, {
+  const isAudio = /^audio\//i.test(mime);
+  if (!isImage && !isVideo && !isAudio)
+    throw new GraphQLError(`Remote URL must be an image, a video or a sound file (got ${mime})`, {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   const buf = Buffer.from(await remote.arrayBuffer());
   // Same admin Upload Settings as every other route in, per kind.
   const setting = await getUploadSettingsSafe(opts.surface);
-  assertUploadSize(buf.length, { isVideo, isDocument: false, isImage }, setting);
-  const ext = (mime.split('/')[1] || (isVideo ? 'mp4' : 'jpg'))
-    .replace('jpeg', 'jpg')
-    .split(';')[0];
+  // A sound file is held to the video ceiling: both are media stored as sent,
+  // never recompressed here.
+  assertUploadSize(buf.length, { isVideo: isVideo || isAudio, isDocument: false, isImage }, setting);
+  const subtype = (mime.split('/')[1] || (isVideo ? 'mp4' : 'jpg')).replace('jpeg', 'jpg').split(';')[0];
+  // audio/mpeg is an MP3; video/mpeg keeps its own name.
+  const ext = isAudio && subtype === 'mpeg' ? 'mp3' : subtype;
   const fileName =
     (opts.fileName || `import-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`).replace(
       /[^a-zA-Z0-9_.-]/g,

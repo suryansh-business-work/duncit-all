@@ -1,4 +1,5 @@
 import { ticketService } from './ticket.service';
+import { walletService } from './wallet/wallet.service';
 import type { GraphQLContext } from '@context';
 import { hasRole, requireAuth, requireRole } from '@middleware/rbac';
 import { consoleReaders } from '@modules/portals/console-access';
@@ -20,6 +21,11 @@ export const eventTicketResolvers = {
     eventTicketPdfBase64: (_p: unknown, args: { ticket_doc_id: string }, ctx: GraphQLContext) => {
       const u = requireAuth(ctx);
       return ticketService.pdfBase64(args.ticket_doc_id, u.id, hasRole(u, ADMIN_RW));
+    },
+    // Own ticket only: the service looks the ticket up by the caller's id.
+    myEventTicketWalletLinks: (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
+      const u = requireAuth(ctx);
+      return walletService.linksForPod(args.pod_doc_id, u.id);
     },
     eventTickets: (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);

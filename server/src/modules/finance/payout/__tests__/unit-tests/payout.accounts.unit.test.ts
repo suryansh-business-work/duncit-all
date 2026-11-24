@@ -1,4 +1,5 @@
-import { matchVerified, toVerifiedAccount, type VerifiedAccount } from '../../payout.accounts';
+import type { GraphQLError } from 'graphql';
+import { customAccount, matchVerified, toVerifiedAccount, type VerifiedAccount } from '../../payout.accounts';
 
 const account = (patch: Partial<VerifiedAccount> = {}): VerifiedAccount => ({
   id: 'HOST:1',
@@ -77,5 +78,46 @@ describe('matchVerified', () => {
 
   it('matches nothing when the person has no verified account', () => {
     expect(matchVerified([], { payout_method: 'IMPS', account_number: '1', ifsc_code: 'HDFC0001234' })).toBeNull();
+  });
+});
+
+describe('customAccount', () => {
+  const fieldOf = (raw: Parameters<typeof customAccount>[0]): unknown => {
+    try {
+      customAccount(raw);
+    } catch (error) {
+      return (error as GraphQLError).extensions?.field;
+    }
+    return undefined;
+  };
+
+  it('keeps only the UPI ID for a UPI destination, so stray bank details cannot ride along', () => {
+    expect(customAccount({ payout_method: 'upi', upi_id: ' meera@okhdfc ', account_number: '123456789012', ifsc_code: 'HDFC0001234' })).toEqual({
+      id: 'CUSTOM',
+      source: 'CUSTOM',
+      label: '',
+      payout_method: 'UPI',
+      account_holder_name: '',
+      account_number: '',
+      ifsc_code: '',
+      upi_id: 'meera@okhdfc',
+    });
+  });
+
+  it('keeps holder, number and an upper-cased IFSC for a bank destination, and drops any UPI ID', () => {
+    expect(
+      customAccount({ payout_method: 'NEFT', account_holder_name: ' Meera Nair ', account_number: '123456789012', ifsc_code: 'hdfc0001234', upi_id: 'x@ok' })
+    ).toMatchObject({ source: 'CUSTOM', payout_method: 'NEFT', account_holder_name: 'Meera Nair', ifsc_code: 'HDFC0001234', upi_id: '' });
+  });
+
+  it('refuses a missing or unknown method, a bank account with no holder, and an over-long holder name', () => {
+    expect(fieldOf({ upi_id: 'a@ok' })).toBe('custom_account.payout_method');
+    expect(fieldOf({ payout_method: 'CHEQUE', upi_id: 'a@ok' })).toBe('custom_account.payout_method');
+    expect(fieldOf({ payout_method: 'IMPS', account_number: '123456789012', ifsc_code: 'HDFC0001234' })).toBe('custom_account.account_holder_name');
+    expect(fieldOf({ payout_method: 'UPI', upi_id: 'a@ok', account_holder_name: 'n'.repeat(121) })).toBe('custom_account.account_holder_name');
+  });
+
+  it('lets a UPI destination go without a holder name — the UPI ID names the payee', () => {
+    expect(fieldOf({ payout_method: 'UPI', upi_id: 'a@okhdfc' })).toBeUndefined();
   });
 });

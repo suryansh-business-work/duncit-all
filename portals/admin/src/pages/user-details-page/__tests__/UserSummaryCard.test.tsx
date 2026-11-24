@@ -184,6 +184,29 @@ describe('UserSummaryCard — field rows', () => {
     expect(rowValue('Last Activity')).toHaveTextContent('Not recorded yet');
   });
 
+  it('lists all three platforms under Last Activity, the ones used marked used', () => {
+    renderWithProviders(
+      <UserSummaryCard user={user({ platforms_used: ['ANDROID', 'IOS'] })} form={form()} busy={false} onPhotoChange={vi.fn()} />,
+    );
+
+    const row = rowValue('Platforms Used');
+    expect(within(row).getAllByRole('img').map((icon) => icon.getAttribute('aria-label'))).toEqual([
+      'Android: used',
+      'iOS: used',
+      'Web: not used',
+    ]);
+    // The row sits directly under Last Activity.
+    const labels = screen.getAllByRole('rowheader').map((cell) => cell.textContent);
+    expect(labels.indexOf('Platforms Used')).toBe(labels.indexOf('Last Activity') + 1);
+  });
+
+  it('dims every platform for an account not seen on any of them', () => {
+    renderWithProviders(<UserSummaryCard user={user({ platforms_used: null })} form={form()} busy={false} onPhotoChange={vi.fn()} />);
+
+    const icons = within(rowValue('Platforms Used')).getAllByRole('img');
+    expect(icons.every((icon) => icon.getAttribute('data-used') === 'false')).toBe(true);
+  });
+
   it('shows a phone number alone when there is no extension', () => {
     renderWithProviders(
       <UserSummaryCard

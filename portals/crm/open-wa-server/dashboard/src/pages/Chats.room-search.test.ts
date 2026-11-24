@@ -133,7 +133,7 @@ before(async () => {
     return Promise.resolve(json({ message: `unstubbed ${path}` }, 404));
   }) as typeof fetch;
   window.sessionStorage.setItem('openwa_engine_type', 'whatsapp-web.js');
-  window.sessionStorage.setItem('openwa_api_key', 'test-key');
+  window.sessionStorage.setItem('openwa_api_key_id', 'test-key');
   const { i18nReady } = await import('../i18n/index.ts');
   await i18nReady;
   rtl = await import('@testing-library/react');
@@ -212,7 +212,7 @@ test('the search button puts the search bar in place of the room header, and Bac
   const { screen, fireEvent } = rtl;
   const container = await openSearch();
   assert.ok(container.querySelector('.room-header .room-search'));
-  assert.equal(focused(), 'input "Search"');
+  assert.equal(focused(), 'combobox "Search"');
   assert.ok(screen.queryByRole('button', { name: 'More actions' }) === null, 'the header was drawn beside the bar');
 
   const back = screen.getByRole('button', { name: 'Back' });
@@ -379,5 +379,5 @@ test('closing the contact panel while searching leaves focus in the search field
   close.focus();
   fireEvent.click(close);
   assert.ok(container.querySelector('.contact-info-panel') === null);
-  assert.equal(focused(), 'input "Search"');
+  assert.equal(focused(), 'combobox "Search"');
 });

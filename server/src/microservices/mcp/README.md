@@ -57,7 +57,7 @@ execute/pipeline.ts
 
 | Folder | What |
 |---|---|
-| `catalog/` | `categories.ts` (every typeDefs module → category; typed against the module list, so a new module must be filed or the server does not compile), `endpoints.ts` (connectors), `build.ts` (field → tool), `denylist.ts`, `sensitivity.ts`, `risk.ts`, `json-schema.ts`, `meta-params.ts`, `visibility.ts`, `console.service.ts` |
+| `catalog/` | `categories.ts` (every typeDefs module → category; typed against the module list, so a new module must be filed or the server does not compile), `endpoints.ts` (connectors), `build.ts` (field → tool), `denylist.ts`, `sensitivity.ts`, `risk.ts`, `json-schema.ts`, `meta-params.ts`, `visibility.ts`, `console.service.ts`, `self-service.ts` (a member's own reads filed under a console — wallet, payments, coins, account health — are also offered under `account`, so the member app reaches them; the tool keeps its name and category) |
 | `tools/` | Curated tools (`meta/*`, `pods/*`), `define.ts` (zod → tool), `tool.types.ts` |
 | `execute/` | `validate.ts`, `pipeline.ts`, `result.ts` |
 | `guard/` | Prompt-injection rules (`patterns.ts`) and scanner (`injection.ts`) |

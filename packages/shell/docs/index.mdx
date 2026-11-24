@@ -63,6 +63,7 @@ exports:
   - 'describeZone'
   - 'formatGmtOffset'
   - 'ABOVE_TASKBAR_HEIGHT'
+  - 'FloatingWindow'
   - 'SHELL_FALLBACK'
   - 'BackgroundJobsProvider'
   - 'BackgroundJobsIndicator'
@@ -550,6 +551,7 @@ non-empty one, else `http://localhost:2001/graphql` under `vite dev`, else
 | `zoneChoices` | `() => ZoneChoice[]` | Every zone the browser knows, described and ordered by offset: `{ value, offset, gmt, name }`. Built once per session — describing 400 zones is three `Intl` formatters each, and the tray re-renders every second. |
 | `describeZone` | `(zone: string, at?: Date) => ZoneChoice` | One zone on its own — used for the device's zone, which some engines resolve to a name their own list does not contain. |
 | `formatGmtOffset` | `(minutes: number) => string` | `330` → `'GMT+05:30'`. Padded, so a list of them sorts and reads straight. |
+| `FloatingWindow` | `(props: FloatingWindowProps) => JSX.Element` | A window over the page, not a modal: dragged by its title, resized from its corner, maximised, minimised to the taskbar (`useWorkspaceWindow`), closed — with an optional `closeWarning` confirm. `initial` is where it first opens (kept on screen); `onRectChange(rect)` fires once when a drag or a resize ends, so a page can save the place (Reel Studio's popped-out panes do); `fill` lets the content manage its own height. Demo: shell › floating-window. |
 | `ABOVE_TASKBAR_HEIGHT` | `string` | `calc(100% - 40px)` — the height a viewport-fixed paper needs so the taskbar does not swallow its last row. |
 | `useColorMode` | `() => …` | Light/dark mode, re-exported from `@duncit/theme`. |
 
@@ -559,9 +561,41 @@ non-empty one, else `http://localhost:2001/graphql` under `vite dev`, else
 | --- | --- |
 | `PortalBootConfig` | `key`, `name`, `tokenKey`, `colorModeKey`, `accent?`, `fullName?`, `nav?`, `searchItems?`, `requiredRoles?`, `footerCaption?` (default `© Duncit`) |
 | `AppConfig` | `PortalBootConfig` + `fullName`, `tagline`, `promoTitle`, `promoText`, `portalLabel`, `loginImage`, `requiredRoles`, `nav`, `modules?` |
-| `AppNavItem` | `{ label, to?, icon?, children?, pinBottom? }` — `children` renders a collapsible group; `pinBottom` (top-level, opt-in) moves the entry out of the scrolling menu to the sidebar's foot, just above the signed-in user, on the full sidebar, the icon rail and the mobile drawer |
+| `AppNavItem` | `{ label, to?, icon?, children?, pinBottom?, badge? }` — `children` renders a collapsible group; `pinBottom` (top-level, opt-in) moves the entry out of the scrolling menu to the sidebar's foot, just above the signed-in user, on the full sidebar, the icon rail and the mobile drawer; `badge` puts an animated red count on the entry (see [Nav badges](#nav-badges)) |
+| `NavBadge` | `{ count, label?, labelKey? }` — `labelKey` is translated by `localizeNav` with `{count}` filled in; a count of 0 shows nothing |
 | `SearchItem` | `{ label, to, keywords?, section? }` |
 | `AppModule` | `{ title, description, icon }` — a "Coming soon" dashboard card |
+
+## Nav badges
+
+Give a nav entry a `badge` when work waits on the signed-in user behind it. The Partners console
+uses it for Workshop & Event Requests: the venue's unanswered booking offers plus members' open
+requests.
+
+```tsx
+const nav: AppNavItem[] = [
+  {
+    label: 'Workshop & Event Requests',
+    to: '/venues/requests',
+    icon: 'host-request',
+    badge: { count: 3, labelKey: 'shell.nav.waitingForYourAction' }, // "3 waiting for your action"
+  },
+];
+```
+
+- **Leaf row:** a red pill beside the label. It hops briefly and a ring swells out of it every
+  few seconds. Hovering or focusing the row shows the label as a tooltip. The tooltip
+  *describes* the link and leaves its name alone, so the link is still "Workshop & Event Requests".
+- **Group:** while it is closed it shows the sum of its children's badges, so the count is not
+  hidden. Once opened, each child shows its own.
+- **Icon rail:** the count sits on the glyph's corner, and the tooltip reads
+  `Label (badge label)`.
+- **Screen readers** hear the label in place of the bare number. Counts above 99 read `99+`.
+- **Reduced motion:** both animations stop under `prefers-reduced-motion: reduce`.
+
+A console with its own menu outside the sidebar (Partners' studio menu) uses the same pieces:
+`NavCountBadge` (`{ badge, children? }`: a pill, or the corner count around `children`) and
+`NavBadgeTooltip` (`{ badge, children }`).
 
 ## Live preview
 

@@ -17,6 +17,9 @@ import NearbyLeadsControl from '../nearby-leads/NearbyLeadsControl';
 import { ENTITY_OF_TABLE } from '../lead-quality/qualityLabels';
 import { buildQualityColumns } from './quality/qualityColumns';
 import RecalculateScoresAction from './quality/RecalculateScoresAction';
+import { MATCHED_USER_ENTITIES, buildMatchedUserColumns } from './matchedUserColumns';
+import { usePlatformText } from '@duncit/ui';
+import { useDateFormat } from '@duncit/app-settings';
 
 /** The Assigned To filter lists the whole CRM team; it is a small group. */
 const ASSIGNEE_FILTER_LIMIT = 50;
@@ -63,6 +66,8 @@ export default function CrmLeadsTable<T extends LeadRow>({
     () => users.map((user) => ({ value: user.id, label: user.name || user.email || user.id })),
     [users],
   );
+  const platformText = usePlatformText();
+  const { formatDateTime } = useDateFormat({ timeZoneAware: true });
   const nearbyOn = Boolean(nearby?.near);
   const meta = leadEntityMeta(t)[entity];
   const columns = useMemo(() => {
@@ -70,8 +75,10 @@ export default function CrmLeadsTable<T extends LeadRow>({
     const quality = buildQualityColumns<T>({ entity, nameField: leadEntityMeta(t)[entity].nameField, t });
     // The Distance column sits right after the lead name while a nearby search is on; the Quality Score follows.
     const lead = nearbyOn ? [base[0], distanceColumn<T>(t)] : [base[0]];
-    return withDuplicateMark([...lead, ...quality, ...base.slice(1)], t);
-  }, [entity, statusOptions, priorityOptions, superCategoryOptions, assigneeOptions, onEdit, onDelete, t, nearbyOn]);
+    // Devices + Last activity of the matched Duncit account, after the quality score.
+    const matched = MATCHED_USER_ENTITIES.has(entity) ? buildMatchedUserColumns<T>({ platformText, formatDateTime, t }) : [];
+    return withDuplicateMark([...lead, ...quality, ...matched, ...base.slice(1)], t);
+  }, [entity, statusOptions, priorityOptions, superCategoryOptions, assigneeOptions, onEdit, onDelete, t, nearbyOn, platformText, formatDateTime]);
   const getRowStyle = useMemo(() => duplicateRowStyle(theme), [theme]);
 
   return (

@@ -123,6 +123,15 @@ function requestPreview(messages: OpenAiMessage[]): string {
 
 const isGeminiModel = (model: string): boolean => model.toLowerCase().startsWith('gemini-');
 
+/**
+ * The Tech portal env category holding the key a model is sent with, so a
+ * "not configured" answer can link to the one field that fixes it.
+ */
+export function envCategoryOfModel(model: string): 'GEMINI' | 'ANTHROPIC' | 'OPENAI' {
+  if (isGeminiModel(model)) return 'GEMINI';
+  return isClaudeModel(model) ? 'ANTHROPIC' : 'OPENAI';
+}
+
 export async function resolveConfig(pinnedModel?: string) {
   const pinned = pinnedModel?.trim() ?? '';
   if (isGeminiModel(pinned)) {

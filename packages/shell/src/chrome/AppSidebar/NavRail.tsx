@@ -3,7 +3,8 @@ import { Divider, List, ListItemButton, ListItemIcon, Popover, Tooltip, Typograp
 import { NavLink, useLocation } from 'react-router';
 import type { AppNavItem } from '../../types';
 import { AppIcon } from '../AppIcon';
-import { groupActive, matches, splitPinned } from './helpers';
+import { groupActive, matches, navBadgeOf, splitPinned } from './helpers';
+import { NavCountBadge } from './NavCountBadge';
 import { tokens } from '@duncit/theme';
 import { NavNode } from './nav-items';
 
@@ -43,9 +44,20 @@ interface RailItemProps {
  */
 function RailItem({ item, pathname, onNavigate, onOpenMenu }: Readonly<RailItemProps>) {
   const children = item.children ?? [];
+  // A group carries every badge under it: its children are out of sight here.
+  const badge = navBadgeOf(item);
+  // The tooltip is the accessible name, so it names the waiting work as well.
+  const title = badge?.label ? `${item.label} (${badge.label})` : item.label;
+  const glyph = (
+    <ListItemIcon>
+      <NavCountBadge badge={badge}>
+        <AppIcon name={item.icon} fontSize="small" />
+      </NavCountBadge>
+    </ListItemIcon>
+  );
   if (children.length > 0) {
     return (
-      <Tooltip title={item.label} placement="right">
+      <Tooltip title={title} placement="right">
         <ListItemButton
           selected={groupActive(pathname, item)}
           onClick={(event) => onOpenMenu(event.currentTarget, item)}
@@ -53,15 +65,13 @@ function RailItem({ item, pathname, onNavigate, onOpenMenu }: Readonly<RailItemP
           data-testid="shell-nav-rail-group"
           sx={railItemSx}
         >
-          <ListItemIcon>
-            <AppIcon name={item.icon} fontSize="small" />
-          </ListItemIcon>
+          {glyph}
         </ListItemButton>
       </Tooltip>
     );
   }
   return (
-    <Tooltip title={item.label} placement="right">
+    <Tooltip title={title} placement="right">
       <ListItemButton
         component={NavLink}
         to={item.to ?? '#'}
@@ -70,9 +80,7 @@ function RailItem({ item, pathname, onNavigate, onOpenMenu }: Readonly<RailItemP
         data-testid="shell-nav-rail-leaf"
         sx={railItemSx}
       >
-        <ListItemIcon>
-          <AppIcon name={item.icon} fontSize="small" />
-        </ListItemIcon>
+        {glyph}
       </ListItemButton>
     </Tooltip>
   );

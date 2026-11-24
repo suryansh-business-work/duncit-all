@@ -15,6 +15,7 @@
 
 import { mwebSpotsLabels, shellSpotsLabels, type SpotsStepperLabels } from '@duncit/ui';
 import {
+  POD_COMPLETE_LEAD_MINUTES,
   POD_SCAN_LEAD_MINUTES,
   mwebSmartIncentiveLabels,
   mwebVenueBillLabels,
@@ -150,6 +151,8 @@ export interface HostPodActionLabels {
    */
   amendClosed: string;
   completePod: string;
+  /** Under the Complete row until it opens, shortly before the pod ends. */
+  completeNotOpen: string;
   editPod: string;
   /** "Host again" — copies a pod's content into a new draft. */
   hostAgain: string;
@@ -346,6 +349,9 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     scanNotOpen: t('mweb.hostPodActions.scanNotOpen', { vars: { minutes: POD_SCAN_LEAD_MINUTES } }),
     amendClosed: t('mweb.hostPodActions.amendClosed'),
     completePod: t('mweb.hostPodActions.completePod'),
+    completeNotOpen: t('mweb.hostPodActions.completeNotOpen', {
+      vars: { minutes: POD_COMPLETE_LEAD_MINUTES },
+    }),
     editPod: t('mweb.hostPodActions.editPod'),
     hostAgain: t('mweb.hostPodActions.hostAgain'),
     hostAgainHint: t('mweb.hostPodActions.hostAgainHint'),
@@ -496,6 +502,9 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     scanNotOpen: t('shell.hostPodActions.scanNotOpen', { vars: { minutes: POD_SCAN_LEAD_MINUTES } }),
     amendClosed: t('shell.hostPodActions.amendClosed'),
     completePod: t('shell.hostPodActions.completePod'),
+    completeNotOpen: t('shell.hostPodActions.completeNotOpen', {
+      vars: { minutes: POD_COMPLETE_LEAD_MINUTES },
+    }),
     editPod: t('shell.hostPodActions.editPod'),
     hostAgain: t('shell.hostPodActions.hostAgain'),
     hostAgainHint: t('shell.hostPodActions.hostAgainHint'),

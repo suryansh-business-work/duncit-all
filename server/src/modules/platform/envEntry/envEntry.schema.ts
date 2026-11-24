@@ -50,9 +50,13 @@ const SDL_CATEGORIES = [
   'SERPER',
   'ANTHROPIC',
   'REMOTION',
+  'PIXABAY',
+  'JAMENDO',
   'MONGODB',
   'MCP_SERVER',
   'GMAIL',
+  'APPLE_WALLET',
+  'GOOGLE_WALLET',
 ];
 
 if (SDL_CATEGORIES.join(',') !== ENV_CATEGORIES.join(',')) {
@@ -97,9 +101,13 @@ export const envEntryTypeDefs = gql`
     SERPER
     ANTHROPIC
     REMOTION
+    PIXABAY
+    JAMENDO
     MONGODB
     MCP_SERVER
     GMAIL
+    APPLE_WALLET
+    GOOGLE_WALLET
   }
 
   type EnvConfigPair {

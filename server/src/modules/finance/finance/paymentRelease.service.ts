@@ -4,6 +4,7 @@ import { logs } from '@observability/log';
 import { Types } from 'mongoose';
 import { PaymentReleaseModel, type IPaymentRelease, type PaymentReleaseKind } from './paymentRelease.model';
 import { isFreePod, PodModel } from '@modules/pods/pod/pod.model';
+import { POD_COMPLETE_LEAD_MINUTES, podCompletionOpen } from '@modules/pods/pod/pod.lifecycle';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { sendEmail } from '@services/email/email.service';
@@ -878,6 +879,8 @@ export function releaseGroupFilter(groupId: string): Record<string, unknown> {
 /** The slice of a pod and of the completion input the guards below read. */
 interface CompletingPod {
   _id: unknown;
+  pod_date_time?: Date | null;
+  pod_end_date_time?: Date | null;
   venue_id?: unknown;
   venue_slot_id?: unknown;
   pod_hosts_id?: unknown[] | null;
@@ -896,6 +899,15 @@ function assertMayComplete(pod: CompletingPod, actor: { id: string; isAdmin: boo
   const isHost = (pod.pod_hosts_id ?? []).some((id) => String(id) === actor.id);
   if (!isHost && !actor.isAdmin) {
     throw new GraphQLError('Only a host of this pod can complete it', { extensions: { code: 'FORBIDDEN' } });
+  }
+  // The host's window opens shortly before the end — the same rule that greys
+  // Complete in Host Studio, enforced here because a greyed row is not a gate.
+  // An admin settling a pod by hand is not held to it.
+  if (!actor.isAdmin && !podCompletionOpen(pod)) {
+    throw new GraphQLError(
+      `This pod can be completed from ${POD_COMPLETE_LEAD_MINUTES} minutes before it ends`,
+      { extensions: { code: 'BAD_REQUEST' } }
+    );
   }
 }
 

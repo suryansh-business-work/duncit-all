@@ -68,6 +68,13 @@ export interface MessageToolCall {
   summary: string;
 }
 
+/** An image or PDF attached to a question (it lives in the asker's Media library). */
+export interface MessageAttachment {
+  media_id: string;
+  name: string;
+  mime: string;
+}
+
 export interface IIntelMessage {
   _id: Types.ObjectId;
   conversation_id: Types.ObjectId;
@@ -86,6 +93,7 @@ export interface IIntelMessage {
   /** Replaced by an edit or a regenerate — kept for the record, hidden from the thread. */
   superseded: boolean;
   edit_history: Array<{ content: string; edited_at: Date }>;
+  attachments: MessageAttachment[];
   created_at: Date;
   updated_at: Date;
 }
@@ -124,6 +132,7 @@ const messageSchema = new Schema<IIntelMessage>(
     error_message: { type: String, default: '' },
     superseded: { type: Boolean, default: false },
     edit_history: { type: [{ content: String, edited_at: Date }], default: [] },
+    attachments: { type: [{ media_id: String, name: String, mime: String, _id: false }], default: [] },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

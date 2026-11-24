@@ -31,6 +31,11 @@ export const MESSAGE_FIELDS = gql`
     error_message
     edited
     approval_ids
+    attachments {
+      id
+      name
+      mime
+    }
     created_at
     citations {
       ref

@@ -94,6 +94,9 @@ export function AskEmptyState() {
       <Text fontSize={14} color="$muted" textAlign="center">
         {t('askDuncit.empty.body')}
       </Text>
+      <Text testID="ask-duncit-beta-hint" fontSize={12} color="$muted" textAlign="center">
+        {t('askDuncit.betaHint')}
+      </Text>
     </YStack>
   );
 }

@@ -67,7 +67,7 @@ const userMutations = {
     await writeAudit({ type: 'SESSION', action: 'session.start', userId: actor.user.id, level: actor.level, ip: ctx.req.ip ?? '', detail: String(ctx.req.get('user-agent') ?? '').slice(0, 300) });
     return true;
   },
-  intelSend: (_: unknown, args: { input: SendInput }, ctx: GraphQLContext) => startTurn(requireIntel(ctx), args.input),
+  intelSend: (_: unknown, args: { input: SendInput }, ctx: GraphQLContext) => startTurn(requireIntel(ctx), args.input, { req: ctx.req, res: ctx.res }),
   intelStop: (_: unknown, args: { message_id: string }, ctx: GraphQLContext) => intelTurns.stop(args.message_id, requireIntel(ctx).user.id),
   intelUpdateConversation: (_: unknown, args: { id: string; patch: Parameters<typeof intelConversations.update>[2] }, ctx: GraphQLContext) =>
     intelConversations.update(requireIntel(ctx).user.id, args.id, args.patch),
@@ -81,7 +81,7 @@ const userMutations = {
   intelReindexMedia: (_: unknown, args: { id: string }, ctx: GraphQLContext) => intelMediaService.reindex(requireIntel(ctx), args.id),
   intelCreateFolder: (_: unknown, args: { path: string }, ctx: GraphQLContext) => intelMediaService.createFolder(requireIntel(ctx), args.path),
   intelDecideApproval: (_: unknown, args: { id: string; approve: boolean; note?: string | null }, ctx: GraphQLContext) =>
-    intelApprovalService.decide(requireIntel(ctx), args.id, args.approve, args.note ?? ''),
+    intelApprovalService.decide(requireIntel(ctx), args.id, args.approve, args.note ?? '', { req: ctx.req, res: ctx.res }),
 };
 
 export const intelResolvers = {
@@ -96,4 +96,5 @@ export const intelResolvers = {
   IntelApproval: dateFields('decided_at', 'expires_at', 'created_at'),
   IntelAuditRow: dateFields('created_at'),
   IntelIndexDocument: dateFields('indexed_at'),
+  IntelGmailAccount: dateFields('connected_at', 'updated_at'),
 };

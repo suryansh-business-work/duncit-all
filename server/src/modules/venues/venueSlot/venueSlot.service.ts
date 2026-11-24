@@ -1096,6 +1096,25 @@ function venueMoneyOf(slot: IVenueSlot, spots: number, commissionPct: number) {
   return { pct: commissionPct, commission: side.commission_paise / 100, receives: side.receives_paise / 100 };
 }
 
+/**
+ * The owner's booking requests they can still decide: pending holds on their
+ * venues (or one of them) whose slot has not begun. A request whose slot has
+ * begun is already settled — the sweep declines it — and showing it as
+ * "Awaiting decision" invites a decision that cannot be made.
+ */
+function openRequestsFilter(userId: string, venueId?: string | null) {
+  const q: Record<string, unknown> = {
+    status: 'PENDING',
+    owner_user_id: new Types.ObjectId(userId),
+    start_at: { $gt: new Date() },
+  };
+  if (venueId) {
+    if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue_id');
+    q.venue_id = new Types.ObjectId(venueId);
+  }
+  return q;
+}
+
 function toRequestRow(s: IVenueSlot, pod: any, host: any, venueName: string) {
   const hostName = host
     ? `${host.profile?.first_name ?? ''} ${host.profile?.last_name ?? ''}`.trim()
@@ -1359,19 +1378,7 @@ export const venueSlotService = {
   /** Owner: pending booking requests across their venues, newest first,
    * joined with the requesting pod and its host's contact details. */
   async listRequests(userId: string, venueId?: string | null) {
-    const q: any = {
-      status: 'PENDING',
-      owner_user_id: new Types.ObjectId(userId),
-      // Only what the owner can still decide. A request whose slot has begun is
-      // already settled — the sweep declines it — and leaving it on the page
-      // labelled "Awaiting decision" invites a decision that cannot be made.
-      start_at: { $gt: new Date() },
-    };
-    if (venueId) {
-      if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue_id');
-      q.venue_id = new Types.ObjectId(venueId);
-    }
-    const slots = await VenueSlotModel.find(q).sort({ updated_at: -1 }).limit(200);
+    const slots = await VenueSlotModel.find(openRequestsFilter(userId, venueId)).sort({ updated_at: -1 }).limit(200);
     if (!slots.length) return [];
     const podIds = slots.map((s) => s.booked_by_pod_id).filter(Boolean);
     const pods = await PodModel.find({ _id: { $in: podIds } }).select(
@@ -1393,6 +1400,20 @@ export const venueSlotService = {
         const host: any = hostMap.get(String((pod.pod_hosts_id ?? [])[0])) ?? null;
         return toRequestRow(s, pod, host, venueMap.get(String(s.venue_id)) ?? '');
       });
+  },
+
+  /**
+   * Owner: how many of those requests wait on THEM — a host's offer the venue
+   * has not answered yet (`awaitingParty` is VENUE while it is SENT), or an old
+   * request with no offer at all. A counter the venue sent waits on the host,
+   * so it is left out. One count, no rows, for the console's sidebar badge.
+   */
+  countAwaitingRequests(userId: string, venueId?: string | null): Promise<number> {
+    return VenueSlotModel.countDocuments({
+      ...openRequestsFilter(userId, venueId),
+      booked_by_pod_id: { $ne: null },
+      $or: [{ offer: null }, { 'offer.status': 'SENT' }],
+    });
   },
 
   /**

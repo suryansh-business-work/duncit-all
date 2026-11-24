@@ -1,5 +1,7 @@
 import type {
   ReelAsset as GeneratedReelAsset,
+  ReelAssetKind,
+  ReelStockProvider,
   ReelCorner,
   ReelProject as GeneratedReelProject,
   ReelProjectSummary as GeneratedReelProjectSummary,
@@ -25,6 +27,9 @@ export type {
   ReelMusic,
   ReelOverlay,
   ReelScene,
+  ReelStockProvider,
+  ReelStudioPaneId,
+  ReelStudioPaneMode,
   ReelText,
 } from '@duncit/gql-types';
 
@@ -116,10 +121,10 @@ export interface ReelProjectSummary extends GeneratedReelProjectSummary {
   views: number;
 }
 
-/** One stock file as the provider search answers it. */
+/** One stock file as the provider search answers it: a photo or clip, or a track from the music library. */
 export interface ReelStockItem {
   id: string;
-  kind: 'IMAGE' | 'VIDEO';
+  kind: ReelAssetKind;
   url: string;
   preview_url: string;
   width: number;
@@ -128,6 +133,8 @@ export interface ReelStockItem {
   licence: string;
   attribution: string;
   provider_id: string;
+  /** The library that listed it. */
+  provider: ReelStockProvider;
 }
 
 export interface ReelStockPage {
@@ -138,7 +145,7 @@ export interface ReelStockPage {
 /** What `addReelStockAssets` is handed for one file. */
 export interface ReelStockInput {
   provider_id: string;
-  kind: 'IMAGE' | 'VIDEO';
+  kind: ReelAssetKind;
   url: string;
   preview_url: string;
   name: string;
@@ -147,6 +154,7 @@ export interface ReelStockInput {
   duration_ms: number;
   licence: string;
   attribution: string;
+  provider: ReelStockProvider;
 }
 
 /** What `addReelUploadAssets` is handed for one file. */

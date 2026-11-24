@@ -109,7 +109,15 @@ export const intelTypeDefs = gql`
     error_code: String
     error_message: String
     edited: Boolean!
+    "Images and PDFs attached to a question."
+    attachments: [IntelMessageAttachment!]!
     created_at: String!
+  }
+
+  type IntelMessageAttachment {
+    id: ID!
+    name: String!
+    mime: String!
   }
 
   type IntelSendResult {
@@ -126,6 +134,8 @@ export const intelTypeDefs = gql`
     sources: [String!]
     edit_message_id: ID
     regenerate: Boolean
+    "Up to five images or PDFs from the asker's Media library (uploaded first)."
+    attachment_ids: [ID!]
   }
 
   input IntelConversationPatch {
@@ -148,6 +158,26 @@ export const intelTypeDefs = gql`
     description: String!
     is_default: Boolean!
     last_test_ok: Boolean
+    "The one environment a built-in source serves (this server's database or MCP); null for a Tech portal entry."
+    environment: String
+    "This server's own database or MCP — no Tech portal entry behind it."
+    builtin: Boolean!
+  }
+
+  "A repository the GitHub entry's token can read."
+  type IntelGithubRepo {
+    owner: String!
+    name: String!
+    default_branch: String!
+  }
+
+  "A Gmail mailbox connected with Google (read-only) and the connector that indexes it."
+  type IntelGmailAccount {
+    id: ID!
+    email: String!
+    connected_at: String
+    updated_at: String
+    connector_id: ID
   }
 
   type IntelTool {
@@ -350,6 +380,8 @@ export const intelTypeDefs = gql`
   type IntelHealth {
     qdrant_configured: Boolean!
     qdrant_reachable: Boolean!
+    "Why the vector index is not reachable ('' when it is)."
+    qdrant_error: String!
     collections: [IntelCollectionHealth!]!
     queue_configured: Boolean!
     openai_configured: Boolean!
@@ -395,6 +427,9 @@ export const intelTypeDefs = gql`
     intelMongoCollections(entry_id: ID!, database: String): [String!]!
     intelSlackChannels(entry_id: ID!): [IntelSlackChannel!]!
     intelGithubBranches(entry_id: ID!, owner: String!, repo: String!): [String!]!
+    intelGithubRepos(entry_id: ID!): [IntelGithubRepo!]!
+    intelOpenAiModels: [String!]!
+    intelGmailAccounts: [IntelGmailAccount!]!
     intelSyncRuns(connector_id: ID, limit: Int): [IntelSyncRun!]!
     intelIndexDocuments(source: String, scope: String, status: String, search: String, page: Int, page_size: Int): IntelIndexPage!
     intelIndexStats: [IntelIndexStat!]!
@@ -431,5 +466,7 @@ export const intelTypeDefs = gql`
     intelDiscoverTools(id: ID!): IntelConnector!
     intelSetToolClass(id: ID!, tool: String!, class: String): IntelConnector!
     intelRebuildIndex(scope: String): Int!
+    intelGmailConnectUrl: String!
+    intelDisconnectGmail(id: ID!): Boolean!
   }
 `;

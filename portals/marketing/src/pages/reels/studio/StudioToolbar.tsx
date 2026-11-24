@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Chip, Stack, Tooltip } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -23,7 +24,9 @@ interface Props {
   /** Makes the frame under the playhead the cover. */
   onCover: () => void;
   settingCover: boolean;
-  onExport: () => Promise<void>;
+  onExport: () => Promise<void> | void;
+  /** The studio's Layout menu: panes shown, saved, restored. */
+  layoutMenu?: ReactNode;
 }
 
 /** The toolbar's chip about the checks: how they stand, or nothing until they have been run. */
@@ -44,7 +47,7 @@ function ChecksChip({ checks }: Readonly<{ checks: readonly ReelCheck[] }>) {
 }
 
 /** The studio's top bar: which reel this is, how it stands, and every tool that acts on it as a whole. */
-export default function StudioToolbar({ project, checks, onEditDetails, onTool, onCover, settingCover, onExport }: Readonly<Props>) {
+export default function StudioToolbar({ project, checks, onEditDetails, onTool, onCover, settingCover, onExport, layoutMenu }: Readonly<Props>) {
   const { t } = useTranslation();
   const sceneCount = project.spec.scenes.length;
   const hasScenes = sceneCount > 0;
@@ -69,6 +72,7 @@ export default function StudioToolbar({ project, checks, onEditDetails, onTool, 
           {project.cover_at_ms !== null && (
             <Chip size="small" variant="outlined" label={t('ai.reels.cover.chip', { vars: { at: formatReelDuration(project.cover_at_ms) } })} data-testid="reel-cover-chip" />
           )}
+          {layoutMenu}
           <DuncitButton size="small" startIcon={<EditOutlinedIcon />} onClick={onEditDetails} data-testid="reel-studio-edit-details">
             {t('ai.reels.studio.editDetails')}
           </DuncitButton>

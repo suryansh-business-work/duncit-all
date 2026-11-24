@@ -69,14 +69,17 @@ interface PodProps {
   when: string;
   /** Venue charges payable at the door, already formatted — empty when none. */
   venueNote: string | null;
-  onAppleWallet: () => void;
-  onGoogleCalendar: () => void;
+  /** Signed .pkpass link; null hides the Apple Wallet button. */
+  appleWalletUrl: string | null;
+  /** Google's save link; null hides the Google Wallet button. */
+  googleWalletUrl: string | null;
 }
 
-/** The booked pod on the confirmation: what and when, the calendar shortcuts,
- * and the venue charges still to be paid at the door. */
-export function SuccessPodCard({ title, when, venueNote, onAppleWallet, onGoogleCalendar }: Readonly<PodProps>) {
+/** The booked pod on the confirmation: what and when, the add-to-wallet
+ * buttons that are set up, and the venue charges still to be paid at the door. */
+export function SuccessPodCard({ title, when, venueNote, appleWalletUrl, googleWalletUrl }: Readonly<PodProps>) {
   const { t } = useTranslation();
+  const hasWallet = Boolean(appleWalletUrl || googleWalletUrl);
   return (
     <Box data-testid="confirmation-pod" sx={{ ...SURFACE_SX, p: 2, textAlign: 'left' }}>
       <Stack spacing={1.5}>
@@ -100,15 +103,40 @@ export function SuccessPodCard({ title, when, venueNote, onAppleWallet, onGoogle
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>{when}</Typography>
           </Box>
         </Stack>
-        <Divider />
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-          <DuncitButton data-testid="success-pod-apple-wallet" fullWidth variant="outlined" startIcon={<AppleIcon />} onClick={onAppleWallet}>
-            {t('mweb.checkout.appleWallet')}
-          </DuncitButton>
-          <DuncitButton data-testid="success-pod-google-wallet" fullWidth variant="outlined" startIcon={<GoogleIcon />} onClick={onGoogleCalendar}>
-            {t('mweb.checkout.googleWallet')}
-          </DuncitButton>
-        </Stack>
+        {hasWallet && (
+          <>
+            <Divider />
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              {appleWalletUrl && (
+                // Same tab: Safari hands a pkpass straight to Wallet's add sheet.
+                <DuncitButton
+                  component="a"
+                  href={appleWalletUrl}
+                  data-testid="success-pod-apple-wallet"
+                  fullWidth
+                  variant="outlined"
+                  startIcon={<AppleIcon />}
+                >
+                  {t('mweb.checkout.appleWallet')}
+                </DuncitButton>
+              )}
+              {googleWalletUrl && (
+                <DuncitButton
+                  component="a"
+                  href={googleWalletUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="success-pod-google-wallet"
+                  fullWidth
+                  variant="outlined"
+                  startIcon={<GoogleIcon />}
+                >
+                  {t('mweb.checkout.googleWallet')}
+                </DuncitButton>
+              )}
+            </Stack>
+          </>
+        )}
         {venueNote && (
           <Stack data-testid="success-venue-note" direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             <StorefrontIcon fontSize="small" sx={{ color: 'text.secondary' }} />

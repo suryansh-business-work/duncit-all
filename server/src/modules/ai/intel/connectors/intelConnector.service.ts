@@ -1,6 +1,5 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { validate } from '@utils/validate';
 import type { IntelActor } from '../access/intel.access';
 import { writeAudit } from '../audit/intelAudit.service';
 import { CONNECTOR_ENV_CATEGORY, type IntelConnectorKind, type ToolClass } from '../intel.constants';
@@ -8,9 +7,11 @@ import { removeConnectorDocuments } from '../index/intel.indexer';
 import { DRIVERS } from '../sync/intel.drivers';
 import { scheduleSync } from '../sync/intelSync.queue';
 import { IntelSyncRunModel } from '../sync/intelSyncRun.model';
-import { listBranches } from './github/github.connector';
+import { listBranches, listRepos } from './github/github.connector';
+import { builtinEntryOption } from './intel.builtin';
+import { connectorEntry, isDuncitMcp } from './intel.connectorEntry';
 import { entryOptions, resolveEntry } from './intel.credentials';
-import { CONFIG_SCHEMAS, connectorInputSchema } from './intelConnector.schema';
+import { credentialNames, invalidInput, parseConnectorInput, settleConnectorEntry } from './intelConnector.input';
 import { IntelConnectorModel, type IIntelConnector } from './intelConnector.model';
 import { discoverTools } from './mcp/mcp.connector';
 import { listCollections } from './mongo/mongo.connector';
@@ -51,18 +52,9 @@ async function load(id: string): Promise<IIntelConnector> {
 }
 
 async function entryFor(c: IIntelConnector) {
-  const entry = await resolveEntry(CONNECTOR_ENV_CATEGORY[c.kind], c.env_entry_id);
-  if (!entry) throw new GraphQLError('The Tech portal entry this connector uses is missing or inactive. Pick another entry.', { extensions: { code: 'BAD_USER_INPUT' } });
+  const entry = await connectorEntry(c);
+  if (!entry) throw new GraphQLError('The credentials this connector uses are missing — its Tech portal entry is inactive or deleted, or its Gmail account was disconnected.', { extensions: { code: 'BAD_USER_INPUT' } });
   return entry;
-}
-
-async function parse(input: unknown) {
-  const base = await validate(connectorInputSchema, input);
-  const config = await validate(CONFIG_SCHEMAS[base.kind], base.config);
-  if (!(await resolveEntry(CONNECTOR_ENV_CATEGORY[base.kind], base.env_entry_id))) {
-    throw new GraphQLError('Validation failed', { extensions: { code: 'BAD_USER_INPUT', errors: ['env_entry_id: Choose an active Tech portal entry of the right kind'] } });
-  }
-  return { ...base, config };
 }
 
 const audit = (actor: IntelActor, action: string, c: Pick<IIntelConnector, 'name' | 'environment'>, detail = '', status: 'OK' | 'FAILED' = 'OK') =>
@@ -71,23 +63,29 @@ const audit = (actor: IntelActor, action: string, c: Pick<IIntelConnector, 'name
 export const intelConnectorService = {
   async list(kind?: IntelConnectorKind | null) {
     const rows = await IntelConnectorModel.find(kind ? { kind } : {}).sort({ kind: 1, name: 1 }).lean();
-    const names = new Map((await Promise.all([...new Set(rows.map((r) => r.kind))].map((k) => entryOptions(CONNECTOR_ENV_CATEGORY[k])))).flat().map((e) => [e.id, e.name]));
-    return rows.map((r) => toConnectorDto(r, names.get(r.env_entry_id) ?? ''));
+    const nameOf = await credentialNames(rows);
+    return rows.map((r) => toConnectorDto(r, nameOf(r)));
   },
 
   async get(id: string) {
     const c = await load(id);
-    return toConnectorDto(c, (await resolveEntry(CONNECTOR_ENV_CATEGORY[c.kind], c.env_entry_id))?.name ?? '');
+    return toConnectorDto(c, (await credentialNames([c]))(c));
   },
 
-  entryOptions: (kind: IntelConnectorKind) => entryOptions(CONNECTOR_ENV_CATEGORY[kind]),
+  /** The credentials select: this server's own source first (the default), then the Tech portal entries. */
+  async entryOptions(kind: IntelConnectorKind) {
+    const builtin = builtinEntryOption(kind);
+    const entries = await entryOptions(CONNECTOR_ENV_CATEGORY[kind]);
+    return builtin ? [builtin, ...entries.map((e) => ({ ...e, is_default: false }))] : entries;
+  },
 
   /** The OpenAI entries for Settings › OpenAI API (not a connector kind). */
   entryOptionsFor: (category: 'OPENAI') => entryOptions(category),
 
   async create(actor: IntelActor, input: unknown) {
-    const data = await parse(input);
-    if (await IntelConnectorModel.exists({ kind: data.kind, name: data.name })) throw new GraphQLError('Validation failed', { extensions: { code: 'BAD_USER_INPUT', errors: ['name: A connector with this name already exists'] } });
+    const parsed = await parseConnectorInput(input);
+    if (await IntelConnectorModel.exists({ kind: parsed.data.kind, name: parsed.data.name })) throw invalidInput('name: A connector with this name already exists');
+    const data = await settleConnectorEntry(parsed);
     const created = await IntelConnectorModel.create({ ...data, created_by: actor.user.id, updated_by: actor.user.id });
     await audit(actor, 'connector.create', created, `${data.kind} via entry ${data.env_entry_id}`);
     if (created.enabled) await scheduleSync(created, 'FULL', 'CREATE', actor.user.id);
@@ -96,9 +94,10 @@ export const intelConnectorService = {
 
   async update(actor: IntelActor, id: string, input: unknown) {
     const before = await load(id);
-    const data = await parse({ ...(input as object), kind: before.kind });
-    const clash = await IntelConnectorModel.exists({ kind: data.kind, name: data.name, _id: { $ne: before._id } });
-    if (clash) throw new GraphQLError('Validation failed', { extensions: { code: 'BAD_USER_INPUT', errors: ['name: A connector with this name already exists'] } });
+    const parsed = await parseConnectorInput({ ...(input as object), kind: before.kind });
+    const clash = await IntelConnectorModel.exists({ kind: parsed.data.kind, name: parsed.data.name, _id: { $ne: before._id } });
+    if (clash) throw invalidInput('name: A connector with this name already exists');
+    const data = await settleConnectorEntry(parsed);
     await IntelConnectorModel.updateOne({ _id: before._id }, { $set: { name: data.name, environment: data.environment, env_entry_id: data.env_entry_id, enabled: data.enabled, config: data.config, updated_by: actor.user.id } });
     await audit(actor, 'connector.update', { name: data.name, environment: data.environment }, JSON.stringify(data.config).slice(0, 1500));
     return this.get(id);
@@ -148,7 +147,7 @@ export const intelConnectorService = {
 
   /** Pickers for the connector forms — read with the selected entry, before or after saving. */
   async collections(kind: 'MONGODB', entryId: string, database: string) {
-    const entry = await resolveEntry(CONNECTOR_ENV_CATEGORY[kind], entryId);
+    const entry = await connectorEntry({ kind, env_entry_id: entryId, config: {} });
     if (!entry) throw notFound();
     return listCollections({ config: { database } } as unknown as IIntelConnector, entry);
   },
@@ -165,9 +164,17 @@ export const intelConnectorService = {
     return listBranches(entry, owner, repo);
   },
 
+  /** Every repository the entry's token can read — the GitHub form's owner and repository selects. */
+  async githubRepos(entryId: string) {
+    const entry = await resolveEntry('GITHUB', entryId);
+    if (!entry) throw notFound();
+    return listRepos(entry);
+  },
+
   async discover(actor: IntelActor, id: string) {
     const c = await load(id);
     if (c.kind !== 'MCP') throw new GraphQLError('Only MCP connectors have tools', { extensions: { code: 'BAD_USER_INPUT' } });
+    if (isDuncitMcp(c)) throw new GraphQLError('Duncit MCP offers its tools live, per person — there is nothing to discover.', { extensions: { code: 'BAD_USER_INPUT' } });
     const tools = await discoverTools(c, await entryFor(c));
     await audit(actor, 'connector.discover', c, `${tools.length} tool(s)`);
     return this.get(id);

@@ -133,6 +133,7 @@ export const REEL_PROJECT = gql`
         asset_ids
         restorable
         failed
+        fix_url
         at
       }
       variants {
@@ -157,10 +158,10 @@ export const REEL_PROJECT = gql`
   ${REEL_SPEC_FIELDS}
 `;
 
-/** Stock footage from the provider the server is configured with; one page at a time. */
+/** Stock from one library — Pexels or Pixabay footage, Jamendo music — one page at a time. */
 export const REEL_MEDIA_SEARCH = gql`
-  query ReelMediaSearch($query: String!, $kind: ReelAssetKind!, $orientation: ReelAspect!, $page: Int!) {
-    reelMediaSearch(query: $query, kind: $kind, orientation: $orientation, page: $page) {
+  query ReelMediaSearch($query: String!, $kind: ReelAssetKind!, $orientation: ReelAspect!, $page: Int!, $provider: ReelStockProvider!) {
+    reelMediaSearch(query: $query, kind: $kind, orientation: $orientation, page: $page, provider: $provider) {
       items {
         id
         kind
@@ -172,9 +173,51 @@ export const REEL_MEDIA_SEARCH = gql`
         licence
         attribution
         provider_id
+        provider
       }
       has_more
     }
+  }
+`;
+
+/** How the signed-in person saved the studio's panes; null when they never did. */
+export const MY_REEL_STUDIO_LAYOUT = gql`
+  query MyReelStudioLayout {
+    myReelStudioLayout {
+      panes {
+        id
+        mode
+        size
+        x
+        y
+        width
+        height
+      }
+      updated_at
+    }
+  }
+`;
+
+export const SAVE_REEL_STUDIO_LAYOUT = gql`
+  mutation SaveReelStudioLayout($panes: [ReelStudioPaneInput!]!) {
+    saveReelStudioLayout(panes: $panes) {
+      panes {
+        id
+        mode
+        size
+        x
+        y
+        width
+        height
+      }
+      updated_at
+    }
+  }
+`;
+
+export const RESET_REEL_STUDIO_LAYOUT = gql`
+  mutation ResetReelStudioLayout {
+    resetReelStudioLayout
   }
 `;
 

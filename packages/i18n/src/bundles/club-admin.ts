@@ -40,6 +40,7 @@ export const CLUB_ADMIN_BUNDLE: NestedCatalogue = {
         venueDeclined: 'Venue Rejected',
         complete: 'Completed',
         rejected: 'Content Blocked',
+        attendanceForced: 'Attendance Marked by Club Admin',
       },
       source: {
         admin: 'Admin Portal',

@@ -67,7 +67,9 @@ export async function nearbyLeadTable<TDoc>(
   kind: LeadGeoKind,
   near: LeadNearInput,
   input: TableQueryInput | null | undefined,
-  config: TableEntityConfig
+  config: TableEntityConfig,
+  /** A filter the caller resolved itself (the Devices filter), applied inside the radius. */
+  baseFilter: Record<string, unknown> = {}
 ) {
   const centre = await nearCentre(near);
   await placeUnplacedLeads(kind);
@@ -81,6 +83,7 @@ export async function nearbyLeadTable<TDoc>(
         distanceMultiplier: 0.001,
         maxDistance: near.radius_km * 1000,
         spherical: true,
+        ...(Object.keys(baseFilter).length > 0 ? { query: baseFilter } : {}),
       },
     },
   ];

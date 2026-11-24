@@ -5,6 +5,8 @@ export interface HostPodMenuItemsProps {
   podId?: string;
   /** Hides everything that only makes sense for a pod that gets to run. */
   showAttendeeActions: boolean;
+  /** Completion is open (shortly before the end onwards). False: the row stays,
+   * greyed, saying when it opens. */
   canComplete: boolean;
   /**
    * The pod's door is open to a scanner — from shortly before the start to the

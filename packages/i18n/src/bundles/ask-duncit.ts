@@ -8,6 +8,8 @@ import type { NestedCatalogue } from '../catalogue';
 export const ASK_DUNCIT_BUNDLE: NestedCatalogue = {
   askDuncit: {
     title: 'Ask Duncit',
+    beta: 'Beta',
+    betaHint: 'Ask Duncit is experimental. Answers can be wrong, so check anything important.',
     actingAs: 'Helping you as',
     menu: {
       label: 'Ask Duncit',

@@ -3,17 +3,20 @@ import { Box, IconButton, InputBase, Paper, Stack, Tooltip, Typography } from '@
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import type { IntelMessageAttachment } from '@duncit/gql-types';
 import { useTranslation } from '@duncit/app-settings';
+import MessageAttachments from './MessageAttachments';
 
 interface Props {
   content: string;
   edited: boolean;
+  attachments?: readonly IntelMessageAttachment[];
   /** Undefined while a turn runs: editing then would race the answer. */
   onEdit?: (text: string) => void;
 }
 
 /** The person's question, right-aligned; editable in place, which answers again from there. */
-export default function UserMessage({ content, edited, onEdit }: Readonly<Props>) {
+export default function UserMessage({ content, edited, attachments = [], onEdit }: Readonly<Props>) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(content);
@@ -54,6 +57,7 @@ export default function UserMessage({ content, edited, onEdit }: Readonly<Props>
           </Typography>
         )}
       </Paper>
+      <MessageAttachments attachments={attachments} />
       <Box className="intel-msg-actions" sx={{ opacity: { xs: 1, md: 0 }, transition: 'opacity .2s', display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
         {edited && !editing && (
           <Typography variant="caption" color="text.secondary">

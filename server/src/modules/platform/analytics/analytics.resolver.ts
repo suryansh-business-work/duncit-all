@@ -3,6 +3,7 @@ import { readScope, requireAuth, requireRole } from '@middleware/rbac';
 import { validate } from '@utils/validate';
 import { analyticsService } from './analytics.service';
 import { recordAppEventSchema, recordAppEventsSchema } from './analytics.validator';
+import { appEventPlatformFromRequest } from './appEvent.platform';
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN'];
 
@@ -65,6 +66,7 @@ export const analyticsResolvers = {
         input,
         user_id: user.id,
         device_id: ctx.device_id ?? null,
+        platform: appEventPlatformFromRequest(ctx.req),
       });
     },
     // The product-analytics batch from mWeb and the native app. A visitor who

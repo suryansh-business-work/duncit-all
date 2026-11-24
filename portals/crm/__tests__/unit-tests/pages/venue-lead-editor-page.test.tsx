@@ -12,6 +12,20 @@ import { venueLead } from '../fixtures/leads';
 
 const SUPER = '64a000000000000000000001';
 
+/**
+ * Records whether `text` ever appeared in the page. The editor's notice is a Snackbar that hides
+ * itself after 4 s; under coverage on CI one remount can block the thread longer than that, so a
+ * query run afterwards finds it already gone. Call `stop()` when done.
+ */
+function watchForText(text: string) {
+  let seen = document.body.textContent?.includes(text) ?? false;
+  const observer = new MutationObserver(() => {
+    if (!seen && document.body.textContent?.includes(text)) seen = true;
+  });
+  observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+  return { seen: () => seen, stop: () => observer.disconnect() };
+}
+
 function LocationProbe() {
   const location = useLocation();
   return <output data-testid="location">{`${location.pathname}${location.search}`}</output>;
@@ -120,7 +134,8 @@ describe('VenueLeadEditorPage', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Update venue lead' }));
 
-    expect(await screen.findByText('Venue lead is locked')).toBeInTheDocument();
+    // The whole form renders before the save can fail; under v8 coverage that outlasts the 1 s default.
+    expect(await screen.findByText('Venue lead is locked', {}, { timeout: 3000 })).toBeInTheDocument();
     expect(screen.getByTestId('location')).toHaveTextContent('/venue-leads/venue-1');
   });
 
@@ -181,19 +196,31 @@ describe('VenueLeadEditorPage', () => {
     const updated: Record<string, any>[] = [];
     renderEditor({ pathname: '/venue-leads/new', state: { aiPrefill, from: '/venue-leads?status=New' } }, [
       capture(CREATE_VENUE_LEAD, 'createVenueLead', created),
-      leadMock({ ...venueLead({ super_category_id: SUPER }), matched_user: null }),
+      // The edit route reads the lead more than once (mount, then cache-and-network after the
+      // create wrote it); a single-use mock left the later reads unanswered.
+      { ...leadMock({ ...venueLead({ super_category_id: SUPER }), matched_user: null }), maxUsageCount: 5 },
       capture(UPDATE_VENUE_LEAD, 'updateVenueLead', updated),
     ]);
 
+    // Two full editor mounts and two saves: under v8 coverage on CI the create has landed after
+    // 3 s, so each step gets 10 s of the file's 30 s test budget.
+    const slow = { timeout: 10_000 };
+    // Press only once the AI draft is in the form. Under coverage on CI the button rendered before
+    // the prefill landed, the submit stopped at validation and the URL stayed on /venue-leads/new.
+    expect(await screen.findByDisplayValue('Sky Lounge', {}, slow)).toBeInTheDocument();
+    // The notice is only ever set by the navigation onto the edit URL, so seeing it at all proves
+    // it survived the remount instead of dying with the /new editor.
+    const notice = watchForText('Lead created. You can keep adding details.');
     fireEvent.click(await screen.findByRole('button', { name: 'Create & Continue' }));
-
-    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^\/venue-leads\/venue-1$/), { timeout: 3000 });
-    expect(await screen.findByText('Lead created. You can keep adding details.')).toBeInTheDocument();
-    expect(await screen.findByRole('heading', { level: 1, name: 'Edit Grand Hall' })).toBeInTheDocument();
+    await waitFor(() => expect(created).toHaveLength(1), slow);
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(/^\/venue-leads\/venue-1$/), slow);
+    await waitFor(() => expect(notice.seen()).toBe(true), slow);
+    notice.stop();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Edit Grand Hall' }, slow)).toBeInTheDocument();
 
     // The follow-up save updates the lead just created and still returns to the original list view.
     fireEvent.click(screen.getByRole('button', { name: 'Update venue lead' }));
-    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/venue-leads?status=New'), { timeout: 3000 });
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/venue-leads?status=New'), slow);
     expect(created).toHaveLength(1);
     expect(updated.at(-1)?.id).toBe('venue-1');
   });

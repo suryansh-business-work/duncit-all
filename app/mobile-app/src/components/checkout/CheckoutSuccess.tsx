@@ -50,6 +50,8 @@ export function CheckoutSuccess({
   const { primary, muted } = useThemeColors();
   const profileAction = profileLabel ?? t('mweb.checkout.myBookings');
   const invoiceLabel = t('mweb.checkout.downloadInvoice');
+  // Nothing paid, no invoice in the file — the button says so.
+  const ticketLabel = payment ? t('mweb.ticket.download') : t('mweb.ticket.downloadTicketOnly');
   const [busy, setBusy] = useState(false);
   const [ticketBusy, setTicketBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,9 +113,7 @@ export function CheckoutSuccess({
       </Text>
       {payment ? <CheckoutReceiptCard payment={payment} /> : null}
       <RentalSuccessCard payment={payment} depositRefundable={rentalDepositRefundable} />
-
       {pod ? <ConfirmationPodCard pod={pod} /> : null}
-
       {payment && venueTotal > 0 ? (
         <XStack testID="success-venue-note" alignItems="center" gap={6} alignSelf="stretch">
           <MaterialIcons name="storefront" size={16} color={muted} />
@@ -134,10 +134,10 @@ export function CheckoutSuccess({
       {onDownloadTicket ? (
         <ActionButton
           testID="download-ticket"
-          ariaLabel={t('mweb.ticket.download')}
+          ariaLabel={ticketLabel}
           busy={ticketBusy}
           onPress={() => fireAndForget(downloadTicket())}
-          label={t('mweb.ticket.download')}
+          label={ticketLabel}
           iconName="confirmation-number"
           variant="filled"
         />

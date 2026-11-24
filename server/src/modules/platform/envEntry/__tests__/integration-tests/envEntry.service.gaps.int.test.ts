@@ -292,6 +292,30 @@ describe('testEnvConnection: upstream probes', () => {
     await expect(testEnvConnection('PEXELS', { api_key: 'k' })).resolves.toEqual({ ok: false, message: 'Pexels rejected the key (HTTP 403)' });
   });
 
+  it('Pixabay: required, a pasted space caught before any request, rejected and valid', async () => {
+    await expect(testEnvConnection('PIXABAY', {})).resolves.toEqual({ ok: false, message: 'API key is required' });
+    await expect(testEnvConnection('PIXABAY', { api_key: '58803161- b3b3' })).resolves.toEqual({
+      ok: false,
+      message: 'The API key has a space in it — paste it again without spaces',
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+    answer(400);
+    await expect(testEnvConnection('PIXABAY', { api_key: '1-abc' })).resolves.toEqual({ ok: false, message: 'Pixabay rejected the key (HTTP 400)' });
+    expect(String(fetchMock.mock.calls[0][0])).toContain('key=1-abc');
+    answer(200, { totalHits: 1, hits: [] });
+    await expect(testEnvConnection('PIXABAY', { api_key: '1-abc' })).resolves.toEqual({ ok: true, message: 'Pixabay API key is valid' });
+  });
+
+  it('Jamendo: required, its own failure reason, a bare HTTP failure, and valid', async () => {
+    await expect(testEnvConnection('JAMENDO', {})).resolves.toEqual({ ok: false, message: 'Client ID is required' });
+    answer(200, { headers: { status: 'failed', error_message: 'Your credential is not valid' } });
+    await expect(testEnvConnection('JAMENDO', { client_id: 'abc' })).resolves.toEqual({ ok: false, message: 'Your credential is not valid' });
+    answer(500, {});
+    await expect(testEnvConnection('JAMENDO', { client_id: 'abc' })).resolves.toEqual({ ok: false, message: 'Jamendo rejected the client ID (HTTP 500)' });
+    answer(200, { headers: { status: 'success' }, results: [] });
+    await expect(testEnvConnection('JAMENDO', { client_id: 'abc' })).resolves.toEqual({ ok: true, message: 'Jamendo client ID is valid' });
+  });
+
   it('Google Maps: required, denied with or without Google’s reason, and valid', async () => {
     await expect(testEnvConnection('GOOGLE_MAPS', {})).resolves.toEqual({ ok: false, message: 'Maps API key is required' });
     answer(200, { status: 'REQUEST_DENIED', error_message: 'The key is invalid' });

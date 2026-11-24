@@ -1,13 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { fireAndForget, logs } from '@duncit/logs';
-import { WA_CONNECT, WA_DISCONNECT, WA_QR, WA_SAVE_CONFIG, WA_STATUS, type WaConnection } from '../whatsappQueries';
-
-/** Manual gateway override sent by Advanced settings (`WaConfigInput`). */
-export interface WaConfigInput {
-  base_url: string;
-  api_key?: string;
-}
+import { WA_CONNECT, WA_DISCONNECT, WA_QR, WA_STATUS, type WaConnection } from '../whatsappQueries';
 
 const LOGGER = logs.portal['crm'];
 
@@ -26,10 +20,11 @@ const log = (action: string, error: unknown) =>
   LOGGER.warn('WhatsAppConnectCard', action, { error, code: `wa_${action}_failed` });
 
 /**
- * Connection state machine for the Lead Generator. The gateway API key is managed
- * by the server, so the only thing left for a person to do is scan the QR.
- * - Reads the LIVE gateway status on mount (the stored one can be days old) and,
- *   when the session is not running, starts it — no button press needed.
+ * Connection state machine for the Lead Generator's "Link WhatsApp" step.
+ * - Nothing starts by itself on a first connect: the person presses Connect.
+ * - A session that was linked before (`connected_at` set) and dropped on its own, e.g. after a
+ *   gateway restart, is resumed once when the page opens, so leaving the page never costs the
+ *   link. Disconnect clears `connected_at` on the server, so a chosen disconnect stays off.
  * - While CONNECTING, polls status + QR; a session that produces no QR within
  *   WA_STUCK_RESTART_MS is restarted once, and a start that fails is retried up to
  *   WA_MAX_ERROR_RESTARTS times.
@@ -37,9 +32,9 @@ const log = (action: string, error: unknown) =>
  */
 export function useWaConnect(connection: WaConnection, onChanged: () => void) {
   const connecting = connection.status === 'CONNECTING';
+  const linkedBefore = !!connection.connected_at;
   const [connect, connectState] = useMutation<{ waConnect: WaConnection }, { restart: boolean }>(WA_CONNECT);
   const [disconnect, disconnectState] = useMutation<{ waDisconnect: WaConnection }>(WA_DISCONNECT);
-  const [saveConfig, saveState] = useMutation<{ waSaveConfig: WaConnection }, { input: WaConfigInput }>(WA_SAVE_CONFIG);
 
   const live = useQuery<{ waStatus: WaConnection }>(WA_STATUS, {
     fetchPolicy: 'network-only',
@@ -57,9 +52,13 @@ export function useWaConnect(connection: WaConnection, onChanged: () => void) {
   // re-fires the effects below nor resets the stuck-session timer.
   const changed = useRef(onChanged);
   changed.current = onChanged;
+  // Failed starts are retried only for a session somebody started: a Connect press,
+  // a resumed saved session, or one that was already booting when the page opened.
+  const armed = useRef(false);
 
   const start = useCallback(
     async (restart: boolean) => {
+      armed.current = true;
       try {
         await connect({ variables: { restart } });
       } catch (error) {
@@ -70,24 +69,23 @@ export function useWaConnect(connection: WaConnection, onChanged: () => void) {
     [connect],
   );
 
-  // Start once per visit from the first live status, then retry a start that
-  // fails (the live status turns ERROR) a bounded number of times.
-  const autoStarted = useRef(false);
+  const firstStatusSeen = useRef(false);
   const errorRestarts = useRef(0);
   useEffect(() => {
     if (!liveStatus) return;
-    if (!autoStarted.current) {
-      autoStarted.current = true;
-      if (liveStatus === 'DISCONNECTED' || liveStatus === 'ERROR') {
-        fireAndForget(start(liveStatus === 'ERROR'), LOGGER, 'WhatsAppConnectCard', 'autoStart');
+    if (!firstStatusSeen.current) {
+      firstStatusSeen.current = true;
+      if (liveStatus === 'CONNECTING') armed.current = true;
+      else if (linkedBefore && (liveStatus === 'DISCONNECTED' || liveStatus === 'ERROR')) {
+        fireAndForget(start(liveStatus === 'ERROR'), LOGGER, 'WhatsAppConnectCard', 'resume');
       }
       return;
     }
-    if (liveStatus === 'ERROR' && errorRestarts.current < WA_MAX_ERROR_RESTARTS) {
+    if (liveStatus === 'ERROR' && armed.current && errorRestarts.current < WA_MAX_ERROR_RESTARTS) {
       errorRestarts.current += 1;
       fireAndForget(start(true), LOGGER, 'WhatsAppConnectCard', 'errorRestart');
     }
-  }, [liveStatus, start]);
+  }, [liveStatus, linkedBefore, start]);
 
   // The page holds the stored connection; refresh it whenever the live status differs.
   useEffect(() => {
@@ -105,16 +103,6 @@ export function useWaConnect(connection: WaConnection, onChanged: () => void) {
     return () => clearTimeout(timer);
   }, [connecting, qr, start]);
 
-  const saveAndConnect = async (input: WaConfigInput) => {
-    try {
-      await saveConfig({ variables: { input } });
-      await connect({ variables: { restart: false } });
-    } catch (error) {
-      log('saveAndConnect', error); // shown via saveState/connectState.error
-    }
-    changed.current();
-  };
-
   const stop = async () => {
     try {
       await disconnect();
@@ -127,12 +115,13 @@ export function useWaConnect(connection: WaConnection, onChanged: () => void) {
   return {
     qr,
     connecting,
+    /** The account was linked before, so a start resumes it (usually without a QR). */
+    linkedBefore,
     /** A start request is in flight: the QR area already shows its spinner. */
     starting: connectState.loading,
     start,
     stop,
-    saveAndConnect,
-    actionError: connectState.error?.message || saveState.error?.message || disconnectState.error?.message,
-    busy: saveState.loading || connectState.loading || disconnectState.loading,
+    actionError: connectState.error?.message || disconnectState.error?.message,
+    busy: connectState.loading || disconnectState.loading,
   };
 }

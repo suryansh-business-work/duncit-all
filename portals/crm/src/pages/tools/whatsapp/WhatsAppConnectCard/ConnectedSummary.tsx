@@ -23,6 +23,9 @@ export default function ConnectedSummary({ connection, busy, onDisconnect }: Rea
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               {connection.phone ? `+${connection.phone}` : t('crm.tools.accountLinked')}
             </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              {t('crm.tools.sessionSaved')}
+            </Typography>
           </Box>
           <DuncitButton color="error" variant="outlined" disabled={busy} onClick={onDisconnect}>
             {t('crm.tools.disconnect')}

@@ -16,8 +16,9 @@ export interface HostPodMenuHandlers {
   /** The venue refused this pod's slot — the attendee-facing actions are gone. */
   venueRejected: boolean;
   /**
-   * The pod is over, so completing it settles a door that is already shut.
-   * False on an upcoming or ongoing pod, and the menu then has no Complete row.
+   * The pod is within `POD_COMPLETE_LEAD_MINUTES` of its end, or past it, so
+   * it may be completed. Before that the Complete row is shown greyed, saying
+   * when it opens.
    */
   canComplete: boolean;
   /**

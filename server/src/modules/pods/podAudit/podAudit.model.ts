@@ -18,7 +18,10 @@ export type PodAuditAction =
   | 'COMPLETE'
   /** A content-guideline check refused the edit — nothing was written to the
    * pod, but the attempt is monitored like any other action. */
-  | 'REJECTED';
+  | 'REJECTED'
+  /** A Club Admin marked a member present without a scan (with or without an
+   * OTP). Attendance is what the host is paid on, so every such mark is kept. */
+  | 'ATTENDANCE_FORCED';
 export const POD_AUDIT_ACTIONS: PodAuditAction[] = [
   'CREATE',
   'UPDATE',
@@ -29,6 +32,7 @@ export const POD_AUDIT_ACTIONS: PodAuditAction[] = [
   'VENUE_DECLINED',
   'COMPLETE',
   'REJECTED',
+  'ATTENDANCE_FORCED',
 ];
 
 /** Which surface performed the action. */

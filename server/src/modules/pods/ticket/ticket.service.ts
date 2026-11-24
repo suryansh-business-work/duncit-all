@@ -2,7 +2,13 @@ import { GraphQLError } from 'graphql';
 import { Types, type ClientSession } from 'mongoose';
 import crypto from 'node:crypto';
 import { TicketModel, type ITicket } from './ticket.model';
-import { attendanceLock, consumeAttendanceProof, markTicketPresent } from './attendance.service';
+import {
+  attendanceLock,
+  canMarkAttendance,
+  consumeAttendanceProof,
+  markTicketPresent,
+} from './attendance.service';
+import { podAuditService, type RecordPodAuditInput } from '@modules/pods/podAudit/podAudit.service';
 import { signTicketToken, verifyTicketToken } from './ticket.token';
 import { ticketPdfFilename, ticketPdfUrl } from './ticket.download';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
@@ -328,7 +334,7 @@ const EVENT_TICKET_TABLE_CONFIG: TableEntityConfig = {
 };
 
 /** The ticket's "WHEN" line, in the admin's zone; a pod with no time yet says so. */
-const dateLabel = (iso?: string | null) => appDateTimeLong(iso) || 'Date pending';
+export const dateLabel = (iso?: string | null) => appDateTimeLong(iso) || 'Date pending';
 
 /** Where the pod happens, as a name. A virtual pod has no venue and names its
  * meeting platform instead — same substitution the ticket email makes, and the
@@ -646,6 +652,39 @@ async function completeHostScan(t: ITicket, hostUserId: string, companions: unkn
     attendee,
     companions: (membership?.companions ?? []).map(toPubCompanion),
   };
+}
+
+/**
+ * A Club Admin's no-scan mark, as an entry on the pod's event log (Pod
+ * Monitoring in Admin and in the Club Admin portal).
+ *
+ * The ticket already carries who marked it, but nobody browses tickets: the
+ * log is where an operator looks when a payout is questioned. The note names
+ * the member and the seats, and says whether a code backed the mark — never
+ * the phone number. Best-effort, like every audit write: `record` swallows its
+ * own failures, so the mark itself is never undone by the log.
+ */
+async function recordForcedMark(
+  pod: RecordPodAuditInput['pod'],
+  membership: { user_id?: unknown; seats?: number | null },
+  actorId: string,
+  otpVerified: boolean
+): Promise<void> {
+  const user = await UserModel.findById(membership.user_id)
+    .select('profile.first_name profile.last_name')
+    .lean<{ profile?: { first_name?: string; last_name?: string } } | null>();
+  const name = `${user?.profile?.first_name ?? ''} ${user?.profile?.last_name ?? ''}`.trim() || 'A member';
+  const seats = membership.seats ?? 1;
+  const seatText = seats > 1 ? ` (${seats} seats)` : '';
+  const proof = otpVerified ? 'after a one-time code' : 'without a scan or code';
+  await podAuditService.record({
+    pod,
+    action: 'ATTENDANCE_FORCED',
+    source: 'CLUB_ADMIN',
+    actorUserId: actorId,
+    note: `${name}${seatText} marked present by the Club Admin ${proof}.`,
+    changes: [{ field: 'attendance', from: '', to: otpVerified ? 'CHECKED_IN (OTP)' : 'CHECKED_IN (no OTP)' }],
+  });
 }
 
 export const ticketService = {
@@ -1000,6 +1039,17 @@ export const ticketService = {
     const { clubAdminService } = await import('@modules/clubs/clubAdmin/clubAdmin.service');
     await clubAdminService.assertClubAdminForPod(actor as any, podDocId);
 
+    // The same lock the board's Mark button reads: a completed or cancelled
+    // pod is shut to everyone, an expired one only to the host. Checked here
+    // too, because hiding the button is not the gate (rule 39).
+    const pod = await PodModel.findById(podDocId).setOptions({ includeDeleted: true });
+    if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
+    const { settingsService } = await import('@modules/platform/settings/settings.service');
+    const { timeout_hours } = await settingsService.getPodCompletionSettings();
+    if (!canMarkAttendance(attendanceLock(pod, timeout_hours), 'CLUB_ADMIN')) {
+      throw new GraphQLError('Attendance is closed for this pod', { extensions: { code: 'BAD_REQUEST' } });
+    }
+
     if (!Types.ObjectId.isValid(membershipId)) {
       throw new GraphQLError('Invalid member', { extensions: { code: 'BAD_USER_INPUT' } });
     }
@@ -1031,6 +1081,7 @@ export const ticketService = {
 
     await markTicketPresent(t, actor.id, 'CLUB_ADMIN_FORCE', verification);
     await notifyAttendanceMarked(t);
+    await recordForcedMark(pod, membership, actor.id, !!verification);
     logs.server.info('ticket.service', 'clubAdminForceAttendance', {
       msg: 'attendance marked by the club admin without a scan',
       pod_doc_id: podDocId,

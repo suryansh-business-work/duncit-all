@@ -27,7 +27,7 @@ export default function MessageList({ messages, live, pendingText, busy, onEdit,
     <Stack spacing={3} sx={{ py: 2 }} role="log" aria-live="off">
       {messages.map((m) =>
         m.role === 'USER' ? (
-          <UserMessage key={m.id} content={m.content} edited={m.edited} onEdit={busy ? undefined : (text) => onEdit(m.id, text)} />
+          <UserMessage key={m.id} content={m.content} edited={m.edited} attachments={m.attachments} onEdit={busy ? undefined : (text) => onEdit(m.id, text)} />
         ) : (
           <AssistantMessage key={m.id} message={m} live={live[m.id]} onRegenerate={!busy && m.id === lastAssistant?.id ? onRegenerate : undefined} />
         )

@@ -372,6 +372,12 @@ describe('PodHistoryDetails', () => {
       expect(onBackout).not.toHaveBeenCalled();
     });
 
+    it('labels the download "Ticket", since a booking with no payment has no invoice', () => {
+      renderIt(baseItem({ pod: freePod(), payment_id: null }));
+      expect(screen.getByTestId('ph-ticket')).toHaveTextContent(/^Ticket$/);
+      expect(screen.queryByText('Ticket & invoice')).not.toBeInTheDocument();
+    });
+
     it('shows the cancelling label and disables Cancel Spot while it runs', () => {
       renderIt(baseItem({ pod: freePod() }), [], { cancellingSpot: true });
       expect(screen.getByTestId('ph-cancel-spot')).toBeDisabled();

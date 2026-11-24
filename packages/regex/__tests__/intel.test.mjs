@@ -6,12 +6,16 @@ import {
   GITHUB_NAME,
   MONGO_COLLECTION,
   MONGO_DATABASE,
+  MONGO_URI,
+  DB_HOST,
   isAiModelId,
   isFolderPath,
   isGitBranch,
   isGithubName,
   isMongoCollection,
   isMongoDatabase,
+  isMongoUri,
+  isDbHost,
 } from '../regex.mjs';
 
 /** The Duncit Intel console's form patterns (Media Manager folders and connector settings). */
@@ -64,5 +68,20 @@ describe('MONGO_COLLECTION / isMongoCollection and MONGO_DATABASE / isMongoDatab
   it('refuses system collections, dollar signs, spaces and empty names', () => {
     for (const name of ['', 'system.users', 'system.profile', 'a$b', 'my coll', 'x'.repeat(121)]) expect(MONGO_COLLECTION.test(name)).toBe(false);
     for (const name of ['', 'my.db', 'db name', 'x'.repeat(65)]) expect(MONGO_DATABASE.test(name)).toBe(false);
+  });
+});
+
+describe('MONGO_URI / isMongoUri and DB_HOST / isDbHost', () => {
+  it('accepts Atlas SRV and standard connection strings', () => {
+    for (const uri of ['mongodb+srv://intel:pw@cluster0.ab1cd.mongodb.net/', 'mongodb://user:p%40ss@db.example.com:27017/?authSource=admin', 'mongodb://duncit-mongo:27017']) expect(isMongoUri(uri)).toBe(true);
+  });
+  it('refuses other schemes, whitespace, a bare scheme and over-long strings', () => {
+    for (const uri of ['', 'mongodb://', 'mongodb+srv://a', 'postgres://u:p@h/db', 'https://cluster0.mongodb.net', 'mongodb://user:pass @host', `mongodb://${'x'.repeat(2001)}`]) expect(MONGO_URI.test(uri)).toBe(false);
+  });
+  it('accepts DNS names, Docker service names and IPv4 hosts', () => {
+    for (const host of ['db.example.com', 'duncit-mongo', 'localhost', '10.0.0.12']) expect(isDbHost(host)).toBe(true);
+  });
+  it('refuses ports, schemes, paths, spaces and over-long hosts', () => {
+    for (const host of ['', 'db.example.com:27017', 'mongodb://db', 'db/x', 'my host', 'x'.repeat(254)]) expect(DB_HOST.test(host)).toBe(false);
   });
 });

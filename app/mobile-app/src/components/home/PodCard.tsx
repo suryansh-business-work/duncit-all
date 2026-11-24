@@ -11,7 +11,7 @@ import type { HomePod } from '@/hooks/useHomeFeed';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { podDateLabel, podImageUrl, podPlaceLabel, podPriceLabel } from '@/utils/pod-format';
-import { imageSourceUrl, isVideoUrl, podSeatsTaken } from '@duncit/utils';
+import { imageSourceUrl, isVideoUrl, podPhase, podSeatsTaken } from '@duncit/utils';
 
 /** A card's widest render in device pixels — mWeb's twin asks for the same. */
 const CARD_IMAGE_WIDTH = 720;
@@ -21,8 +21,12 @@ const CARD_HEIGHT = 240;
 /** The width every Home rail gives its cards — mWeb's PodCard is fixed at it. */
 export const POD_CARD_RAIL_WIDTH = 268;
 
+/** Only the home feed selects attendance (it feeds Previous Pods); saved,
+ * profile and search pods reach the card without it. */
+type PodCardPod = Omit<HomePod, 'attendance'> & Partial<Pick<HomePod, 'attendance'>>;
+
 interface PodCardProps {
-  pod: HomePod;
+  pod: PodCardPod;
   width?: number;
   onPress?: () => void;
   /** Show the place/address line. Off in the home feed (addresses are hidden there). */
@@ -68,6 +72,14 @@ export function PodCard({
   let spotsText = `${taken}${spotsSuffix}`;
   if (spotsLeft === 1) spotsText = t('mweb.home.spotsLeftOne');
   else if (spotsLeft > 1) spotsText = t('mweb.home.spotsLeftMany', { count: spotsLeft });
+  // An over pod has no seats left to sell and nobody joining: the line says
+  // who actually turned up (seats scanned in) and that it is completed, read
+  // off the same rule that files it under Previous Pods (mWeb twin).
+  const expired = podPhase(pod.pod_date_time, pod.pod_end_date_time) === 'PREVIOUS';
+  const attended = pod.attendance?.attended_seats ?? 0;
+  if (expired) spotsText = t('mweb.home.podCompleted');
+  let joiningText = taken > 0 ? t('mweb.home.joiningNow', { count: taken }) : '';
+  if (expired) joiningText = attended > 0 ? t('mweb.home.attendedCount', { count: attended }) : '';
 
   const priceText = podPriceLabel(pod, t);
   // One spoken name for the whole card, title first (2.5.3) — the twin of mWeb.
@@ -124,8 +136,9 @@ export function PodCard({
           <PodCardInfo
             title={pod.pod_title}
             price={priceText}
-            joiningText={taken > 0 ? t('mweb.home.joiningNow', { count: taken }) : ''}
+            joiningText={joiningText}
             spotsText={spotsText}
+            expired={expired}
             subText={place}
             locality={pod.locality}
           />

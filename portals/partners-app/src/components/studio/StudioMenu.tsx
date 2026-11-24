@@ -3,9 +3,11 @@ import { Box, Link, List, ListItemButton, ListItemIcon, ListItemText, Stack, Too
 import MenuIcon from '@mui/icons-material/Menu';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import { DuncitIconButton } from '@duncit/buttons';
-import { useTranslation } from '@duncit/shell';
+import { NavCountBadge, useTranslation } from '@duncit/shell';
 import { STUDIO_OPTIONS_ENTRY, type PartnerStudioMode, type StudioOptionItem } from '@duncit/utils';
+import type { OptionBadges } from '../../config/app-config';
 import { STUDIO_OPTION_ICONS } from '../../pages/studio-options-page/optionIcons';
+import { localizedBadge, optionTooltip } from './studio-menu-state';
 
 interface Props {
   mode: PartnerStudioMode;
@@ -14,6 +16,8 @@ interface Props {
   active: StudioOptionItem | null;
   collapsed: boolean;
   onToggle: () => void;
+  /** Waiting work per option key: that entry's red count, explained on hover. */
+  badges?: OptionBadges;
 }
 
 /**
@@ -35,7 +39,7 @@ const MENU_ID = 'studio-menu-options';
  * minimising folds it down to its heading. Every entry is the same link the
  * Options page lists, in the same order.
  */
-export default function StudioMenu({ mode, options, active, collapsed, onToggle }: Readonly<Props>) {
+export default function StudioMenu({ mode, options, active, collapsed, onToggle, badges }: Readonly<Props>) {
   const { t } = useTranslation();
   const entry = STUDIO_OPTIONS_ENTRY[mode];
   const title = t(entry.labelKey);
@@ -106,15 +110,18 @@ export default function StudioMenu({ mode, options, active, collapsed, onToggle 
           const Icon = STUDIO_OPTION_ICONS[option.icon];
           const label = t(option.labelKey);
           const selected = option.key === active?.key;
+          const badge = localizedBadge(badges?.[option.key], t);
+          const tip = optionTooltip(label, badge?.label, collapsed);
           return (
-            // The tooltip is the entry's name on the icon rail, where there are
-            // no words; with the words showing it would only repeat them.
+            // On the icon rail the tooltip is the entry's name (with what waits
+            // behind it); with the words showing it only says what is waiting.
             <Tooltip
               key={option.key}
-              title={label}
+              title={tip.title}
               placement="right"
-              disableHoverListener={!collapsed}
-              disableFocusListener={!collapsed}
+              describeChild={tip.describes}
+              disableHoverListener={!tip.title}
+              disableFocusListener={!tip.title}
               disableTouchListener
             >
               <ListItemButton
@@ -133,6 +140,7 @@ export default function StudioMenu({ mode, options, active, collapsed, onToggle 
                   slotProps={{ primary: { variant: 'body2', noWrap: true } }}
                   sx={{ display: { xs: 'block', md: wordsOnWide }, my: 0 }}
                 />
+                <NavCountBadge badge={badge} />
               </ListItemButton>
             </Tooltip>
           );

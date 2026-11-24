@@ -87,11 +87,18 @@ const KEYWORD_FIELDS = ['source', 'connector_id', 'document_key', 'owner_id', 'v
 
 export const qdrant = {
   async ready(): Promise<boolean> {
+    return (await this.probe()).ok;
+  },
+
+  /** Whether Qdrant answers, and if not, why — for the source cards and System Health. */
+  async probe(): Promise<{ ok: boolean; error: string }> {
     try {
       await call('GET', '/collections', undefined, 4000);
-      return true;
-    } catch {
-      return false;
+      return { ok: true, error: '' };
+    } catch (error) {
+      const cause = (error as { cause?: { code?: string } })?.cause?.code;
+      const message = error instanceof Error ? error.message : String(error);
+      return { ok: false, error: cause ? `${message} (${cause})` : message };
     }
   },
 

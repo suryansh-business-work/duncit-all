@@ -18,6 +18,7 @@ import { clip, objectSchema } from './json-schema';
 import { withMetaParams } from './meta-params';
 import { titleOf, toolNameFor } from './naming';
 import { needsConfirmation, reachesOutside, riskOf, type OperationKind, type ToolRisk } from './risk';
+import { alsoInFor } from './self-service';
 import { isSensitiveName } from './sensitivity';
 
 /**
@@ -127,12 +128,14 @@ function toolFor(
   const operationName = `Mcp_${field.name}`;
   const { signature, call } = fieldInvocation(field);
   const document = parse(`${operation} ${operationName}${signature} { ${call}${selectionFor(field, hasResolver)} }`);
+  const alsoIn = alsoInFor(field.name, kind, category);
   return {
     source: 'graphql',
     name: toolNameFor(category, field.name),
     title: titleOf(field.name),
     description: describe(field, kind, category, risk, confirm),
     category,
+    ...(alsoIn ? { alsoIn } : {}),
     kind,
     risk,
     confirm,

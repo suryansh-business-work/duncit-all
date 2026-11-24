@@ -45,13 +45,10 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       colLastLogin: 'Last Login',
       colIssues: 'Data Issues',
       // Platforms Used / Last Activity: read from every signed-in request, on
-      // the Users table and the top of User Details.
+      // the Users table and User Details (header, summary card, Activity tab).
+      // The platform names themselves are `ui.platforms.*` (shared with the CRM).
       colPlatforms: 'Platforms Used',
       colLastActivity: 'Last Activity',
-      platformAndroid: 'Android',
-      platformIos: 'iOS',
-      platformWeb: 'Web',
-      noPlatforms: 'None recorded yet',
       noActivity: 'Not recorded yet',
       noIssues: 'None',
       issueMissingName: 'No name',

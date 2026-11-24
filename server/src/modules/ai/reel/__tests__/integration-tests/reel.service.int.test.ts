@@ -331,6 +331,14 @@ describe('reelService — the conversation', () => {
     expect(mockError).toHaveBeenCalledWith('reel', 'director', expect.objectContaining({ project_id: reel.id }));
   });
 
+  it('keeps which Tech portal key a failed turn was missing, for the chat to link to', async () => {
+    const reel = await newReel();
+    mockDirect.mockResolvedValue({ ok: false, reply: 'Anthropic is not configured.', spec: null, fix_category: 'ANTHROPIC' });
+    const after = await reelService.sendMessage({ project_id: reel.id, text: 'make it punchy' }, ACTOR);
+    expect(after.messages[1]).toMatchObject({ failed: true, fix_category: 'ANTHROPIC', text: 'Anthropic is not configured.' });
+    expect(after.messages[0]).toMatchObject({ fix_category: '' });
+  });
+
   it('answers not-found when the reel was deleted while the editor was thinking', async () => {
     const reel = await newReel();
     mockDirect.mockImplementation(async () => {

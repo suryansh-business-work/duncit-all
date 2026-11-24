@@ -20,7 +20,7 @@ export {
   type PortalBuildEnv,
 } from './mountWelcomePortal';
 export { PortalBranding } from './PortalBranding';
-export type { MountPortalOptions, PortalBootConfig, AppConfig, AppModule, AppNavItem, SearchItem } from './types';
+export type { MountPortalOptions, PortalBootConfig, AppConfig, AppModule, AppNavItem, NavBadge, SearchItem } from './types';
 export { useColorMode, type AccentColors } from '@duncit/theme';
 
 // Unified chrome.
@@ -32,6 +32,7 @@ export { AppHeader, type AppHeaderProps } from './chrome/AppHeader';
 export { HeaderSearch, deriveSearchItems, type HeaderSearchProps } from './chrome/HeaderSearch';
 export { AppSidebar, type AppSidebarProps } from './chrome/AppSidebar';
 export { SidebarUserCard, type SidebarUserCardProps } from './chrome/AppSidebar/SidebarUserCard';
+export { NavCountBadge, NavBadgeTooltip } from './chrome/AppSidebar/NavCountBadge';
 export {
   AppBreadcrumbs,
   BreadcrumbProvider,
@@ -93,6 +94,9 @@ export {
   type WorkspaceWindowHandle,
   type ZoneChoice,
 } from './workspace';
+// A window that floats over the page — dragged by its bar, resized from its
+// corner, minimised to the taskbar. Reel Studio pops its panes out into these.
+export { default as FloatingWindow, type FloatingWindowProps, type WindowRect } from './floating-window';
 export { ShellRuntimeProvider, useShellRuntime, type ShellRuntime } from './lib/runtime';
 export { UserMenu, type UserMenuProps } from './chrome/UserMenu';
 export { ProfilePage } from './chrome/ProfilePage';

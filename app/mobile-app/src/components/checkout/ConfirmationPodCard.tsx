@@ -7,11 +7,12 @@ import type { CheckoutPod } from '@/hooks/useCheckout';
 import { coverImageUrl } from '@duncit/utils';
 
 import { SurfaceCard } from '@/components/SurfaceCard';
+import { WalletButtons } from '@/components/checkout/WalletButtons';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatDateTime } from '@/utils/date-format';
 
-/** Pod summary shown on the success screen — image + title + date + location, so
- * the native confirmation mirrors mWeb's pod box. */
+/** Pod summary shown on the success screen — image + title + date + location +
+ * the add-to-wallet buttons, so the native confirmation mirrors mWeb's pod box. */
 export function ConfirmationPodCard({ pod }: Readonly<{ pod: CheckoutPod }>) {
   const { muted, accent } = useThemeColors();
   if (!pod) return null;
@@ -47,6 +48,7 @@ export function ConfirmationPodCard({ pod }: Readonly<{ pod: CheckoutPod }>) {
           </XStack>
         ) : null}
       </YStack>
+      <WalletButtons podId={pod.id} />
     </SurfaceCard>
   );
 }

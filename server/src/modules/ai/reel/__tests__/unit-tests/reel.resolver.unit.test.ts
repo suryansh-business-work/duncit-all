@@ -1,6 +1,7 @@
 import { makeContext } from '@test/harness';
 import { reelResolvers } from '../../reel.resolver';
 import { reelService } from '../../reel.service';
+import { reelLayoutService } from '../../reel.layout';
 
 jest.mock('../../reel.service', () => ({
   reelService: {
@@ -32,8 +33,12 @@ jest.mock('../../reel.service', () => ({
   },
 }));
 
+jest.mock('../../reel.layout', () => ({ reelLayoutService: { mine: jest.fn(), save: jest.fn(), reset: jest.fn() } }));
+
 const service = reelService as jest.Mocked<typeof reelService>;
-const { Query, Mutation } = reelResolvers;
+const layouts = reelLayoutService as jest.Mocked<typeof reelLayoutService>;
+const { Query, Mutation, ReelMessage } = reelResolvers;
+const PANE = { id: 'SIDE' as const, mode: 'POPPED' as const, size: 380, x: 1, y: 2, width: 500, height: 400 };
 
 const manager = makeContext({ id: 'user-1', email: 'reels@duncit.com', roles: ['AI_MANAGER'] });
 const ACTOR = { id: 'user-1', email: 'reels@duncit.com' };
@@ -70,6 +75,9 @@ const CALLS: Array<[string, (ctx: ReturnType<typeof makeContext>) => unknown]> =
   ['generateReelVariants', (ctx) => Mutation.generateReelVariants(null, { project_id: 'p1', platforms: ['X'] }, ctx)],
   ['setReelCover', (ctx) => Mutation.setReelCover(null, { project_id: 'p1', at_ms: 1500 }, ctx)],
   ['recommendNextReel', (ctx) => Mutation.recommendNextReel(null, { project_id: 'p1' }, ctx)],
+  ['myReelStudioLayout', (ctx) => Query.myReelStudioLayout(null, {}, ctx)],
+  ['saveReelStudioLayout', (ctx) => Mutation.saveReelStudioLayout(null, { panes: [PANE] }, ctx)],
+  ['resetReelStudioLayout', (ctx) => Mutation.resetReelStudioLayout(null, {}, ctx)],
 ];
 
 describe('reelResolvers — who may call them', () => {
@@ -105,20 +113,40 @@ describe('reelResolvers — who may call them', () => {
   });
 });
 
+describe('reelResolvers — the studio layout', () => {
+  it('reads, saves and forgets only the caller’s own arrangement', () => {
+    Query.myReelStudioLayout(null, {}, manager);
+    Mutation.saveReelStudioLayout(null, { panes: [PANE] }, manager);
+    Mutation.resetReelStudioLayout(null, {}, manager);
+    expect(layouts.mine).toHaveBeenCalledWith('user-1');
+    expect(layouts.save).toHaveBeenCalledWith('user-1', [PANE]);
+    expect(layouts.reset).toHaveBeenCalledWith('user-1');
+  });
+});
+
+describe('ReelMessage.fix_url', () => {
+  it('links a missing AI key to its Tech portal tab in the caller’s environment, and nothing else', () => {
+    const url = ReelMessage.fix_url({ fix_category: 'ANTHROPIC' }, {}, manager);
+    expect(url).toMatch(/^https:\/\/.+\/\?selectedtab_category=ANTHROPIC$/);
+    expect(ReelMessage.fix_url({ fix_category: '' }, {}, manager)).toBeNull();
+    expect(ReelMessage.fix_url({}, {}, manager)).toBeNull();
+  });
+});
+
 describe('reelResolvers — what they hand the service', () => {
   it('reads', () => {
     Query.reelProjects(null, {}, manager);
     Query.reelProject(null, { id: 'p1' }, manager);
     Query.reelDriveStatus(null, {}, manager);
     Query.reelDriveFolder(null, { folder: 'folder-link' }, manager);
-    Query.reelMediaSearch(null, { query: 'dogs', kind: 'VIDEO', orientation: 'SQUARE', page: 2 }, manager);
+    Query.reelMediaSearch(null, { query: 'dogs', kind: 'VIDEO', orientation: 'SQUARE', page: 2, provider: 'PIXABAY' }, manager);
     Query.validateReel(null, { project_id: 'p1', platforms: ['INSTAGRAM', 'X'] }, manager);
     Query.reelAnalytics(null, { project_id: 'p1' }, manager);
     expect(service.list).toHaveBeenCalledWith();
     expect(service.get).toHaveBeenCalledWith('p1');
     expect(service.driveStatus).toHaveBeenCalledWith();
     expect(service.driveFolder).toHaveBeenCalledWith('folder-link');
-    expect(service.mediaSearch).toHaveBeenCalledWith({ query: 'dogs', kind: 'VIDEO', orientation: 'SQUARE', page: 2 });
+    expect(service.mediaSearch).toHaveBeenCalledWith({ query: 'dogs', kind: 'VIDEO', orientation: 'SQUARE', page: 2, provider: 'PIXABAY' });
     expect(service.validate).toHaveBeenCalledWith('p1', ['INSTAGRAM', 'X']);
     expect(service.analytics).toHaveBeenCalledWith('p1');
   });

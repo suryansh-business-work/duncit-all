@@ -1,10 +1,16 @@
 import { pexelsSearch, pexelsSearchVideos } from '@modules/platform/upload/upload.service';
 import type { IReelProject, ReelAsset } from '../../reel.model';
 import { PEXELS_LICENCE, isPexelsUrl, newStockAssets, searchReelMedia, stockAsset, uploadAsset, type ReelStockAssetInput } from '../../reel.stock';
+import { searchPixabay } from '../../reel.pixabay';
+import { searchJamendo } from '../../reel.jamendo';
 
 jest.mock('@modules/platform/upload/upload.service', () => ({ pexelsSearch: jest.fn(), pexelsSearchVideos: jest.fn() }));
+jest.mock('../../reel.pixabay', () => ({ searchPixabay: jest.fn() }));
+jest.mock('../../reel.jamendo', () => ({ searchJamendo: jest.fn() }));
 
 const photos = pexelsSearch as jest.Mock;
+const pixabay = searchPixabay as jest.Mock;
+const jamendo = searchJamendo as jest.Mock;
 const videos = pexelsSearchVideos as jest.Mock;
 const BAD_INPUT = { extensions: { code: 'BAD_USER_INPUT' } };
 const PHOTO_URL = 'https://images.pexels.com/photos/1/pexels-photo-1.jpeg?auto=compress';
@@ -70,6 +76,7 @@ describe('searchReelMedia', () => {
         licence: PEXELS_LICENCE,
         attribution: 'Photo by Asha on Pexels',
         provider_id: '1',
+        provider: 'PEXELS',
       },
       // No large size: the original serves; no photographer: the library is credited.
       expect.objectContaining({ id: 'photo-2', url: 'https://images.pexels.com/photos/2/original.jpeg', preview_url: 'https://images.pexels.com/photos/2/original.jpeg', attribution: 'Photo by Pexels on Pexels' }),
@@ -100,6 +107,23 @@ describe('searchReelMedia', () => {
     await expect(searchReelMedia({ query: 'rain', kind: 'AUDIO' })).rejects.toMatchObject({ ...BAD_INPUT, message: expect.stringContaining('not sound') });
     expect(photos).not.toHaveBeenCalled();
     expect(videos).not.toHaveBeenCalled();
+  });
+
+  it('sends a Pixabay search to Pixabay with the reel’s shape, and a music search to Jamendo', async () => {
+    pixabay.mockResolvedValue({ items: [], has_more: false });
+    jamendo.mockResolvedValue({ items: [], has_more: true });
+    await searchReelMedia({ query: ' beach ', kind: 'VIDEO', orientation: 'SQUARE', provider: 'PIXABAY', page: 2 });
+    expect(pixabay).toHaveBeenCalledWith({ query: 'beach', kind: 'VIDEO', aspect: 'SQUARE', page: 2, perPage: 24 });
+    await expect(searchReelMedia({ query: 'lofi', kind: 'AUDIO', provider: 'JAMENDO' })).resolves.toEqual({ items: [], has_more: true });
+    expect(jamendo).toHaveBeenCalledWith({ query: 'lofi', page: 1, perPage: 24 });
+    expect(photos).not.toHaveBeenCalled();
+  });
+
+  it('refuses a kind the named library does not have', async () => {
+    await expect(searchReelMedia({ query: 'rain', kind: 'VIDEO', provider: 'JAMENDO' })).rejects.toMatchObject({ ...BAD_INPUT, message: expect.stringContaining('music only') });
+    await expect(searchReelMedia({ query: 'rain', kind: 'AUDIO', provider: 'PIXABAY' })).rejects.toMatchObject({ ...BAD_INPUT, message: expect.stringContaining('Jamendo') });
+    expect(pixabay).not.toHaveBeenCalled();
+    expect(jamendo).not.toHaveBeenCalled();
   });
 
   it('never asks for a page before the first', async () => {

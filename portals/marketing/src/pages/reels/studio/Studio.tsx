@@ -4,6 +4,7 @@ import type { PlayerRef } from '@remotion/player';
 import { useTabParam } from '@duncit/tabs';
 import { useTranslation, type Translate } from '@duncit/shell';
 import { FillViewport, type PortalTourStep } from '@duncit/ui';
+import { ReelExportForm } from '../../../forms/reel-export';
 import { ReelProjectForm, type ReelProjectFormValues } from '../../../forms/reel-project';
 import RunsGuide from '../../activity-page/RunsGuide';
 import { framesToMs, type ReelSelection } from '../editor/layout';
@@ -14,9 +15,14 @@ import ChatPanel from './chat/ChatPanel';
 import CreatePanel from './create/CreatePanel';
 import ExportDialog from './export/ExportDialog';
 import ReelComposer from './export/ReelComposer';
+import { useExportOptions } from './export/useExportOptions';
 import { useReelExport } from './export/useReelExport';
 import { useReelPost } from './export/useReelPost';
 import InspectorPanel from './inspector/InspectorPanel';
+import LayoutMenu from './layout/LayoutMenu';
+import StudioWorkspace, { type PaneContent } from './layout/StudioWorkspace';
+import { useStudioLayout } from './layout/useStudioLayout';
+import type { PaneId } from './layout/layoutModel';
 import PreviewPane from './preview/PreviewPane';
 import SourcesPanel from './sources/SourcesPanel';
 import StudioDialogs from './tools/StudioDialogs';
@@ -36,28 +42,20 @@ const tourSteps = (t: Translate): PortalTourStep[] => [
   { anchor: 'studio-export', title: t('ai.reels.guide.tourExportTitle'), body: t('ai.reels.guide.tourExportBody') },
 ];
 
-/** Each pane scrolls inside itself; on a narrow window they stack and the page scrolls instead. */
-const PANES_SX = {
-  flex: 1,
-  minHeight: 0,
-  display: 'grid',
-  gridTemplateColumns: { xs: '1fr', lg: '320px minmax(0, 1fr) 380px' },
-  gridTemplateRows: { xs: 'minmax(360px, auto) minmax(480px, 70vh) minmax(480px, 70vh)', lg: 'minmax(0, 1fr)' },
-  overflowY: { xs: 'auto', lg: 'hidden' },
-  borderTop: '1px solid',
-  borderColor: 'divider',
-} as const;
-
-const PANE_SX = { minWidth: 0, minHeight: 0, borderColor: 'divider' } as const;
-
-/** The timeline row: fixed on a wide screen so the panes keep the rest; full height of its tracks below that. */
-const TIMELINE_SX = { height: { xs: 320, lg: 'clamp(240px, 32vh, 360px)' }, flexShrink: 0, borderTop: '1px solid', borderColor: 'divider' } as const;
+const paneTitles = (t: Translate): Record<PaneId, string> => ({
+  SOURCES: t('ai.reels.layout.paneSources'),
+  PREVIEW: t('ai.reels.layout.panePreview'),
+  SIDE: t('ai.reels.layout.paneSide'),
+  TIMELINE: t('ai.reels.layout.paneTimeline'),
+});
 
 /**
  * The studio: footage on the left, the reel in the middle, the conversation,
  * the Create flow or the selected item's settings on the right, and the
  * timeline across the bottom. They are one screen because they are one loop —
- * pick a clip, say or do what should change, watch it change.
+ * pick a clip, say or do what should change, watch it change. Each pane can be
+ * resized, popped out into its own window or closed, and the arrangement saved
+ * to the person's account (Layout).
  *
  * Hand edits go through `useSpecEditor`: the player, the timeline, the
  * inspector and the export all draw its draft, so an edit shows everywhere the
@@ -70,6 +68,8 @@ export default function Studio({ project }: Readonly<{ project: ReelProject }>) 
   const live = useMemo(() => ({ ...project, spec: editor.spec }), [project, editor.spec]);
   const tools = useStudioTools(project);
   const exporter = useReelExport(live);
+  const exportOptions = useExportOptions(exporter, editor.spec);
+  const layout = useStudioLayout();
   const postSource = useMemo(() => ({ projectId: project.id, caption: tools.caption }), [project.id, tools.caption]);
   const poster = useReelPost(postSource, exporter.state.phase === 'rendered');
   const [player, setPlayer] = useState<PlayerRef | null>(null);
@@ -95,9 +95,31 @@ export default function Studio({ project }: Readonly<{ project: ReelProject }>) 
   const deselect = useCallback(() => setSelection(null), []);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const openDetails = () => setDetailsOpen(true);
+  const titles = paneTitles(t);
 
   const saveDetails = async (values: ReelProjectFormValues) => {
     if (await actions.saveDetails(values)) setDetailsOpen(false);
+  };
+
+  const panes: Record<PaneId, PaneContent> = {
+    SOURCES: { title: titles.SOURCES, content: <SourcesPanel project={project} actions={actions} onEditDetails={openDetails} /> },
+    PREVIEW: { title: titles.PREVIEW, content: <PreviewPane project={live} onPlayer={setPlayer} /> },
+    SIDE: {
+      title: titles.SIDE,
+      content: (
+        <StudioSidePanel
+          tabs={tabs}
+          chat={<ChatPanel project={project} actions={actions} />}
+          create={<CreatePanel project={project} />}
+          edit={<InspectorPanel spec={editor.spec} assets={project.assets} selection={selection} apply={editor.apply} onDeselect={deselect} />}
+        />
+      ),
+    },
+    TIMELINE: {
+      title: titles.TIMELINE,
+      tour: 'studio-timeline',
+      content: <TimelinePanel assets={project.assets} player={player} selection={selection} onSelect={select} editor={editor} />,
+    },
   };
 
   return (
@@ -113,26 +135,11 @@ export default function Studio({ project }: Readonly<{ project: ReelProject }>) 
           onTool={tools.open}
           onCover={() => actions.setCover(playheadMs)}
           settingCover={actions.settingCover}
-          onExport={exporter.start}
+          onExport={exportOptions.show}
+          layoutMenu={<LayoutMenu state={layout} titles={titles} />}
         />
-        <Box sx={PANES_SX}>
-          <Box sx={{ ...PANE_SX, borderRight: { lg: '1px solid' }, borderBottom: { xs: '1px solid', lg: 'none' } }}>
-            <SourcesPanel project={project} actions={actions} onEditDetails={openDetails} />
-          </Box>
-          <Box sx={{ ...PANE_SX, borderRight: { lg: '1px solid' }, borderBottom: { xs: '1px solid', lg: 'none' } }}>
-            <PreviewPane project={live} onPlayer={setPlayer} />
-          </Box>
-          <Box sx={PANE_SX}>
-            <StudioSidePanel
-              tabs={tabs}
-              chat={<ChatPanel project={project} actions={actions} />}
-              create={<CreatePanel project={project} />}
-              edit={<InspectorPanel spec={editor.spec} assets={project.assets} selection={selection} apply={editor.apply} onDeselect={deselect} />}
-            />
-          </Box>
-        </Box>
-        <Box sx={TIMELINE_SX} data-tour="studio-timeline">
-          <TimelinePanel assets={project.assets} player={player} selection={selection} onSelect={select} editor={editor} />
+        <Box sx={{ flex: 1, minHeight: 0, display: 'flex', borderTop: '1px solid', borderColor: 'divider' }}>
+          <StudioWorkspace state={layout} panes={panes} />
         </Box>
       </Paper>
       <ReelProjectForm
@@ -141,6 +148,13 @@ export default function Studio({ project }: Readonly<{ project: ReelProject }>) 
         submitting={actions.saving}
         onClose={() => setDetailsOpen(false)}
         onSubmit={saveDetails}
+      />
+      <ReelExportForm
+        open={exportOptions.open}
+        durationS={exportOptions.durationS}
+        initialValues={exportOptions.values}
+        onClose={exportOptions.close}
+        onSubmit={exportOptions.submit}
       />
       <ExportDialog exporter={exporter} poster={poster} />
       {poster.composer && <ReelComposer request={poster.composer} onClose={poster.closeComposer} />}

@@ -142,6 +142,25 @@ async function probePexels(str: ConfigStr): Promise<TestResult> {
   return res.ok ? { ok: true, message: 'Pexels API key is valid' } : { ok: false, message: `Pexels rejected the key (HTTP ${res.status})` };
 }
 
+/** One request of the key's 100 a minute; Pixabay answers 400 to a key it does not know. */
+async function probePixabay(str: ConfigStr): Promise<TestResult> {
+  const key = str('api_key');
+  if (!key) return { ok: false, message: 'API key is required' };
+  if (/\s/.test(key)) return { ok: false, message: 'The API key has a space in it — paste it again without spaces' };
+  const res = await fetch(`https://pixabay.com/api/?key=${encodeURIComponent(key)}&q=test&per_page=3`);
+  return res.ok ? { ok: true, message: 'Pixabay API key is valid' } : { ok: false, message: `Pixabay rejected the key (HTTP ${res.status})` };
+}
+
+/** Jamendo answers 200 with headers.status "failed" to a client id it does not know. */
+async function probeJamendo(str: ConfigStr): Promise<TestResult> {
+  const clientId = str('client_id');
+  if (!clientId) return { ok: false, message: 'Client ID is required' };
+  const res = await fetch(`https://api.jamendo.com/v3.0/tracks/?client_id=${encodeURIComponent(clientId)}&format=json&limit=1`);
+  const json = (await res.json().catch(() => ({}))) as { headers?: { status?: string; error_message?: string } };
+  if (res.ok && json.headers?.status === 'success') return { ok: true, message: 'Jamendo client ID is valid' };
+  return { ok: false, message: json.headers?.error_message || `Jamendo rejected the client ID (HTTP ${res.status})` };
+}
+
 async function probeGoogleMaps(str: ConfigStr): Promise<TestResult> {
   if (!str('maps_api_key')) return { ok: false, message: 'Maps API key is required' };
   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=test&key=${encodeURIComponent(str('maps_api_key'))}`;
@@ -199,6 +218,8 @@ async function probeServam(str: ConfigStr): Promise<TestResult> {
 const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestResult>>> = {
   IMAGEKIT: probeImagekit,
   PEXELS: probePexels,
+  PIXABAY: probePixabay,
+  JAMENDO: probeJamendo,
   GOOGLE_MAPS: probeGoogleMaps,
   GOOGLE_OAUTH: probeGoogleOauth,
   TWILIO: probeTwilio,

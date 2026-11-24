@@ -167,6 +167,57 @@ describe('PodCard', () => {
     expect(screen.getByText('Cafe · MG Road')).toBeOnTheScreen();
     expect(screen.getByText('Free')).toBeOnTheScreen();
   });
+
+  const paidPod = (over: Record<string, unknown>) =>
+    ({ ...pod, pod_type: 'PAID', pod_amount: 250, seats_taken: 7, ...over }) as unknown as HomePod;
+
+  const PAST = '2020-01-05T09:00:00.000Z';
+
+  it('says who attended and Completed, in place of who is joining and the spots, once the pod is over', () => {
+    renderWithProviders(
+      <PodCard pod={paidPod({ pod_date_time: PAST, attendance: { attended_seats: 5 } })} />,
+    );
+    expect(screen.getByText('5 Attended · Completed')).toBeOnTheScreen();
+    expect(screen.queryByText(/joining now/)).toBeNull();
+    expect(screen.queryByText(/spot left/)).toBeNull();
+    expect(screen.getByTestId('pod-card-p1').props.accessibilityLabel).toContain('Completed');
+  });
+
+  it('counts attendance, not bookings: nobody scanned in shows only Completed', () => {
+    renderWithProviders(
+      <PodCard pod={paidPod({ pod_date_time: PAST, attendance: { attended_seats: 0 } })} />,
+    );
+    expect(screen.getByText('Completed')).toBeOnTheScreen();
+    expect(screen.queryByText(/Attended/)).toBeNull();
+  });
+
+  it('shows only Completed for an over pod whose query did not ask for attendance', () => {
+    renderWithProviders(<PodCard pod={paidPod({ pod_date_time: PAST })} />);
+    expect(screen.getByText('Completed')).toBeOnTheScreen();
+  });
+
+  it('is completed once the host-set end has passed, even inside the default four-hour tail', () => {
+    const now = Date.now();
+    renderWithProviders(
+      <PodCard
+        pod={paidPod({
+          pod_date_time: new Date(now - 60 * 60 * 1000).toISOString(),
+          pod_end_date_time: new Date(now - 30 * 60 * 1000).toISOString(),
+          attendance: { attended_seats: 2 },
+        })}
+      />,
+    );
+    expect(screen.getByText('2 Attended · Completed')).toBeOnTheScreen();
+  });
+
+  it('keeps who is joining and the spots while a started pod is still ongoing, even with scans', () => {
+    const start = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    renderWithProviders(
+      <PodCard pod={paidPod({ pod_date_time: start, attendance: { attended_seats: 3 } })} />,
+    );
+    expect(screen.getByText(/7 joining now/)).toBeOnTheScreen();
+    expect(screen.queryByText(/Completed/)).toBeNull();
+  });
 });
 
 describe('HappeningNearbyHeader', () => {

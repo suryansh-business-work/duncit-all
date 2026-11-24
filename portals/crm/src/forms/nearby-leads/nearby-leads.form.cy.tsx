@@ -98,6 +98,13 @@ describe('NearbyLeadsForm', () => {
     expect(onSubmit.mock.calls[0][0].radius_km).toBe(10.5);
   });
 
+  it('labels only radius marks with room for their text, so the low end does not overlap', () => {
+    const { container } = render(<NearbyLeadsForm onSubmit={vi.fn()} />);
+    const labels = Array.from(container.querySelectorAll('.MuiSlider-markLabel'), (el) => el.textContent);
+    expect(labels).toEqual(['1 km', '10 km', '25 km', '50 km']);
+    expect(container.querySelectorAll('.MuiSlider-mark')).toHaveLength(6);
+  });
+
   it('keeps one centre source picked: clicking the active one again changes nothing', () => {
     render(<NearbyLeadsForm onSubmit={vi.fn()} />);
     const mine = screen.getByTestId('nearby-source-me');

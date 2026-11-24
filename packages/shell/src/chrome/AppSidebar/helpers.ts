@@ -1,4 +1,29 @@
-import type { AppNavItem } from '../../types';
+import type { AppNavItem, NavBadge } from '../../types';
+
+/** Past this a nav badge reads "99+", so the pill stays narrow. */
+export const NAV_BADGE_MAX = 99;
+
+/** A nav badge's visible count, capped. */
+export const navBadgeText = (count: number): string => (count > NAV_BADGE_MAX ? `${NAV_BADGE_MAX}+` : String(count));
+
+/** True when a badge has something to show. */
+export const hasNavBadge = (badge?: NavBadge | null): badge is NavBadge => !!badge && badge.count > 0;
+
+/**
+ * The badge an entry shows: a leaf's own, or — for a group — the sum of every
+ * badge under it, its labels joined, so waiting work still shows while the
+ * group is closed. `null` when there is nothing waiting.
+ */
+export function navBadgeOf(item: AppNavItem): NavBadge | null {
+  if (!item.children?.length) return hasNavBadge(item.badge) ? item.badge : null;
+  const badges = item.children.map(navBadgeOf).filter(hasNavBadge);
+  if (badges.length === 0) return null;
+  const labels = badges.flatMap((badge) => (badge.label ? [badge.label] : []));
+  return {
+    count: badges.reduce((sum, badge) => sum + badge.count, 0),
+    ...(labels.length > 0 ? { label: labels.join(', ') } : {}),
+  };
+}
 
 /** True when `to` is the current pathname, or a prefix segment of it. */
 export const matches = (pathname: string, to?: string): boolean => {

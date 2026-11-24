@@ -122,7 +122,8 @@ describe('connector and sync controls', () => {
   });
 
   it('discovers tools, shows a missing entry and asks before deleting', async () => {
-    const actions = { testing: false, discovering: false, test: vi.fn(), toggle: vi.fn(), sync: vi.fn(), discover: vi.fn(), setToolClass: vi.fn(), remove: vi.fn() };
+    const done = () => vi.fn(async () => undefined);
+    const actions = { testing: false, discovering: false, test: done(), toggle: done(), sync: done(), discover: done(), setToolClass: done(), remove: done() };
     const onEdit = vi.fn();
     renderWithProviders(<ConnectorCard connector={connector()} actions={actions as never} testResult={{ __typename: 'IntelTestResult', ok: true, message: 'Connected.', details: [] }} onEdit={onEdit} />);
     expect(screen.getByText('intel.settings.connectors.entryLine:intel.settings.connectors.entryMissing')).toBeInTheDocument();

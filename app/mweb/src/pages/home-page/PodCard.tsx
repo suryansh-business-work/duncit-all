@@ -4,7 +4,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 import PodCardMedia from './PodCardMedia';
 import PodCardInfo from './PodCardInfo';
 import { PodCategoryPill, PodDatePill, PodSaveButton } from './PodCardOverlays';
-import { podSeatsTaken } from '@duncit/utils';
+import { podPhase, podSeatsTaken } from '@duncit/utils';
 import { formatDateTime } from '../../utils/dateFormat';
 
 /** Every pod card's footprint — the same numbers native's PodCard draws (rule
@@ -51,7 +51,15 @@ export default function PodCard({
   let spotsText = `${spotsTaken}${spotsSuffix}`;
   if (spotsLeft === 1) spotsText = t('mweb.home.spotsLeftOne');
   else if (spotsLeft > 1) spotsText = t('mweb.home.spotsLeftMany', { count: spotsLeft });
-  const joiningText = spotsTaken > 0 ? t('mweb.home.joiningNow', { count: spotsTaken }) : '';
+  // An over pod (Previous Pods, a past pod in a club/venue list) has no seats
+  // left to sell and nobody joining: the line says who actually turned up
+  // (seats scanned in) and that it is completed. Same rule as the rails' split
+  // (pod-phase), so a card in Previous always says it.
+  const expired = podPhase(pod.pod_date_time, pod.pod_end_date_time) === 'PREVIOUS';
+  const attended = pod.attendance?.attended_seats ?? 0;
+  if (expired) spotsText = t('mweb.home.podCompleted');
+  let joiningText = spotsTaken > 0 ? t('mweb.home.joiningNow', { count: spotsTaken }) : '';
+  if (expired) joiningText = attended > 0 ? t('mweb.home.attendedCount', { count: attended }) : '';
   const dateText = formatDateTime(pod.pod_date_time) || '—';
   const priceText = isFree ? t('mweb.slots.free') : format(pod.pod_amount);
   // One spoken name for the whole card, title first (2.5.3).
@@ -114,6 +122,7 @@ export default function PodCard({
           price={priceText}
           joiningText={joiningText}
           spotsText={spotsText}
+          expired={expired}
           subText={[hostText, placeText].filter(Boolean).join(' · ')}
           locality={pod.locality}
           testIdPrefix={`pod-card-${pod.pod_id}`}

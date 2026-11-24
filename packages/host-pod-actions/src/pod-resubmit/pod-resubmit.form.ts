@@ -164,9 +164,13 @@ export function buildPodResubmitModerationInput(values: PodResubmitValues) {
   };
 }
 
-/** A declined offer's terms as the form holds them, at the pod's own venue. */
+/**
+ * A declined offer's terms as the form holds them, at the pod's own venue. A
+ * paid pod drops a declined Free, since a free venue is only for a free pod.
+ */
 function prefilledOffer(pod: HostPodTarget, prefill: Readonly<VenueOfferPrefill>): Partial<PodResubmitValues> {
-  return { venue_id: pod.venue_id ?? '', ...venueOfferPrefillValues(prefill) };
+  const podFree = isFreePod(pod.pod_type);
+  return { venue_id: pod.venue_id ?? '', ...venueOfferPrefillValues(prefill, { podFree }) };
 }
 
 /**

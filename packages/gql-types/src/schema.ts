@@ -1778,6 +1778,8 @@ export type AppAnalyticsEvent = {
   metadata_json: Scalars['String']['output'];
   occurred_at: Scalars['String']['output'];
   path: Scalars['String']['output'];
+  /** The platform the event came from (mWeb and the native web build are WEB); null on events from before it was recorded. */
+  platform?: Maybe<UserPlatform>;
   pod_id?: Maybe<Scalars['ID']['output']>;
   route: Scalars['String']['output'];
   super_category_slug?: Maybe<Scalars['String']['output']>;
@@ -9849,8 +9851,12 @@ export type CrmMatchedUser = {
   __typename?: 'CrmMatchedUser';
   email?: Maybe<Scalars['String']['output']>;
   full_name?: Maybe<Scalars['String']['output']>;
+  /** ISO time of the account's last signed-in request, or null when none was seen. */
+  last_activity_at?: Maybe<Scalars['String']['output']>;
   matched_on: Scalars['String']['output'];
   phone?: Maybe<Scalars['String']['output']>;
+  /** Every platform the account has used Duncit from while signed in, in display order (ANDROID, IOS, WEB). */
+  platforms_used: Array<UserPlatform>;
   profile_photo?: Maybe<Scalars['String']['output']>;
   user_id: Scalars['ID']['output'];
 };
@@ -12177,6 +12183,7 @@ export type EnvCategory =
   | 'AISENSY'
   | 'ANTHROPIC'
   | 'APPLE_SIGNIN'
+  | 'APPLE_WALLET'
   | 'APP_STORE_CONNECT'
   | 'CLOUDFLARE'
   | 'EMAIL'
@@ -12188,12 +12195,15 @@ export type EnvCategory =
   | 'GOOGLE_MAPS'
   | 'GOOGLE_OAUTH'
   | 'GOOGLE_PLAY'
+  | 'GOOGLE_WALLET'
   | 'IMAGEKIT'
+  | 'JAMENDO'
   | 'MCP_SERVER'
   | 'MONGODB'
   | 'MSG91'
   | 'OPENAI'
   | 'PEXELS'
+  | 'PIXABAY'
   | 'RAZORPAY'
   | 'REMOTION'
   | 'SERPER'
@@ -12583,6 +12593,20 @@ export type EventTicketVerifyResult = {
   message: Scalars['String']['output'];
   ok: Scalars['Boolean']['output'];
   ticket?: Maybe<EventTicket>;
+};
+
+/**
+ * Where the caller's ticket can be added to a phone wallet. Each link is null
+ * when that wallet is not set up in Tech portal, Environment, and both are null
+ * when the caller holds no live ticket for the pod: show only the buttons that
+ * come back.
+ */
+export type EventTicketWalletLinks = {
+  __typename?: 'EventTicketWalletLinks';
+  /** Signed .pkpass download, good for 30 minutes. Open it in the browser; Safari hands it to Wallet. */
+  apple_pass_url?: Maybe<Scalars['String']['output']>;
+  /** Google's Save to Google Wallet link for this ticket. */
+  google_save_url?: Maybe<Scalars['String']['output']>;
 };
 
 export type Expense = {
@@ -15714,11 +15738,33 @@ export type IntelConversationPatch = {
 
 export type IntelEntryOption = {
   __typename?: 'IntelEntryOption';
+  /** This server's own database or MCP — no Tech portal entry behind it. */
+  builtin: Scalars['Boolean']['output'];
   description: Scalars['String']['output'];
+  /** The one environment a built-in source serves (this server's database or MCP); null for a Tech portal entry. */
+  environment?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   is_default: Scalars['Boolean']['output'];
   last_test_ok?: Maybe<Scalars['Boolean']['output']>;
   name: Scalars['String']['output'];
+};
+
+/** A repository the GitHub entry's token can read. */
+export type IntelGithubRepo = {
+  __typename?: 'IntelGithubRepo';
+  default_branch: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  owner: Scalars['String']['output'];
+};
+
+/** A Gmail mailbox connected with Google (read-only) and the connector that indexes it. */
+export type IntelGmailAccount = {
+  __typename?: 'IntelGmailAccount';
+  connected_at?: Maybe<Scalars['String']['output']>;
+  connector_id?: Maybe<Scalars['ID']['output']>;
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
 };
 
 export type IntelHealth = {
@@ -15730,6 +15776,8 @@ export type IntelHealth = {
   openai_entry_selected: Scalars['Boolean']['output'];
   pending_approvals: Scalars['Int']['output'];
   qdrant_configured: Scalars['Boolean']['output'];
+  /** Why the vector index is not reachable ('' when it is). */
+  qdrant_error: Scalars['String']['output'];
   qdrant_reachable: Scalars['Boolean']['output'];
   queue_configured: Scalars['Boolean']['output'];
 };
@@ -15813,6 +15861,8 @@ export type IntelMediaPatch = {
 export type IntelMessage = {
   __typename?: 'IntelMessage';
   approval_ids: Array<Scalars['String']['output']>;
+  /** Images and PDFs attached to a question. */
+  attachments: Array<IntelMessageAttachment>;
   citations: Array<IntelCitation>;
   content: Scalars['String']['output'];
   conversation_id: Scalars['ID']['output'];
@@ -15827,6 +15877,13 @@ export type IntelMessage = {
   tool_calls: Array<IntelToolCall>;
 };
 
+export type IntelMessageAttachment = {
+  __typename?: 'IntelMessageAttachment';
+  id: Scalars['ID']['output'];
+  mime: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+};
+
 export type IntelModelOption = {
   __typename?: 'IntelModelOption';
   enabled: Scalars['Boolean']['output'];
@@ -15836,6 +15893,8 @@ export type IntelModelOption = {
 };
 
 export type IntelSendInput = {
+  /** Up to five images or PDFs from the asker's Media library (uploaded first). */
+  attachment_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   conversation_id?: InputMaybe<Scalars['ID']['input']>;
   edit_message_id?: InputMaybe<Scalars['ID']['input']>;
   environment?: InputMaybe<Scalars['String']['input']>;
@@ -19053,7 +19112,7 @@ export type Mutation = {
   addPostComment: Post;
   /** Add Drive files to a reel's footage. Files it already holds are skipped. */
   addReelDriveAssets: ReelProject;
-  /** Add stock photos or videos as the library listed them. Items the reel already holds are skipped. */
+  /** Add stock photos, videos or music as the library listed them. Items the reel already holds are skipped; at most 6 Pixabay or Jamendo files at a time, as each is copied into the media store. */
   addReelStockAssets: ReelProject;
   /** Add pictures, clips or sound files from the media store; the kind is read off the address. */
   addReelUploadAssets: ReelProject;
@@ -19384,8 +19443,10 @@ export type Mutation = {
    *   records whichever of them a multi-seat booking was given.
    *
    * Neither door is gated on the companion count, unlike the host's scan — the
-   * group is not standing at this one. Every mark records who made it and
-   * notifies the member, so it is contestable rather than silent.
+   * group is not standing at this one. Every mark records who made it,
+   * notifies the member and is written to the pod's event log (Pod Monitoring)
+   * as ATTENDANCE_FORCED, so it is contestable rather than silent. Refused once
+   * the roster is closed (the pod is completed or cancelled).
    */
   clubAdminForceAttendance: EventTicket;
   /** Edit a club the signed-in user administers (governance fields are ignored). */
@@ -20093,7 +20154,9 @@ export type Mutation = {
   intelDecideApproval: IntelApproval;
   intelDeleteConnector: Scalars['Boolean']['output'];
   intelDeleteConversation: Scalars['Boolean']['output'];
+  intelDisconnectGmail: Scalars['Boolean']['output'];
   intelDiscoverTools: IntelConnector;
+  intelGmailConnectUrl: Scalars['String']['output'];
   intelPurgeMedia: Scalars['Boolean']['output'];
   intelRebuildIndex: Scalars['Int']['output'];
   intelReindexMedia: IntelMedia;
@@ -20752,6 +20815,8 @@ export type Mutation = {
   resetRateLimitCounters: Scalars['Boolean']['output'];
   /** Zero one rule's lifetime hit/blocked counters without changing what it does. */
   resetRateLimitRuleCounters: RateLimitRule;
+  /** Forget the signed-in person's Reel Studio arrangement so the default view returns. True whether or not one was saved. */
+  resetReelStudioLayout: Scalars['Boolean']['output'];
   resolveBouncerSos: BouncerSosAlert;
   /** Close a request once the club's venues have published slots. */
   resolveClubSlotRequest: ClubSlotRequest;
@@ -20951,9 +21016,13 @@ export type Mutation = {
   /**
    * Save an edit made by hand on the timeline. spec_json is the whole ReelSpec as
    * JSON; it is sanitized against the project's footage exactly as the editor's
-   * answers are, and the reel comes back as it now stands.
+   * answers are, and the reel comes back as it now stands. This is also how an AI
+   * chat builds a reel on its own subscription: read the reel with reelProject,
+   * write the whole spec, and save it here — no Reel Studio AI call is made.
    */
   saveReelSpec: ReelProject;
+  /** Save how the signed-in person has Reel Studio arranged, replacing what they saved before. */
+  saveReelStudioLayout: ReelStudioLayout;
   /**
    * Store the caller's chrome arrangement. Only the fields present in the input
    * are written, so two consoles open at once cannot overwrite each other's
@@ -20994,7 +21063,7 @@ export type Mutation = {
   /** Admin. Sends the WhatsApp launch message to the city's subscribers who are not SENT yet. The city must be launched. */
   sendLocationLaunchMessage: LocationLaunchSendResult;
   sendMarketingCampaign: MarketingCampaign;
-  /** Pay a person from the Finance Portal, to one of their verified accounts. */
+  /** Pay a person from the Finance Portal, to one of their verified accounts or to an account typed in and acknowledged. */
   sendMoney: SendMoneyTransfer;
   /**
    * Send the LIVE link or the RESULT link to confirmed attendees who have not
@@ -21005,7 +21074,11 @@ export type Mutation = {
   sendPodMessage: PodMessage;
   /** Send a Pod Request. LIMIT_REACHED past the monthly cap; CONFLICT if the pair already has a live one. */
   sendPodPartnerRequest: PodPartnerRequest;
-  /** One chat turn: the request (and any attached pictures) goes to the editor, and the reel comes back as it now stands. */
+  /**
+   * One chat turn: the request (and any attached pictures) goes to the editor, and the reel comes back as it now stands.
+   * Runs on Reel Studio's own AI key, billed to Duncit. From an AI chat, first ask the person whether to use Reel
+   * Studio's key or the chat's own subscription; for the second, write the edit yourself and save it with saveReelSpec.
+   */
   sendReelMessage: ReelProject;
   /** Finance managers: send a rental refund that is waiting for review through Razorpay (never marks anything paid). note: why, at least 10 characters. */
   sendRentalRefund: RentalBookingDetail;
@@ -21971,6 +22044,7 @@ export type Mutation = {
   waImportUserLeads: WaImportResult;
   /** Synchronous pull of latest communities/groups/contacts into the cache. */
   waRefresh: WaSyncResult;
+  /** Save the gateway URL / API key. The URL must be http(s) and a new key must be accepted by the gateway. */
   waSaveConfig: WaConnection;
   /** Start a non-blocking background extraction; poll waExtraction for progress. */
   waStartExtraction: WaExtraction;
@@ -24757,6 +24831,11 @@ export type MutationIntelDeleteConversationArgs = {
 };
 
 
+export type MutationIntelDisconnectGmailArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationIntelDiscoverToolsArgs = {
   id: Scalars['ID']['input'];
 };
@@ -26348,6 +26427,11 @@ export type MutationSavePushSubscriptionArgs = {
 export type MutationSaveReelSpecArgs = {
   project_id: Scalars['ID']['input'];
   spec_json: Scalars['String']['input'];
+};
+
+
+export type MutationSaveReelStudioLayoutArgs = {
+  panes: Array<ReelStudioPaneInput>;
 };
 
 
@@ -32184,6 +32268,8 @@ export type PodAttendeeSeats = {
 
 /** What kind of pod action was recorded. */
 export type PodAuditAction =
+  /** A Club Admin marked a member present without a scan (with or without an OTP). */
+  | 'ATTENDANCE_FORCED'
   | 'COMPLETE'
   | 'CREATE'
   | 'DELETE'
@@ -37293,6 +37379,8 @@ export type Query = {
   intelConversations: IntelConversationPage;
   intelEntryOptions: Array<IntelEntryOption>;
   intelGithubBranches: Array<Scalars['String']['output']>;
+  intelGithubRepos: Array<IntelGithubRepo>;
+  intelGmailAccounts: Array<IntelGmailAccount>;
   intelHealth: IntelHealth;
   intelIndexDocuments: IntelIndexPage;
   intelIndexStats: Array<IntelIndexStat>;
@@ -37301,6 +37389,7 @@ export type Query = {
   intelMediaFolders: Array<Scalars['String']['output']>;
   intelMessages: Array<IntelMessage>;
   intelMongoCollections: Array<Scalars['String']['output']>;
+  intelOpenAiModels: Array<Scalars['String']['output']>;
   intelSettings: IntelSettingsPayload;
   intelSlackChannels: Array<IntelSlackChannel>;
   intelSyncRuns: Array<IntelSyncRun>;
@@ -37624,6 +37713,8 @@ export type Query = {
   /** Whether the signed-in member already has an open request to this host or venue. */
   myEventRequestState: MyEventRequestState;
   myEventTicketForPod?: Maybe<EventTicket>;
+  /** Add-to-wallet links for the caller's own ticket to this pod. */
+  myEventTicketWalletLinks: EventTicketWalletLinks;
   myEventTickets: Array<EventTicket>;
   /** Open follow requests waiting on the signed-in user, newest first. */
   myFollowRequests: Array<FollowRequest>;
@@ -37708,6 +37799,8 @@ export type Query = {
   myReceivedEventRequestCounts: EventRequestCounts;
   /** Requests addressed to the caller: the venues they own (VENUE) or themself as host (HOST). */
   myReceivedEventRequestsTable: EventRequestTablePage;
+  /** The signed-in person's saved Reel Studio arrangement, or null when they have never saved one. */
+  myReelStudioLayout?: Maybe<ReelStudioLayout>;
   /** My code + everyone I brought in (generates the code on first read). */
   myReferral: MyReferral;
   /** The signed-in Regional Club Admin's own region, created on first read. */
@@ -38185,7 +38278,11 @@ export type Query = {
   /** The videos, pictures, sound files and sub-folders of a Drive folder. folder is a link or a folder id. */
   reelDriveFolder: ReelDriveFolder;
   reelDriveStatus: ReelDriveStatus;
-  /** Stock photos or videos from Pexels for a reel; portrait unless another orientation is asked for. Pages start at 1. */
+  /**
+   * Stock for a reel: photos or videos from Pexels (the default) or Pixabay, or
+   * music (kind AUDIO) from Jamendo — only tracks a marketing reel may use.
+   * Portrait unless another orientation is asked for. Pages start at 1.
+   */
   reelMediaSearch: ReelMediaPage;
   reelProject?: Maybe<ReelProject>;
   reelProjects: Array<ReelProjectSummary>;
@@ -38773,6 +38870,8 @@ export type Query = {
   venueRentalStats: RentalVenueStats;
   /** Owner: one request with its earnings, for the decision page linked from the request email. */
   venueSlotDecision: VenueSlotDecision;
+  /** Owner: how many of those requests wait on the venue's answer (the console's sidebar badge). */
+  venueSlotRequestCount: Scalars['Int']['output'];
   /** Owner: pending booking requests across their venues (or one venue). */
   venueSlotRequests: Array<VenueSlotRequest>;
   venueSlots: Array<VenueSlot>;
@@ -40801,6 +40900,11 @@ export type QueryIntelGithubBranchesArgs = {
 };
 
 
+export type QueryIntelGithubReposArgs = {
+  entry_id: Scalars['ID']['input'];
+};
+
+
 export type QueryIntelIndexDocumentsArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   page_size?: InputMaybe<Scalars['Int']['input']>;
@@ -41384,6 +41488,11 @@ export type QueryMyEventRequestStateArgs = {
 
 
 export type QueryMyEventTicketForPodArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryMyEventTicketWalletLinksArgs = {
   pod_doc_id: Scalars['ID']['input'];
 };
 
@@ -42531,6 +42640,7 @@ export type QueryReelMediaSearchArgs = {
   kind: ReelAssetKind;
   orientation?: InputMaybe<ReelAspect>;
   page?: InputMaybe<Scalars['Int']['input']>;
+  provider?: InputMaybe<ReelStockProvider>;
   query: Scalars['String']['input'];
 };
 
@@ -43684,6 +43794,11 @@ export type QueryVenueSlotDecisionArgs = {
 };
 
 
+export type QueryVenueSlotRequestCountArgs = {
+  venue_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
 export type QueryVenueSlotRequestsArgs = {
   venue_id?: InputMaybe<Scalars['ID']['input']>;
 };
@@ -44272,7 +44387,7 @@ export type ReelAssetSource =
   | 'DRIVE'
   /** Sound made here — a voiceover. */
   | 'GENERATED'
-  /** A Pexels photo or video, kept by its CDN address with its licence line. */
+  /** A stock library file with its licence line: a Pexels photo or video kept by its CDN address, or a Pixabay photo or video or a Jamendo track copied into the media store. */
   | 'STOCK'
   /** A picture or clip from the media store — attached in the chat or picked from the library. */
   | 'UPLOAD';
@@ -44383,7 +44498,7 @@ export type ReelIdeas = {
   run_id: Scalars['ID']['output'];
 };
 
-/** One stock photo or video as the library lists it. */
+/** One stock photo, video or track as the library lists it. */
 export type ReelMediaItem = {
   __typename?: 'ReelMediaItem';
   attribution: Scalars['String']['output'];
@@ -44395,6 +44510,8 @@ export type ReelMediaItem = {
   licence: Scalars['String']['output'];
   /** A small picture for the picker. */
   preview_url: Scalars['String']['output'];
+  /** The library that listed it; pass it back with the pick. */
+  provider: ReelStockProvider;
   provider_id: Scalars['String']['output'];
   /** The file the reel would use, on the library's CDN. */
   url: Scalars['String']['output'];
@@ -44414,6 +44531,8 @@ export type ReelMessage = {
   at: Scalars['String']['output'];
   /** ASSISTANT: true when the editor could not be reached or read. */
   failed: Scalars['Boolean']['output'];
+  /** ASSISTANT, failed: the Tech portal page where the missing AI key is added, when a missing key is why; null otherwise. */
+  fix_url?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   /** ASSISTANT: true when this reply produced an edit that can be put back. */
   restorable: Scalars['Boolean']['output'];
@@ -44618,11 +44737,66 @@ export type ReelStockAssetInput = {
   licence: Scalars['String']['input'];
   name: Scalars['String']['input'];
   preview_url?: InputMaybe<Scalars['String']['input']>;
+  /** The library reelMediaSearch named; PEXELS when absent. Pixabay and Jamendo picks are copied into the media store. */
+  provider?: InputMaybe<ReelStockProvider>;
   provider_id: Scalars['String']['input'];
   /** On the library's CDN. */
   url: Scalars['String']['input'];
   width?: InputMaybe<Scalars['Int']['input']>;
 };
+
+/** The stock libraries Reel Studio searches. Pexels and Pixabay have photos and videos; Jamendo has music. */
+export type ReelStockProvider =
+  | 'JAMENDO'
+  | 'PEXELS'
+  | 'PIXABAY';
+
+/** The signed-in person's saved Reel Studio arrangement. */
+export type ReelStudioLayout = {
+  __typename?: 'ReelStudioLayout';
+  panes: Array<ReelStudioPane>;
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/** One pane of the studio as its owner left it. Sizes are CSS pixels. */
+export type ReelStudioPane = {
+  __typename?: 'ReelStudioPane';
+  height: Scalars['Int']['output'];
+  id: ReelStudioPaneId;
+  mode: ReelStudioPaneMode;
+  /** DOCKED: the pane's width, or the timeline's height. */
+  size: Scalars['Int']['output'];
+  width: Scalars['Int']['output'];
+  /** POPPED: where the window floats and how big it is. */
+  x: Scalars['Int']['output'];
+  y: Scalars['Int']['output'];
+};
+
+/** A part of the Reel Studio screen that can be resized, popped out into its own window or closed. */
+export type ReelStudioPaneId =
+  /** The player — the middle pane. */
+  | 'PREVIEW'
+  /** Chat, Create and Edit — the right pane. */
+  | 'SIDE'
+  /** Footage, stock, music, uploads and voice — the left pane. */
+  | 'SOURCES'
+  /** The timeline along the bottom. */
+  | 'TIMELINE';
+
+export type ReelStudioPaneInput = {
+  height: Scalars['Int']['input'];
+  id: ReelStudioPaneId;
+  mode: ReelStudioPaneMode;
+  size: Scalars['Int']['input'];
+  width: Scalars['Int']['input'];
+  x: Scalars['Int']['input'];
+  y: Scalars['Int']['input'];
+};
+
+export type ReelStudioPaneMode =
+  | 'CLOSED'
+  | 'DOCKED'
+  | 'POPPED';
 
 /** Words on top of a scene. Times are milliseconds from the start of that scene. */
 export type ReelText = {
@@ -45958,13 +46132,26 @@ export type SendMoneyCategory =
   | 'REIMBURSEMENT'
   | 'SALARY';
 
+/** An account typed into Send Money for one transfer. UPI needs upi_id; IMPS and NEFT need the holder, number and IFSC. */
+export type SendMoneyCustomAccountInput = {
+  account_holder_name?: InputMaybe<Scalars['String']['input']>;
+  account_number?: InputMaybe<Scalars['String']['input']>;
+  ifsc_code?: InputMaybe<Scalars['String']['input']>;
+  payout_method: WithdrawalMethod;
+  upi_id?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type SendMoneyInput = {
-  /** One of the recipient's verified_accounts. */
-  account_id: Scalars['ID']['input'];
+  /** One of the recipient's verified_accounts. Leave empty when paying a custom_account. */
+  account_id?: InputMaybe<Scalars['ID']['input']>;
+  /** True once the sender has checked the typed account. Required with custom_account. */
+  acknowledge_custom_account?: InputMaybe<Scalars['Boolean']['input']>;
   amount: Scalars['Float']['input'];
   category: SendMoneyCategory;
+  /** An account typed in for this transfer instead of a verified one. Needs acknowledge_custom_account. */
+  custom_account?: InputMaybe<SendMoneyCustomAccountInput>;
   notes?: InputMaybe<Scalars['String']['input']>;
-  /** IMPS or NEFT for a bank account. Ignored for UPI. */
+  /** IMPS or NEFT for a verified bank account. Ignored for UPI and for a custom_account (it names its own). */
   payout_method?: InputMaybe<WithdrawalMethod>;
   reason: Scalars['String']['input'];
   recipient_user_id: Scalars['ID']['input'];
@@ -45994,6 +46181,8 @@ export type SendMoneyTransfer = {
   __typename?: 'SendMoneyTransfer';
   account_holder_name: Scalars['String']['output'];
   account_number: Scalars['String']['output'];
+  /** HOST, VENUE or ECOMM_BRAND for a verified account; CUSTOM for one typed into Send Money. */
+  account_source: Scalars['String']['output'];
   amount: Scalars['Float']['output'];
   approved_by_name: Scalars['String']['output'];
   attempt: Scalars['Int']['output'];

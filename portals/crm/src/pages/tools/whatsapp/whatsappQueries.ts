@@ -48,6 +48,21 @@ export const WA_SAVE_CONFIG = gql`
   }
 `;
 
+/**
+ * Mints a key on the gateway with the server's master key and saves it. The plaintext key
+ * is not selected: the browser never needs it, the server keeps it.
+ */
+export const WA_GENERATE_API_KEY = gql`
+  ${CONNECTION_FIELDS}
+  mutation WaGenerateApiKey($base_url: String) {
+    waGenerateApiKey(base_url: $base_url) {
+      connection {
+        ...WaConnectionFields
+      }
+    }
+  }
+`;
+
 /** Starts the session; `restart` stops a stuck engine first. */
 export const WA_CONNECT = gql`
   ${CONNECTION_FIELDS}

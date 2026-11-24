@@ -106,6 +106,8 @@ export interface TransferRow {
   notes: string;
   supporting_reference: string;
   payout_method: string;
+  /** HOST, VENUE or ECOMM_BRAND for a verified account; CUSTOM for one typed in. */
+  account_source: string;
   initiated_by_name: string;
   approved_by_name: string;
   status: TransferStatus;
@@ -131,6 +133,7 @@ export const SEND_MONEY_TRANSFERS_TABLE = gql`
         notes
         supporting_reference
         payout_method
+        account_source
         initiated_by_name
         approved_by_name
         status

@@ -3,10 +3,14 @@ import { pexelsSearch, pexelsSearchVideos } from '@modules/platform/upload/uploa
 import type { ReelAspect } from './reel.edit';
 import type { IReelProject, ReelAsset, ReelAssetKind } from './reel.model';
 import { badInput, kindOfMime, mimeFromUrl, shortId, str } from './reel.shared';
+import { assertKindFits, providerOf, type ReelStockProvider } from './reel.library';
+import { searchPixabay } from './reel.pixabay';
+import { searchJamendo } from './reel.jamendo';
 
 /**
  * Footage that is not in Drive: stock from Pexels, and files already in the
- * media store. A stock asset is a POINTER to the library's CDN with its
+ * media store. Pixabay and Jamendo are searched from here too, but their picks
+ * are imported (reel.picks.ts). A Pexels asset is a POINTER to the library's CDN with its
  * licence line — the file is never copied, so the credit the library asks for
  * travels with the reel and the renderer fetches from a host it already
  * trusts (see TRUSTED_MEDIA_HOSTS).
@@ -23,6 +27,7 @@ export interface ReelMediaItem {
   licence: string;
   attribution: string;
   provider_id: string;
+  provider: ReelStockProvider;
 }
 
 export interface ReelMediaPage {
@@ -41,6 +46,8 @@ export interface ReelStockAssetInput {
   duration_ms?: number | null;
   licence: string;
   attribution: string;
+  /** Which library listed it; absent from older clients, whose picks are all Pexels. */
+  provider?: ReelStockProvider | null;
 }
 
 export interface ReelUploadInput {
@@ -93,6 +100,7 @@ function photoItem(photo: PexelsPhoto): ReelMediaItem[] {
       licence: PEXELS_LICENCE,
       attribution: `Photo by ${str(photo.photographer) || 'Pexels'} on Pexels`,
       provider_id: String(photo.id),
+      provider: 'PEXELS',
     },
   ];
 }
@@ -119,16 +127,38 @@ function videoItem(video: PexelsVideo): ReelMediaItem[] {
       licence: PEXELS_LICENCE,
       attribution: `Video by ${str(video.user_name) || 'Pexels'} on Pexels`,
       provider_id: String(video.id),
+      provider: 'PEXELS',
     },
   ];
 }
 
-/** Stock photos or videos for a reel, portrait unless asked otherwise. Never scraped: the library's own API, key kept server-side. */
-export async function searchReelMedia(input: { query: string; kind: ReelAssetKind; orientation?: ReelAspect | null; page?: number | null; perPage?: number }): Promise<ReelMediaPage> {
+export interface ReelMediaSearchInput {
+  query: string;
+  kind: ReelAssetKind;
+  orientation?: ReelAspect | null;
+  page?: number | null;
+  perPage?: number;
+  /** Pexels when not named — what every older client searched. */
+  provider?: ReelStockProvider | null;
+}
+
+/**
+ * Stock photos, videos or music for a reel, portrait unless asked otherwise.
+ * Never scraped: each library's own API, its key kept server-side.
+ */
+export async function searchReelMedia(input: ReelMediaSearchInput): Promise<ReelMediaPage> {
   const query = str(input.query);
   if (!query) throw badInput('Say what to search the stock library for.');
-  if (input.kind === 'AUDIO') throw badInput('The stock library has pictures and clips, not sound.');
-  const opts = { query, page: Math.max(1, input.page ?? 1), perPage: input.perPage ?? PAGE_SIZE, orientation: ORIENTATION[input.orientation ?? 'PORTRAIT'] };
+  const provider = providerOf(input.provider);
+  if (provider === 'PEXELS' && input.kind === 'AUDIO') throw badInput('The stock library has pictures and clips, not sound.');
+  const misfit = assertKindFits(provider, input.kind);
+  if (misfit) throw badInput(misfit);
+  const page = Math.max(1, input.page ?? 1);
+  const perPage = input.perPage ?? PAGE_SIZE;
+  const aspect = input.orientation ?? 'PORTRAIT';
+  if (provider === 'PIXABAY') return searchPixabay({ query, kind: input.kind, aspect, page, perPage });
+  if (provider === 'JAMENDO') return searchJamendo({ query, page, perPage });
+  const opts = { query, page, perPage, orientation: ORIENTATION[aspect] };
   if (input.kind === 'IMAGE') {
     const result = await pexelsSearch(opts);
     return { items: result.photos.flatMap(photoItem), has_more: result.next_page != null };

@@ -17,6 +17,7 @@ import MediaPickerField from '../../components/MediaPickerField';
 import { STATUS_META, type EditForm } from './queries';
 import { formatDateTime, useDateFormat } from '@duncit/app-settings';
 import { EmailValidateButton, useTranslation } from '@duncit/shell';
+import { PlatformIcons } from '@duncit/ui';
 
 interface Props {
   user: any;
@@ -64,6 +65,11 @@ export default function UserSummaryCard({ user, form, busy, onPhotoChange }: Rea
       value: user.last_activity_at
         ? activityFormat.formatDateTime(user.last_activity_at)
         : t('admin.users.noActivity'),
+    },
+    {
+      // All three, the ones this account uses dark: Android, iOS, the web (mWeb and the consoles).
+      label: t('admin.users.colPlatforms'),
+      value: <PlatformIcons platforms={user.platforms_used} variant="all" testId="admin-user-summary-platforms" />,
     },
   ];
 

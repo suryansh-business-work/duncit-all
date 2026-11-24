@@ -4,10 +4,12 @@ import { useTranslation } from '@duncit/shell';
 interface Props {
   connecting: boolean;
   qr: string | undefined;
+  /** Beside the spinner until a QR arrives (a resumed session usually needs none). */
+  waitingText: string;
 }
 
 /** The QR to scan while CONNECTING, or a spinner until the gateway hands one over. */
-export default function QrSection({ connecting, qr }: Readonly<Props>) {
+export default function QrSection({ connecting, qr, waitingText }: Readonly<Props>) {
   const { t } = useTranslation();
   if (!connecting) return null;
   if (qr) {
@@ -24,7 +26,7 @@ export default function QrSection({ connecting, qr }: Readonly<Props>) {
     <Stack direction="row" spacing={1} role="status" sx={{ alignItems: 'center', justifyContent: 'center' }}>
       <CircularProgress size={20} />
       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-        {t('crm.tools.waitingForQr')}
+        {waitingText}
       </Typography>
     </Stack>
   );

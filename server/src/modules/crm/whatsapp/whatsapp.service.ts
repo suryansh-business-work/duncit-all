@@ -1,4 +1,5 @@
 import { logs } from '@observability/log';
+import { humanFetchMessage } from '@utils/outboundFetch';
 import { WaConnectionModel } from './whatsapp.model';
 import { createWaClient, createWaClientWithKeys, mapSessionStatus, type WaClient } from './whatsapp.client';
 import { masterKeyCandidates } from './whatsapp.keys';
@@ -19,7 +20,35 @@ async function getConnection() {
   return WaConnectionModel.create({ key: KEY });
 }
 
-const errorMessage = (error: unknown): string => (error instanceof Error ? error.message : '');
+/** The reason in words: a bare undici "fetch failed" becomes "… could not be reached" and the like. */
+const errorMessage = (error: unknown): string =>
+  humanFetchMessage('The WhatsApp gateway', error) ?? (error instanceof Error ? error.message : '');
+
+/** True when the gateway answered 401/403: it is up, but refuses the key. */
+const isAuthRefusal = (error: unknown): boolean => /\((401|403)\)/.test(errorMessage(error));
+
+/** Only http(s) gateway URLs are accepted; anything else could not be fetched anyway. */
+function assertGatewayUrl(baseUrl: string): void {
+  let protocol = '';
+  try {
+    protocol = new URL(baseUrl).protocol;
+  } catch {
+    /* not a URL — refused below */
+  }
+  if (protocol !== 'http:' && protocol !== 'https:') {
+    throw new Error('Enter the gateway URL in full, starting with https:// or http://.');
+  }
+}
+
+/** Prove a key works on the gateway before it is saved, so step 1 fails with the real reason. */
+async function verifyApiKey(baseUrl: string, apiKey: string): Promise<void> {
+  try {
+    await createWaClientWithKeys(baseUrl, [apiKey]).validateKey();
+  } catch (error) {
+    if (isAuthRefusal(error)) throw new Error('The WhatsApp gateway refused this API key. Check it and try again.');
+    throw new Error(errorMessage(error) || 'The WhatsApp gateway could not check this API key.');
+  }
+}
 
 /** True when an OpenWA error is a 409 "session already exists" — a harmless
  * no-op for us, since the gateway persists sessions across restarts. */
@@ -130,9 +159,19 @@ export interface WaGenerateKeyInput {
 export const whatsappService = {
   getConnection,
 
-  /** Save the gateway base URL / API key / session id (partial update). */
-  async saveConfig(input: WaConfigInput) {
+  /**
+   * Save the gateway base URL / API key / session id (partial update). With `verify`
+   * (the CRM's Gateway step) the URL must be http(s) and a new key must be accepted by
+   * the gateway, so a wrong key fails here instead of at Connect.
+   */
+  async saveConfig(input: WaConfigInput, options: { verify?: boolean } = {}) {
     const conn = await getConnection();
+    if (options.verify) {
+      const baseUrl = input.base_url === undefined ? conn.base_url : input.base_url.trim();
+      if (input.base_url !== undefined) assertGatewayUrl(baseUrl);
+      const apiKey = (input.api_key ?? '').trim();
+      if (apiKey) await verifyApiKey(baseUrl, apiKey);
+    }
     if (input.base_url !== undefined) conn.base_url = input.base_url.trim();
     if (input.api_key !== undefined) conn.api_key = input.api_key.trim();
     if (input.session_id) conn.session_id = input.session_id.trim();
@@ -255,7 +294,11 @@ export const whatsappService = {
     }
   },
 
-  /** Stop the session and mark disconnected (does not delete persisted auth). */
+  /**
+   * Stop the session and mark disconnected (does not delete persisted auth). Clearing
+   * `connected_at` records that a person chose to disconnect, so the CRM does not
+   * resume this session by itself the next time the page opens.
+   */
   async disconnect() {
     const conn = await getConnection();
     const client = createWaClient(conn.base_url, conn.api_key);
@@ -263,6 +306,7 @@ export const whatsappService = {
       logs.server.warn('crm.whatsapp', 'disconnect.stop', { error });
     });
     conn.status = 'DISCONNECTED';
+    conn.connected_at = null;
     await conn.save();
     return conn;
   },

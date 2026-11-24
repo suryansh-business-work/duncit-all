@@ -20,6 +20,7 @@ const ACTION_COLORS: StatusColorMap = {
   VENUE_DECLINED: 'warning',
   COMPLETE: 'primary',
   REJECTED: 'error',
+  ATTENDANCE_FORCED: 'warning',
 };
 
 /** The three lifecycle steps and which of them this pod has reached. */

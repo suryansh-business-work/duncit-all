@@ -44,6 +44,10 @@ export interface EntryOption {
   description: string;
   is_default: boolean;
   last_test_ok: boolean | null;
+  /** The one environment a built-in source serves; null for a Tech portal entry (the form asks). */
+  environment: string | null;
+  /** This server's own database or MCP (intel.builtin.ts) — no Tech portal entry behind it. */
+  builtin: boolean;
 }
 
 /** The names a connector form offers in its select — never a value from `config`. */
@@ -55,5 +59,7 @@ export async function entryOptions(category: string): Promise<EntryOption[]> {
     description: r.description ?? '',
     is_default: Boolean(r.is_default),
     last_test_ok: r.last_test_ok ?? null,
+    environment: null,
+    builtin: false,
   }));
 }

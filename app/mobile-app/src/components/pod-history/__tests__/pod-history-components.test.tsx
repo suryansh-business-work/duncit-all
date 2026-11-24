@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { fireEvent, screen, within } from '@testing-library/react-native';
 
 import {
   BackoutConfirmDialog,
@@ -225,6 +225,29 @@ describe('PodHistoryActions', () => {
     expect(h.onInvoice).toHaveBeenCalled();
     expect(h.onTicket).toHaveBeenCalled();
     expect(h.onSupport).toHaveBeenCalled();
+  });
+
+  it('names the download after what the file holds: ticket and invoice when paid, ticket alone when not', () => {
+    const renderActions = (paymentId: string | null) =>
+      renderWithProviders(
+        <PodHistoryActions
+          item={membership({ payment_id: paymentId })}
+          backingOut={false}
+          rejoining={false}
+          invoiceBusy={false}
+          ticketBusy={false}
+          {...handlers()}
+        />,
+      );
+
+    const paid = renderActions('pay-1');
+    // The label's own text node: the button's icon adds text of its own to the whole.
+    expect(within(screen.getByTestId('ph-ticket')).getByText('Ticket & invoice')).toBeOnTheScreen();
+    paid.unmount();
+
+    renderActions(null);
+    expect(within(screen.getByTestId('ph-ticket')).getByText('Ticket')).toBeOnTheScreen();
+    expect(screen.queryByText('Ticket & invoice')).toBeNull();
   });
 
   it('shows only Invoice + Support for a soft-deleted pod', () => {

@@ -11,6 +11,15 @@ const ROLE_OPTIONS = [
 const formatDate = (s: string) => `D(${s})`;
 const formatDateTime = (s: string) => `DT(${s})`;
 const formatActivityAt = (s: string) => `AT(${s})`;
+// What usePlatformText answers, spelled so a test can tell the column used it.
+const platformText = {
+  options: [
+    { value: 'ANDROID' as const, label: 'Android' },
+    { value: 'IOS' as const, label: 'iOS' },
+    { value: 'WEB' as const, label: 'Web' },
+  ],
+  valueText: (platforms: readonly string[] | null | undefined) => (platforms ?? []).join(' + '),
+};
 
 const makeUser = (over: Partial<UserRow> = {}): UserRow => ({
   user_id: 'u1',
@@ -32,7 +41,7 @@ const makeUser = (over: Partial<UserRow> = {}): UserRow => ({
 });
 
 const buildColumns = () =>
-  getUsersColumns({ formatDate, formatDateTime, formatActivityAt, roleOptions: ROLE_OPTIONS, t: (key: string) => key });
+  getUsersColumns({ formatDate, formatDateTime, formatActivityAt, roleOptions: ROLE_OPTIONS, platformText, t: (key: string) => key });
 
 const columnBy = (field: string) => {
   const col = buildColumns().find((c) => c.field === field);
@@ -115,9 +124,9 @@ describe('getUsersColumns / column set', () => {
       type: 'enum',
       sortable: false,
       options: [
-        { value: 'ANDROID', label: 'admin.users.platformAndroid' },
-        { value: 'IOS', label: 'admin.users.platformIos' },
-        { value: 'WEB', label: 'admin.users.platformWeb' },
+        { value: 'ANDROID', label: 'Android' },
+        { value: 'IOS', label: 'iOS' },
+        { value: 'WEB', label: 'Web' },
       ],
     });
   });
@@ -201,11 +210,8 @@ describe('getUsersColumns / value getters', () => {
     expect(valueOf('last_activity_at', makeUser())).toBe('admin.users.noActivity');
   });
 
-  it('spells out the platforms in order for search and export, blank when none', () => {
-    expect(valueOf('platforms_used', makeUser({ platforms_used: ['ANDROID', 'IOS', 'WEB'] }))).toBe(
-      'admin.users.platformAndroid, admin.users.platformIos, admin.users.platformWeb',
-    );
-    expect(valueOf('platforms_used', makeUser({ platforms_used: [] }))).toBe('');
+  it('spells out the platforms through the shared platform text for search and export', () => {
+    expect(valueOf('platforms_used', makeUser({ platforms_used: ['ANDROID', 'WEB'] }))).toBe('ANDROID + WEB');
     expect(valueOf('platforms_used', makeUser({ platforms_used: null }))).toBe('');
   });
 });
@@ -281,26 +287,28 @@ describe('getUsersColumns / cell renderers', () => {
     expect(screen.getByText('Not tracked yet')).toBeInTheDocument();
   });
 
-  it('shows one named icon per platform, side by side, kept out of the tab order inside the grid', () => {
+  it('shows all three platforms per row, the used ones marked used, kept out of the tab order', () => {
     renderCell('platforms_used', makeUser({ platforms_used: ['IOS', 'WEB'] }));
-    const icons = within(screen.getByRole('group', { name: 'admin.users.colPlatforms' })).getAllByRole('img');
+    const icons = within(screen.getByRole('group', { name: 'Platforms used' })).getAllByRole('img');
     expect(icons.map((icon) => icon.getAttribute('aria-label'))).toEqual([
-      'admin.users.platformIos',
-      'admin.users.platformWeb',
+      'Android: not used',
+      'iOS: used',
+      'Web: used',
     ]);
     expect(icons.every((icon) => !icon.hasAttribute('tabindex'))).toBe(true);
-    expect(screen.getByTestId('admin-user-platform-IOS')).toBeInTheDocument();
+    expect(screen.getByTestId('admin-user-platforms-u1-IOS')).toHaveAttribute('data-used', 'true');
   });
 
-  it('says no platform is recorded yet for an account nobody has seen', () => {
+  it('dims every platform for an account nobody has seen yet', () => {
     renderCell('platforms_used', makeUser({ platforms_used: null }));
-    expect(screen.getByText('admin.users.noPlatforms')).toBeInTheDocument();
-    expect(screen.queryByRole('img')).toBeNull();
+    const icons = screen.getAllByRole('img');
+    expect(icons).toHaveLength(3);
+    expect(icons.every((icon) => icon.getAttribute('data-used') === 'false')).toBe(true);
   });
 
   it('never calls the date formatters for a user that never signed in', () => {
     const spy = vi.fn((s: string) => `D(${s})`);
-    const col = getUsersColumns({ formatDate: spy, formatDateTime, formatActivityAt, roleOptions: ROLE_OPTIONS, t: (key: string) => key }).find(
+    const col = getUsersColumns({ formatDate: spy, formatDateTime, formatActivityAt, roleOptions: ROLE_OPTIONS, platformText, t: (key: string) => key }).find(
       (c) => c.field === 'last_login_provider',
     );
     render(<>{col?.cellRenderer?.(makeUser({ last_login_at: null }))}</>);

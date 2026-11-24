@@ -117,3 +117,21 @@ describe('the prompts', () => {
     expect(text.split('\n').filter((line) => line.startsWith('4.'))).toHaveLength(1);
   });
 });
+
+describe('make_reel', () => {
+  it('asks who pays for the AI before anything else, and keeps the two paths apart', () => {
+    const text = prompt('make_reel').render({});
+    const lines = text.split('\n');
+    expect(lines[0]).toBe('Help me make a reel.');
+    expect(lines[1]).toContain("Duncit's own API key");
+    expect(lines[1]).toContain("this chat's own subscription");
+    expect(lines[1]).toContain('Wait for my answer.');
+    expect(text).toContain('only after I said yes to (a)');
+    expect(text).toContain('Do not call any Reel Studio AI tool on this path.');
+  });
+
+  it('weaves in the reel and the brief, as safe single-line text', () => {
+    const text = prompt('make_reel').render({ reel: 'Jam night\nrecap', brief: 'Sunday pickleball' });
+    expect(text.split('\n')[0]).toBe('Help me make a reel from "Jam night recap" about: Sunday pickleball.');
+  });
+});

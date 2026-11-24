@@ -74,6 +74,14 @@ const FOLDER_URL = 'https://drive.google.com/drive/folders/1AbCdEfGhIjKlMnOp';
 const project = (over: Partial<ReelProject> = {}): ReelProject =>
   reelProject({ duration_ms: 2000, spec: reelSpec({ scenes: [reelScene({ id: 's1', asset_id: '' })] }), ...over });
 
+/** Export opens the options first; Start with the defaults begins the render. */
+async function startExport() {
+  fireEvent.click(screen.getByTestId('reel-studio-export'));
+  const start = await screen.findByTestId('reel-export-submit');
+  await waitFor(() => expect(start).toBeEnabled());
+  fireEvent.click(start);
+}
+
 const mount = (page = <ReelStudioPage />, entry = '/studio/reels/DUN-REEL-1') =>
   renderWithProviders(page, {
     initialEntries: [entry],
@@ -247,7 +255,7 @@ describe('ReelStudioPage — the studio', () => {
   it('exports from the toolbar, and shows the dialog when the browser cannot encode the file', async () => {
     renderer.canRenderMediaOnWeb.mockResolvedValue({ canRender: false, issues: [{ severity: 'error', message: 'No H.264 encoder.' }] });
     mount();
-    fireEvent.click(screen.getByTestId('reel-studio-export'));
+    await startExport();
     expect(await screen.findByTestId('reel-export-error')).toHaveTextContent('No H.264 encoder.');
     fireEvent.click(screen.getByTestId('reel-export-close'));
     await waitFor(() => expect(screen.queryByTestId('reel-export-dialog')).not.toBeInTheDocument());
@@ -261,7 +269,7 @@ describe('ReelStudioPage — the studio', () => {
       return 'https://ik.imagekit.io/duncit/marketing/reels/jam-night-recap.mp4';
     });
     mount();
-    fireEvent.click(screen.getByTestId('reel-studio-export'));
+    await startExport();
     expect(await screen.findByTestId('reel-export-ready')).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('reel-export-post'));
@@ -290,7 +298,7 @@ describe('ReelStudioPage — the studio', () => {
     renderer.renderMediaOnWeb.mockResolvedValue({ getBlob: async () => new Blob(['mp4']) });
     upload.mockRejectedValue(new Error('Upload is not available right now'));
     mount();
-    fireEvent.click(screen.getByTestId('reel-studio-export'));
+    await startExport();
     fireEvent.click(await screen.findByTestId('reel-export-post'));
     expect(await screen.findByTestId('reel-export-error')).toHaveTextContent('The reel could not be posted: Upload is not available right now');
     expect(screen.queryByTestId('reel-composer')).not.toBeInTheDocument();

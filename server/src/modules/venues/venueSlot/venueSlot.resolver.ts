@@ -36,6 +36,10 @@ export const venueSlotResolvers = {
       const user = requireAuth(ctx);
       return venueSlotService.listRequests(user.id, args.venue_id);
     },
+    venueSlotRequestCount: (_p: unknown, args: { venue_id?: string | null }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return venueSlotService.countAwaitingRequests(user.id, args.venue_id);
+    },
     venueSlotDecision: (_p: unknown, args: { slot_id: string }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
       return venueSlotService.decisionDetail(user.id, args.slot_id);

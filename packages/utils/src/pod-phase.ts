@@ -87,17 +87,32 @@ export function nothingUpcoming(pods: readonly PodPhaseFields[], now: number = D
 }
 
 /**
- * Whether a host may complete this pod — TRUE only once it is over.
+ * How many minutes before a pod's end its host may complete it.
+ *
+ * The server holds the same number (`POD_COMPLETE_LEAD_MINUTES` in
+ * `server/src/modules/pods/pod/pod.lifecycle.ts`) and refuses an earlier
+ * completion; this copy only decides when the menu row stops being greyed.
+ * In minutes because that is the number the copy quotes.
+ */
+export const POD_COMPLETE_LEAD_MINUTES = 15;
+
+/**
+ * Whether a host may complete this pod — from `POD_COMPLETE_LEAD_MINUTES`
+ * before its end onwards.
  *
  * Completing a pod is the settlement: it prices the payout off the seats
- * scanned in and hands Finance the releases to approve. Running it on a pod
- * that has not started, or is running right now, freezes that answer while the
- * door is still open — guests who arrive after it are seats the host is never
- * paid for. So Host Studio offers the action on PAST pods only; an upcoming or
- * ongoing pod carries no Complete row at all.
+ * scanned in and hands Finance the releases to approve. Running it early
+ * freezes that answer while the door is still open, so it opens only in the
+ * last few minutes, once the guests are in. A pod that has not started yet
+ * never qualifies, even one shorter than the lead. Host Studio keeps the row
+ * visible but greyed until then, saying when it opens.
  */
 export function canCompletePod(pod: PodPhaseFields, now: number = Date.now()): boolean {
-  return podPhase(pod.pod_date_time, pod.pod_end_date_time, now) === 'PREVIOUS';
+  const { pod_date_time: start, pod_end_date_time: end } = pod;
+  if (podPhase(start, end, now) === 'UPCOMING') return false;
+  // Already PREVIOUS on a clock running the lead fast = within the lead of the end.
+  const leadMs = POD_COMPLETE_LEAD_MINUTES * 60 * 1000;
+  return podPhase(start, end, now + leadMs) === 'PREVIOUS';
 }
 
 /**

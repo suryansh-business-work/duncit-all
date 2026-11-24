@@ -50,7 +50,7 @@ describe('UserHeader — platforms used', () => {
       <UserHeader user={{ ...baseUser, platforms_used: ['ANDROID', 'IOS', 'WEB'] }} status="ACTIVE" busy={false} {...spies()} />,
     );
 
-    const group = within(screen.getByTestId('back-header')).getByRole('group', { name: 'Platforms Used' });
+    const group = within(screen.getByTestId('back-header')).getByRole('group', { name: 'Platforms used' });
     const icons = within(group).getAllByRole('img');
     expect(icons.map((icon) => icon.getAttribute('aria-label'))).toEqual(['Android', 'iOS', 'Web']);
     // Nothing to operate, so nothing for the keyboard to stop on (jsx-a11y/no-noninteractive-tabindex).
@@ -62,7 +62,7 @@ describe('UserHeader — platforms used', () => {
       <UserHeader user={{ ...baseUser, platforms_used: ['IOS'] }} status="ACTIVE" busy={false} {...spies()} />,
     );
 
-    fireEvent.mouseOver(screen.getByTestId('admin-user-platform-IOS'));
+    fireEvent.mouseOver(screen.getByTestId('admin-user-platforms-IOS'));
     expect(await screen.findByRole('tooltip')).toHaveTextContent('iOS');
   });
 
@@ -70,7 +70,7 @@ describe('UserHeader — platforms used', () => {
     renderWithProviders(<UserHeader user={baseUser} status="ACTIVE" busy={false} {...spies()} />);
 
     expect(screen.getByText('None recorded yet')).toBeInTheDocument();
-    expect(screen.queryByRole('group', { name: 'Platforms Used' })).toBeNull();
+    expect(screen.queryByRole('group', { name: 'Platforms used' })).toBeNull();
   });
 });
 

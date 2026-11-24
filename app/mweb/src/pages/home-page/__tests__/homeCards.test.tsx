@@ -55,7 +55,8 @@ const pod = (over: Record<string, unknown> = {}) => ({
   seats_taken: 7,
   pod_images_and_videos: [],
   club_slug: 'club',
-  pod_date_time: '2026-08-23T09:00:00.000Z',
+  // Far ahead so the card stays UPCOMING whenever the suite runs.
+  pod_date_time: '2099-08-23T09:00:00.000Z',
   ...over,
 });
 
@@ -71,6 +72,51 @@ describe('PodCard', () => {
     wrap(<PodCard pod={pod()} onOpen={vi.fn()} />);
     expect(spots()).toContain(fallbackT('mweb.home.spotsLeftOne'));
     expect(spots()).toContain(fallbackT('mweb.home.joiningNow', { count: 7 }));
+  });
+
+  it('says who attended and Completed, in place of who is joining and the spots, once the pod is over', () => {
+    const over = pod({ pod_date_time: '2020-01-05T09:00:00.000Z', attendance: { attended_seats: 5 } });
+    wrap(<PodCard pod={over} onOpen={vi.fn()} />);
+    expect(spots()).toBe(
+      `${fallbackT('mweb.home.attendedCount', { count: 5 })} · ${fallbackT('mweb.home.podCompleted')}`
+    );
+    expect(spots()).not.toContain(fallbackT('mweb.home.joiningNow', { count: 7 }));
+    expect(spots()).not.toContain(fallbackT('mweb.home.spotsLeftOne'));
+    expect(screen.getByTestId('pod-card-DUN-1')).toHaveAttribute(
+      'aria-label',
+      expect.stringContaining(fallbackT('mweb.home.podCompleted'))
+    );
+  });
+
+  it('counts attendance, not bookings: nobody scanned in shows only Completed', () => {
+    const over = pod({ pod_date_time: '2020-01-05T09:00:00.000Z', attendance: { attended_seats: 0 } });
+    wrap(<PodCard pod={over} onOpen={vi.fn()} />);
+    // 7 seats were booked; none was scanned in, so no count is claimed.
+    expect(spots()).toBe(fallbackT('mweb.home.podCompleted'));
+  });
+
+  it('shows only Completed for an over pod whose query did not ask for attendance', () => {
+    wrap(<PodCard pod={pod({ pod_date_time: '2020-01-05T09:00:00.000Z' })} onOpen={vi.fn()} />);
+    expect(spots()).toBe(fallbackT('mweb.home.podCompleted'));
+  });
+
+  it('is completed once the host-set end has passed, even inside the default four-hour tail', () => {
+    const now = Date.now();
+    const start = new Date(now - 60 * 60 * 1000).toISOString();
+    const end = new Date(now - 30 * 60 * 1000).toISOString();
+    const over = pod({ pod_date_time: start, pod_end_date_time: end, attendance: { attended_seats: 2 } });
+    wrap(<PodCard pod={over} onOpen={vi.fn()} />);
+    expect(spots()).toBe(
+      `${fallbackT('mweb.home.attendedCount', { count: 2 })} · ${fallbackT('mweb.home.podCompleted')}`
+    );
+  });
+
+  it('keeps who is joining and the spots while a started pod is still ongoing, even with scans', () => {
+    const start = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    wrap(<PodCard pod={pod({ pod_date_time: start, attendance: { attended_seats: 3 } })} onOpen={vi.fn()} />);
+    expect(spots()).toContain(fallbackT('mweb.home.joiningNow', { count: 7 }));
+    expect(spots()).toContain(fallbackT('mweb.home.spotsLeftOne'));
+    expect(spots()).not.toContain(fallbackT('mweb.home.podCompleted'));
   });
 
   it('says how many spots are left when there are several', () => {

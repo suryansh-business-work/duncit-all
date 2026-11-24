@@ -443,7 +443,10 @@ export class BaileysEvents {
    * handed on. A change that arrives while the delivery is still being processed (limiter wait, repeat
    * check, media download) waits for that processing to end first.
    */
-  private readonly outcomesPending = new Map<string, { count: number; ended: Promise<void>; free: () => void }>();
+  private readonly outcomesPending = new Map<
+    string,
+    { count: number; ended: Promise<void>; free: () => void; timers: Set<ReturnType<typeof setTimeout>> }
+  >();
 
   /**
    * Reactions, edits and deletes that reached a message still being processed where nothing is admitted before
@@ -454,7 +457,7 @@ export class BaileysEvents {
    */
   private readonly changesAwaitingEmit = new Map<
     string,
-    { announce: Array<() => void>; timer: ReturnType<typeof setTimeout> }
+    { announce: Array<() => void>; timer: ReturnType<typeof setTimeout>; generation: number }
   >();
 
   /** How many changes wait for a delivery or its outcome (see parkUntil); the rest are judged at once. */
@@ -534,6 +537,16 @@ export class BaileysEvents {
   /** Drop the store writes of every message that arrived before now; call before wiping the store. */
   fenceStoredWrites(): void {
     this.storeGeneration++;
+    for (const waiting of this.changesAwaitingEmit.values()) clearTimeout(waiting.timer);
+    this.changesAwaitingEmit.clear();
+    this.changesAwaiting = 0;
+    const pendingOutcomes = [...this.outcomesPending.values()];
+    this.outcomesPending.clear();
+    for (const entry of pendingOutcomes) {
+      for (const timer of entry.timers) clearTimeout(timer);
+      entry.timers.clear();
+      entry.free();
+    }
     const retirements = [...this.preparationRetirements];
     this.preparationRetirements.clear();
     for (const retire of retirements) retire();
@@ -677,6 +690,7 @@ export class BaileysEvents {
       const processed = this.host.inboundLimiter
         .run(yieldSlot => this.processInboundMessage(msg, { generation, order, ticket, yieldSlot }))
         .catch((error: unknown) => {
+          if (generation !== this.storeGeneration) return;
           // Names the failure rather than calling it "saturated", which used to send operators to look
           // at concurrency settings for a problem that was never there. The retry below skips the
           // limiter and processInboundMessage handles its own errors, so it cannot reject.
@@ -967,22 +981,37 @@ export class BaileysEvents {
             ? normalizedRoot?.secretEncryptedMessage
             : normalizedRoot?.encReactionMessage;
         let handled = false;
-        await this.prepareMessageChange(encrypted?.targetMessageKey?.id, opts, async releasePreparation => {
-          const revealed = await this.revealEncryptedModification(b, msg, normalizedRoot, contentType);
-          if (!revealed) return;
-          handled = true;
-          await this.processMessageChange(b, msg, revealed.content, revealed.contentType, {
-            ...opts,
-            releasePreparation,
-          });
-        });
+        await this.prepareMessageChange(
+          encrypted?.targetMessageKey?.id,
+          opts,
+          async (releasePreparation, yieldSlot) => {
+            const revealed = await this.revealEncryptedModification(
+              b,
+              msg,
+              normalizedRoot,
+              contentType,
+              opts.generation,
+            );
+            if (!revealed || opts.generation !== this.storeGeneration) return;
+            handled = true;
+            await this.processMessageChange(b, msg, revealed.content, revealed.contentType, {
+              ...opts,
+              yieldSlot,
+              releasePreparation,
+            });
+          },
+        );
         if (handled) return;
       }
 
       if (contentType === 'protocolMessage' || contentType === 'reactionMessage') {
         const targetId = normalizedRoot?.protocolMessage?.key?.id ?? normalizedRoot?.reactionMessage?.key?.id;
-        await this.prepareMessageChange(targetId, opts, releasePreparation =>
-          this.processMessageChange(b, msg, normalizedRoot, contentType, { ...opts, releasePreparation }),
+        await this.prepareMessageChange(targetId, opts, (releasePreparation, yieldSlot) =>
+          this.processMessageChange(b, msg, normalizedRoot, contentType, {
+            ...opts,
+            yieldSlot,
+            releasePreparation,
+          }),
         );
         return;
       }
@@ -1053,6 +1082,7 @@ export class BaileysEvents {
         });
         return;
       }
+      if (opts.generation !== this.storeGeneration) return;
       // The account's own status post reaches the projector and is dropped there: a story is not a
       // conversation, so no `message.sent` is emitted for it. Downloading its media first is work
       // nothing consumes, and a story is a full-size photo or video. Everything else about the path
@@ -1063,6 +1093,7 @@ export class BaileysEvents {
         ticket: opts.ticket,
         yieldSlot: opts.yieldSlot,
       });
+      if (opts.generation !== this.storeGeneration) return;
       // Stored before it is announced: whoever hears about this message may act on it at once (a quoted
       // reply, a reaction, a read receipt), and the store holds a read of an id until its write lands.
       // A message deleted for everyone or edited while it was being processed is stored as the change
@@ -1104,7 +1135,7 @@ export class BaileysEvents {
         const emit = msg.key.fromMe === true ? this.host.getOnMessageCreate() : this.host.getOnMessage();
         // The ticket goes along only where one was issued, so elsewhere the call is unchanged.
         const receipt = opts.ticket ? emit?.(incoming, opts.ticket) : emit?.(incoming);
-        this.watchOutcome(msg.key, receipt);
+        this.watchOutcome(msg.key, receipt, opts.generation);
       }
       this.host.recordMessage(msg, deleted ? 'revoked' : incoming.type, opts.order, dropped);
       if (deleted) {
@@ -1128,57 +1159,74 @@ export class BaileysEvents {
   private async prepareMessageChange(
     messageId: string | null | undefined,
     opts: { generation: number; ticket?: InboundTicket; yieldSlot?: <R>(fn: () => Promise<R>) => Promise<R> },
-    work: (releasePreparation: () => void) => Promise<void>,
+    work: (releasePreparation: () => void, yieldSlot?: <R>(fn: () => Promise<R>) => Promise<R>) => Promise<void>,
   ): Promise<void> {
     if (opts.generation !== this.storeGeneration) return;
     if (!messageId) {
-      if (opts.generation === this.storeGeneration) await work(() => undefined);
+      if (opts.generation === this.storeGeneration) await work(() => undefined, opts.yieldSlot);
       return;
     }
     opts.ticket?.drop();
-    while (this.changesPreparing >= BaileysEvents.CHANGES_PARKED_LIMIT) {
-      if (!this.preparationRoom) {
-        let release!: () => void;
-        const ready = new Promise<void>(resolve => {
-          release = resolve;
-        });
-        this.preparationRoom = { ready, release };
-      }
-      await this.preparationRoom.ready;
+    const run = async (): Promise<void> => {
       if (opts.generation !== this.storeGeneration) return;
-    }
-    this.changesPreparing++;
-    let finish!: () => void;
-    let fail!: (error: unknown) => void;
-    const done = new Promise<void>((resolve, reject) => {
-      finish = resolve;
-      fail = reject;
-    });
-    let releasePreparation!: () => void;
-    const released = new Promise<void>(resolve => {
-      releasePreparation = resolve;
-    });
-    this.messageChanges.enqueue(messageId, async () => {
-      const preparing = (async () => {
-        if (opts.generation === this.storeGeneration) await work(releasePreparation);
-      })().then(finish, fail);
-      try {
-        await Promise.race([preparing, released]);
-      } finally {
-        this.changesPreparing--;
-        this.wakePreparationWaiters();
+      while (this.changesPreparing >= BaileysEvents.CHANGES_PARKED_LIMIT) {
+        if (!this.preparationRoom) {
+          let release!: () => void;
+          const ready = new Promise<void>(resolve => {
+            release = resolve;
+          });
+          this.preparationRoom = { ready, release };
+        }
+        await this.preparationRoom.ready;
+        if (opts.generation !== this.storeGeneration) return;
       }
-    });
-    const retire = (): void => {
-      releasePreparation();
-      finish();
+      this.changesPreparing++;
+      let retired = false;
+      let finish!: () => void;
+      let fail!: (error: unknown) => void;
+      const done = new Promise<void>((resolve, reject) => {
+        finish = resolve;
+        fail = reject;
+      });
+      let releasePreparation!: () => void;
+      const released = new Promise<void>(resolve => {
+        releasePreparation = resolve;
+      });
+      // Once retired (or fenced), detached work must never invoke opts.yieldSlot after the
+      // surrounding inboundLimiter.run() has already exited, or it would double-release the slot.
+      const gatedYieldSlot = opts.yieldSlot
+        ? <R>(fn: () => Promise<R>): Promise<R> => {
+            if (retired || opts.generation !== this.storeGeneration) return fn();
+            return opts.yieldSlot!(fn);
+          }
+        : undefined;
+      this.messageChanges.enqueue(messageId, async () => {
+        const preparing = (async () => {
+          if (!retired && opts.generation === this.storeGeneration) {
+            await work(releasePreparation, gatedYieldSlot);
+          }
+        })().then(finish, fail);
+        try {
+          await Promise.race([preparing, released]);
+        } finally {
+          this.changesPreparing--;
+          this.wakePreparationWaiters();
+        }
+      });
+      const retire = (): void => {
+        retired = true;
+        releasePreparation();
+        finish();
+      };
+      this.preparationRetirements.add(retire);
+      try {
+        await done;
+      } finally {
+        retired = true;
+        this.preparationRetirements.delete(retire);
+      }
     };
-    this.preparationRetirements.add(retire);
-    try {
-      await (opts.yieldSlot ? opts.yieldSlot(() => done) : done);
-    } finally {
-      this.preparationRetirements.delete(retire);
-    }
+    await (opts.yieldSlot ? opts.yieldSlot(run) : run());
   }
 
   /** Wake the arrivals waiting for room; each looks again for room, and whether its store was fenced meanwhile. */
@@ -1402,9 +1450,11 @@ export class BaileysEvents {
         const storedKey = (await this.readTarget(edited.messageId, 'reading an edit target'))?.key ?? target?.key;
         const resolveStored = await this.reportedPhones(storedKey, target?.key, msg.key);
         if (opts.generation !== this.storeGeneration) return;
-        const currentTarget = this.inboundInFlight.get(edited.messageId) ?? target;
+        const currentTarget = this.inboundInFlight.get(edited.messageId);
         if (currentTarget && this.mayChange(currentTarget.key, msg.key, false, resolveStored)) {
           recordInFlightEdit(resolveStored);
+        } else if (this.editedWhileInFlight.get(edited.messageId)?.envelope === msg.key) {
+          this.editedWhileInFlight.delete(edited.messageId);
         }
         const storedChatJid =
           storedKey?.remoteJid && this.mayChange(storedKey, msg.key, false, resolveStored)
@@ -1484,7 +1534,7 @@ export class BaileysEvents {
     }
     const timer = setTimeout(() => this.handOverChanges(messageId), 3 * inboundMediaTimeoutMs());
     timer.unref();
-    this.changesAwaitingEmit.set(messageId, { announce: [announce], timer });
+    this.changesAwaitingEmit.set(messageId, { announce: [announce], timer, generation: this.storeGeneration });
   }
 
   /** Announce, in order, what waited for message `id` to be handed on (see announceWhenHandedOn). */
@@ -1494,6 +1544,7 @@ export class BaileysEvents {
     this.changesAwaitingEmit.delete(messageId);
     clearTimeout(waiting.timer);
     this.changesAwaiting -= waiting.announce.length;
+    if (waiting.generation !== this.storeGeneration) return;
     for (const announce of waiting.announce) {
       try {
         announce();
@@ -1513,14 +1564,19 @@ export class BaileysEvents {
    * later edit, delete or reaction of it is judged. Detached: it never delays inbound handling, and
    * nothing it does can fail it, whatever the callback returns or rejects with.
    */
-  private watchOutcome(key: WAMessageKey, receipt: void | InboundReceipt): void {
+  private watchOutcome(key: WAMessageKey, receipt: void | InboundReceipt, generation = this.storeGeneration): void {
     const id = key.id;
     if (!id || !receipt?.settled) return;
     // The session holds no entry for a status post, so it judges no change aimed at one: only a message
     // it holds can stand in for the stored copy there.
-    const release = key.remoteJid === 'status@broadcast' ? undefined : this.holdOutcome(id);
+    const release =
+      key.remoteJid === 'status@broadcast' || generation !== this.storeGeneration ? undefined : this.holdOutcome(id);
     void Promise.resolve(receipt.settled)
-      .then(result => (result?.conflict === true ? this.dropConflictingCopy(key, id) : undefined))
+      .then(result =>
+        result?.conflict === true && generation === this.storeGeneration
+          ? this.dropConflictingCopy(key, id)
+          : undefined,
+      )
       .catch((err: unknown) =>
         this.host.logger.warn('Could not act on what the session made of a message', {
           msgId: id,
@@ -1541,7 +1597,7 @@ export class BaileysEvents {
     if (!hold) {
       let free!: () => void;
       const ended = new Promise<void>(resolve => (free = resolve));
-      hold = { count: 0, ended, free };
+      hold = { count: 0, ended, free, timers: new Set() };
       this.outcomesPending.set(id, hold);
     }
     const entry = hold;
@@ -1551,12 +1607,14 @@ export class BaileysEvents {
       if (ended) return;
       ended = true;
       clearTimeout(timer);
+      entry.timers.delete(timer);
       if (--entry.count > 0) return;
-      this.outcomesPending.delete(id);
+      if (this.outcomesPending.get(id) === entry) this.outcomesPending.delete(id);
       entry.free();
     };
     const timer = setTimeout(end, BaileysEvents.OUTCOME_HOLD_MS);
     timer.unref();
+    entry.timers.add(timer);
     return end;
   }
 
@@ -1655,6 +1713,7 @@ export class BaileysEvents {
     msg: WAMessage,
     content: WAMessage['message'],
     contentType: string,
+    generation?: number,
   ): Promise<
     { content: NonNullable<WAMessage['message']>; contentType: 'protocolMessage' | 'reactionMessage' } | undefined
   > {
@@ -1674,6 +1733,7 @@ export class BaileysEvents {
         if (type !== editType && type !== 'MESSAGE_EDIT') return undefined;
       }
       const original = await this.readTarget(targetId, 'reading the message an encrypted edit or reaction targets');
+      if (generation !== undefined && generation !== this.storeGeneration) return undefined;
       const secret = messageSecretOf(original?.message);
       if (!original || !secret) {
         this.host.logger.debug('Cannot read an encrypted edit or reaction: the message it targets is not stored', {
@@ -1758,6 +1818,7 @@ export class BaileysEvents {
     checkAuthor: boolean,
     kind?: 'reaction',
     inbound?: {
+      generation?: number;
       ticket?: InboundTicket;
       yieldSlot?: <R>(fn: () => Promise<R>) => Promise<R>;
       releasePreparation?: () => void;
@@ -1771,10 +1832,12 @@ export class BaileysEvents {
     let heldUntil: number | undefined;
     let reread = false;
     for (;;) {
+      if (inbound?.generation !== undefined && inbound.generation !== this.storeGeneration) return true;
       const removals = this.removalsOf(targetId);
       // A message still being processed has no stored copy yet, but the projector may already hold it
       // (PostgreSQL), so its own key is checked instead.
       const found = await this.readTarget(targetId, 'checking what an edit, revoke or reaction targets');
+      if (inbound?.generation !== undefined && inbound.generation !== this.storeGeneration) return true;
       // Without a stored copy the key the wait was for stands (a delivery that may never have been stored: no
       // store, a failed write; or a copy gone since), unless a conflicting copy went since the wait for it
       // began: then that delivery was not the message the id names, and nothing says which one is.
@@ -1803,6 +1866,7 @@ export class BaileysEvents {
         waitedFor = { key: original, removals };
         if (await this.parkUntil(processing, 3 * inboundMediaTimeoutMs(), inbound)) continue;
       }
+      if (inbound?.generation !== undefined && inbound.generation !== this.storeGeneration) return true;
       // A conflicting copy went while the store was read, and the read may have returned it: it ends the
       // hold only once removed, so the read is the one that can no longer be told from the real copy. Read
       // again, with the copy gone, rather than drop the real author's change against it.
@@ -1833,11 +1897,13 @@ export class BaileysEvents {
     until: Promise<void>,
     limitMs: number,
     inbound?: {
+      generation?: number;
       ticket?: InboundTicket;
       yieldSlot?: <R>(fn: () => Promise<R>) => Promise<R>;
       releasePreparation?: () => void;
     },
   ): Promise<boolean> {
+    if (inbound?.generation !== undefined && inbound.generation !== this.storeGeneration) return false;
     if (this.changesParked >= BaileysEvents.CHANGES_PARKED_LIMIT) return false;
     this.changesParked++;
     try {
@@ -2750,6 +2816,11 @@ export class BaileysEvents {
     // Hold the stream handle in the outer scope so the timeout can destroy it. A genuine
     // download/read error still rejects (propagating to the caller's catch as before).
     let stream: (AsyncIterable<Buffer> & { destroy?: () => void }) | undefined;
+    // AbortController cancels the underlying HTTP fetch (via patch-baileys-media-signal) and any
+    // pending reuploadRequest when the deadline fires, the byte cap trips, or reading stops early.
+    const abort = new AbortController();
+    const abortReason = (): Error =>
+      abort.signal.reason instanceof Error ? abort.signal.reason : new Error('inbound media download aborted');
     // The timeout can fire before the stream exists (an expired-media re-upload wait, a slow response):
     // the abandoned download must then stop on its own instead of buffering outside the limiter.
     let timedOut = false;
@@ -2763,7 +2834,7 @@ export class BaileysEvents {
       releaseSlot = () => resolve(Buffer.alloc(0));
     });
     const body = async (): Promise<Buffer | { overflowBytes: number }> => {
-      if (timedOut) {
+      if (timedOut || abort.signal.aborted) {
         return Buffer.alloc(0);
       }
       const b = await this.host.loadLib();
@@ -2781,34 +2852,60 @@ export class BaileysEvents {
       // from the nested `options`; a top-level one is ignored. Read after the socket: once the session
       // is torn down getSocket() throws, and a dispatcher built then would never be closed.
       const dispatcher = this.host.getFetchDispatcher();
-      stream = (await b.downloadMediaMessage(
-        msg,
-        'stream',
-        dispatcher ? { options: { dispatcher } as RequestInit } : {},
-        {
-          logger: createSilentLogger(),
-          reuploadRequest: async m => assertWhatsAppSource(await sock.updateMediaMessage(m)),
-        },
-      )) as AsyncIterable<Buffer> & { destroy?: () => void };
-      if (timedOut) {
-        stream.destroy?.();
-        return Buffer.alloc(0);
-      }
-
-      const chunks: Buffer[] = [];
-      let total = 0;
-      for await (const chunk of stream) {
-        if (timedOut) {
-          break;
-        }
-        total += chunk.length;
-        if (total > maxBytes) {
+      try {
+        stream = (await b.downloadMediaMessage(
+          msg,
+          'stream',
+          { options: { ...(dispatcher ? { dispatcher } : {}), signal: abort.signal } },
+          {
+            logger: createSilentLogger(),
+            reuploadRequest: async m => {
+              if (abort.signal.aborted) {
+                throw abortReason();
+              }
+              let onAbort: (() => void) | undefined;
+              const reupload = Promise.resolve(sock.updateMediaMessage(m));
+              // Attach a no-op rejection handler so a late rejection after abort never goes unhandled.
+              reupload.catch(() => undefined);
+              const updated = await new Promise<WAMessage>((resolve, reject) => {
+                onAbort = () => reject(abortReason());
+                abort.signal.addEventListener('abort', onAbort, { once: true });
+                reupload.then(resolve, reject);
+              }).finally(() => {
+                if (onAbort) abort.signal.removeEventListener('abort', onAbort);
+              });
+              if (abort.signal.aborted) {
+                throw abortReason();
+              }
+              return assertWhatsAppSource(updated);
+            },
+          },
+        )) as AsyncIterable<Buffer> & { destroy?: () => void };
+        if (timedOut || abort.signal.aborted) {
           stream.destroy?.();
-          return { overflowBytes: total };
+          return Buffer.alloc(0);
         }
-        chunks.push(chunk);
+
+        const chunks: Buffer[] = [];
+        let total = 0;
+        for await (const chunk of stream) {
+          if (timedOut || abort.signal.aborted) {
+            break;
+          }
+          total += chunk.length;
+          if (total > maxBytes) {
+            abort.abort(new Error('inbound media download exceeded size cap'));
+            stream.destroy?.();
+            return { overflowBytes: total };
+          }
+          chunks.push(chunk);
+        }
+        return Buffer.concat(chunks);
+      } finally {
+        if (!abort.signal.aborted) {
+          abort.abort();
+        }
       }
-      return Buffer.concat(chunks);
     };
     // The wait for the process-wide gate sits inside the deadline below, so a contended gate cannot
     // hold this session's inbound handler longer than MEDIA_DOWNLOAD_TIMEOUT_MS.
@@ -2820,10 +2917,11 @@ export class BaileysEvents {
     });
 
     // A slow/trickling sender never trips the byte cap, so without a deadline it pins a concurrency
-    // slot (and, on Baileys, the whole inbound handler) indefinitely. On timeout, destroy the stream
-    // and treat it as no usable media.
+    // slot (and, on Baileys, the whole inbound handler) indefinitely. On timeout, abort the signal
+    // before destroying the stream so pre-header fetches and pending re-uploads cancel immediately.
     return withInboundDownloadTimeout(download, inboundMediaTimeoutMs(), () => {
       timedOut = true;
+      abort.abort(new Error('inbound media download timed out'));
       stream?.destroy?.();
       releaseSlot();
     });

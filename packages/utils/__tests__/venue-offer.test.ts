@@ -597,6 +597,16 @@ describe('venueOfferPrefillValues', () => {
 
   it('starts again from a declined free venue, with no amount to fill', () => {
     expect(venueOfferPrefillValues({ ...declined, model: 'FREE', rate: 0 })).toMatchObject({ venue_offer_model: 'FREE', venue_offer_rate: '' });
+    expect(venueOfferPrefillValues({ ...declined, model: 'FREE', rate: 0 }, { podFree: true })).toMatchObject({ venue_offer_model: 'FREE' });
+  });
+
+  it('leaves a paid pod no free venue to carry over, but keeps its priced option', () => {
+    expect(venueOfferPrefillValues({ ...declined, model: 'FREE', rate: 0 }, { podFree: false })).toMatchObject({
+      venue_offer_model: '',
+      venue_offer_rate: '',
+      offerings: 'Projector\nSnacks',
+    });
+    expect(venueOfferPrefillValues(declined, { podFree: false })).toMatchObject({ venue_offer_model: 'PER_GUEST', venue_offer_rate: '500' });
   });
 });
 

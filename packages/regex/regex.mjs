@@ -408,6 +408,25 @@ export const MONGO_DATABASE = /^[A-Za-z0-9_-]{1,64}$/;
 export const isMongoDatabase = (v) => MONGO_DATABASE.test(v);
 
 /**
+ * A MongoDB connection string such as `mongodb+srv://user:pass@cluster0.x.mongodb.net/`
+ * (Atlas) or `mongodb://user:pass@host:27017/?authSource=admin`: the scheme, then
+ * 3–2000 characters with no whitespace. One class, bounded count — linear.
+ */
+export const MONGO_URI = /^mongodb(?:\+srv)?:\/\/\S{3,2000}$/;
+
+/** MONGO_URI shape check. Trim before calling it. */
+export const isMongoUri = (v) => MONGO_URI.test(v);
+
+/**
+ * A database host: a DNS name, a Docker service name such as `duncit-mongo` or an
+ * IPv4 address — 1–253 letters, digits, `.` or `-`. One class, bounded count — linear.
+ */
+export const DB_HOST = /^[A-Za-z0-9.-]{1,253}$/;
+
+/** DB_HOST shape check. Trim before calling it. */
+export const isDbHost = (v) => DB_HOST.test(v);
+
+/**
  * A fully-qualified hostname such as `ns1.example.com`: at least two labels,
  * each a {@link HOSTNAME_LABEL}, 253 characters at most. A trailing dot (the
  * root) is accepted. Case-insensitive, as DNS is.

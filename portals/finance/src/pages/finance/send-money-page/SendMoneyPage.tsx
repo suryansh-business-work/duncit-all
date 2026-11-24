@@ -13,7 +13,8 @@ import { useSendMoneyForm } from './useSendMoneyForm';
  * Send Money: pay a person by hand — salary, a manual refund, a reimbursement,
  * an adjustment — to one of the bank accounts Duncit has verified for them.
  *
- * Choosing a person shows who they are and their verified accounts; the amount,
+ * Choosing a person shows who they are and their verified accounts, plus the
+ * option to type another bank account or UPI ID in for this payment; the amount,
  * category, reason and notes follow; a confirmation repeats it all back before
  * anything moves. The server re-checks permission, the account and the amount,
  * and records the transfer in Send Money Logs and the audit trail.
@@ -40,7 +41,7 @@ export default function SendMoneyPage() {
 
       <Stack component="form" spacing={3} noValidate onSubmit={m.review} sx={{ maxWidth: 720 }}>
         {m.options && !m.options.payouts_configured ? (
-          <Alert severity="warning">{t('finance.payouts.notConfigured')}</Alert>
+          <Alert severity="warning">{t('finance.payouts.sendNotConfigured')}</Alert>
         ) : null}
 
         <RecipientPicker
@@ -55,7 +56,9 @@ export default function SendMoneyPage() {
             recipient={m.recipient}
             accountId={m.form.watch('account_id')}
             onAccountChange={(id) => setValue('account_id', id, { shouldValidate: true })}
+            control={control}
             error={errors.account_id?.message}
+            disabled={m.sending}
           />
         ) : null}
 
@@ -65,7 +68,7 @@ export default function SendMoneyPage() {
           errors={errors}
           categories={m.options?.categories ?? [...SEND_MONEY_CATEGORIES]}
           currencySymbol={m.options?.currency_symbol ?? ''}
-          chooseMethod={m.account?.payout_method !== 'UPI'}
+          chooseMethod={m.chooseMethod}
           disabled={m.sending}
         />
 

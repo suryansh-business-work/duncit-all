@@ -112,3 +112,19 @@ describe('money-out mutations (withdrawals and Send Money)', () => {
     expect(reachesOutside('MUTATION', 'retryWithdrawalPayout')).toBe(true);
   });
 });
+
+describe('Reel Studio AI calls', () => {
+  it.each(['sendReelMessage', 'generateReelIdeas', 'generateReelScript', 'generateReelVariants', 'generateReelVoiceover', 'generateReelSubtitles', 'recommendNextReel'])(
+    '%s spends Duncit’s AI key, so the person must say yes first',
+    (field) => {
+      expect(needsConfirmation('MUTATION', field)).toBe(true);
+    }
+  );
+
+  it('lets a chat build the reel itself without asking: reading, adding stock and saving the spec', () => {
+    for (const field of ['saveReelSpec', 'addReelStockAssets', 'applyReelStoryboard', 'createReelProject']) {
+      expect(needsConfirmation('MUTATION', field)).toBe(false);
+    }
+    expect(needsConfirmation('QUERY', 'reelMediaSearch')).toBe(false);
+  });
+});

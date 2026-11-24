@@ -1282,3 +1282,16 @@ server {
         proxy_read_timeout 90s;
     }
 }
+
+# --- Retired hostname: track.duncit.com ---------------------------------------
+# Its service is gone (deploy.yml deletes the old per-host file), but the DNS
+# record still points here. With no block, HTTPS fell through to another site's
+# default server ("Infinity MQTT broker"), so it keeps a certificate and
+# redirects to the main site.
+server {
+    listen 80;
+    listen [::]:80;
+    http2 on;
+    server_name track.duncit.com;
+    return 301 https://duncit.com$request_uri;
+}

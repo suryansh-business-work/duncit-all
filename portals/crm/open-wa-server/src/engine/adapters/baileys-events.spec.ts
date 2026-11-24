@@ -3826,3 +3826,657 @@ describe('BaileysEvents poll votes', () => {
     expect(unmappedCb).not.toHaveBeenCalled();
   });
 });
+
+describe('BaileysEvents preparation room and unlink fencing', () => {
+  const chat = '6281111111111@s.whatsapp.net';
+  const flush = async (turns = 10): Promise<void> => {
+    for (let i = 0; i < turns; i++) await new Promise(resolve => setImmediate(resolve));
+  };
+
+  it('releases the inbound limiter slot while waiting for preparation room', async () => {
+    const releases: Array<() => void> = [];
+    const onMessage = jest.fn();
+    const limiter = new ConcurrencyLimiter(1);
+    const events = new BaileysEvents(
+      makeHost({
+        inboundLimiter: limiter,
+        getStoredMessage: (id: string) => {
+          if (id === 'PLAIN') return Promise.resolve(null);
+          return new Promise<WAMessage | null>(resolve => {
+            releases.push(() => resolve(null));
+          });
+        },
+        getOnMessage: () => onMessage,
+        getOnMessageReaction: () => jest.fn(),
+      }),
+    );
+
+    const reactions: WAMessage[] = Array.from({ length: 65 }, (_, i) => ({
+      key: { id: `R-${i}`, remoteJid: chat, fromMe: false },
+      messageTimestamp: 1_700_000_000 + i,
+      message: { reactionMessage: { key: { id: `T-${i}`, remoteJid: chat, fromMe: false }, text: 'ok' } },
+    }));
+    const plain: WAMessage = {
+      key: { id: 'PLAIN', remoteJid: chat, fromMe: false },
+      messageTimestamp: 1_700_000_999,
+      message: { conversation: 'unblocked' },
+    };
+
+    events.handleMessagesUpsert({ type: 'notify', messages: [...reactions, plain] });
+    await flush(30);
+
+    // The 65th reaction waits for preparation room without holding the lone limiter slot,
+    // so the plain message queued behind it runs and is emitted immediately.
+    expect(onMessage).toHaveBeenCalledTimes(1);
+    expect(onMessage).toHaveBeenCalledWith(expect.objectContaining({ id: 'PLAIN', body: 'unblocked' }));
+
+    for (const release of releases) release();
+    await flush(30);
+  });
+
+  it('aborts a change waiting for preparation room when fenceStoredWrites advances the generation', async () => {
+    const releases: Array<() => void> = [];
+    const onMessageReaction = jest.fn();
+    const events = new BaileysEvents(
+      makeHost({
+        inboundLimiter: new ConcurrencyLimiter(2),
+        getStoredMessage: () =>
+          new Promise<WAMessage | null>(resolve => {
+            releases.push(() => resolve(null));
+          }),
+        getOnMessageReaction: () => onMessageReaction,
+      }),
+    );
+
+    const reactions: WAMessage[] = Array.from({ length: 65 }, (_, i) => ({
+      key: { id: `RF-${i}`, remoteJid: chat, fromMe: false },
+      messageTimestamp: 1_700_000_000 + i,
+      message: { reactionMessage: { key: { id: `TF-${i}`, remoteJid: chat, fromMe: false }, text: 'ok' } },
+    }));
+
+    events.handleMessagesUpsert({ type: 'notify', messages: reactions });
+    await flush(30);
+
+    events.fenceStoredWrites();
+    for (const release of releases) release();
+    await flush(30);
+
+    expect(onMessageReaction).not.toHaveBeenCalled();
+  });
+
+  it('does not underflow inboundLimiter or leak changesParked when fenceStoredWrites retires a change awaiting readTarget', async () => {
+    const otherChat = '6282222222222@s.whatsapp.net';
+    let releaseOriginal!: (v: WAMessage | null) => void;
+    let releaseForeignRead!: (v: WAMessage | null) => void;
+    let originalReadOnce = false;
+    const limiter = new ConcurrencyLimiter(2);
+    const onMessageReaction = jest.fn();
+
+    const events = new BaileysEvents(
+      makeHost({
+        inboundLimiter: limiter,
+        getStoredMessage: (id: string) => {
+          if (id === 'ORIG-1' && !originalReadOnce) {
+            originalReadOnce = true;
+            return new Promise<WAMessage | null>(r => (releaseOriginal = r));
+          }
+          if (id === 'ORIG-1') {
+            return new Promise<WAMessage | null>(r => (releaseForeignRead = r));
+          }
+          return Promise.resolve(null);
+        },
+        getOnMessage: () => jest.fn(),
+        getOnMessageReaction: () => onMessageReaction,
+      }),
+    );
+
+    // Start an in-flight original in `chat` (stays pending in `inboundInFlight`).
+    events.handleMessagesUpsert({
+      type: 'notify',
+      messages: [
+        {
+          key: { id: 'ORIG-1', remoteJid: chat, fromMe: false },
+          messageTimestamp: 1_700_000_000,
+          message: { conversation: 'hello' },
+        },
+      ],
+    });
+    await flush();
+
+    // Send a foreign reaction from `otherChat` targeting ORIG-1; its targetsForeignMessage awaits readTarget.
+    events.handleMessagesUpsert({
+      type: 'notify',
+      messages: [
+        {
+          key: { id: 'REACT-FOREIGN', remoteJid: otherChat, fromMe: false },
+          messageTimestamp: 1_700_000_001,
+          message: {
+            reactionMessage: { key: { id: 'ORIG-1', remoteJid: otherChat, fromMe: false }, text: 'x' },
+          },
+        },
+      ],
+    });
+    await flush();
+
+    // Fence while the reaction's readTarget is still pending: retires prepareMessageChange so
+    // inboundLimiter.run() finishes while the detached targetsForeignMessage still holds releaseForeignRead.
+    events.fenceStoredWrites();
+    await flush();
+
+    // Now resolve the detached readTarget: it sees the foreign in-flight original, and MUST NOT
+    // call parkUntil (which would leak changesParked) or double-release inboundLimiter.
+    releaseForeignRead(null);
+    await flush(20);
+
+    const internals = events as unknown as { changesParked: number };
+    expect(internals.changesParked).toBe(0);
+    expect(limiter.activeCount).toBe(1); // only ORIG-1 still active
+
+    releaseOriginal(null);
+    await flush(20);
+
+    expect(limiter.activeCount).toBe(0);
+    expect(internals.changesParked).toBe(0);
+    expect(onMessageReaction).not.toHaveBeenCalled();
+  });
+
+  describe('timers and callbacks across fenceStoredWrites', () => {
+    const savedTimeout = process.env.MEDIA_DOWNLOAD_TIMEOUT_MS;
+
+    beforeEach(() => {
+      process.env.MEDIA_DOWNLOAD_TIMEOUT_MS = '1000';
+      jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate'] });
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+      if (savedTimeout === undefined) delete process.env.MEDIA_DOWNLOAD_TIMEOUT_MS;
+      else process.env.MEDIA_DOWNLOAD_TIMEOUT_MS = savedTimeout;
+    });
+
+    it('clears changesAwaitingEmit timers and drops stale waiting changes on fenceStoredWrites', async () => {
+      let releaseOriginal!: (stored: WAMessage | null) => void;
+      let checked = false;
+      const onMessageReaction = jest.fn();
+      const events = new BaileysEvents(
+        makeHost({
+          getStoredMessage: (id: string) => {
+            if (id !== 'M-FENCE' || checked) return Promise.resolve(null);
+            checked = true;
+            return new Promise<WAMessage | null>(resolve => {
+              releaseOriginal = resolve;
+            });
+          },
+          getOnMessageReaction: () => onMessageReaction,
+        }),
+      );
+
+      events.handleMessagesUpsert({
+        type: 'notify',
+        messages: [
+          {
+            key: { id: 'M-FENCE', remoteJid: chat, fromMe: false },
+            messageTimestamp: 1_700_000_000,
+            message: { conversation: 'hi' },
+          },
+        ],
+      });
+      await flush();
+
+      events.handleMessagesUpsert({
+        type: 'notify',
+        messages: [
+          {
+            key: { id: 'R-FENCE', remoteJid: chat, fromMe: false },
+            messageTimestamp: 1_700_000_001,
+            message: { reactionMessage: { key: { id: 'M-FENCE', remoteJid: chat, fromMe: false }, text: 'ok' } },
+          },
+        ],
+      });
+      await flush();
+      expect(jest.getTimerCount()).toBe(1);
+
+      events.fenceStoredWrites();
+      expect(jest.getTimerCount()).toBe(0);
+
+      jest.advanceTimersByTime(10_000);
+      releaseOriginal(null);
+      await flush();
+
+      expect(onMessageReaction).not.toHaveBeenCalled();
+      expect((events as unknown as { changesAwaiting: number }).changesAwaiting).toBe(0);
+    });
+
+    it('clears outcomesPending timers, gates dropConflictingCopy, and preserves a newer hold on fenceStoredWrites', async () => {
+      let resolveFirst!: (val: { conflict?: boolean }) => void;
+      let resolveSecond!: (val: { conflict?: boolean }) => void;
+      const firstReceipt = { settled: new Promise<{ conflict?: boolean }>(r => (resolveFirst = r)) };
+      const secondReceipt = { settled: new Promise<{ conflict?: boolean }>(r => (resolveSecond = r)) };
+      const removeStoredMessage = jest.fn(() => Promise.resolve());
+      const onMessage = jest.fn().mockReturnValueOnce(firstReceipt).mockReturnValueOnce(secondReceipt);
+
+      const events = new BaileysEvents(
+        makeHost({
+          getOnMessage: () => onMessage,
+          removeStoredMessage,
+        }),
+      );
+
+      const msg: WAMessage = {
+        key: { id: 'M-OUTCOME', remoteJid: chat, fromMe: false },
+        messageTimestamp: 1_700_000_000,
+        message: { conversation: 'first' },
+      };
+
+      events.handleMessagesUpsert({ type: 'notify', messages: [msg] });
+      await flush();
+      expect(jest.getTimerCount()).toBe(1);
+
+      const internals = events as unknown as {
+        outcomesPending: Map<string, { ended: Promise<void> }>;
+      };
+      const firstHold = internals.outcomesPending.get('M-OUTCOME');
+      expect(firstHold).toBeDefined();
+      let waiterUnblocked = false;
+      void firstHold!.ended.then(() => {
+        waiterUnblocked = true;
+      });
+
+      events.fenceStoredWrites();
+      await flush();
+      expect(jest.getTimerCount()).toBe(0);
+      expect(waiterUnblocked).toBe(true);
+      expect(internals.outcomesPending.size).toBe(0);
+
+      // New generation receives a message with the same id and installs a new hold.
+      events.handleMessagesUpsert({ type: 'notify', messages: [msg] });
+      await flush();
+      expect(jest.getTimerCount()).toBe(1);
+      const secondHold = internals.outcomesPending.get('M-OUTCOME');
+      expect(secondHold).toBeDefined();
+
+      // The fenced delivery settles late as a conflict: must neither drop the new copy nor remove the new hold.
+      resolveFirst({ conflict: true });
+      await flush();
+      expect(removeStoredMessage).not.toHaveBeenCalled();
+      expect(internals.outcomesPending.get('M-OUTCOME')).toBe(secondHold);
+      expect(jest.getTimerCount()).toBe(1);
+
+      // Settling the new hold cleans up its timer completely.
+      resolveSecond({ conflict: false });
+      await flush();
+      expect(internals.outcomesPending.size).toBe(0);
+      expect(jest.getTimerCount()).toBe(0);
+    });
+  });
+
+  describe('inbound media download AbortSignal propagation', () => {
+    const savedEnv = {
+      MEDIA_DOWNLOAD_ENABLED: process.env.MEDIA_DOWNLOAD_ENABLED,
+      MEDIA_DOWNLOAD_MAX_BYTES: process.env.MEDIA_DOWNLOAD_MAX_BYTES,
+      MEDIA_DOWNLOAD_TIMEOUT_MS: process.env.MEDIA_DOWNLOAD_TIMEOUT_MS,
+    };
+
+    const imageMsg = (id: string, fileLength = 100): WAMessage => ({
+      key: { id, remoteJid: '15550001111@s.whatsapp.net', fromMe: false },
+      messageTimestamp: 1_700_000_000,
+      message: { imageMessage: { mimetype: 'image/png', fileLength } },
+    });
+
+    beforeEach(() => {
+      downloadMediaMessage.mockReset();
+      process.env.MEDIA_DOWNLOAD_ENABLED = 'true';
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+      for (const [key, value] of Object.entries(savedEnv)) {
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
+    });
+
+    it('passes options.signal to downloadMediaMessage both with and without a proxy dispatcher', async () => {
+      downloadMediaMessage.mockImplementation(() => Promise.resolve(streamOf(Buffer.from('PNG'))));
+
+      const directEvents = new BaileysEvents(makeHost({ getFetchDispatcher: () => undefined }));
+      await directEvents.mapMessage(imageMsg('SIG-DIRECT', 3), 'imageMessage');
+      const calls = downloadMediaMessage.mock.calls as unknown[][];
+      const directOpts = calls[0]?.[2] as { options?: Record<string, unknown> } | undefined;
+      expect(directOpts?.options?.signal).toBeInstanceOf(AbortSignal);
+      expect(directOpts?.options).not.toHaveProperty('dispatcher');
+
+      const dispatcher = { dispatch: jest.fn() };
+      const proxiedEvents = new BaileysEvents(makeHost({ getFetchDispatcher: () => dispatcher as never }));
+      await proxiedEvents.mapMessage(imageMsg('SIG-PROXY', 3), 'imageMessage');
+      const proxyOpts = calls[1]?.[2] as { options?: Record<string, unknown> } | undefined;
+      expect(proxyOpts?.options?.signal).toBeInstanceOf(AbortSignal);
+      expect(proxyOpts?.options?.dispatcher).toBe(dispatcher);
+    });
+
+    it('aborts options.signal on timeout even when downloadMediaMessage is still stalled pre-stream', async () => {
+      jest.useFakeTimers();
+      process.env.MEDIA_DOWNLOAD_TIMEOUT_MS = '50';
+
+      let capturedSignal: AbortSignal | undefined;
+      downloadMediaMessage.mockImplementation((_m, _t, opts: { options?: { signal?: AbortSignal } }) => {
+        capturedSignal = opts?.options?.signal;
+        return new Promise(() => undefined); // never resolves stream
+      });
+
+      const events = new BaileysEvents(makeHost());
+      const pending = events.mapMessage(imageMsg('SIG-TIMEOUT', 1024), 'imageMessage');
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(capturedSignal).toBeInstanceOf(AbortSignal);
+      expect(capturedSignal?.aborted).toBe(false);
+
+      await jest.advanceTimersByTimeAsync(50);
+      const result = await pending;
+      expect(result.media).toMatchObject({ omitted: true, sizeBytes: 1024 });
+      expect(capturedSignal?.aborted).toBe(true);
+    });
+
+    it('aborts options.signal and destroys the stream when size cap is breached mid-stream', async () => {
+      process.env.MEDIA_DOWNLOAD_MAX_BYTES = '10';
+      let capturedSignal: AbortSignal | undefined;
+      const destroy = jest.fn();
+      downloadMediaMessage.mockImplementation((_m, _t, opts: { options?: { signal?: AbortSignal } }) => {
+        capturedSignal = opts?.options?.signal;
+        return Promise.resolve({
+          // eslint-disable-next-line @typescript-eslint/require-await
+          async *[Symbol.asyncIterator]() {
+            yield Buffer.alloc(6);
+            yield Buffer.alloc(6);
+          },
+          destroy,
+        });
+      });
+
+      const events = new BaileysEvents(makeHost());
+      const result = await events.mapMessage(imageMsg('SIG-CAP', 5), 'imageMessage');
+      expect(result.media).toMatchObject({ omitted: true, sizeBytes: 12 });
+      expect(capturedSignal?.aborted).toBe(true);
+      expect(destroy).toHaveBeenCalled();
+    });
+
+    it('rejects reuploadRequest immediately if aborted and races pending sock.updateMediaMessage against abort', async () => {
+      jest.useFakeTimers();
+      process.env.MEDIA_DOWNLOAD_TIMEOUT_MS = '50';
+
+      const updateMediaMessage = jest.fn(() => new Promise(() => undefined));
+      let capturedReupload: ((m: WAMessage) => Promise<WAMessage>) | undefined;
+      downloadMediaMessage.mockImplementation(
+        (_m, _t, _opts, ctx: { reuploadRequest?: (m: WAMessage) => Promise<WAMessage> }) => {
+          capturedReupload = ctx?.reuploadRequest;
+          return new Promise(() => undefined);
+        },
+      );
+
+      const events = new BaileysEvents(
+        makeHost({
+          getSocket: () => ({ updateMediaMessage }) as unknown as WASocket,
+        }),
+      );
+
+      // Start download and kick off a pending reuploadRequest before timeout.
+      const pending = events.mapMessage(imageMsg('SIG-REUPLOAD', 1024), 'imageMessage');
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(capturedReupload).toBeDefined();
+
+      const inFlightReupload = capturedReupload!(imageMsg('SIG-REUPLOAD', 1024));
+      expect(updateMediaMessage).toHaveBeenCalledTimes(1);
+
+      // Advance past timeout -> abort signal fires -> pending reuploadRequest rejects promptly.
+      const reuploadRejection = inFlightReupload.then(
+        () => 'resolved',
+        (err: unknown) => (err instanceof Error ? err.message : String(err)),
+      );
+      await jest.advanceTimersByTimeAsync(50);
+      await pending;
+      expect(await reuploadRejection).toMatch(/timed out|aborted/i);
+
+      // Calling reuploadRequest again after abort must reject immediately without invoking updateMediaMessage.
+      await expect(capturedReupload!(imageMsg('SIG-REUPLOAD', 1024))).rejects.toThrow(/timed out|aborted/i);
+      expect(updateMediaMessage).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('storeGeneration fencing and editedWhileInFlight cleanup', () => {
+    it('stops processing after readStoredMessage when fenceStoredWrites ran during the store lookup', async () => {
+      let resolveGet: ((val: WAMessage | null) => void) | undefined;
+      const getStoredMessage = jest.fn(
+        () =>
+          new Promise<WAMessage | null>(res => {
+            resolveGet = res;
+          }),
+      );
+      const putStoredMessage = jest.fn().mockResolvedValue(undefined);
+      const onMessage = jest.fn();
+      const recordMessage = jest.fn();
+      const events = new BaileysEvents(
+        makeHost({
+          getStoredMessage,
+          putStoredMessage,
+          getOnMessage: () => onMessage,
+          recordMessage,
+        }),
+      );
+      const mapSpy = jest.spyOn(events, 'mapMessage');
+
+      const pending = (
+        events as unknown as {
+          processInboundMessage: (msg: WAMessage, opts: { generation: number }) => Promise<void>;
+        }
+      ).processInboundMessage(
+        {
+          key: { id: 'FENCE-READ', remoteJid: '628111@s.whatsapp.net', fromMe: false },
+          messageTimestamp: 1_700_000_000,
+          message: { conversation: 'late' },
+        },
+        { generation: 0 },
+      );
+      for (let i = 0; i < 20 && !resolveGet; i++) {
+        await new Promise(resolve => setImmediate(resolve));
+      }
+      expect(resolveGet).toBeDefined();
+      events.fenceStoredWrites();
+      resolveGet!(null);
+      await pending;
+
+      expect(mapSpy).not.toHaveBeenCalled();
+      expect(putStoredMessage).not.toHaveBeenCalled();
+      expect(onMessage).not.toHaveBeenCalled();
+      expect(recordMessage).not.toHaveBeenCalled();
+    });
+
+    it('stops before putStoredMessage, onMessage, and recordMessage when fenced during mapMessage', async () => {
+      let resolveMedia!: (val: unknown) => void;
+      downloadMediaMessage.mockImplementationOnce(
+        () =>
+          new Promise(res => {
+            resolveMedia = res;
+          }),
+      );
+      const putStoredMessage = jest.fn().mockResolvedValue(undefined);
+      const onMessage = jest.fn();
+      const recordMessage = jest.fn();
+      const events = new BaileysEvents(
+        makeHost({
+          putStoredMessage,
+          getOnMessage: () => onMessage,
+          recordMessage,
+        }),
+      );
+
+      const pending = (
+        events as unknown as {
+          processInboundMessage: (msg: WAMessage, opts: { generation: number }) => Promise<void>;
+        }
+      ).processInboundMessage(
+        {
+          key: { id: 'FENCE-MAP', remoteJid: '628111@s.whatsapp.net', fromMe: false },
+          messageTimestamp: 1_700_000_000,
+          message: { imageMessage: { mimetype: 'image/jpeg' } },
+        },
+        { generation: 0 },
+      );
+      await new Promise(resolve => setImmediate(resolve));
+      events.fenceStoredWrites();
+      resolveMedia(streamOf(Buffer.from([1, 2, 3])));
+      await pending;
+
+      expect(putStoredMessage).not.toHaveBeenCalled();
+      expect(onMessage).not.toHaveBeenCalled();
+      expect(recordMessage).not.toHaveBeenCalled();
+    });
+
+    it('skips fallback emit in handleMessagesUpsert when fenced before inboundLimiter rejects on close', async () => {
+      const limiter = new ConcurrencyLimiter(1);
+      let releaseFirst!: () => void;
+      const firstHold = limiter.run(
+        () =>
+          new Promise<void>(res => {
+            releaseFirst = res;
+          }),
+      );
+      const onMessage = jest.fn();
+      const putStoredMessage = jest.fn().mockResolvedValue(undefined);
+      const recordMessage = jest.fn();
+      const events = new BaileysEvents(
+        makeHost({
+          inboundLimiter: limiter,
+          putStoredMessage,
+          getOnMessage: () => onMessage,
+          recordMessage,
+        }),
+      );
+
+      events.handleMessagesUpsert({
+        type: 'notify',
+        messages: [
+          {
+            key: { id: 'QUEUED-1', remoteJid: '628111@s.whatsapp.net', fromMe: false },
+            messageTimestamp: 1_700_000_000,
+            message: { conversation: 'queued during teardown' },
+          },
+        ],
+      });
+
+      events.fenceStoredWrites();
+      limiter.close();
+      await new Promise(resolve => setTimeout(resolve, 25));
+      releaseFirst();
+      await firstHold;
+      await new Promise(resolve => setTimeout(resolve, 25));
+
+      expect(putStoredMessage).not.toHaveBeenCalled();
+      expect(onMessage).not.toHaveBeenCalled();
+      expect(recordMessage).not.toHaveBeenCalled();
+    });
+
+    it('does not re-insert editedWhileInFlight via stale target fallback after inbound completes mid-await', async () => {
+      let releaseInbound!: () => void;
+      let releaseRead: ((msg: WAMessage | null) => void) | undefined;
+      let readStarted = false;
+      let editReads = 0;
+      const onMessage = jest.fn();
+      const events = new BaileysEvents(
+        makeHost({
+          loadLib: () =>
+            Promise.resolve({
+              ...libStub,
+              BufferJSON: {
+                replacer: (_k: string, v: unknown) => v,
+                reviver: (_k: string, v: unknown) => v,
+              },
+              proto: { Message: { ProtocolMessage: { Type: { REVOKE: 0, MESSAGE_EDIT: 14 } } } },
+            } as unknown as Awaited<ReturnType<BaileysEventsHost['loadLib']>>),
+          getStoredMessage: jest.fn((msgId: string) => {
+            if (msgId === 'EDITED-TARGET-1' && !readStarted) {
+              // First read for EDITED-TARGET-1 is repeat-delivery check during inbound; allow once.
+              return Promise.resolve(null);
+            }
+            if (msgId === 'EDITED-TARGET-1') {
+              editReads++;
+              if (editReads === 1) return Promise.resolve(null); // targetsForeignMessage read
+              return new Promise<WAMessage | null>(res => {
+                releaseRead = res;
+              });
+            }
+            return Promise.resolve(null);
+          }),
+          getOnMessage: () => onMessage,
+        }),
+      );
+
+      jest.spyOn(events, 'mapMessage').mockImplementationOnce(
+        () =>
+          new Promise(res => {
+            releaseInbound = () =>
+              res({
+                id: 'EDITED-TARGET-1',
+                from: '628111@s.whatsapp.net',
+                to: '6280000000000@s.whatsapp.net',
+                chatId: '628111@s.whatsapp.net',
+                body: 'orig',
+                type: 'text',
+                timestamp: 1_700_000_000,
+                fromMe: false,
+                isGroup: false,
+                kind: 'individual',
+              });
+          }),
+      );
+
+      events.handleMessagesUpsert({
+        type: 'notify',
+        messages: [
+          {
+            key: { id: 'EDITED-TARGET-1', remoteJid: '628111@s.whatsapp.net', fromMe: false },
+            messageTimestamp: 1_700_000_000,
+            message: { conversation: 'orig' },
+          },
+        ],
+      });
+      await new Promise(resolve => setTimeout(resolve, 10));
+      readStarted = true;
+
+      // Start an edit while inbound is in flight, pausing inside readTarget -> getStoredMessage.
+      const editPromise = (
+        events as unknown as {
+          processInboundMessage: (msg: WAMessage, opts: { generation: number }) => Promise<void>;
+        }
+      ).processInboundMessage(
+        {
+          key: { id: 'EDIT-ENV-1', remoteJid: '628111@s.whatsapp.net', fromMe: false },
+          messageTimestamp: 1_700_000_001,
+          message: {
+            protocolMessage: {
+              type: 14,
+              key: { id: 'EDITED-TARGET-1', remoteJid: '628111@s.whatsapp.net', fromMe: false },
+              editedMessage: { conversation: 'edited' },
+            },
+          },
+        },
+        { generation: 0 },
+      );
+      for (let i = 0; i < 20 && !releaseRead; i++) {
+        await new Promise(resolve => setImmediate(resolve));
+      }
+      expect(releaseRead).toBeDefined();
+
+      // Inbound completes before readTarget resolves, clearing inboundInFlight and editedWhileInFlight.
+      releaseInbound();
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      // Now readTarget settles. editedWhileInFlight must stay empty rather than re-inserting stale target.
+      releaseRead!(null);
+      await editPromise;
+
+      const map = (events as unknown as { editedWhileInFlight: Map<string, unknown> }).editedWhileInFlight;
+      expect(map.size).toBe(0);
+    });
+  });
+});

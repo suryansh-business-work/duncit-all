@@ -12,11 +12,11 @@ import { EngineTransportError } from '../../common/errors/engine-transport.error
 import { EnginePageError } from '../../common/errors/engine-page.error';
 import { type createLogger } from '../../common/services/logger.service';
 import { DEFAULT_PUPPETEER_ARGS, MAX_TIMER_MS, withPinnedBrowserLocale } from '../../config/configuration';
-import { resolveWebVersionPin } from '../wa-web-version';
+import { validatePuppeteerArg } from '../../config/puppeteer-args';
+import { getVerifiedPinnedHtml, resolveWebVersionPin } from '../wa-web-version';
 import { resolveAuthTimeoutMs, resolveEngineInitTimeoutMs } from '../engine-init-timeout';
 import { killOrphanedChromiumProcesses, removeStaleSingletonFiles } from './chromium-profile-hygiene';
 import { isSupportedProxyUrl, buildProxyLaunchConfig, bypassServiceWorkerOnLaunch } from './wwebjs-proxy';
-import { backportProblem } from './wwebjs-backport-check';
 import { unappliedPatches, unappliedPatchesMessage } from './engine-patch-status';
 import { type EvaluatablePage, reportMissingCallHook } from './wwebjs-call-hook-check';
 import { reportRunningWebBuild } from './wwebjs-running-build';
@@ -383,14 +383,7 @@ export class WwebjsLifecycle {
     this.setStatus(EngineStatus.INITIALIZING);
     const initStartedAt = Date.now();
 
-    // An install that skipped the message-id backport fails later with errors that name no cause
-    // (#889) — say so here instead, while the operator is still looking at the startup logs.
-    const backportProblemText = backportProblem();
-    if (backportProblemText) {
-      this.host.logger.error(backportProblemText);
-    }
-
-    // The other whatsapp-web.js patchers fail the same way and were equally silent about it.
+    // Report any unapplied whatsapp-web.js install-time patches while the operator is watching startup logs.
     const unapplied = unappliedPatches('wwebjs');
     if (unapplied.length) {
       this.host.logger.error(unappliedPatchesMessage('wwebjs', unapplied));
@@ -399,13 +392,27 @@ export class WwebjsLifecycle {
     // Set once the launch is known to drop the credentials of a SOCKS proxy URL, for the reason a failed start reports.
     let socksCredentialsDropped = false;
     try {
-      // Build puppeteer args, including proxy if configured
-      // Pin stored argument overrides too: their array replaces the environment list and its locale pin.
-      // A copy, never mutated.
+      // Build puppeteer args, including proxy if configured.
+      // Validate configured args at the launch sink as well as in env/infra validation: plugin
+      // config saved via `PUT /api/plugins/whatsapp-web.js/config` merges directly into engine
+      // config without restarting through validateEnv. Pin stored argument overrides too; never mutate.
       const configuredArgs: unknown = this.host.config.puppeteer?.args;
-      const puppeteerArgs = withPinnedBrowserLocale(
-        Array.isArray(configuredArgs) ? (configuredArgs as string[]) : DEFAULT_PUPPETEER_ARGS,
-      );
+      let validatedArgs: readonly string[];
+      if (Array.isArray(configuredArgs)) {
+        const collected: string[] = [];
+        for (const entry of configuredArgs) {
+          if (typeof entry !== 'string') {
+            throw new Error(`PUPPETEER_ARGS entries must be strings (got ${typeof entry})`);
+          }
+          const argError = validatePuppeteerArg(entry);
+          if (argError) throw new Error(argError);
+          collected.push(entry);
+        }
+        validatedArgs = collected;
+      } else {
+        validatedArgs = DEFAULT_PUPPETEER_ARGS;
+      }
+      const puppeteerArgs = withPinnedBrowserLocale(validatedArgs);
 
       // Add proxy configuration if provided. A stored proxy that does not parse to a supported scheme
       // fails the session, as on Baileys (#859): launching without it would send the session's traffic
@@ -439,16 +446,13 @@ export class WwebjsLifecycle {
       // output later (after a hard kill of the OpenWA process orphaned them).
       puppeteerArgs.push(`--openwa-session=${this.host.config.sessionId}`);
 
-      // Pin the WA-Web version (fixes the 1.34.x "stuck at authenticating" hang on some setups,
-      // #251/#488). DEFAULT: auto-resolve a settled build from the wa-version registry and pin its
-      // remote HTML (no integrity check — resolveWebVersionPin logs a loud warning); only
-      // WWEBJS_WEB_VERSION=off leaves whatsapp-web.js to use the first-party build from WhatsApp.
-      // The pinned HTML is downloaded (bounded) onto the writable data volume and served from there,
-      // so an unreachable mirror is named in the log instead of silently loading the live build.
-      const versionPin = await resolveWebVersionPin(
-        undefined,
-        path.join(path.resolve(this.host.config.sessionDataPath), '.wa-web-cache'),
-      );
+      // Optional WA-Web version pin (workaround for the 1.34.x "stuck at authenticating" hang on
+      // some setups, #251/#488). DEFAULT (unset or "off"): native first-party build served by
+      // WhatsApp with zero third-party fetches. Opting into a remote build requires either a
+      // matching WWEBJS_WEB_VERSION_SHA256 digest (verified on fetch and every cache hit, and served
+      // directly from memory to close disk TOCTOU) or explicit WWEBJS_WEB_VERSION_ALLOW_UNVERIFIED=true.
+      const webCacheDir = path.join(path.resolve(this.host.config.sessionDataPath), '.wa-web-cache');
+      const versionPin = await resolveWebVersionPin(undefined, webCacheDir);
       // Assigned on every init, including the unpinned case, so a pin from an earlier init is never
       // compared against the page this one loads.
       this.requestedWebVersion = versionPin?.webVersion;
@@ -504,7 +508,15 @@ export class WwebjsLifecycle {
           );
           throw attemptError;
         }
-        await this.runInitAttempt(puppeteerArgs, authTimeoutMs, proxyAuthentication, versionPin);
+        // Re-resolve and re-verify the version pin before attempt 2 so a retry never reuses stale
+        // or tampered cached HTML without integrity verification.
+        const retryVersionPin = await resolveWebVersionPin(undefined, webCacheDir);
+        this.requestedWebVersion = retryVersionPin?.webVersion;
+        if (this.tearingDown) {
+          this.setStatus(EngineStatus.DISCONNECTED);
+          return;
+        }
+        await this.runInitAttempt(puppeteerArgs, authTimeoutMs, proxyAuthentication, retryVersionPin);
       }
     } catch (error) {
       // A stop, delete or force-kill closed the browser under the launch, which is what rejected it:
@@ -616,6 +628,46 @@ export class WwebjsLifecycle {
       // only reads: it persists nothing when the cache served the page.
       ...(versionPin ?? { webVersionCache: { type: 'none' as const } }),
     });
+    // When SHA-256 verification succeeded in resolveWebVersionPin, serve the verified in-memory
+    // bytes directly during Client.initWebVersionCache instead of letting LocalWebCache re-read
+    // the file from disk (eliminates the disk TOCTOU window between verification and launch).
+    const verifiedHtml = getVerifiedPinnedHtml(versionPin);
+    if (
+      verifiedHtml !== undefined &&
+      typeof (client as unknown as { initWebVersionCache?: unknown }).initWebVersionCache === 'function'
+    ) {
+      const target = client as unknown as {
+        initWebVersionCache: () => Promise<void>;
+        pupPage: {
+          setRequestInterception: (enabled: boolean) => Promise<void>;
+          on: (
+            event: string,
+            handler: (req: {
+              url: () => string;
+              respond: (res: unknown) => Promise<unknown> | void;
+              continue: () => Promise<unknown> | void;
+            }) => void,
+          ) => void;
+        };
+      };
+      const htmlBody = verifiedHtml.toString('utf8');
+      target.initWebVersionCache = async () => {
+        await target.pupPage.setRequestInterception(true);
+        target.pupPage.on('request', req => {
+          if (req.url() === 'https://web.whatsapp.com/') {
+            void Promise.resolve(
+              req.respond({
+                status: 200,
+                contentType: 'text/html',
+                body: htmlBody,
+              }),
+            ).catch(() => undefined);
+          } else {
+            void Promise.resolve(req.continue()).catch(() => undefined);
+          }
+        });
+      };
+    }
     this.client = client;
 
     this.setupEventHandlers();
@@ -734,9 +786,9 @@ export class WwebjsLifecycle {
     this.qrCode = null;
     this.setStatus(EngineStatus.INITIALIZING);
     if (!failed) return true;
-    // The old client may still emit late events from persisted page bindings. The qr, authenticated
-    // and ready listeners fence on the source client, but disconnected, auth_failure and the domain
-    // events do not, so silence it before the new attempt starts.
+    // The old client may still emit late events from persisted page bindings. Connection-state
+    // listeners (qr, authenticated, ready, disconnected, auth_failure) fence on the source client,
+    // but domain events do not, so silence it before the new attempt starts.
     failed.removeAllListeners();
     // Bounded DIRECT destroy — never this.destroy()/forceDestroy(), both of which latch the
     // teardown flags above.
@@ -835,23 +887,6 @@ export class WwebjsLifecycle {
       // teardown finished) must be dropped outright: dereferencing this.client would throw, and
       // reading it optionally would promote a client-less adapter to READY.
       if (this.client !== source || this.tearingDown || this.disconnectReported) return;
-      // The library re-emits 'ready' at the end of EVERY completed (re)inject pipeline — for a
-      // post-navigation re-inject this is the completion edge, and the only one it offers. Close the
-      // navigation window HERE, before the guards below: markReadyFromClientInfo early-returns while
-      // already READY, so a clear behind it would never run for the re-inject case (#1081).
-      this.clearNavigationReinjectWindow();
-      // whatsapp-web.js can emit `ready` BEFORE its message listeners are attached: its post-auth
-      // callback runs once per hasSynced trigger, and any run that finds `window.WWebJS` already
-      // defined skips the attach and bare-emits `ready` — including while the first run's attach is
-      // still in flight (observed live). Promoting on that premature emit binds READY to a session
-      // whose inbound bridge may never come up. The patched client's `eventsAttached` flag
-      // (scripts/patch-wwebjs-ready-sync.js) distinguishes the cases: `false` → ignore this emit
-      // and let the attach's own completion re-emit `ready` (it always does), with the readiness
-      // reconciliation as the backstop when the attach failed instead. `undefined` (unpatched
-      // tree) keeps the legacy behaviour. The same holds for a page that reloaded: once the callback has found the
-      // new page without the helpers the flag is false again until its attach completes, so an emit in that span says
-      // nothing about the page now loaded, and it must not close the unverified reload or count as a re-inject of the
-      // page it replaced.
       if (eventBridgeUnattached(source)) {
         this.host.logger.warn('Ignoring premature ready: the message event bridge is not attached yet', {
           sessionId: this.host.config.sessionId,
@@ -859,6 +894,11 @@ export class WwebjsLifecycle {
         });
         return;
       }
+      // The library re-emits 'ready' at the end of EVERY completed (re)inject pipeline — for a
+      // post-navigation re-inject this is the completion edge, and the only one it offers. Close the
+      // navigation window HERE, after verifying the bridge is attached: markReadyFromClientInfo
+      // early-returns while already READY, so a clear behind it would never run for re-inject (#1081).
+      this.clearNavigationReinjectWindow();
       this.lastReadyAt = Date.now();
       // While a reload is unverified, ask the page now loaded for the helpers, as a probe would: a yes closes the episode
       // only when no navigation landed since it was asked, so it speaks for the page it read and nothing later.
@@ -881,6 +921,8 @@ export class WwebjsLifecycle {
     this.host.attachDomainEvents(this.client);
 
     this.client.on('disconnected', reason => {
+      // Drop everything from a superseded client once a newer client owns this adapter.
+      if (this.client !== null && this.client !== source) return;
       // A LOGOUT means whatsapp-web.js is ABOUT to delete this session's profile. The only site that
       // emits this reason is the `framenavigated` listener, which emits and THEN awaits
       // `authStrategy.logout()` → `LocalAuth.logout()` → `fs.rm(userDataDir)` — with the browser still
@@ -913,7 +955,7 @@ export class WwebjsLifecycle {
       // duplicate native 'disconnected' (whatsapp-web.js can fire it more than once for one drop) must
       // no-op HERE — before log/status/callback — otherwise clearReadyReconcile(), setStatus, and
       // onDisconnected re-run and the lifecycle schedules a second reconnect.
-      if (this.tearingDown || this.disconnectReported) return;
+      if (this.client !== source || this.tearingDown || this.disconnectReported) return;
       this.host.clearReadyReconcile();
       // #982: LOGOUT is not a transient drop. The lifecycle's reconnect cannot restore the link; it
       // can only come back with a fresh QR. Say that here rather than leaving the operator with an
@@ -937,6 +979,14 @@ export class WwebjsLifecycle {
     });
 
     this.client.on('auth_failure', (message?: string) => {
+      if (
+        this.client !== source ||
+        this.tearingDown ||
+        this.disconnectReported ||
+        this.status === EngineStatus.FAILED
+      ) {
+        return;
+      }
       this.host.clearReadyReconcile();
       this.setStatus(EngineStatus.FAILED);
       // Authentication failure is terminal: the stored credentials are invalid and
@@ -1241,20 +1291,33 @@ export class WwebjsLifecycle {
     this.host.getCallbacks().onStateChanged?.(status);
   }
 
-  private beginClientTeardown(): Client | null {
-    this.tearingDown = true;
-    // The cached ringing call ids belong to the client that is going away, so drop them all.
+  markCredentialTeardownStarted(): void {
+    this.credentialTeardownStarted = true;
+  }
+
+  clearTimersAndTransientState(): void {
+    this.host.clearReadyReconcile();
+    this.host.clearOnboardingWatcher();
     this.host.clearLiveCalls();
-    // Before the clientless early-return: a teardown must always close the navigation window, or a
-    // stale stamp could grace the next generation's probe (single-use contract notwithstanding).
     this.clearNavigationReinjectWindow();
     this.reinjectUnverifiedSince = 0;
     this.pageWithoutHelpers = false;
-    const client = this.client;
-    if (!client) return null;
+  }
 
-    this.host.clearReadyReconcile();
-    this.host.clearOnboardingWatcher();
+  private beginClientTeardown(): Client | null {
+    this.tearingDown = true;
+    // Before the clientless early-return: a teardown must always drop timers, transient watchers,
+    // live calls, and the navigation window, and move any active non-terminal status to
+    // DISCONNECTED so teardown during pre-launch or stuck-auth recovery never leaves a stale state.
+    this.clearTimersAndTransientState();
+    const client = this.client;
+    if (!client) {
+      if (this.status !== EngineStatus.DISCONNECTED && this.status !== EngineStatus.FAILED) {
+        this.setStatus(EngineStatus.DISCONNECTED);
+      }
+      return null;
+    }
+
     if (this.status !== EngineStatus.DISCONNECTED) {
       this.setStatus(EngineStatus.DISCONNECTED);
     }

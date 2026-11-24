@@ -209,3 +209,225 @@ describe('WebhookOutboxService.findStale() past a row the database would not rea
     }
   });
 });
+
+describe('WebhookOutboxService.openBatch() conflict-ignoring transactional insert (SQLite)', () => {
+  let ds: DataSource;
+  let outbox: WebhookOutboxService;
+
+  beforeEach(async () => {
+    ds = await new DataSource({
+      type: 'better-sqlite3',
+      database: ':memory:',
+      entities: [Session, Webhook, WebhookDeliveryFailure, WebhookOutboxEvent],
+      synchronize: true,
+    }).initialize();
+    outbox = new WebhookOutboxService(ds.getRepository(WebhookOutboxEvent));
+  });
+  afterEach(() => ds.destroy());
+
+  it('inserts fresh rows, ignores duplicates without aborting an enclosing transaction, and returns newly inserted rows', async () => {
+    const row1 = {
+      webhookId: 'w1',
+      sessionId: 's1',
+      event: 'message.received',
+      idempotencyKey: 'k1_w1',
+      deliveryId: 'd1',
+      payload: { id: 'm1' },
+    };
+    const row2 = {
+      webhookId: 'w2',
+      sessionId: 's1',
+      event: 'message.received',
+      idempotencyKey: 'k1_w2',
+      deliveryId: 'd2',
+      payload: { id: 'm1' },
+    };
+
+    const first = await outbox.openBatch([row1]);
+    expect(first).not.toBeNull();
+    expect(first!.map(r => r.idempotencyKey)).toEqual(['k1_w1']);
+
+    // Inside a transaction, a batch containing one duplicate and one fresh row must succeed
+    // without rolling back the enclosing transaction or throwing a unique violation.
+    const second = await ds.transaction(async manager => {
+      const inserted = await outbox.openBatch([row1, row2], manager);
+      await manager.getRepository(WebhookDeliveryFailure).insert({
+        webhookId: 'w1',
+        sessionId: 's1',
+        event: 'message.received',
+        url: 'https://a.example',
+        idempotencyKey: 'sibling_in_tx',
+        deliveryId: 'sib-1',
+        attempts: 1,
+        lastStatusCode: 500,
+        lastError: 'HTTP 500',
+      });
+      return inserted;
+    });
+
+    expect(second).not.toBeNull();
+    expect(second!.map(r => r.idempotencyKey)).toEqual(['k1_w2']);
+    expect(await ds.getRepository(WebhookOutboxEvent).count()).toBe(2);
+    expect(await ds.getRepository(WebhookDeliveryFailure).count({ where: { idempotencyKey: 'sibling_in_tx' } })).toBe(
+      1,
+    );
+  });
+
+  it('propagates non-conflict errors when running inside a caller transaction so the transaction rolls back', async () => {
+    await ds.query(`
+      CREATE TRIGGER fail_outbox_insert BEFORE INSERT ON webhook_outbox_events
+      BEGIN
+        SELECT RAISE(ABORT, 'simulated outbox disk error');
+      END
+    `);
+
+    await expect(
+      ds.transaction(async manager => {
+        await manager.getRepository(WebhookDeliveryFailure).insert({
+          webhookId: 'w1',
+          sessionId: 's1',
+          event: 'message.received',
+          url: 'https://a.example',
+          idempotencyKey: 'must_rollback',
+          deliveryId: 'rb-1',
+          attempts: 1,
+          lastStatusCode: 500,
+          lastError: 'HTTP 500',
+        });
+        await outbox.openBatch(
+          [
+            {
+              webhookId: 'w1',
+              sessionId: 's1',
+              event: 'message.received',
+              idempotencyKey: 'bad',
+              deliveryId: 'd-bad',
+              payload: {},
+            },
+          ],
+          manager,
+        );
+      }),
+    ).rejects.toThrow(/simulated outbox disk error/i);
+
+    expect(await ds.getRepository(WebhookDeliveryFailure).count({ where: { idempotencyKey: 'must_rollback' } })).toBe(
+      0,
+    );
+  });
+
+  it('chunks large batches (>115 rows) below SQLite bind-parameter limits and deduplicates across chunks', async () => {
+    const rows = Array.from({ length: 120 }, (_, i) => ({
+      webhookId: `w-${i}`,
+      sessionId: 's1',
+      event: 'message.received',
+      idempotencyKey: `msg_s1_m1_w-${i}`,
+      deliveryId: `d-${i}`,
+      payload: { id: 'm1', index: i },
+    }));
+
+    const paramCounts: number[] = [];
+    const runner = ds.createQueryRunner();
+    const realQuery = runner.query.bind(runner);
+    const querySpy = jest
+      .spyOn(runner, 'query')
+      .mockImplementation((sql: string, params?: unknown, useStructuredResult?: boolean) => {
+        if (/INSERT INTO "webhook_outbox_events"/i.test(sql) && Array.isArray(params)) {
+          paramCounts.push(params.length);
+        }
+        return realQuery(sql, params as never, useStructuredResult as never);
+      });
+
+    try {
+      const inserted = await outbox.openBatch(rows);
+      expect(inserted).not.toBeNull();
+      expect(inserted).toHaveLength(120);
+      expect(await ds.getRepository(WebhookOutboxEvent).count()).toBe(120);
+      // 120 rows at 9 columns each must split into >= 2 chunks, each <= 900 bind variables (< SQLite's 999 limit).
+      expect(paramCounts.length).toBeGreaterThanOrEqual(2);
+      for (const count of paramCounts) {
+        expect(count).toBeLessThanOrEqual(900);
+      }
+
+      // Replaying the same 120 rows plus 5 new ones must return only the 5 newly inserted rows.
+      const extra = Array.from({ length: 5 }, (_, i) => ({
+        webhookId: `w-extra-${i}`,
+        sessionId: 's1',
+        event: 'message.received',
+        idempotencyKey: `msg_s1_m1_w-extra-${i}`,
+        deliveryId: `d-extra-${i}`,
+        payload: { id: 'm1', extra: i },
+      }));
+      const second = await outbox.openBatch([...rows, ...extra]);
+      expect(second).not.toBeNull();
+      expect(second!.map(r => r.webhookId)).toEqual(extra.map(r => r.webhookId));
+      expect(await ds.getRepository(WebhookOutboxEvent).count()).toBe(125);
+    } finally {
+      querySpy.mockRestore();
+    }
+  });
+
+  it('pruneSettled uses IDX_webhook_outbox_events_state_createdAt, caps maxRows, and handles legacy NULL states in a bounded pass', async () => {
+    const outbox = new WebhookOutboxService(ds.getRepository(WebhookOutboxEvent));
+    const repo = ds.getRepository(WebhookOutboxEvent);
+    const oldDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const oldSqlDate = oldDate.toISOString().replace('T', ' ').slice(0, 19);
+
+    const seed = (prefix: string, count: number, state: string) =>
+      repo.insert(
+        Array.from({ length: count }, (_, i) => ({
+          webhookId: 'wh-1',
+          sessionId: 'sess-1',
+          event: 'message.received',
+          idempotencyKey: `${prefix}-${i}`,
+          deliveryId: `dlv-${prefix}-${i}`,
+          payload: null,
+          state: state as never,
+          attempts: 0,
+        })),
+      );
+    await seed('disp', 8, 'dispatched');
+    await seed('fail', 6, 'failed');
+    await seed('pend', 2, 'pending');
+    await seed('que', 2, 'queued');
+    await seed('leg', 5, 'dispatched');
+    await ds.query(`UPDATE webhook_outbox_events SET createdAt = ?`, [oldSqlDate]);
+    await ds.query(`UPDATE webhook_outbox_events SET state = NULL WHERE idempotencyKey LIKE 'leg-%'`);
+
+    const capturedPlans: string[] = [];
+    const spiedRunners = new WeakSet<object>();
+    const origQuery = ds.driver.createQueryRunner.bind(ds.driver);
+    const queryRunnerSpy = jest.spyOn(ds.driver, 'createQueryRunner').mockImplementation(mode => {
+      const qr = origQuery(mode);
+      if (!spiedRunners.has(qr)) {
+        spiedRunners.add(qr);
+        const origQrQuery = qr.query.bind(qr) as (...args: unknown[]) => Promise<never>;
+        jest.spyOn(qr, 'query').mockImplementation(async (sql: string, ...rest: unknown[]) => {
+          if (/SELECT .* FROM "webhook_outbox_events"/i.test(sql) && /state/i.test(sql)) {
+            const plan = (await origQrQuery(`EXPLAIN QUERY PLAN ${sql}`, rest[0])) as unknown as Array<{
+              detail: string;
+            }>;
+            capturedPlans.push(...plan.map(p => p.detail));
+          }
+          return origQrQuery(sql, ...rest);
+        });
+      }
+      return qr;
+    });
+
+    try {
+      const firstRun = await outbox.pruneSettled(7, 10);
+      expect(firstRun).toBe(10);
+      expect(capturedPlans.some(d => /USING INDEX IDX_webhook_outbox_events_state_createdAt/.test(d))).toBe(true);
+      expect(capturedPlans.some(d => /^SCAN webhook_outbox_events\b/.test(d))).toBe(false);
+
+      // Pending and queued rows must remain untouched; finishing remaining settled + legacy NULL rows leaves 4.
+      const secondRun = await outbox.pruneSettled(7, 50);
+      expect(secondRun).toBe(9);
+      const remaining = await repo.find();
+      expect(remaining.map(r => r.state).sort()).toEqual(['pending', 'pending', 'queued', 'queued']);
+    } finally {
+      queryRunnerSpy.mockRestore();
+      await outbox.onModuleDestroy();
+    }
+  });
+});

@@ -14,6 +14,8 @@ import type { NearbyLeadsFormProps, NearbyLeadsFormValues } from './nearby-leads
 
 const RADIUS_LABEL_ID = 'nearby-leads-radius-label';
 const SOURCE_LABEL_ID = 'nearby-leads-source-label';
+/** Mark labels closer than this share of the track overlap, so those marks keep only their tick. */
+const MIN_LABEL_GAP = 0.15;
 
 /** Leads listing › Nearby leads: where to search around, and how far. */
 export default function NearbyLeadsForm({ initialValues, onSubmit }: Readonly<NearbyLeadsFormProps>) {
@@ -26,11 +28,16 @@ export default function NearbyLeadsForm({ initialValues, onSubmit }: Readonly<Ne
   });
   const { control, handleSubmit, formState } = methods;
   const source = useWatch({ control, name: 'source' });
-  const marks = useMemo(
-    () => NEARBY_RADIUS.marks.map((km) => ({ value: km, label: t('crm.nearby.radiusValue', { vars: { km } }) })),
-    [t]
-  );
   const radiusText = (km: number) => t('crm.nearby.radiusValue', { vars: { km } });
+  const marks = useMemo(() => {
+    const span = NEARBY_RADIUS.max - NEARBY_RADIUS.min;
+    let lastLabelled = Number.NEGATIVE_INFINITY;
+    return NEARBY_RADIUS.marks.map((km) => {
+      if ((km - lastLabelled) / span < MIN_LABEL_GAP) return { value: km };
+      lastLabelled = km;
+      return { value: km, label: t('crm.nearby.radiusValue', { vars: { km } }) };
+    });
+  }, [t]);
 
   return (
     <FormProvider {...methods}>

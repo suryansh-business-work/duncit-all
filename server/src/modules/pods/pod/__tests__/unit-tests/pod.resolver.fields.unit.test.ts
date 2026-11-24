@@ -2,7 +2,7 @@ const loadClub = jest.fn();
 const loadUserActors = jest.fn();
 const resolvePodPlace = jest.fn();
 const reelHasAudio = jest.fn();
-const podAttendanceRoster = jest.fn();
+const loadPodAttendance = jest.fn();
 const coHost = { invite: jest.fn(), remove: jest.fn(), respond: jest.fn() };
 const podService = { hostUpdate: jest.fn(), addStatus: jest.fn(), remove: jest.fn() };
 const mapPodToPublic = jest.fn((doc: unknown) => ({ mapped: doc }));
@@ -12,8 +12,8 @@ jest.mock('@modules/clubs/club/club.loaders', () => ({ loadClub: (...a: unknown[
 jest.mock('@modules/access/user/user.loaders', () => ({ loadUserActors: (...a: unknown[]) => loadUserActors(...a) }));
 jest.mock('../../pod.place', () => ({ resolvePodPlace: (...a: unknown[]) => resolvePodPlace(...a) }));
 jest.mock('../../pod.reelAudio', () => ({ reelHasAudio: (...a: unknown[]) => reelHasAudio(...a) }));
-jest.mock('@modules/finance/finance/settlement.service', () => ({
-  podAttendanceRoster: (...a: unknown[]) => podAttendanceRoster(...a),
+jest.mock('../../pod.attendance.loader', () => ({
+  loadPodAttendance: (...a: unknown[]) => loadPodAttendance(...a),
 }));
 jest.mock('@utils/hidden', () => ({
   canSeeHidden: (ctx: { user?: { roles?: string[] } | null }) => !!ctx.user?.roles?.includes('SUPER_ADMIN'),
@@ -120,14 +120,15 @@ describe('Pod.cancellation_risk', () => {
 
 describe('Pod.attendance', () => {
   it('reports zeros without an id, and "recorded" only when someone was scanned', async () => {
-    expect(await Pod.attendance({})).toEqual({ attended_seats: 0, booked_seats: 0, recorded: false });
-    expect(await Pod.attendance(null)).toEqual({ attended_seats: 0, booked_seats: 0, recorded: false });
-    expect(podAttendanceRoster).not.toHaveBeenCalled();
-    podAttendanceRoster.mockResolvedValueOnce({ attended_seats: 3, booked_seats: 5 });
-    expect(await Pod.attendance({ id: 'p1' })).toEqual({ attended_seats: 3, booked_seats: 5, recorded: true });
-    podAttendanceRoster.mockResolvedValueOnce({ attended_seats: 0, booked_seats: 5 });
-    expect(await Pod.attendance({ _id: 'p2' })).toEqual({ attended_seats: 0, booked_seats: 5, recorded: false });
-    expect(podAttendanceRoster).toHaveBeenLastCalledWith('p2');
+    const ctx = user();
+    expect(await Pod.attendance({}, {}, ctx)).toEqual({ attended_seats: 0, booked_seats: 0, recorded: false });
+    expect(await Pod.attendance(null, {}, ctx)).toEqual({ attended_seats: 0, booked_seats: 0, recorded: false });
+    expect(loadPodAttendance).not.toHaveBeenCalled();
+    loadPodAttendance.mockResolvedValueOnce({ attended_seats: 3, booked_seats: 5 });
+    expect(await Pod.attendance({ id: 'p1' }, {}, ctx)).toEqual({ attended_seats: 3, booked_seats: 5, recorded: true });
+    loadPodAttendance.mockResolvedValueOnce({ attended_seats: 0, booked_seats: 5 });
+    expect(await Pod.attendance({ _id: 'p2' }, {}, ctx)).toEqual({ attended_seats: 0, booked_seats: 5, recorded: false });
+    expect(loadPodAttendance).toHaveBeenLastCalledWith(ctx, 'p2');
   });
 });
 

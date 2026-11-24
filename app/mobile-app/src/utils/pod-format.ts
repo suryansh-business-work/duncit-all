@@ -12,8 +12,15 @@ import { fallbackT, type Translate } from '@/i18n/fallback';
 import type { HomePod } from '@/hooks/useHomeFeed';
 import { formatDateTime, formatTime } from '@/utils/date-format';
 
+/**
+ * The pod shape these formatters read. Only the home feed asks for a pod's
+ * `attendance` (a card's "{n} Attended"), so it is left out here: Explore, the
+ * club rail and Pod details pass pods from queries that never select it.
+ */
+type FormatPod = Omit<HomePod, 'attendance'>;
+
 /** First image (preferred) or first media url for a pod, else null. */
-export function podImageUrl(pod: HomePod): string | null {
+export function podImageUrl(pod: FormatPod): string | null {
   const media =
     pod.pod_images_and_videos.find((m) => m.type === 'IMAGE') ?? pod.pod_images_and_videos[0];
   return media?.url ?? null;
@@ -21,14 +28,14 @@ export function podImageUrl(pod: HomePod): string | null {
 
 /** Pod date label in the admin's configured date and time patterns and zone,
  * e.g. "07 Jun 2026 · 06:30 PM" — the same reading mWeb's pod cards give. */
-export function podDateLabel(pod: HomePod): string {
+export function podDateLabel(pod: FormatPod): string {
   return formatDateTime(pod.pod_date_time) || 'Date pending';
 }
 
 /** "Free" for a free pod, else the rupee amount. `t` comes from the rendering
  * screen so the word follows the reader's language; the bundled English is the
  * default for call sites that have none. */
-export function podPriceLabel(pod: HomePod, t: Translate = fallbackT): string {
+export function podPriceLabel(pod: FormatPod, t: Translate = fallbackT): string {
   return pod.pod_type === 'FREE' ? t('mweb.podDetails.free') : `₹${pod.pod_amount}`;
 }
 
@@ -39,7 +46,7 @@ export function podTypeLabel(type: string, t: Translate = fallbackT): string {
 }
 
 /** "label · detail" from the optional place fields. */
-export function podPlaceLabel(pod: HomePod): string {
+export function podPlaceLabel(pod: FormatPod): string {
   return [pod.place_label, pod.place_detail].filter(Boolean).join(' · ');
 }
 

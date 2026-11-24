@@ -14,6 +14,9 @@ import {
   offerBookingArgs,
   paidPodSubmitBlocked,
   podViabilityNotice,
+  placeChargesTicketDraft,
+  placeChargesTotal,
+  type PodPlaceCharge,
 } from '@duncit/utils';
 import { defineDemo, type PackageDemo } from '../../types';
 import type { SpotsMock, SpotsRangeMock, SeatsSoldMock } from './mocks';
@@ -132,6 +135,34 @@ export const podMoneyDemos: PackageDemo[] = [
         'Taxed on (GST extracted from this)': formatMoney(bill.taxable, { decimals: 2 }),
         'Round off row': bill.roundOff > 0 ? `+ ${formatMoney(bill.roundOff, { decimals: 2 })}` : 'hidden',
         'Total payable': formatMoney(bill.payable, { decimals: 2 }),
+      };
+    },
+  }),
+
+  defineDemo<{ pod_title: string; charges: PodPlaceCharge[] }>({
+    id: 'place-charges',
+    title: 'Place charges are paid at the venue, never to Duncit',
+    note:
+      'Edit the charges: this is what the confirmation before Join / Book totals, and the ticket one tap on "Report to support" opens. Clear the list and no confirmation is shown at all.',
+    mock: {
+      pod_title: 'Sunday Board Games',
+      charges: [
+        { label: 'Entry', amount: 200, note: 'Includes one drink' },
+        { label: 'Table', amount: 300 },
+      ],
+    },
+    compute: (mock) => {
+      const draft = placeChargesTicketDraft({
+        podId: 'pod-demo',
+        podTitle: mock.pod_title,
+        currencySymbol: '₹',
+        charges: mock.charges,
+      });
+      return {
+        'Asks before joining': mock.charges.length > 0 ? 'yes' : 'no — nothing to accept',
+        'placeChargesTotal(charges)': formatMoney(placeChargesTotal(mock.charges)),
+        'Ticket subject': draft.subject,
+        'Ticket body': draft.body_text,
       };
     },
   }),

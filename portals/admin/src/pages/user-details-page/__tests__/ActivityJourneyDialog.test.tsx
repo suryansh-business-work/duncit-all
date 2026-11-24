@@ -26,6 +26,7 @@ const base = {
   super_category_slug: null,
   checkout_url: null,
   metadata_json: '',
+  platform: null,
 };
 
 const events = [
@@ -33,6 +34,7 @@ const events = [
     ...base,
     id: 'e1',
     event_type: 'PAGE_VIEW',
+    platform: 'WEB',
     path: '/shop',
     title: 'Shop',
     super_category_slug: 'pets',
@@ -43,6 +45,7 @@ const events = [
     ...base,
     id: 'e2',
     event_type: 'CLICK',
+    platform: 'ANDROID',
     path: '/shop',
     title: 'Shop',
     target_label: 'Buy collar',
@@ -142,6 +145,15 @@ describe('ActivityJourneyDialog — the journey', () => {
     expect(screen.getByText('mweb · touch · 390x844')).toBeInTheDocument();
     expect(screen.queryByText('not-json')).toBeNull();
     expect(screen.getByText(formatTime('2026-09-30T10:00:00.000Z'))).toBeInTheDocument();
+  });
+
+  it('names the device each event came from, and none for an event recorded before it was', async () => {
+    renderDialog([clickstreamMock(events)]);
+
+    await screen.findByTestId('journey-chart');
+    expect(within(screen.getByTestId('admin-user-journey-platform-e1')).getByRole('img', { name: 'Web' })).toBeInTheDocument();
+    expect(within(screen.getByTestId('admin-user-journey-platform-e2')).getByRole('img', { name: 'Android' })).toBeInTheDocument();
+    expect(screen.queryByTestId('admin-user-journey-platform-e3')).toBeNull();
   });
 
   it('offers each page (untitled ones by name) and each action once, sorted', async () => {

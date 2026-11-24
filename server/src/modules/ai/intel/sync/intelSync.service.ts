@@ -1,9 +1,8 @@
 import { logs } from '@observability/log';
 import { writeAudit } from '../audit/intelAudit.service';
-import { resolveEntry } from '../connectors/intel.credentials';
+import { connectorEntry } from '../connectors/intel.connectorEntry';
 import { scopeOf, type SyncContext, type SyncMode } from '../connectors/intel.driver';
 import { IntelConnectorModel, type IIntelConnector } from '../connectors/intelConnector.model';
-import { CONNECTOR_ENV_CATEGORY } from '../intel.constants';
 import { countIndexed, documentKey, ensureCollections, indexDocument, pruneUnseen, removeDocument } from '../index/intel.indexer';
 import { intelSettingsService } from '../settings/intelSettings.service';
 import { DRIVERS } from './intel.drivers';
@@ -37,7 +36,7 @@ async function isPaused(connectorId: string): Promise<boolean> {
   return settings.sync.paused || !connector || connector.sync_paused || !connector.enabled;
 }
 
-function buildContext(run: IIntelSyncRun, connector: IIntelConnector, entry: NonNullable<Awaited<ReturnType<typeof resolveEntry>>>, settings: Awaited<ReturnType<typeof intelSettingsService.get>>, state: { stopped: boolean }): SyncContext {
+function buildContext(run: IIntelSyncRun, connector: IIntelConnector, entry: NonNullable<Awaited<ReturnType<typeof connectorEntry>>>, settings: Awaited<ReturnType<typeof intelSettingsService.get>>, state: { stopped: boolean }): SyncContext {
   const scope = scopeOf(connector.environment);
   const runId = String(run._id);
   const connectorId = String(connector._id);
@@ -80,8 +79,8 @@ export async function runSync(runId: string): Promise<void> {
   await IntelSyncRunModel.updateOne({ _id: run._id }, { $set: { status: 'RUNNING', started_at: new Date() } });
   const state = { stopped: false };
   try {
-    const entry = await resolveEntry(CONNECTOR_ENV_CATEGORY[connector.kind], connector.env_entry_id);
-    if (!entry) throw new Error('The Tech portal entry this connector uses is missing or inactive.');
+    const entry = await connectorEntry(connector);
+    if (!entry) throw new Error('The credentials this connector uses are missing: its Tech portal entry is inactive or deleted, or its Gmail account was disconnected.');
     const settings = await intelSettingsService.get();
     if (connector.kind !== 'MCP' && !(await ensureCollections(settings))) throw new Error('The knowledge index (Qdrant) is not reachable.');
     const ctx = buildContext(run, connector, entry, settings, state);

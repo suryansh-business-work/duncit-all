@@ -484,14 +484,20 @@ export interface VenueOfferPrefill {
   pets: boolean;
 }
 
-/** A declined offer's terms as the resubmit forms (mWeb, Partners, the app) hold them. */
-export function venueOfferPrefillValues(prefill: Readonly<VenueOfferPrefill>) {
+/**
+ * A declined offer's terms as the resubmit forms (mWeb, Partners, the app) hold
+ * them. A free venue is only ever for a free pod (server: FREE_VENUE_NEEDS_FREE_POD),
+ * so a paid pod (`podFree: false`) starts with no option picked instead of the
+ * Free it can no longer offer; left out, the declined option is kept.
+ */
+export function venueOfferPrefillValues(prefill: Readonly<VenueOfferPrefill>, { podFree = true }: { podFree?: boolean } = {}) {
+  const keeps = isHostOfferModel(prefill.model) && (podFree || !isFreeVenueOfferModel(prefill.model));
   return {
     offer_start: prefill.start_at,
     offer_end: prefill.end_at,
     space_label: prefill.space_label,
     pets: prefill.pets,
-    venue_offer_model: isHostOfferModel(prefill.model) ? prefill.model : '',
+    venue_offer_model: keeps ? prefill.model : '',
     venue_offer_rate: prefill.rate > 0 ? String(prefill.rate) : '',
     offerings: offeringsToText(prefill.offerings),
     note: prefill.note,

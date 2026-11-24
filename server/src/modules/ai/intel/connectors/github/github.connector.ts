@@ -18,8 +18,33 @@ import { TarReader, type TarEntry } from './tar.stream';
  */
 
 export async function listBranches(entry: ResolvedEntry, owner: string, repo: string): Promise<string[]> {
-  const rows = await gh<Array<{ name: string }>>(entry, `/repos/${owner}/${repo}/branches?per_page=100`);
+  const rows = await gh<Array<{ name: string }>>(entry, `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches?per_page=100`);
   return rows.map((r) => r.name);
+}
+
+export interface RepoOption {
+  owner: string;
+  name: string;
+  default_branch: string;
+}
+
+/** At most this many pages of 100 — enough for any account Intel indexes, bounded for a form picker. */
+const MAX_REPO_PAGES = 5;
+
+/**
+ * Every repository the token can read (its own, collaborations and its
+ * organisations'), most recently pushed first. Works for classic and
+ * fine-grained tokens alike, so the owners offered are exactly those the
+ * token reaches.
+ */
+export async function listRepos(entry: ResolvedEntry): Promise<RepoOption[]> {
+  const out: RepoOption[] = [];
+  for (let page = 1; page <= MAX_REPO_PAGES; page += 1) {
+    const rows = await gh<Array<{ name: string; owner: { login: string }; default_branch?: string }>>(entry, `/user/repos?per_page=100&sort=pushed&affiliation=owner,collaborator,organization_member&page=${page}`);
+    out.push(...rows.map((r) => ({ owner: r.owner.login, name: r.name, default_branch: r.default_branch ?? 'main' })));
+    if (rows.length < 100) break;
+  }
+  return out;
 }
 
 const blobUrl = (r: RepoConfig, path: string) => `https://github.com/${r.owner}/${r.repo}/blob/${encodeURIComponent(r.branch)}/${path}`;

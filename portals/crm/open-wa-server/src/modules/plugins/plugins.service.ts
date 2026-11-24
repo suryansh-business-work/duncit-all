@@ -22,6 +22,12 @@ import type { PluginConfigSchema } from '../../core/plugins';
 import { PluginDto } from './dto/plugin.dto';
 import { redactSecretConfig, restoreSecretConfig } from './redact-config';
 import { restorableConfig } from '../../core/plugins/plugin-activation';
+import { assertWritePathNoSymlinks, lstatIfPresent } from '../../core/plugins/plugin-paths';
+import {
+  getBuiltInBaseConfig,
+  PluginInstanceSanitizationError,
+  updatePluginConfigDurable,
+} from '../../core/plugins/plugin-lifecycle';
 import { PluginUninstallingError } from '../../core/plugins/plugin-uninstaller';
 import { DEFAULT_PACKAGE_LIMITS, parsePluginPackage, type ParsedPackage } from './plugin-installer';
 import { assertDownloadSha256, assertPluginInstallUrl, fetchSafeBuffer } from './plugin-download';
@@ -218,9 +224,9 @@ export class PluginsService {
       };
     }
 
-    if (plugin.status !== PluginStatus.ENABLED) {
-      // Clear the decision here too: a plugin sitting in ERROR after a failed restore is not ENABLED,
-      // and disabling it must stop the gateway retrying it on every boot.
+    if (plugin.status !== PluginStatus.ENABLED && plugin.status !== PluginStatus.ERROR) {
+      // Clear the decision here too so disabling an installed/disabled plugin stops the gateway
+      // from retrying it on boot if an older registry entry kept enabledByOperator set.
       this.pluginLoader.setOperatorEnabled(id, false);
       return { success: true, message: `Plugin ${id} is not enabled` };
     }
@@ -257,7 +263,7 @@ export class PluginsService {
     return this.findOne(id);
   }
 
-  updateConfig(id: string, config: Record<string, unknown>): { success: boolean; message: string } {
+  async updateConfig(id: string, config: Record<string, unknown>): Promise<{ success: boolean; message: string }> {
     const plugin = this.pluginLoader.getPlugin(id);
 
     if (!plugin) {
@@ -268,13 +274,25 @@ export class PluginsService {
       // The dashboard PUTs the whole (redacted) config back, so a sentinel secret means "unchanged":
       // restore the stored value instead of overwriting the real secret with the mask. From the stored
       // config, not the runtime one: a built-in's runtime config carries its env-derived settings, and
-      // restoring a mask from those would store them over every later .env change.
+      // restoring a mask from those would store them over every later .env change. A write that points
+      // an allowConfigHosts key at another origin gets no stored secret back.
       const stored = this.pluginLoader.getRegistryEntry(id)?.config ?? {};
-      const merged = restoreSecretConfig(config, stored, plugin.manifest.configSchema, { mergedOverStored: true });
-      this.pluginLoader.updatePluginConfig(id, merged, { mustPersist: true });
+      const base = getBuiltInBaseConfig(plugin);
+      const merged = restoreSecretConfig(
+        config,
+        restorableConfig(stored, config, plugin.manifest, base, { nullRevertsToBeneath: Boolean(base) }),
+        plugin.manifest.configSchema,
+        { mergedOverStored: true },
+      );
+      if (!(await updatePluginConfigDurable(plugin, merged, { mustPersist: true }))) {
+        this.pluginLoader.updatePluginConfig(id, merged, { mustPersist: true });
+      }
       return { success: true, message: `Plugin ${id} configuration updated` };
     } catch (error) {
       if (error instanceof PluginUninstallingError) throw new ConflictException(error.message);
+      if (error instanceof PluginInstanceSanitizationError) {
+        throw new InternalServerErrorException(error.message);
+      }
       return {
         success: false,
         message: error instanceof Error ? error.message : String(error),
@@ -405,17 +423,24 @@ export class PluginsService {
         throw new ConflictException(`A plugin directory "${manifest.id}" already exists`);
       }
       // `existsSync` answers for the link's TARGET, so narrowing the guard above must not also
-      // narrow containment: a link planted at this path would send every write below — and the
-      // rollback's delete — wherever it points.
-      if (fs.realpathSync(dir) !== path.join(fs.realpathSync(pluginsDir), manifest.id)) {
+      // narrow containment: a link planted at this path, or anywhere along an archive entry's path,
+      // would send every write below, and the rollback's delete, wherever it points.
+      const dirStat = lstatIfPresent(dir);
+      if (dirStat?.isSymbolicLink() || fs.realpathSync(dir) !== path.join(fs.realpathSync(pluginsDir), manifest.id)) {
         throw new ConflictException(`A plugin directory "${manifest.id}" already exists`);
       }
       // Merging into a pre-existing directory means an entry path can already be occupied by a
-      // directory. Refusing here keeps that a conflict; writing into it fails with EISDIR, which
-      // the rollback below cannot clean up either.
+      // directory or symlink. Refusing here keeps that a conflict; writing into a directory fails
+      // with EISDIR and writing into a symlink (including a dangling one) escapes containment.
       for (const entry of entries) {
+        assertWritePathNoSymlinks(
+          dir,
+          entry.relPath,
+          detail => new ConflictException(`Cannot install "${manifest.id}": "${entry.relPath}" ${detail}`),
+        );
         const dest = path.join(dir, entry.relPath);
-        if (fs.existsSync(dest) && fs.statSync(dest).isDirectory()) {
+        const destStat = lstatIfPresent(dest);
+        if (destStat && destStat.isDirectory()) {
           throw new ConflictException(`Cannot install "${manifest.id}": "${entry.relPath}" is a directory`);
         }
       }

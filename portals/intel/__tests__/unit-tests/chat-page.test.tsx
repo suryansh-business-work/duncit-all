@@ -12,7 +12,7 @@ vi.mock('../../src/pages/chat/composer/MicButton', () => ({ default: () => null 
 
 const now = new Date().toISOString();
 const conversation = { __typename: 'IntelConversation', id: 'c1', title: 'Pod revenue', pinned: false, archived: false, model: 'gpt-4o', environment: 'STAGING', sources: [], message_count: 2, last_message_at: now, created_at: now, updated_at: now };
-const msg = (id: string, role: string, content: string, status = 'COMPLETE') => ({ __typename: 'IntelMessage', id, conversation_id: 'c1', role, content, status, model: 'gpt-4o', error_code: null, error_message: null, edited: false, approval_ids: [], created_at: now, citations: [], tool_calls: [] });
+const msg = (id: string, role: string, content: string, status = 'COMPLETE') => ({ __typename: 'IntelMessage', id, conversation_id: 'c1', role, content, status, model: 'gpt-4o', error_code: null, error_message: null, edited: false, approval_ids: [], attachments: [], created_at: now, citations: [], tool_calls: [] });
 const counts = { request: { query: INTEL_COUNTS }, result: { data: { intelConversationCounts: { __typename: 'IntelConversationCounts', recent: 1, pinned: 0, archived: 0, all: 1 } } }, maxUsageCount: 5 };
 const routes = (
   <>

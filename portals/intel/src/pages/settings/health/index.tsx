@@ -15,6 +15,12 @@ const ICON: Record<Level, ReactElement> = {
   error: <ErrorIcon color="error" />,
 };
 
+/** The vector index line: working, or down with the server's own reason. */
+function qdrantDetail(h: HealthData['intelHealth'], t: ReturnType<typeof useTranslation>['t']): string {
+  if (h.qdrant_reachable) return t('intel.settings.health.up');
+  return h.qdrant_error ? t('intel.settings.health.downReason', { vars: { reason: h.qdrant_error } }) : t('intel.settings.health.down');
+}
+
 /** Settings › System Health: every dependency Intel needs, checked live. */
 export default function HealthSection() {
   const { t } = useTranslation();
@@ -22,7 +28,7 @@ export default function HealthSection() {
   const h = data?.intelHealth;
   const checks: Array<{ level: Level; label: string; detail: string }> = h
     ? [
-        { level: h.qdrant_reachable ? 'ok' : 'error', label: t('intel.settings.health.qdrant'), detail: h.qdrant_reachable ? t('intel.settings.health.up') : t('intel.settings.health.down') },
+        { level: h.qdrant_reachable ? 'ok' : 'error', label: t('intel.settings.health.qdrant'), detail: qdrantDetail(h, t) },
         { level: h.collections.some((c) => c.dimension_mismatch) ? 'warn' : 'ok', label: t('intel.settings.health.collections'), detail: t('intel.settings.health.collectionsDetail', { vars: { count: h.collections.filter((c) => c.exists).length } }) },
         { level: h.queue_configured ? 'ok' : 'warn', label: t('intel.settings.health.queue'), detail: h.queue_configured ? t('intel.settings.health.queueOn') : t('intel.settings.health.queueOff') },
         { level: h.openai_configured ? 'ok' : 'error', label: t('intel.settings.health.openai'), detail: h.openai_configured ? t('intel.settings.health.up') : t('intel.settings.health.openaiMissing') },

@@ -1,6 +1,7 @@
 import { useLazyQuery } from '@apollo/client/react';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { useState } from 'react';
+import { useTicketWalletLinks } from './useTicketWalletLinks';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import { alpha } from '@mui/material/styles';
@@ -9,7 +10,6 @@ import PaymentLottie from '../../../components/PaymentLottie';
 import ConfettiOverlay from '../../../components/ConfettiOverlay';
 import TwoToneHeading from '../../../components/TwoToneHeading';
 import { SuccessPodCard, SuccessReceiptCard } from '../SuccessDetails';
-import { notify } from '../../../components/notify';
 import { formatMoney } from '../checkoutMath';
 import { parseApiError } from '../../../utils/parseApiError';
 import { useDateFormat } from '../../../utils/dateFormat';
@@ -42,6 +42,7 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
   const profileAction = profileLabel ?? t('mweb.checkout.myProfile');
+  const wallet = useTicketWalletLinks(pod?.id);
   const venueCharges: Array<{ amount: number }> = pod?.place_charges ?? [];
   const venueTotal = venueCharges.reduce((sum, charge) => sum + Number(charge.amount || 0), 0);
 
@@ -76,23 +77,6 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
     } catch (error) {
       setInvoiceError(parseApiError(error));
     }
-  };
-
-  const openGoogleCalendar = () => {
-    const start = pod?.pod_date_time ? new Date(pod.pod_date_time) : new Date();
-    const end = pod?.pod_end_date_time ? new Date(pod.pod_end_date_time) : new Date(start.getTime() + 60 * 60 * 1000);
-    const dates = `${start.toISOString().replace(/[-:]/g, '').replace('.000', '')}/${end.toISOString().replace(/[-:]/g, '').replace('.000', '')}`;
-    const params = new URLSearchParams({
-      action: 'TEMPLATE',
-      text: pod?.pod_title || t('mweb.checkout.calendarEventFallback'),
-      dates,
-      details: t('mweb.checkout.calendarDetails'),
-    });
-    window.open(`https://calendar.google.com/calendar/render?${params.toString()}`, '_blank', 'noopener,noreferrer');
-  };
-
-  const requestAppleWallet = () => {
-    notify(t('mweb.checkout.appleWalletUnavailable'), 'info');
   };
 
   const venueNote = payment && venueTotal > 0
@@ -136,8 +120,8 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
             title={pod.pod_title}
             when={formatDateTime(pod.pod_date_time)}
             venueNote={venueNote}
-            onAppleWallet={requestAppleWallet}
-            onGoogleCalendar={openGoogleCalendar}
+            appleWalletUrl={wallet.apple_pass_url}
+            googleWalletUrl={wallet.google_save_url}
           />
         )}
         {invoiceError && <Alert severity="error" data-testid="invoice-error">{invoiceError}</Alert>}
@@ -152,7 +136,8 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
               disabled={ticketLoading}
               data-testid="download-ticket"
             >
-              {t('mweb.ticket.download')}
+              {/* Nothing paid, no invoice in the file — the button says so. */}
+              {payment ? t('mweb.ticket.download') : t('mweb.ticket.downloadTicketOnly')}
             </DuncitButton>
           )}
           {payment && (

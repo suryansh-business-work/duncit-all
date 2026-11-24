@@ -6,7 +6,7 @@
  * produce the SAME link, and that the walk never leaves a `//` in the middle —
  * `https://duncit.com//profile` is a broken link, not a cosmetic one.
  */
-import { isUploadedPhotoUrl, joinUrl, trimTrailingSlash } from '@utils/url';
+import { isStockLibraryHost, isStockLibraryUrl, isTrustedMediaUrl, isUploadedPhotoUrl, joinUrl, trimTrailingSlash } from '@utils/url';
 
 describe('trimTrailingSlash', () => {
   it('leaves a base that has no trailing slash alone', () => {
@@ -69,5 +69,24 @@ describe('isUploadedPhotoUrl', () => {
     ['an empty string', ''],
   ])('refuses %s', (_label, url) => {
     expect(isUploadedPhotoUrl(url)).toBe(false);
+  });
+});
+
+describe('isStockLibraryUrl', () => {
+  it.each(['https://cdn.pixabay.com/video/7_medium.mp4', 'https://pixabay.com/get/1_1280.jpg', 'https://prod-1.storage.jamendo.com/download/track/9/mp32/'])(
+    'accepts %s, a library Reel Studio copies from',
+    (url) => {
+      expect(isStockLibraryUrl(url)).toBe(true);
+    }
+  );
+
+  it.each(['http://cdn.pixabay.com/a.mp4', 'https://pixabay.com.evil.example/a.mp4', 'https://images.pexels.com/p.jpg', 'not a url'])('refuses %s', (url) => {
+    expect(isStockLibraryUrl(url)).toBe(false);
+  });
+
+  it('never makes a library address look like something the media store served', () => {
+    expect(isStockLibraryHost('cdn.pixabay.com')).toBe(true);
+    expect(isTrustedMediaUrl('https://cdn.pixabay.com/video/7_medium.mp4')).toBe(false);
+    expect(isTrustedMediaUrl('https://prod-1.storage.jamendo.com/x')).toBe(false);
   });
 });

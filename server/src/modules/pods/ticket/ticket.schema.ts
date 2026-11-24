@@ -31,6 +31,19 @@ export const eventTicketTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  """
+  Where the caller's ticket can be added to a phone wallet. Each link is null
+  when that wallet is not set up in Tech portal, Environment, and both are null
+  when the caller holds no live ticket for the pod: show only the buttons that
+  come back.
+  """
+  type EventTicketWalletLinks {
+    "Signed .pkpass download, good for 30 minutes. Open it in the browser; Safari hands it to Wallet."
+    apple_pass_url: String
+    "Google's Save to Google Wallet link for this ticket."
+    google_save_url: String
+  }
+
   type EventTicketVerifyResult {
     ok: Boolean!
     message: String!
@@ -151,6 +164,8 @@ export const eventTicketTypeDefs = /* GraphQL */ `
     myEventTickets: [EventTicket!]!
     myEventTicketForPod(pod_doc_id: ID!): EventTicket
     eventTicketPdfBase64(ticket_doc_id: ID!): String!
+    "Add-to-wallet links for the caller's own ticket to this pod."
+    myEventTicketWalletLinks(pod_doc_id: ID!): EventTicketWalletLinks!
     eventTickets(filter: EventTicketFilterInput): [EventTicket!]!
     eventTicketsTable(query: TableQueryInput): EventTicketTablePage!
     eventTicket(id: ID!): EventTicket
@@ -186,8 +201,10 @@ export const eventTicketTypeDefs = /* GraphQL */ `
       records whichever of them a multi-seat booking was given.
 
     Neither door is gated on the companion count, unlike the host's scan — the
-    group is not standing at this one. Every mark records who made it and
-    notifies the member, so it is contestable rather than silent.
+    group is not standing at this one. Every mark records who made it,
+    notifies the member and is written to the pod's event log (Pod Monitoring)
+    as ATTENDANCE_FORCED, so it is contestable rather than silent. Refused once
+    the roster is closed (the pod is completed or cancelled).
     """
     clubAdminForceAttendance(
       pod_doc_id: ID!

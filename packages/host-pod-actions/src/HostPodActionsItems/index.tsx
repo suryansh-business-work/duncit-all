@@ -103,12 +103,21 @@ export default function HostPodActionsItems({
           <ListItemText primary={chatWithVenueLabel} />
         </MenuItem>
       )}
-      {showAttendeeActions && canComplete && (
-        <MenuItem onClick={pick(onComplete)} data-testid={`host-pod-action-complete-${podId}`}>
+      {/* Shown greyed until shortly before the end, saying when it opens — a
+          host looking for it mid-pod should learn when, not that it is gone. */}
+      {showAttendeeActions && (
+        <MenuItem
+          disabled={!canComplete}
+          onClick={pick(onComplete)}
+          data-testid={`host-pod-action-complete-${podId}`}
+        >
           <ListItemIcon>
-            <TaskAltIcon fontSize="small" color="success" />
+            <TaskAltIcon fontSize="small" color={canComplete ? 'success' : 'disabled'} />
           </ListItemIcon>
-          <ListItemText primary={labels.completePod} />
+          <ListItemText
+            primary={labels.completePod}
+            secondary={canComplete ? undefined : labels.completeNotOpen}
+          />
         </MenuItem>
       )}
       {/* Edit, Request Change Host and Cancel all rewrite a pod's plan, so a

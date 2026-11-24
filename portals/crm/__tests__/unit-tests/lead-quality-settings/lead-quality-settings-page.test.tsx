@@ -63,7 +63,8 @@ describe('Lead Quality Score settings page', () => {
 
     type('lead-quality-criterion-0-weightage', '15');
     fireEvent.click(screen.getByTestId('lead-quality-save'));
-    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Draft saved.'));
+    // Save and its refetch re-render the whole form; under coverage on CI that outlasts the default 1 s.
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Draft saved.'), { timeout: 10_000 });
     expect(screen.queryByTestId('lead-quality-failure')).toBeNull();
   });
 
@@ -115,11 +116,12 @@ describe('Lead Quality Score settings page', () => {
     await screen.findByText('Published version 3');
     fireEvent.click(screen.getByTestId('lead-quality-save'));
 
-    expect(await screen.findByTestId('lead-quality-failure')).toHaveTextContent(
+    // Same whole-form re-render as a save: allow for coverage on CI instead of the default 1 s.
+    expect(await screen.findByTestId('lead-quality-failure', {}, { timeout: 10_000 })).toHaveTextContent(
       'Someone else changed this draft after you opened it. Reload to see their changes.',
     );
     fireEvent.click(screen.getByTestId('lead-quality-reload'));
-    await waitFor(() => expect(screen.queryByTestId('lead-quality-failure')).toBeNull());
+    await waitFor(() => expect(screen.queryByTestId('lead-quality-failure')).toBeNull(), { timeout: 10_000 });
     expect(notifySuccess).not.toHaveBeenCalled();
   });
 

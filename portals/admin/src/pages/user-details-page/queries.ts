@@ -168,6 +168,7 @@ export const USER_CLICKSTREAM = gql`
       checkout_url
       metadata_json
       occurred_at
+      platform
     }
   }
 `;

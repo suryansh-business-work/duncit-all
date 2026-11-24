@@ -207,6 +207,7 @@ export const waLeadsTypeDefs = gql`
   }
 
   extend type Mutation {
+    "Save the gateway URL / API key. The URL must be http(s) and a new key must be accepted by the gateway."
     waSaveConfig(input: WaConfigInput!): WaConnection!
     """
     Mint a dedicated gateway API key and save it. Both arguments are optional: with no

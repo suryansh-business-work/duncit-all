@@ -1,4 +1,4 @@
-import { openaiChat, type OpenAiMessage } from '@services/openai/openai.client';
+import { envCategoryOfModel, openaiChat, type OpenAiMessage } from '@services/openai/openai.client';
 import { resolvePrompt } from '@modules/ai/prompt/prompt.service';
 import { logs } from '@observability/log';
 import { driveThumbnail } from './reel.drive';
@@ -26,6 +26,8 @@ export interface DirectorTurn {
   spec: ReelSpec | null;
   /** False when the model could not be reached or could not be read. */
   ok: boolean;
+  /** The Tech portal env category whose missing key stopped the turn; absent otherwise. */
+  fix_category?: string;
 }
 
 export interface DirectorInput {
@@ -139,7 +141,10 @@ export async function directReel(input: DirectorInput): Promise<DirectorTurn> {
     messages,
     user_id: input.userId,
   });
-  if (!res.ok) return { ok: false, reply: res.message, spec: null };
+  if (!res.ok) {
+    const fix = res.code === 'NOT_CONFIGURED' ? { fix_category: envCategoryOfModel(res.model) } : {};
+    return { ok: false, reply: res.message, spec: null, ...fix };
+  }
   const answer = parseAnswer(res.content);
   if (!answer) return { ok: false, reply: UNREADABLE, spec: null };
   const reply = typeof answer.reply === 'string' ? answer.reply.trim() : '';

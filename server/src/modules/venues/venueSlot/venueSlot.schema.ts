@@ -201,6 +201,8 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     adminVenueSlots(venue_id: ID!, from: String, to: String): [VenueSlot!]!
     "Owner: pending booking requests across their venues (or one venue)."
     venueSlotRequests(venue_id: ID): [VenueSlotRequest!]!
+    "Owner: how many of those requests wait on the venue's answer (the console's sidebar badge)."
+    venueSlotRequestCount(venue_id: ID): Int!
 
     "Owner: one request with its earnings, for the decision page linked from the request email."
     venueSlotDecision(slot_id: ID!): VenueSlotDecision!

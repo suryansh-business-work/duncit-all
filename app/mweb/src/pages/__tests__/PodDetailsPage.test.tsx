@@ -115,10 +115,11 @@ vi.mock('../pod-details-page/PodCommercePreview', () => ({
   ),
 }));
 vi.mock('../pod-details-page/StickyPodActionPanel', () => ({
-  default: ({ onGoToDashboard, onCancelSpot }: any) => (
+  default: ({ onGoToDashboard, onCancelSpot, onPaidCheckout }: any) => (
     <>
       <button onClick={onGoToDashboard}>go-dashboard</button>
       <button onClick={onCancelSpot}>cancel-spot</button>
+      <button onClick={onPaidCheckout}>book-paid</button>
     </>
   ),
 }));
@@ -328,5 +329,31 @@ describe('PodDetailsPage', () => {
     ]);
     expect(await screen.findByText('Unable to connect to server.')).toBeInTheDocument();
     expect(screen.queryByText('Pod not found.')).not.toBeInTheDocument();
+  });
+
+  it('books a pod with no place charges straight away', async () => {
+    setup([slugMock('pod1'), detailsMock, peopleMock]);
+    await screen.findByText('Sunset Yoga');
+    fireEvent.click(screen.getByText('book-paid'));
+    expect(actions.onPaidCheckout).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId('place-charges-dialog')).not.toBeInTheDocument();
+  });
+
+  it('asks the member to accept the place charges before Book goes ahead', async () => {
+    const withCharges = {
+      ...detailsMock,
+      result: {
+        data: { ...podData, pod: { ...podData.pod, place_charges: [{ label: 'Entry', amount: 150, note: null }] } },
+      },
+    };
+    setup([slugMock('pod1'), withCharges, peopleMock]);
+    await screen.findByText('Sunset Yoga');
+    fireEvent.click(screen.getByText('book-paid'));
+    expect(actions.onPaidCheckout).not.toHaveBeenCalled();
+    const dialog = screen.getByTestId('place-charges-dialog');
+    expect(dialog).toHaveTextContent('Entry');
+    expect(dialog).toHaveTextContent('Rs150.00');
+    fireEvent.click(screen.getByTestId('place-charges-dialog-confirm'));
+    expect(actions.onPaidCheckout).toHaveBeenCalledTimes(1);
   });
 });

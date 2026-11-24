@@ -19,6 +19,10 @@ import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
 import { BookingClashDialog } from '@/components/details/BookingClashDialog';
+import {
+  PlaceChargesConfirmDialog,
+  usePlaceChargesConfirm,
+} from '@/components/details/place-charges';
 
 import { PodBackoutDialogs } from './PodBackoutDialogs';
 import type { PodDetailActions } from './usePodDetailActions';
@@ -66,11 +70,13 @@ export function PodDetailsOverlays({
   const { picks } = usePodRentalPicks(pod.id);
   const freeJoin = isFree && Object.keys(picks).length === 0;
   const clash = useBookingClashGuard();
-  // Book runs once the member has seen (and accepted) any time clash.
+  const placeCharges = usePlaceChargesConfirm(pod, currency);
+  // Book runs once the member has seen (and accepted) any time clash, then the
+  // venue's own place charges (mWeb twin: PodDetailsPage).
   const guard = (handler: () => void) => () =>
     fireAndForget(
       (async () => {
-        if (await clash.check([pod.id])) handler();
+        if ((await clash.check([pod.id])) && (await placeCharges.confirm())) handler();
       })(),
     );
   const onCheckout = guard(
@@ -155,6 +161,7 @@ export function PodDetailsOverlays({
         guard={clash}
         onOpenPod={(clubSlug, podSlug) => navigation.push('PodDetails', { clubSlug, podSlug })}
       />
+      <PlaceChargesConfirmDialog {...placeCharges.dialog} />
       <LocationMismatchDialog kind="POD" {...locationPrompt} />
       <PodBackoutDialogs
         actions={actions}

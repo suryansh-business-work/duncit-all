@@ -110,6 +110,36 @@ export function podLiveEnd(pod: {
 }
 
 /**
+ * How many minutes before a pod's end its host may complete it. The client's
+ * `POD_COMPLETE_LEAD_MINUTES` in `@duncit/utils` (pod-phase.ts) is the same
+ * number; it greys the menu row, this refuses the write.
+ */
+export const POD_COMPLETE_LEAD_MINUTES = 15;
+
+/**
+ * Whether a host may complete this pod now: it has started and is within
+ * {@link POD_COMPLETE_LEAD_MINUTES} of its end ({@link podLiveEnd}), or past it.
+ * The server side of the client's `canCompletePod`.
+ *
+ * A pod with no usable start cannot be placed on a clock; it is left open
+ * rather than made impossible to settle, the same reading every other
+ * deadline here gives it.
+ */
+export function podCompletionOpen(
+  pod: {
+    pod_date_time?: Date | string | null;
+    pod_end_date_time?: Date | string | null;
+  },
+  now: number = Date.now(),
+): boolean {
+  const end = podLiveEnd(pod);
+  // podLiveEnd answers null exactly when the start is unusable.
+  if (!end || !pod.pod_date_time) return true;
+  if (now < new Date(pod.pod_date_time).getTime()) return false;
+  return now >= end.getTime() - POD_COMPLETE_LEAD_MINUTES * 60_000;
+}
+
+/**
  * Whether a pod's booking window has closed: it is past its end ({@link podLiveEnd}),
  * or Finance already settled it. A pod that has started but not ended can still
  * be joined (the app asks the member to confirm first), so this is the rule

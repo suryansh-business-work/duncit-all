@@ -208,6 +208,7 @@ exports:
   - 'canScanPodTickets'
   - 'podScanWindow'
   - 'POD_SCAN_LEAD_MINUTES'
+  - 'POD_COMPLETE_LEAD_MINUTES'
   - 'splitPodsByPhase'
   - 'nothingUpcoming'
   - 'withinHappeningNearbyWindow'
@@ -608,6 +609,7 @@ exports:
   - 'isFreeArrangement'
   - 'FREE_POLICY_KEYS'
   - 'venueOfferPriceInput'
+  - 'venueOfferPrefillValues'
   - 'offeringsFromText'
   - 'offerQuoteRange'
   - 'offerEarningsArgs'
@@ -1226,6 +1228,20 @@ paymentFailureReportInput(classifyPaymentFailure(null), {
 
 The deducted-payment claim's form rules live in `@duncit/forms/schemas` (`makePaymentClaimSchema`), since they need Zod.
 
+### Place charges — `pod-place-charges`
+
+A pod's place charges are billed by the venue at its own door and never pass through Duncit. Before Join / Book, both apps show them in a confirmation (mWeb `pod-details-page/place-charges`, native `details/place-charges`), and its "Report to support" link opens a ticket in one tap.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `placeChargesTotal` | `(charges) => number` | The listed amounts added up; `null` / `undefined` / a non-numeric amount count as 0. |
+| `placeChargesTicketDraft` | `(PlaceChargesTicketContext) => { subject, body_text, category: 'BOOKING', pod_id, pod_title }` | The ticket that tap opens: the pod and every charge as the member saw it, plus the total. |
+
+```ts
+placeChargesTicketDraft({ podId: 'p1', podTitle: 'Board Games', currencySymbol: '₹', charges: [{ label: 'Entry', amount: 200 }] });
+// { subject: 'Place charges look wrong — Board Games', category: 'BOOKING', pod_id: 'p1', … }
+```
+
 ### Delivery quote gate — `delivery-quote-gate`
 
 The product checkout's Pay button stays shut until the delivery charge for the cart and pincode
@@ -1536,7 +1552,8 @@ rails can never place the same pod differently.
 | `splitPodsByPhase` | `(pods, now = Date.now()) => { upcoming, ongoing, previous }` | One pass, one clock read, so the three rails cannot disagree at a boundary. |
 | `withinHappeningNearbyWindow` | `(pods, days, now = Date.now()) => pods` | The Home "Happening nearby" rail and page: upcoming pods starting within the next `days` days (admin-set in Pods > Pod Settings, `DEFAULT_HAPPENING_NEARBY_DAYS` = 7 until it loads). A pod with no usable start is left out. |
 | `nothingUpcoming` | `(pods, now = Date.now()) => boolean` | True when every pod is PREVIOUS, or there are none — the cue a host's or venue's page reads to offer "Request an event" (mWeb + native). |
-| `canCompletePod` | `(pod, now = Date.now()) => boolean` | True only on a PREVIOUS pod. Completion settles the payout off the seats scanned in, so Host Studio offers it once the door has shut — never on an upcoming or ongoing pod. |
+| `canCompletePod` | `(pod, now = Date.now()) => boolean` | True from `POD_COMPLETE_LEAD_MINUTES` before the end onwards, and never before the start (even on a pod shorter than the lead). Completion settles the payout off the seats scanned in, so Host Studio keeps the row greyed until then, saying when it opens. The server refuses an earlier host completion with the same rule. |
+| `POD_COMPLETE_LEAD_MINUTES` | `number` | 15 — how long before a pod's end its host may complete it. Mirrored on the server in `pod.lifecycle.ts`. |
 | `POD_SCAN_LEAD_MINUTES` | `number` | 15 — how long before the start a pod's door opens to the host's scanner. |
 | `podScanWindow` | `(pod, now = Date.now()) => 'NOT_OPEN' \| 'OPEN' \| 'CLOSED'` | `NOT_OPEN` until `POD_SCAN_LEAD_MINUTES` before the start, `OPEN` through the end instant, `CLOSED` after. Host Studio keeps the scan row greyed either side of `OPEN`, saying "not yet" or "too late". No usable start ⇒ never opens. |
 | `canScanPodTickets` | `(pod, now = Date.now()) => boolean` | `podScanWindow(...) === 'OPEN'`. Marking someone present by hand is not gated by this; the server's attendance lock owns that. |
@@ -2167,6 +2184,7 @@ clubAdminRangeFrom('all')                            // null
 clubAdminRangeLabels(t)['12m']                       // 'Last 12 months'
 
 podAuditActionLabel('VENUE_DECLINED', t)   // 'Venue Rejected'
+podAuditActionLabel('ATTENDANCE_FORCED', t) // 'Attendance Marked by Club Admin' — a no-scan mark, toned warning
 podAuditRiskOptions(t).map((o) => o.value) // ['LOW', 'MEDIUM', 'HIGH', 'PENDING']
 ```
 
@@ -3901,6 +3919,7 @@ offer's pricing (the legacy venue pricing calendar's `VenueBookingModel` still h
 | `VENUE_OFFER_ASK_LIMITS` / `offeringsFromText(text)` / `offeringsToText(list)` | The server's bounds (20 points, 120 characters each, a 1000-character note); the box's text as points (trimmed, typed bullets and blank lines dropped) and back. |
 | `venueOfferInput(source)` | The `venue_offer` input (`start_at`, `end_at`, `space_label` — `''` for the whole venue — `pax`, `pets`, `model`, `rate`, and `offerings` / `note` when the source has them), or null until a window, an option and an amount are all there. A `FREE` offer needs no amount (rate 0) and carries `free_justification` once `source.freeJustification` is complete and accepted. |
 | `venueOfferPriceInput(input)` | The same input without the points and note — what a live quote asks with, so typing them never re-prices. |
+| `venueOfferPrefillValues(prefill, { podFree })` | A declined offer's terms (`VenueOfferPrefill`) as the resubmit forms hold them — window, space, pets, option, amount, points and note. A paid pod (`podFree: false`) drops a declined `FREE` (a free venue is only for a free pod) so an option is picked again; left out, the option is kept. |
 | `offerQuoteRange(quote, quoteMin)` / `moneyRangeText(min, max, money)` | A quote pair as `{ venueMin, venueMax, totalMin, totalMax, ranged }`, and one amount or "min – max" written with the surface's formatter. |
 | `offerEarningsArgs(quote, quoteMin, minGuests, spots)` | The venue arguments `potentialPodEarnings` takes, with `min_spots` and the money at the minimum when it is below the spots. |
 | `offerGuestFloor(venueMinimum, capacity)` / `offerGuestsText(t, min, max)` | The fewest spots an offer may be for (the venue's minimum, never more than the space holds — the server's rule), and "8–20 guests" / "20 guests". |

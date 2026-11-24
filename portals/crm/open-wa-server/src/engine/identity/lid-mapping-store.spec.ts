@@ -5351,3 +5351,171 @@ describe('LidMappingStoreService: the readers agree with the table once overlapp
     120_000,
   );
 });
+
+describe('LidMappingStoreService onMappingLearned notifications', () => {
+  const pg = process.env.DATABASE_TYPE === 'postgres';
+  const server = {
+    type: 'postgres' as const,
+    host: process.env.DATABASE_HOST || 'localhost',
+    port: Number(process.env.DATABASE_PORT || 5432),
+    username: process.env.DATABASE_USERNAME || 'openwa',
+    password: process.env.DATABASE_PASSWORD || 'openwa',
+    database: process.env.DATABASE_NAME || 'openwa',
+  };
+
+  it('notifies listeners when remember() persists a non-null phone, skips null/failed writes, and supports unsubscribe', async () => {
+    const schema = pg ? `lid_learned_${randomUUID().replace(/-/g, '')}` : '';
+    const onServer = async (sql: string): Promise<void> => {
+      const admin = await new DataSource(server).initialize();
+      await admin.query(sql).finally(() => admin.destroy());
+    };
+    if (pg) await onServer(`CREATE SCHEMA "${schema}"`);
+    const ds = await new DataSource(
+      pg
+        ? {
+            ...server,
+            schema,
+            extra: { options: `-c search_path=${schema},public` },
+            entities: [Session, LidMapping],
+            synchronize: true,
+          }
+        : {
+            type: 'better-sqlite3',
+            database: ':memory:',
+            entities: [Session, LidMapping],
+            synchronize: true,
+          },
+    ).initialize();
+    const repo = ds.getRepository(LidMapping);
+    const store = new LidMappingStoreService(repo);
+    const learned: Array<{ lid: string; phone: string }> = [];
+    const unsubscribe = store.onMappingLearned(mapping => {
+      learned.push(mapping);
+    });
+
+    try {
+      await expect(store.remember('123456', '628111000111', 's1')).resolves.toBe(true);
+      expect(learned).toEqual([{ lid: '123456', phone: '628111000111' }]);
+
+      // Persisting null does not fire mapping-learned notifications.
+      await expect(store.remember('123456', null, 's1')).resolves.toBe(true);
+      expect(learned).toHaveLength(1);
+
+      // Failed DB persistence does not fire mapping-learned notifications.
+      jest.spyOn(repo, 'upsert').mockRejectedValueOnce(new Error('write failed'));
+      await expect(store.remember('789012', '628222000222', 's1')).resolves.toBe(false);
+      expect(learned).toHaveLength(1);
+
+      // Unsubscribed listener receives no further notifications.
+      unsubscribe();
+      await expect(store.remember('789012', '628222000222', 's1')).resolves.toBe(true);
+      expect(learned).toHaveLength(1);
+    } finally {
+      store.onModuleDestroy();
+      await ds.destroy();
+      if (pg) await onServer(`DROP SCHEMA "${schema}" CASCADE`);
+    }
+  });
+});
+
+describe('LidMappingStoreService concurrency and releaseSession guards', () => {
+  it('discards stale warmFromTable results from before reload (reloadSeq)', async () => {
+    let resolveFindOne!: (row: LidMapping | null) => void;
+    const repo = makeFakeRepo([]);
+    repo.findOne.mockImplementationOnce(
+      () =>
+        new Promise<LidMapping | null>(res => {
+          resolveFindOne = res;
+        }),
+    );
+    repo.find.mockResolvedValue([]);
+    const store = new LidMappingStoreService(repo as unknown as Repository<LidMapping>);
+
+    // Trigger warmFromTable before reload(); findOne hangs while reload runs.
+    expect(store.getCached('stale-lid')).toBeUndefined();
+    await store.reload();
+
+    // Pre-reload DB snapshot returns an old mapping even though reload restored an empty table.
+    resolveFindOne({
+      lid: 'stale-lid',
+      phone: '628000111222',
+      sessionId: null,
+      isReported: true,
+      updatedAt: new Date(0),
+    });
+    await new Promise(resolve => setImmediate(resolve));
+
+    expect(store.getCached('stale-lid')).toBeUndefined();
+
+    // Reverse: pre-reload findOne returns null while reload restores row above cache or resets table;
+    // stale absence must not be recorded in absentFromTable.
+    let resolveNull!: (row: LidMapping | null) => void;
+    repo.findOne
+      .mockImplementationOnce(
+        () =>
+          new Promise<LidMapping | null>(res => {
+            resolveNull = res;
+          }),
+      )
+      .mockResolvedValueOnce({
+        lid: 'restored-lid',
+        phone: '628999888777',
+        sessionId: null,
+        isReported: true,
+        updatedAt: new Date(),
+      });
+    expect(store.getCached('restored-lid')).toBeUndefined();
+    await store.reload();
+    resolveNull(null);
+    await new Promise(resolve => setImmediate(resolve));
+
+    // If stale null wrote absentFromTable, this miss won't even query findOne a second time.
+    expect(store.getCached('restored-lid')).toBeUndefined();
+    await new Promise(resolve => setImmediate(resolve));
+    expect(store.getCached('restored-lid')).toBe('628999888777');
+    store.onModuleDestroy();
+  });
+
+  it('clears failedWrites on write completion even after releaseSession cleared seenBy', async () => {
+    let releaseFirstFail!: () => void;
+    let releaseSecondOk!: () => void;
+    const repo = makeFakeRepo([]);
+    repo.upsert
+      .mockImplementationOnce(
+        () =>
+          new Promise((_res, rej) => {
+            releaseFirstFail = () => rej(new Error('transient db lock'));
+          }),
+      )
+      .mockImplementationOnce(
+        (values: Partial<LidMapping>) =>
+          new Promise(res => {
+            releaseSecondOk = () => {
+              repo.rows.push(values as LidMapping);
+              res({});
+            };
+          }),
+      );
+    const store = new LidMappingStoreService(repo as unknown as Repository<LidMapping>);
+
+    // Concurrent failing write shares the same UnsettledWrite (sets writing.failed = true), so endWrite cannot clear failedWrites.
+    const failing = store.remember('rel-lid', '628000000000', 'sess-0');
+    const succeeding = store.remember('rel-lid', '628111999000', 'sess-1');
+    await new Promise(resolve => setImmediate(resolve));
+
+    releaseFirstFail();
+    await expect(failing).resolves.toBe(false);
+    await new Promise(resolve => setImmediate(resolve));
+
+    // Unrelated session deletion clears seenBy while succeeding write's upsert is still in flight.
+    await store.releaseSession('other-sess');
+    releaseSecondOk();
+    await expect(succeeding).resolves.toBe(true);
+
+    // failedWrites must not be stranded after the latest operation settled cleanly.
+    expect(store.getCached('rel-lid')).toBe('628111999000');
+    const inner = store as unknown as { failedWrites: Set<string> };
+    expect(inner.failedWrites.has('rel-lid')).toBe(false);
+    store.onModuleDestroy();
+  });
+});

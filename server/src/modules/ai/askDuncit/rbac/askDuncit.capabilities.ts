@@ -1,4 +1,5 @@
 import type { AuthUser } from '@context';
+import { categoriesOf } from '@microservices/mcp/catalog/self-service';
 import { refusalFor, reachableCategories } from '@microservices/mcp/catalog/visibility';
 import { SCOPE_READ, SCOPE_WRITE } from '@microservices/mcp/mcp.constants';
 import type { McpSettingsValue } from '@microservices/mcp/settings/settings.types';
@@ -49,7 +50,7 @@ export function policyAllows(tool: McpTool, policy: AskDuncitRolePolicy, canWrit
   if (policy.blocked_tools.includes(tool.name)) return false;
   if (tool.risk !== 'READ' && !canWrite) return false;
   if (policy.allowed_tools.includes(tool.name)) return true;
-  return policy.allowed_categories.includes('*') || policy.allowed_categories.includes(tool.category);
+  return policy.allowed_categories.includes('*') || categoriesOf(tool).some((category) => policy.allowed_categories.includes(category));
 }
 
 /**

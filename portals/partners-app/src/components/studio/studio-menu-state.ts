@@ -1,4 +1,5 @@
 import { STUDIO_OPTIONS_ENTRY, type StudioOptionItem } from '@duncit/utils';
+import type { NavBadge } from '@duncit/shell';
 import { sectionFor, underPath, type PartnerSection } from '../../config/partner-sections';
 
 /** Where "the studio menu is minimised" is remembered, per browser. */
@@ -71,4 +72,28 @@ export function showsStudioMenu(
   if (options.length === 0 || pathname === STUDIO_OPTIONS_ENTRY[section.mode].portal) return false;
   if (sectionFor(pathname)?.role === section.role) return true;
   return options.some((option) => destinationOf(option).path === pathname);
+}
+
+/** The translate function the studio menu renders with. */
+type Translate = (key: string, options?: { vars?: Record<string, string | number> }) => string;
+
+/** An option's badge with its hover words resolved (`{count}` filled in), or `null` when nothing waits. */
+export function localizedBadge(badge: NavBadge | null | undefined, t: Translate): NavBadge | null {
+  if (!badge || badge.count <= 0) return null;
+  return badge.labelKey ? { ...badge, label: t(badge.labelKey, { vars: { count: badge.count } }) } : badge;
+}
+
+/**
+ * An option's tooltip. On the icon rail it is the entry's name, plus what waits
+ * behind it, and names the link. With the words showing it says only what is
+ * waiting (or nothing), and describes the link instead of renaming it — a
+ * string title would otherwise replace the link's accessible name.
+ */
+export function optionTooltip(
+  label: string,
+  waiting: string | undefined,
+  collapsed: boolean,
+): { title: string; describes: boolean } {
+  if (collapsed) return { title: waiting ? `${label} (${waiting})` : label, describes: false };
+  return { title: waiting ?? '', describes: true };
 }

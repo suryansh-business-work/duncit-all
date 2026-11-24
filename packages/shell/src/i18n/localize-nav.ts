@@ -21,6 +21,9 @@ export function localizeNav(items: AppNavItem[], t: Translator['t']): AppNavItem
     ...item,
     label: item.labelKey ? t(item.labelKey) : item.label,
     caption: item.captionKey ? t(item.captionKey) : item.caption,
+    ...(item.badge?.labelKey
+      ? { badge: { ...item.badge, label: t(item.badge.labelKey, { vars: { count: item.badge.count } }) } }
+      : {}),
     ...(item.children ? { children: localizeNav(item.children, t) } : {}),
   }));
 }

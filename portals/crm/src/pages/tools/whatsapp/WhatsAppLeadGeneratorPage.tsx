@@ -8,12 +8,11 @@ import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { WA_CONNECTION, type WaConnection } from './whatsappQueries';
 import WhatsAppConnectCard from './WhatsAppConnectCard';
 import WhatsAppBrowser from './WhatsAppBrowser';
-import WhatsAppApiKeyHelp from './WhatsAppApiKeyHelp';
 
 /**
- * WhatsApp Lead Generator — links a WhatsApp account through the OpenWA gateway,
- * then browses Communities / Groups / Users and imports them as User Leads.
- * Opening the page starts the session and shows its QR (see useWaConnect).
+ * WhatsApp Lead Generator — links a WhatsApp account through the OpenWA gateway
+ * (a two-step stepper: gateway URL + API key, then Connect and scan the QR), then
+ * browses Communities / Groups / Users and imports them as User Leads.
  */
 export default function WhatsAppLeadGeneratorPage() {
   const { t } = useTranslation();
@@ -38,7 +37,7 @@ export default function WhatsAppLeadGeneratorPage() {
     body = (
       <Stack spacing={2}>
         <WhatsAppConnectCard connection={connection} onChanged={handleChanged} />
-        {connection.status === 'CONNECTED' ? <WhatsAppBrowser /> : <WhatsAppApiKeyHelp />}
+        {connection.status === 'CONNECTED' && <WhatsAppBrowser />}
       </Stack>
     );
   }

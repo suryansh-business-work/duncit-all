@@ -63,6 +63,9 @@ export default function SendMoneyLogsPage() {
           <Stack component="span" sx={{ lineHeight: 1.2 }}>
             <Typography variant="body2" component="span" sx={{ fontWeight: 700 }}>{r.recipient_name}</Typography>
             <Typography variant="caption" component="span" sx={{ color: 'text.secondary' }}>{r.recipient_email}</Typography>
+            {r.account_source === 'CUSTOM' ? (
+              <Chip size="small" color="warning" variant="outlined" label={t('finance.payouts.customAccountChip')} sx={{ alignSelf: 'flex-start', mt: 0.25 }} />
+            ) : null}
           </Stack>
         ),
         valueGetter: (r) => `${r.recipient_name} ${r.recipient_email}`.trim(),

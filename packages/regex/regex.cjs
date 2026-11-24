@@ -204,6 +204,12 @@ const MONGO_COLLECTION = /^(?!system\.)[A-Za-z0-9_.-]{1,120}$/;
 /** A MongoDB database name, e.g. `duncit`: 1–64 letters, digits, `_` or `-`. One class, bounded count — linear. */
 const MONGO_DATABASE = /^[A-Za-z0-9_-]{1,64}$/;
 
+/** A MongoDB connection string (Atlas mongodb+srv:// or mongodb://), no whitespace. See regex.mjs. */
+const MONGO_URI = /^mongodb(?:\+srv)?:\/\/\S{3,2000}$/;
+
+/** A database host: DNS name, Docker service name or IPv4 — 1–253 letters, digits, `.` or `-`. See regex.mjs. */
+const DB_HOST = /^[A-Za-z0-9.-]{1,253}$/;
+
 /** Keep only the digits in a string. See regex.mjs for the full note. */
 const toDigits = (v) => String(v ?? '').replaceAll(NON_DIGITS, '');
 
@@ -250,6 +256,8 @@ module.exports = {
   GIT_BRANCH,
   MONGO_COLLECTION,
   MONGO_DATABASE,
+  MONGO_URI,
+  DB_HOST,
   toDigits,
   isPhoneNumber: (v) => PHONE_NUMBER.test(v),
   isPincode: (v) => PINCODE.test(v),
@@ -287,6 +295,8 @@ module.exports = {
   isGitBranch: (v) => GIT_BRANCH.test(v),
   isMongoCollection: (v) => MONGO_COLLECTION.test(v),
   isMongoDatabase: (v) => MONGO_DATABASE.test(v),
+  isMongoUri: (v) => MONGO_URI.test(v),
+  isDbHost: (v) => DB_HOST.test(v),
   isHostname: (v) => {
     const name = String(v ?? '').replace(/\.$/, '');
     const labels = name.split('.');

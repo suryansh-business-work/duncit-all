@@ -1,5 +1,6 @@
 import type { IntelActor } from '../access/intel.access';
 import { IntelConnectorModel, type IIntelConnector } from '../connectors/intelConnector.model';
+import type { IntelHttp } from '../connectors/mcp/mcp.builtin';
 import { INTEL_SOURCES, type IndexScope, type IntelEnvironment, type IntelSource } from '../intel.constants';
 import { intelSettingsService } from '../settings/intelSettings.service';
 import type { IntelRolePolicy, IntelSettings } from '../settings/intelSettings.types';
@@ -25,6 +26,8 @@ export interface TurnContext {
   model: string;
   /** How many [S#] citations earlier searches of this turn handed out. */
   citationBase: number;
+  /** The console request that started the turn — Duncit MCP runs tools as the person under it. */
+  http?: IntelHttp;
 }
 
 export function allowedEnvironments(choice: string, policy: IntelRolePolicy): IntelEnvironment[] {
@@ -45,7 +48,7 @@ export function pickModel(requested: string, settings: IntelSettings): string {
   return enabled.some((m) => m.id === requested) ? requested : intelSettingsService.defaultModel(settings);
 }
 
-export async function buildTurnContext(actor: IntelActor, conversation: IIntelConversation, messageId: string): Promise<TurnContext> {
+export async function buildTurnContext(actor: IntelActor, conversation: IIntelConversation, messageId: string, http?: IntelHttp): Promise<TurnContext> {
   const settings = await intelSettingsService.get();
   const policy = intelSettingsService.policyFor(settings, actor.level);
   const environments = allowedEnvironments(conversation.environment, policy);
@@ -64,5 +67,6 @@ export async function buildTurnContext(actor: IntelActor, conversation: IIntelCo
     connectors: all.filter((c) => connectorVisible(c, environments, sources)),
     model: pickModel(conversation.model, settings),
     citationBase: 0,
+    http,
   };
 }

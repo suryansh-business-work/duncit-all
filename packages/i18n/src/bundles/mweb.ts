@@ -954,6 +954,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       spotsLeftOne: '1 spot left',
       spotsLeftMany: '{count} spots left',
       joiningNow: '{count} joining now',
+      // A pod that is over: who actually turned up (scanned in), then its status.
+      attendedCount: '{count} Attended',
+      podCompleted: 'Completed',
       podsNearbyOne: '1 pod nearby',
       podsNearbyMany: '{count} pods nearby',
       hostCtaTitle: 'Host your own pod',
@@ -1285,9 +1288,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       },
     },
     // The booking document. One file: the ticket, then the invoice for what
-    // paid for it — a free pod has no payment, so that one is the ticket alone.
+    // paid for it — a free pod has no payment, so that one is the ticket alone
+    // and its button says so.
     ticket: {
       download: 'Ticket & invoice',
+      downloadTicketOnly: 'Ticket',
       downloading: 'Downloading…',
     },
     // The booking deep link (`/booking/:bookingId`) — the receipt email's
@@ -2322,13 +2327,18 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // list, so the label names where it actually goes.
       myProfile: 'My Profile',
       myOrders: 'My orders',
-      // mWeb only — passes to a wallet are a browser affordance.
+      // Both apps — each button shows only once its wallet is set up in the
+      // Tech portal, so neither ever has to apologise.
       appleWallet: 'Add to Apple Wallet',
       googleWallet: 'Add to Google Wallet',
+      // Deprecated, these three: read by app versions from before real wallet
+      // passes (Apple said "not yet", Google opened a calendar event).
       appleWalletUnavailable:
         'Apple Wallet pass is not available yet. Invoice download is separate below.',
       calendarEventFallback: 'Duncit Pod',
       calendarDetails: 'Your Duncit booking is confirmed.',
+      // Opening a wallet link failed (no browser, or the OS refused the URL).
+      walletOpenFailed: 'Could not open your wallet. Please try again.',
       // What went wrong. A buyer reads these instead of the payable, so they
       // say what happened to the money and what to do next.
       errorFailed: 'Payment failed. Please try again.',

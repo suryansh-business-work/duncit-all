@@ -20,7 +20,9 @@ export interface TicketPdfData {
   seats: number;
 }
 
-const ACCENT = '#F82D2F';
+/** The ticket's brand colour — the wallet passes wear it too. */
+export const TICKET_ACCENT = '#F82D2F';
+const ACCENT = TICKET_ACCENT;
 const INK = '#111827';
 const MUTED = '#6b7280';
 

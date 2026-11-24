@@ -378,20 +378,26 @@ describe('SuccessReceiptCard', () => {
 });
 
 describe('SuccessPodCard', () => {
-  it('shows the pod, offers the two calendar actions and the venue note', () => {
-    const onApple = vi.fn();
-    const onGoogle = vi.fn();
-    render(<SuccessPodCard title="Sunset Jam" when="Sat 6pm" venueNote="Pay ₹50 at the venue" onAppleWallet={onApple} onGoogleCalendar={onGoogle} />);
+  it('shows the pod, both wallet links and the venue note', () => {
+    render(
+      <SuccessPodCard
+        title="Sunset Jam"
+        when="Sat 6pm"
+        venueNote="Pay ₹50 at the venue"
+        appleWalletUrl="https://server.test/p.pkpass"
+        googleWalletUrl="https://pay.google.com/gp/v/save/jwt"
+      />,
+    );
     expect(screen.getByTestId('confirmation-pod')).toHaveTextContent('Sunset Jam');
-    fireEvent.click(screen.getByTestId('success-pod-apple-wallet'));
-    fireEvent.click(screen.getByTestId('success-pod-google-wallet'));
-    expect(onApple).toHaveBeenCalledTimes(1);
-    expect(onGoogle).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('success-pod-apple-wallet')).toHaveAttribute('href', 'https://server.test/p.pkpass');
+    expect(screen.getByTestId('success-pod-google-wallet')).toHaveAttribute('href', 'https://pay.google.com/gp/v/save/jwt');
     expect(screen.getByTestId('success-venue-note')).toHaveTextContent('Pay ₹50 at the venue');
   });
 
-  it('leaves out the venue note when there are no venue charges', () => {
-    render(<SuccessPodCard title="T" when="W" venueNote={null} onAppleWallet={vi.fn()} onGoogleCalendar={vi.fn()} />);
+  it('leaves out the wallet row when no wallet is set up, and the venue note when there are no charges', () => {
+    render(<SuccessPodCard title="T" when="W" venueNote={null} appleWalletUrl={null} googleWalletUrl={null} />);
+    expect(screen.queryByTestId('success-pod-apple-wallet')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('success-pod-google-wallet')).not.toBeInTheDocument();
     expect(screen.queryByTestId('success-venue-note')).not.toBeInTheDocument();
   });
 });

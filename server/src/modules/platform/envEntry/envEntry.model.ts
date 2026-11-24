@@ -52,6 +52,9 @@ export const ENV_CATEGORIES = [
   'MONGODB',
   'MCP_SERVER',
   'GMAIL',
+  // Pod tickets as wallet passes: Apple signs a .pkpass, Google a save link.
+  'APPLE_WALLET',
+  'GOOGLE_WALLET',
 ] as const;
 export type EnvCategory = (typeof ENV_CATEGORIES)[number];
 

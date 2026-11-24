@@ -2,6 +2,7 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { logs } from '@duncit/logs';
 
 import { MobileCheckoutPodDocument } from '@/graphql/checkout';
+import { TicketWalletLinksDocument } from '@/graphql/pod-history';
 import { FreeJoinSuccessScreen } from '@/screens/FreeJoinSuccessScreen';
 import { graphqlRequest } from '@/services/graphql.client';
 import { renderWithProviders } from '@/utils/test-utils';
@@ -31,11 +32,16 @@ const pod = {
   pod_images_and_videos: [],
 };
 
-/** Answers the pod query with `answer`; every other request (coins, settings) with nothing. */
-const answerPodWith = (answer: () => Promise<unknown>) =>
-  mockRequest.mockImplementation((document: unknown) =>
-    document === MobileCheckoutPodDocument ? answer() : Promise.resolve({}),
-  );
+const noWallets = { apple_pass_url: null, google_save_url: null };
+
+/** Answers the pod query with `answer`, the wallet links with `wallets`, and
+ * every other request (coins, settings) with nothing. */
+const answerPodWith = (answer: () => Promise<unknown>, wallets = noWallets) =>
+  mockRequest.mockImplementation((document: unknown) => {
+    if (document === MobileCheckoutPodDocument) return answer();
+    if (document === TicketWalletLinksDocument) return Promise.resolve({ myEventTicketWalletLinks: wallets });
+    return Promise.resolve({});
+  });
 
 beforeEach(() => {
   mockRequest.mockReset();
@@ -60,6 +66,23 @@ describe('FreeJoinSuccessScreen', () => {
     expect(screen.getByText(/This pod is free, so there is nothing to pay\./)).toBeOnTheScreen();
     expect(screen.queryByText('Amount paid')).toBeNull();
     expect(screen.queryByTestId('download-invoice')).toBeNull();
+    // Nothing was paid, so the file is the ticket alone and the button says so.
+    expect(screen.getByTestId('download-ticket')).toHaveTextContent('Ticket');
+    expect(screen.queryByText('Ticket & invoice')).toBeNull();
+    // Neither wallet set up: no wallet buttons at all.
+    expect(screen.queryByTestId('success-pod-wallets')).toBeNull();
+  });
+
+  it('offers the wallets the server returns links for, as on mWeb', async () => {
+    answerPodWith(() => Promise.resolve({ pod }), {
+      apple_pass_url: 'https://server.test/tickets/tok/ticket.pkpass',
+      google_save_url: 'https://pay.google.com/gp/v/save/jwt',
+    });
+    renderWithProviders(<FreeJoinSuccessScreen />);
+
+    expect(await screen.findByTestId('success-pod-apple-wallet')).toHaveTextContent('Add to Apple Wallet');
+    expect(screen.getByTestId('success-pod-google-wallet')).toHaveTextContent('Add to Google Wallet');
+    expect(mockRequest).toHaveBeenCalledWith(TicketWalletLinksDocument, { podId: 'p1' }, { auth: true });
   });
 
   it('downloads the ticket for this pod and routes Home and to Pod History', async () => {

@@ -108,6 +108,15 @@
         "MCP_SERVER",
         "GMAIL"
       ]
+    },
+    {
+      "key": "WALLETS",
+      "label": "Wallet passes",
+      "description": "Pod tickets in Apple Wallet and Google Wallet",
+      "categories": [
+        "APPLE_WALLET",
+        "GOOGLE_WALLET"
+      ]
     }
   ],
   "categories": {
@@ -2372,6 +2381,98 @@
       ],
       "alsoReadBy": [
         "server/src/modules/ai/intel/connectors/gmail/gmail.connector.ts"
+      ]
+    },
+    "APPLE_WALLET": {
+      "label": "Apple Wallet (pod tickets)",
+      "description": "Signs the .pkpass behind \"Add to Apple Wallet\"",
+      "docUrl": "https://developer.apple.com/account/resources/identifiers/list/passTypeId",
+      "apiDocsUrl": "https://developer.apple.com/documentation/walletpasses/building-a-pass",
+      "usedIn": [],
+      "fields": [
+        {
+          "name": "certificate",
+          "label": "Pass Type ID Certificate (PEM)",
+          "hint": "Identifiers → Pass Type IDs → e.g. pass.com.duncit.ticket → Create Certificate. Export it from Keychain as .p12, then `openssl pkcs12 -in pass.p12 -clcerts -nokeys -legacy` and paste the BEGIN CERTIFICATE block. The Pass Type ID and Team ID are read from it",
+          "envKey": "APPLE_WALLET_CERTIFICATE",
+          "description": "Pass Type ID certificate that signs every ticket pass; its subject names the pass type and the Apple team, so neither is typed separately.",
+          "validation": {
+            "type": "pem",
+            "required": true
+          },
+          "usedIn": []
+        },
+        {
+          "name": "private_key",
+          "label": "Certificate Private Key (PEM)",
+          "hint": "`openssl pkcs12 -in pass.p12 -nocerts -legacy` — paste the whole BEGIN … PRIVATE KEY block",
+          "secret": true,
+          "envKey": "APPLE_WALLET_PRIVATE_KEY",
+          "description": "Private key of the Pass Type ID certificate; signs the pass manifest.",
+          "validation": {
+            "type": "pem",
+            "required": true
+          },
+          "usedIn": []
+        },
+        {
+          "name": "private_key_passphrase",
+          "label": "Private Key Passphrase (optional)",
+          "hint": "Only when the key above is ENCRYPTED (BEGIN ENCRYPTED PRIVATE KEY); blank for a plain key",
+          "secret": true,
+          "envKey": "APPLE_WALLET_KEY_PASSPHRASE",
+          "description": "Unlocks an encrypted private key; blank when the key is stored unencrypted.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "wwdr_certificate",
+          "label": "Apple WWDR Certificate (PEM)",
+          "hint": "apple.com/certificateauthority → Worldwide Developer Relations - G4 (.cer), then `openssl x509 -inform der -in AppleWWDRCAG4.cer` and paste the BEGIN CERTIFICATE block",
+          "envKey": "APPLE_WALLET_WWDR_CERTIFICATE",
+          "description": "Apple intermediate certificate that Wallet needs in the signature chain to trust the pass.",
+          "validation": {
+            "type": "pem",
+            "required": true
+          },
+          "usedIn": []
+        }
+      ]
+    },
+    "GOOGLE_WALLET": {
+      "label": "Google Wallet (pod tickets)",
+      "description": "Signs the \"Add to Google Wallet\" save link",
+      "docUrl": "https://pay.google.com/business/console",
+      "apiDocsUrl": "https://developers.google.com/wallet/tickets/events/web",
+      "usedIn": [],
+      "fields": [
+        {
+          "name": "issuer_id",
+          "label": "Issuer ID",
+          "hint": "Google Pay & Wallet Console → Google Wallet API → Issuer ID, a long number e.g. 3388000000022212345",
+          "envKey": "GOOGLE_WALLET_ISSUER_ID",
+          "description": "Issuer account that owns every ticket class and pass; prefixes their ids.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": []
+        },
+        {
+          "name": "service_account_json",
+          "label": "Service Account Key (JSON)",
+          "hint": "Paste the whole JSON key of a service account on a project with the Google Wallet API enabled, and add its client_email under Users in the Wallet console with Developer access",
+          "secret": true,
+          "envKey": "GOOGLE_WALLET_SERVICE_ACCOUNT_JSON",
+          "description": "Signs the save-to-wallet link (a JWT) so Google accepts the pass as issued by Duncit.",
+          "validation": {
+            "type": "json",
+            "required": true
+          },
+          "usedIn": []
+        }
       ]
     }
   },

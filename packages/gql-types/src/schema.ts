@@ -12183,6 +12183,7 @@ export type EnvCategory =
   | 'AISENSY'
   | 'ANTHROPIC'
   | 'APPLE_SIGNIN'
+  | 'APPLE_WALLET'
   | 'APP_STORE_CONNECT'
   | 'CLOUDFLARE'
   | 'EMAIL'
@@ -12194,6 +12195,7 @@ export type EnvCategory =
   | 'GOOGLE_MAPS'
   | 'GOOGLE_OAUTH'
   | 'GOOGLE_PLAY'
+  | 'GOOGLE_WALLET'
   | 'IMAGEKIT'
   | 'JAMENDO'
   | 'MCP_SERVER'
@@ -12591,6 +12593,20 @@ export type EventTicketVerifyResult = {
   message: Scalars['String']['output'];
   ok: Scalars['Boolean']['output'];
   ticket?: Maybe<EventTicket>;
+};
+
+/**
+ * Where the caller's ticket can be added to a phone wallet. Each link is null
+ * when that wallet is not set up in Tech portal, Environment, and both are null
+ * when the caller holds no live ticket for the pod: show only the buttons that
+ * come back.
+ */
+export type EventTicketWalletLinks = {
+  __typename?: 'EventTicketWalletLinks';
+  /** Signed .pkpass download, good for 30 minutes. Open it in the browser; Safari hands it to Wallet. */
+  apple_pass_url?: Maybe<Scalars['String']['output']>;
+  /** Google's Save to Google Wallet link for this ticket. */
+  google_save_url?: Maybe<Scalars['String']['output']>;
 };
 
 export type Expense = {
@@ -37697,6 +37713,8 @@ export type Query = {
   /** Whether the signed-in member already has an open request to this host or venue. */
   myEventRequestState: MyEventRequestState;
   myEventTicketForPod?: Maybe<EventTicket>;
+  /** Add-to-wallet links for the caller's own ticket to this pod. */
+  myEventTicketWalletLinks: EventTicketWalletLinks;
   myEventTickets: Array<EventTicket>;
   /** Open follow requests waiting on the signed-in user, newest first. */
   myFollowRequests: Array<FollowRequest>;
@@ -38852,6 +38870,8 @@ export type Query = {
   venueRentalStats: RentalVenueStats;
   /** Owner: one request with its earnings, for the decision page linked from the request email. */
   venueSlotDecision: VenueSlotDecision;
+  /** Owner: how many of those requests wait on the venue's answer (the console's sidebar badge). */
+  venueSlotRequestCount: Scalars['Int']['output'];
   /** Owner: pending booking requests across their venues (or one venue). */
   venueSlotRequests: Array<VenueSlotRequest>;
   venueSlots: Array<VenueSlot>;
@@ -41472,6 +41492,11 @@ export type QueryMyEventTicketForPodArgs = {
 };
 
 
+export type QueryMyEventTicketWalletLinksArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
 export type QueryMyGiftCardOrderArgs = {
   order_no: Scalars['String']['input'];
 };
@@ -43766,6 +43791,11 @@ export type QueryVenueRentalStatsArgs = {
 
 export type QueryVenueSlotDecisionArgs = {
   slot_id: Scalars['ID']['input'];
+};
+
+
+export type QueryVenueSlotRequestCountArgs = {
+  venue_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 

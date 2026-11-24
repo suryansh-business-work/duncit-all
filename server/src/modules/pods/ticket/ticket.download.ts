@@ -52,3 +52,28 @@ export async function ticketPdfUrl(ticketDocId: string): Promise<string> {
   const { serverUrl } = await getUrlConfigs();
   return joinUrl(serverUrl, `/tickets/${signTicketPdfToken(ticketDocId)}/ticket.pdf`);
 }
+
+/**
+ * The Apple Wallet pass rides a link of its own for the same reason the PDF
+ * does: "Add to Apple Wallet" is a plain GET from Safari (or from the app via
+ * the system browser), which carries no session. Its own purpose, so a PDF link
+ * can never open a pass or the other way round, and the same half hour — the
+ * pass holds the same check-in QR.
+ */
+const passLink = signedLink('ticket-pkpass', TICKET_PDF_TTL_MS);
+
+export const signTicketPassToken = (ticketDocId: string, now?: number): string => passLink.sign(ticketDocId, now);
+
+export const verifyTicketPassToken = (token: string, now?: number): string | null => passLink.verify(token, now);
+
+/** Where this ticket's Apple Wallet pass can be fetched from, for the next half hour. */
+export async function ticketPassUrl(ticketDocId: string): Promise<string> {
+  const { serverUrl } = await getUrlConfigs();
+  return joinUrl(serverUrl, `/tickets/${signTicketPassToken(ticketDocId)}/ticket.pkpass`);
+}
+
+/** The public logo Google Wallet fetches for every ticket class. */
+export async function walletLogoUrl(): Promise<string> {
+  const { serverUrl } = await getUrlConfigs();
+  return joinUrl(serverUrl, '/tickets/wallet-logo.png');
+}

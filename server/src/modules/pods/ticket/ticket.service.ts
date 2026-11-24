@@ -334,7 +334,7 @@ const EVENT_TICKET_TABLE_CONFIG: TableEntityConfig = {
 };
 
 /** The ticket's "WHEN" line, in the admin's zone; a pod with no time yet says so. */
-const dateLabel = (iso?: string | null) => appDateTimeLong(iso) || 'Date pending';
+export const dateLabel = (iso?: string | null) => appDateTimeLong(iso) || 'Date pending';
 
 /** Where the pod happens, as a name. A virtual pod has no venue and names its
  * meeting platform instead — same substitution the ticket email makes, and the

@@ -78,7 +78,8 @@ describe('UI Bookings & tickets', () => {
     openBooking(booking.id);
     cy.interceptOperation('PodHistoryTicketForPod');
     cy.interceptOperation('PodHistoryTicketPdf');
-    cy.byTestId('ph-ticket').should('have.text', 'Ticket & invoice').click();
+    // A free seat paid nothing, so the file is the ticket alone and the button says "Ticket".
+    cy.byTestId('ph-ticket').should('have.text', 'Ticket').click();
     cy.wait('@PodHistoryTicketForPod').its('response.body.data.myEventTicketForPod.id').should('be.a', 'string');
     cy.wait('@PodHistoryTicketPdf')
       .its('response.body.data.eventTicketPdfBase64')

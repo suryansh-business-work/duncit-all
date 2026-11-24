@@ -3,11 +3,10 @@ import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
+import { logs } from '@duncit/logs';
 import CheckoutSuccess from '../CheckoutSuccess';
-import { INVOICE_PDF, MY_TICKET_FOR_POD, TICKET_PDF } from '../CheckoutSuccess/queries';
+import { INVOICE_PDF, MY_TICKET_FOR_POD, TICKET_PDF, TICKET_WALLET_LINKS } from '../CheckoutSuccess/queries';
 
-const h = vi.hoisted(() => ({ notify: vi.fn() }));
-vi.mock('../../../components/notify', () => ({ notify: h.notify }));
 // The confetti plays a lottie over the page; nothing here is about it.
 vi.mock('../../../components/ConfettiOverlay', () => ({ default: () => null }));
 // Dates are formatted by the admin-configured zone; a fixed formatter keeps the
@@ -63,9 +62,12 @@ function renderSuccess(opts: RenderOpts = {}) {
 
 let downloads: Array<{ href: string; download: string }>;
 
+const walletLinks = (links: { apple_pass_url: string | null; google_save_url: string | null }): MockedResponse => ({
+  request: { query: TICKET_WALLET_LINKS, variables: { podId: 'pod-doc-1' } },
+  result: { data: { myEventTicketWalletLinks: { __typename: 'EventTicketWalletLinks', ...links } } },
+});
+
 beforeEach(() => {
-  h.notify.mockReset();
-  vi.mocked(window.open).mockReset();
   downloads = [];
   vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
     downloads.push({ href: this.getAttribute('href') ?? '', download: this.download });
@@ -204,51 +206,50 @@ describe('CheckoutSuccess', () => {
     expect(downloads).toHaveLength(0);
   });
 
-  it('opens a Google Calendar event spanning the pod’s start and end', () => {
+  it('labels the paid download "Ticket & invoice", since the file carries both', () => {
     renderSuccess();
-    fireEvent.click(screen.getByTestId('success-pod-google-wallet'));
-
-    expect(window.open).toHaveBeenCalledTimes(1);
-    const [url, target, features] = vi.mocked(window.open).mock.calls[0];
-    const parsed = new URL(String(url));
-    expect(parsed.origin + parsed.pathname).toBe('https://calendar.google.com/calendar/render');
-    expect(parsed.searchParams.get('action')).toBe('TEMPLATE');
-    expect(parsed.searchParams.get('text')).toBe('Sunset Jam');
-    expect(parsed.searchParams.get('dates')).toBe('20260801T100000Z/20260801T120000Z');
-    expect(parsed.searchParams.get('details')).toBe('Your Duncit booking is confirmed.');
-    expect(target).toBe('_blank');
-    expect(features).toBe('noopener,noreferrer');
+    expect(screen.getByTestId('download-ticket')).toHaveTextContent('Ticket & invoice');
   });
 
-  it('defaults the calendar event to one hour and a generic title when the pod lacks them', () => {
-    renderSuccess({ pod: pod({ pod_title: '', pod_end_date_time: null }) });
-    fireEvent.click(screen.getByTestId('success-pod-google-wallet'));
+  it('offers both wallets as links to the signed pass and the Google save link', async () => {
+    renderSuccess({
+      mocks: [
+        walletLinks({
+          apple_pass_url: 'https://server.test/tickets/tok/ticket.pkpass',
+          google_save_url: 'https://pay.google.com/gp/v/save/jwt',
+        }),
+      ],
+    });
 
-    const parsed = new URL(String(vi.mocked(window.open).mock.calls[0][0]));
-    expect(parsed.searchParams.get('text')).toBe('Duncit Pod');
-    expect(parsed.searchParams.get('dates')).toBe('20260801T100000Z/20260801T110000Z');
+    const apple = await screen.findByTestId('success-pod-apple-wallet');
+    expect(apple).toHaveAttribute('href', 'https://server.test/tickets/tok/ticket.pkpass');
+    expect(apple).not.toHaveAttribute('target');
+    const google = screen.getByTestId('success-pod-google-wallet');
+    expect(google).toHaveAttribute('href', 'https://pay.google.com/gp/v/save/jwt');
+    expect(google).toHaveAttribute('target', '_blank');
+    expect(google).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
-  it('starts the calendar event now when the pod has no date', () => {
-    const before = Date.now();
-    renderSuccess({ pod: pod({ pod_date_time: null, pod_end_date_time: null }) });
-    fireEvent.click(screen.getByTestId('success-pod-google-wallet'));
+  it('shows only the wallet that is set up', async () => {
+    renderSuccess({
+      mocks: [walletLinks({ apple_pass_url: 'https://server.test/tickets/tok/ticket.pkpass', google_save_url: null })],
+    });
 
-    const dates = new URL(String(vi.mocked(window.open).mock.calls[0][0])).searchParams.get('dates') ?? '';
-    const [start, end] = dates.split('/');
-    const parse = (v: string) => Date.parse(`${v.slice(0, 4)}-${v.slice(4, 6)}-${v.slice(6, 8)}T${v.slice(9, 11)}:${v.slice(11, 13)}:${v.slice(13, 15)}Z`);
-    expect(parse(start)).toBeGreaterThanOrEqual(Math.floor(before / 1000) * 1000);
-    expect(parse(end) - parse(start)).toBe(60 * 60 * 1000);
+    expect(await screen.findByTestId('success-pod-apple-wallet')).toBeInTheDocument();
+    expect(screen.queryByTestId('success-pod-google-wallet')).not.toBeInTheDocument();
   });
 
-  it('tells the member Apple Wallet is not available yet', () => {
-    renderSuccess();
-    fireEvent.click(screen.getByTestId('success-pod-apple-wallet'));
-    expect(h.notify).toHaveBeenCalledWith(
-      'Apple Wallet pass is not available yet. Invoice download is separate below.',
-      'info',
+  it('shows no wallet buttons, and logs, when the links cannot be loaded', async () => {
+    const logError = vi.spyOn(logs.mWeb, 'error').mockImplementation(() => undefined);
+    renderSuccess({
+      mocks: [{ request: { query: TICKET_WALLET_LINKS, variables: { podId: 'pod-doc-1' } }, error: new Error('offline') }],
+    });
+
+    await waitFor(() =>
+      expect(logError).toHaveBeenCalledWith('checkout', 'ticketWalletLinks', expect.objectContaining({ error: expect.anything() })),
     );
-    expect(window.open).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('success-pod-apple-wallet')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('success-pod-google-wallet')).not.toBeInTheDocument();
   });
 });
 
@@ -282,6 +283,8 @@ describe('CheckoutSuccess — free join (no payment)', () => {
     expect(screen.queryByTestId('download-invoice')).not.toBeInTheDocument();
     expect(screen.getByTestId('confirmation-pod')).toHaveTextContent('Sunset Jam');
     expect(screen.getByTestId('download-ticket')).toBeEnabled();
+    // Nothing was paid, so the file is the ticket alone and the button says so.
+    expect(screen.getByTestId('download-ticket')).toHaveTextContent(/^Ticket$/);
 
     expect(screen.getByTestId('success-profile')).toHaveTextContent('My Bookings');
     fireEvent.click(screen.getByTestId('success-profile'));

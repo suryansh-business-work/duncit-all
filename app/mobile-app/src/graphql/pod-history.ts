@@ -188,3 +188,13 @@ export const EventTicketPdfDocument = gql(`
     eventTicketPdfBase64(ticket_doc_id: $id)
   }
 `);
+
+/** Add-to-wallet links for the current user's ticket to a pod; each null until that wallet is set up. */
+export const TicketWalletLinksDocument = gql(`
+  query MobileTicketWalletLinks($podId: ID!) {
+    myEventTicketWalletLinks(pod_doc_id: $podId) {
+      apple_pass_url
+      google_save_url
+    }
+  }
+`);

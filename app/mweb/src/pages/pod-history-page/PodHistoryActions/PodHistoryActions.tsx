@@ -76,6 +76,8 @@ export default function PodHistoryActions({
   onShowRefundStatus,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  // The file holds the invoice only when something was paid (a free pod's is the ticket alone).
+  const ticketLabel = item.payment_id ? t('mweb.ticket.download') : t('mweb.ticket.downloadTicketOnly');
 
   return (
     <>
@@ -155,7 +157,7 @@ export default function PodHistoryActions({
               variant="contained"
               startIcon={<ConfirmationNumberIcon />}
             >
-              {ticketLoading ? t('mweb.ticket.downloading') : t('mweb.ticket.download')}
+              {ticketLoading ? t('mweb.ticket.downloading') : ticketLabel}
             </DuncitButton>
           </>
         )}

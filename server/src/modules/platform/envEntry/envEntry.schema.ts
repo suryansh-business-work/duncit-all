@@ -55,6 +55,8 @@ const SDL_CATEGORIES = [
   'MONGODB',
   'MCP_SERVER',
   'GMAIL',
+  'APPLE_WALLET',
+  'GOOGLE_WALLET',
 ];
 
 if (SDL_CATEGORIES.join(',') !== ENV_CATEGORIES.join(',')) {
@@ -104,6 +106,8 @@ export const envEntryTypeDefs = gql`
     MONGODB
     MCP_SERVER
     GMAIL
+    APPLE_WALLET
+    GOOGLE_WALLET
   }
 
   type EnvConfigPair {

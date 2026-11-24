@@ -43,6 +43,7 @@ export const toMessageDto = (m: IIntelMessage) => ({
   error_code: m.error_code || null,
   error_message: m.error_message || null,
   edited: m.edit_history.length > 0,
+  attachments: (m.attachments ?? []).map((a) => ({ id: a.media_id, name: a.name, mime: a.mime })),
   created_at: m.created_at,
 });
 

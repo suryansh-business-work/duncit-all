@@ -47,7 +47,7 @@ export async function historyMessages(ctx: TurnContext, excludeIds: readonly str
   })
     .sort({ created_at: -1 })
     .limit(turns)
-    .select('role content approval_ids')
+    .select('role content approval_ids attachments')
     .lean();
   rows.reverse();
   const ids = rows.flatMap((m) => m.approval_ids ?? []).filter((id) => Types.ObjectId.isValid(id));
@@ -58,6 +58,9 @@ export async function historyMessages(ctx: TurnContext, excludeIds: readonly str
       .filter((a) => a !== undefined)
       .map((a) => `[change ${a.action}: ${a.status}]`)
       .join(' ');
-    return { role: m.role === 'USER' ? 'user' : 'assistant', content: outcomes ? `${m.content}\n${outcomes}` : m.content };
+    // Earlier files are named, not sent again: they are in Media, so the knowledge search can still find them.
+    const files = (m.attachments ?? []).map((a) => a.name).join(', ');
+    const notes = [outcomes, files ? `[attached: ${files}]` : ''].filter(Boolean).join('\n');
+    return { role: m.role === 'USER' ? 'user' : 'assistant', content: notes ? `${m.content}\n${notes}` : m.content };
   });
 }

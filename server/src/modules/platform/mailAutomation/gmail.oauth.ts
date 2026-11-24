@@ -32,6 +32,13 @@ export const GMAIL_SCOPES = [
   'https://www.googleapis.com/auth/gmail.send',
 ];
 
+/** Duncit Intel's mailbox connections: read only, never send. */
+export const INTEL_GMAIL_SCOPES = ['openid', 'https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/gmail.readonly'];
+
+/** Which flow a signed state belongs to — the one callback URL serves both. */
+export const MAIL_AUTOMATION_PURPOSE = 'gmail_connect';
+export const INTEL_GMAIL_PURPOSE = 'intel_gmail_connect';
+
 const STATE_TTL_SECONDS = 600;
 const stateSecret = () => process.env.JWT_SECRET || 'dev-secret';
 
@@ -80,38 +87,55 @@ function requireCredentials(creds: GoogleOAuthCredentials | null): GoogleOAuthCr
  * started here and know who started it. Short-lived: a consent screen left
  * open for an hour is not a link anyone should still be able to complete.
  */
-export function signOAuthState(userId: string): string {
-  return jwt.sign({ uid: userId, purpose: 'gmail_connect' }, stateSecret(), {
+export function signOAuthState(userId: string, purpose: string = MAIL_AUTOMATION_PURPOSE): string {
+  return jwt.sign({ uid: userId, purpose }, stateSecret(), {
     expiresIn: STATE_TTL_SECONDS,
   });
 }
 
 /** The signer's user id, or null when the state is forged, stale or foreign. */
-export function verifyOAuthState(state: string): string | null {
+export function verifyOAuthState(state: string, purpose: string = MAIL_AUTOMATION_PURPOSE): string | null {
   try {
     const decoded = jwt.verify(state, stateSecret()) as { uid?: string; purpose?: string };
-    if (decoded.purpose !== 'gmail_connect') return null;
+    if (decoded.purpose !== purpose) return null;
     return decoded.uid ?? null;
   } catch {
     return null;
   }
 }
 
+/** The flow a state was signed for, or null when it is forged or stale — so the callback knows where to go. */
+export function oauthStatePurpose(state: string): string | null {
+  try {
+    const decoded = jwt.verify(state, stateSecret()) as { purpose?: string };
+    return typeof decoded.purpose === 'string' ? decoded.purpose : null;
+  } catch {
+    return null;
+  }
+}
+
+export interface ConsentOptions {
+  scopes?: readonly string[];
+  purpose?: string;
+}
+
 /** The consent screen URL. `prompt=consent` + `access_type=offline` are what
  * guarantee a refresh token — without them Google returns one only on the very
  * first authorisation, so re-connecting a mailbox would silently yield an
  * account that dies at the next access-token expiry. */
-export async function buildConsentUrl(userId: string, loginHint?: string): Promise<string> {
+export async function buildConsentUrl(userId: string, loginHint?: string, options: ConsentOptions = {}): Promise<string> {
   const { clientId, redirectUri } = requireCredentials(await googleOAuthCredentials());
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: 'code',
-    scope: GMAIL_SCOPES.join(' '),
+    scope: (options.scopes ?? GMAIL_SCOPES).join(' '),
     access_type: 'offline',
     prompt: 'consent',
-    include_granted_scopes: 'true',
-    state: signOAuthState(userId),
+    // A narrower flow (Intel's read-only one) must not inherit the send scope
+    // the same Google account may already have granted to Mail Automation.
+    include_granted_scopes: options.scopes ? 'false' : 'true',
+    state: signOAuthState(userId, options.purpose),
   });
   if (loginHint) params.set('login_hint', loginHint);
   return `${AUTH_ENDPOINT}?${params.toString()}`;

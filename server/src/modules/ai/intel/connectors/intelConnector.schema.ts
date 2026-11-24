@@ -19,12 +19,14 @@ export const CONFIG_SCHEMAS: Record<IntelConnectorKind, z.ZodType<Record<string,
   }),
   MCP: z.object({}).passthrough().default({}),
   SLACK: z.object({
-    channels: z.array(z.object({ id: z.string().trim().regex(/^[CGD][A-Z0-9]{6,20}$/, 'A Slack channel id'), name: z.string().trim().max(120) })).max(200).default([]),
+    channels: z.array(z.object({ id: z.string().trim().regex(/^[CGD][A-Z0-9]{6,20}$/, 'A Slack channel id'), name: z.string().trim().max(120) })).max(1000).default([]),
     include_threads: z.boolean().default(true),
     index_attachments: z.boolean().default(false),
     history_days: z.number().int().min(1).max(3650).default(90),
   }),
   GMAIL: z.object({
+    /** The mailbox connected with Google (Settings › Gmail); absent on older entry-based connectors. */
+    account_id: z.string().trim().regex(/^[a-f0-9]{24}$/i, 'A connected Gmail account').optional(),
     query: z.string().trim().max(300).default('in:inbox'),
     max_threads: z.number().int().min(10).max(5000).default(500),
     include_attachments: z.boolean().default(false),
@@ -54,7 +56,10 @@ export const connectorInputSchema = z
     kind: z.enum(INTEL_CONNECTOR_KINDS),
     name: z.string().trim().min(2, 'Name is required').max(80),
     environment: z.enum(INTEL_ENV_CHOICES),
-    env_entry_id: z.string().trim().regex(/^[a-f0-9]{24}$/i, 'Choose a Tech portal entry'),
+    // A Tech portal entry id, or a reserved id: `server` (this server's database),
+    // `duncit` (this server's MCP) or `oauth` (a Gmail account connected with Google).
+    // Empty only when the form adds a new database connection (config.new_connection).
+    env_entry_id: z.string().trim().regex(/^(?:[a-f0-9]{24}|server|duncit|oauth)?$/i, 'Choose a Tech portal entry'),
     enabled: z.boolean().default(true),
     config: z.record(z.string(), z.unknown()).default({}),
   })

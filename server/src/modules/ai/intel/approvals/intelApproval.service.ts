@@ -3,11 +3,11 @@ import { Types } from 'mongoose';
 import type { IntelActor } from '../access/intel.access';
 import { writeAudit } from '../audit/intelAudit.service';
 import { emitIntel } from '../chat/intel.stream';
-import { resolveEntry } from '../connectors/intel.credentials';
+import { connectorEntry, isDuncitMcp } from '../connectors/intel.connectorEntry';
 import { IntelConnectorModel } from '../connectors/intelConnector.model';
+import { callDuncitTool, findDuncitTool, type IntelHttp } from '../connectors/mcp/mcp.builtin';
 import { openSession } from '../connectors/mcp/mcp.connector';
 import { databaseName, executeWrite, type WriteRequest } from '../connectors/mongo/mongo.connector';
-import { CONNECTOR_ENV_CATEGORY } from '../intel.constants';
 import { intelSettingsService } from '../settings/intelSettings.service';
 import { IntelApprovalModel, type ApprovalKind, type IIntelApproval } from './intelApproval.model';
 import { mayDecide, needsFourEyes } from './intelApproval.rules';
@@ -90,17 +90,42 @@ export async function propose(actor: IntelActor, input: ProposalInput): Promise<
   return created.toObject();
 }
 
-async function execute(approval: IIntelApproval): Promise<{ ok: boolean; result: string }> {
+interface McpCallRequest {
+  tool: string;
+  arguments: Record<string, unknown>;
+  reason?: string;
+}
+
+/**
+ * Duncit MCP (in-process) runs the approved call as the approver — the person
+ * who just read and accepted it — through the MCP pipeline, so their own
+ * permissions still decide whether it may run.
+ */
+async function executeDuncit(decider: IntelActor, http: IntelHttp | undefined, req: McpCallRequest): Promise<{ ok: boolean; result: string }> {
+  const tool = await findDuncitTool(decider.user, req.tool);
+  if (!tool) return { ok: false, result: `You cannot use the tool ${req.tool} (it is switched off or outside your access).` };
+  const out = await callDuncitTool({ user: decider.user, http, tool, args: req.arguments, reason: req.reason ?? '', approved: true });
+  return { ok: !out.isError, result: out.text.slice(0, 20_000) };
+}
+
+async function execute(approval: IIntelApproval, decider: IntelActor, http?: IntelHttp): Promise<{ ok: boolean; result: string }> {
   const connector = await IntelConnectorModel.findById(approval.connector_id).lean();
   if (!connector?.enabled) return { ok: false, result: 'The connector was disabled or deleted after the request.' };
-  const entry = await resolveEntry(CONNECTOR_ENV_CATEGORY[connector.kind], connector.env_entry_id);
+  if (approval.kind === 'MCP_CALL' && isDuncitMcp(connector)) {
+    try {
+      return await executeDuncit(decider, http, JSON.parse(approval.request) as McpCallRequest);
+    } catch (error) {
+      return { ok: false, result: error instanceof Error ? error.message : String(error) };
+    }
+  }
+  const entry = await connectorEntry(connector);
   if (!entry) return { ok: false, result: 'The Tech portal entry of this connector is missing or inactive.' };
   try {
     if (approval.kind === 'MONGO_WRITE') {
       if (databaseName(connector, entry) !== approval.database) return { ok: false, result: 'The connection now points at a different database; the request was not run.' };
       return { ok: true, result: JSON.stringify(await executeWrite(connector, entry, JSON.parse(approval.request) as WriteRequest)) };
     }
-    const req = JSON.parse(approval.request) as { tool: string; arguments: Record<string, unknown> };
+    const req = JSON.parse(approval.request) as McpCallRequest;
     const out = await (await openSession(entry)).callTool(req.tool, req.arguments);
     return { ok: !out.isError, result: out.text.slice(0, 20_000) };
   } catch (error) {
@@ -124,7 +149,7 @@ export const intelApprovalService = {
     return toApprovalDto(a);
   },
 
-  async decide(actor: IntelActor, id: string, approve: boolean, note: string) {
+  async decide(actor: IntelActor, id: string, approve: boolean, note: string, http?: IntelHttp) {
     if (!Types.ObjectId.isValid(id)) throw notFound();
     const current = await IntelApprovalModel.findById(id).lean();
     if (!current) throw notFound();
@@ -145,7 +170,7 @@ export const intelApprovalService = {
     }
     let final = claimed;
     if (approve) {
-      const outcome = await execute(claimed);
+      const outcome = await execute(claimed, actor, http);
       final = (await IntelApprovalModel.findOneAndUpdate({ _id: claimed._id, status: 'EXECUTING' }, { $set: { status: outcome.ok ? 'EXECUTED' : 'FAILED', result: outcome.ok ? outcome.result : '', error: outcome.ok ? '' : outcome.result } }, { new: true }).lean()) ?? claimed;
       await writeAudit({ type: 'WRITE', action: `${claimed.kind.toLowerCase()}.${claimed.action}`, status: outcome.ok ? 'OK' : 'FAILED', userId: actor.user.id, level: actor.level, environment: claimed.environment, target: `${claimed.connector_name} ${claimed.target_collection}`.trim(), detail: `${claimed.request}\n→ ${outcome.result}`.slice(0, 4000) });
     }

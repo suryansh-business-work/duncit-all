@@ -18,6 +18,7 @@ const developmentUrls = {
   mcpUrl: 'http://localhost:2001',
   mcpPortalUrl: 'http://localhost:2046',
   liteUrl: 'http://localhost:2040',
+  intelUrl: 'http://localhost:2049',
   supportEmail: 'support@duncit.local',
   fromEmail: 'Duncit <noreply@duncit.local>',
 };
@@ -38,6 +39,7 @@ const productionUrls = {
   mcpUrl: 'https://mcp.duncit.com',
   mcpPortalUrl: 'https://mcp.duncit.com',
   liteUrl: 'https://lite.duncit.com',
+  intelUrl: 'https://intel.duncit.com',
   supportEmail: 'support@duncit.com',
   fromEmail: 'Duncit <noreply@duncit.com>',
 };
@@ -89,6 +91,9 @@ export async function getUrlConfigs() {
     // Duncit Lite's API, which the MCP "lite" connector calls on a person's
     // behalf with a signed one-minute assertion (never Lite's database).
     liteUrl: await configValue('LITE_URL', defaults.liteUrl),
+    // The Intel console — where "Connect with Google" returns a person after
+    // Google's consent screen. Fixed server-side for the open-redirect reason.
+    intelUrl: await configValue('INTEL_URL', defaults.intelUrl),
     supportEmail: await configValue('SUPPORT_EMAIL', defaults.supportEmail),
     mail: {
       host: await getRuntimeEnvValue('SMTP_HOST'),

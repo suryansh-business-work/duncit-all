@@ -4,9 +4,11 @@ import { logs } from '@observability/log';
 import { inspectUserInput, sanitizeAnswer } from '@modules/ai/askDuncit/guard/askDuncit.guard';
 import type { IntelActor } from '../access/intel.access';
 import { writeAudit } from '../audit/intelAudit.service';
+import type { IntelHttp } from '../connectors/mcp/mcp.builtin';
 import { INTEL_LIMITS } from '../intel.constants';
 import { intelSettingsService } from '../settings/intelSettings.service';
 import { buildTurnContext, pickModel } from './intel.context';
+import { resolveAttachments } from './intel.attachments';
 import { allowMinute, underDailyCap } from './intel.limits';
 import { runLoop, usedCitations } from './intel.loop';
 import { emitIntel, intelTurns } from './intel.stream';
@@ -30,6 +32,8 @@ export interface SendInput {
   edit_message_id?: string | null;
   /** Answer the last question again. */
   regenerate?: boolean | null;
+  /** Images or PDFs from the asker's Media library, for a new message. */
+  attachment_ids?: string[] | null;
 }
 
 const bad = (message: string, code = 'BAD_USER_INPUT') => new GraphQLError(message, { extensions: { code } });
@@ -78,11 +82,12 @@ async function rewind(conversation: IIntelConversation, ownerId: string, input: 
   return { userMessageId: String(lastUser._id), question: lastUser.content };
 }
 
-export async function startTurn(actor: IntelActor, input: SendInput) {
+export async function startTurn(actor: IntelActor, input: SendInput, http?: IntelHttp) {
   const raw = String(input.message ?? '').trim();
   if (!raw && !input.regenerate) throw bad('Type a message first.');
   const { settings, text } = await checks(actor, raw || 'regenerate');
   if (input.edit_message_id && !raw) throw bad('Type the edited message first.');
+  const attachments = input.edit_message_id || input.regenerate ? [] : await resolveAttachments(actor, input.attachment_ids);
   const conversation = await resolveConversation(actor, input, settings);
   const firstTurn = conversation.message_count === 0;
   let userMessageId: string;
@@ -90,13 +95,13 @@ export async function startTurn(actor: IntelActor, input: SendInput) {
   if (input.edit_message_id || input.regenerate) {
     ({ userMessageId, question } = await rewind(conversation, actor.user.id, input, text));
   } else {
-    userMessageId = String((await IntelMessageModel.create({ conversation_id: conversation._id, owner_id: oid(actor.user.id), role: 'USER', content: text }))._id);
+    userMessageId = String((await IntelMessageModel.create({ conversation_id: conversation._id, owner_id: oid(actor.user.id), role: 'USER', content: text, attachments }))._id);
   }
   const assistant = await IntelMessageModel.create({ conversation_id: conversation._id, owner_id: oid(actor.user.id), role: 'ASSISTANT', status: 'STREAMING', model: conversation.model });
   const messageId = String(assistant._id);
   await IntelConversationModel.updateOne({ _id: conversation._id }, { $set: { last_message_at: new Date() }, $inc: { message_count: input.regenerate || input.edit_message_id ? 1 : 2 } });
 
-  const ctx = await buildTurnContext(actor, conversation, messageId);
+  const ctx = await buildTurnContext(actor, conversation, messageId, http);
   const controller = intelTurns.start(messageId, actor.user.id);
   answerInBackground({ ctx, userMessageId, question, signal: controller.signal, titleIt: firstTurn && !conversation.title_generated })
     .catch(async (error) => {

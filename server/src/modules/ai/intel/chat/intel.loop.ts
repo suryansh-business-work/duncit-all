@@ -4,6 +4,7 @@ import type { StreamedToolCall } from '@services/openai/openai.sse';
 import { openaiChatStream, type StreamMessage } from '@services/openai/openai.stream';
 import { intelOpenAiCredentials } from '../index/intel.openai';
 import { INTEL_LIMITS } from '../intel.constants';
+import { questionContent } from './intel.attachments';
 import type { TurnContext } from './intel.context';
 import type { MessageCitation, MessageToolCall } from './intelChat.models';
 import { historyMessages, systemPrompt } from './intel.prompt';
@@ -55,7 +56,7 @@ async function runToolCalls(ctx: TurnContext, calls: readonly StreamedToolCall[]
 
 export async function runLoop(ctx: TurnContext, userMessageId: string, userText: string, signal: AbortSignal): Promise<LoopOutcome> {
   const userId = ctx.actor.user.id;
-  const messages: StreamMessage[] = [{ role: 'system', content: await systemPrompt(ctx) }, ...(await historyMessages(ctx, [ctx.messageId, userMessageId])), { role: 'user', content: userText }];
+  const messages: StreamMessage[] = [{ role: 'system', content: await systemPrompt(ctx) }, ...(await historyMessages(ctx, [ctx.messageId, userMessageId])), { role: 'user', content: await questionContent(userMessageId, userText) }];
   const tools = toolDefinitions(ctx);
   const credentials = await intelOpenAiCredentials(ctx.settings);
   const out: LoopOutcome = { content: '', model: ctx.model, promptTokens: 0, completionTokens: 0, toolCalls: [], citations: [], approvalIds: [], errorCode: null, errorMessage: null, aborted: false };

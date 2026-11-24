@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { logs } from '@observability/log';
 import { getUrlConfigs } from '@config/url-configs';
-import { trimTrailingSlash } from './gmail.oauth';
+import { intelGmailAccounts } from '@modules/ai/intel/connectors/gmail/gmailAccount.service';
+import { INTEL_GMAIL_PURPOSE, oauthStatePurpose, trimTrailingSlash } from './gmail.oauth';
 import { mailAutomationService } from './mailAutomation.service';
 
 /**
@@ -20,12 +21,19 @@ export function buildGmailOAuthRouter(): Router {
   const router = Router();
 
   router.get('/oauth/callback', async (req, res) => {
-    const { techUrl } = await getUrlConfigs();
-    const destination = new URL(`${trimTrailingSlash(techUrl)}/mail-automation`);
-
     const denied = typeof req.query.error === 'string' ? req.query.error : '';
     const code = typeof req.query.code === 'string' ? req.query.code : '';
     const state = typeof req.query.state === 'string' ? req.query.state : '';
+
+    // One registered redirect URI serves two flows; the signed state names its
+    // own (Duncit Intel's read-only mailbox connection, or Mail Automation's).
+    if (state && oauthStatePurpose(state) === INTEL_GMAIL_PURPOSE) {
+      res.redirect(await intelGmailAccounts.callbackRedirect({ code, state, denied }));
+      return;
+    }
+
+    const { techUrl } = await getUrlConfigs();
+    const destination = new URL(`${trimTrailingSlash(techUrl)}/mail-automation`);
 
     if (denied || !code || !state) {
       // `access_denied` is the operator clicking Cancel, which is not an

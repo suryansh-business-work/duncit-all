@@ -2,10 +2,13 @@ import { GraphQLError } from 'graphql';
 import type { GraphQLContext } from '@context';
 import { requireIntel } from '../access/intel.access';
 import { listAudit, type AuditListArgs } from '../audit/intelAudit.service';
+import { intelGmailAccounts } from '../connectors/gmail/gmailAccount.service';
+import { ProviderError } from '../connectors/intel.http';
 import { intelConnectorService } from '../connectors/intelConnector.service';
 import { systemHealth } from '../health/intel.health';
 import { indexDocuments, indexStats, usage } from '../health/intel.reports';
 import { INDEX_SCOPES, INTEL_CONNECTOR_KINDS, TOOL_CLASSES, type IndexScope, type IntelConnectorKind, type ToolClass } from '../intel.constants';
+import { openAiChatModels } from '../index/intel.models';
 import { rebuildIndex } from '../index/intel.rebuild';
 import { intelSettingsService } from '../settings/intelSettings.service';
 
@@ -28,6 +31,23 @@ function parseJson(value: string, what: string): unknown {
     return JSON.parse(value);
   } catch {
     throw badInput(`${what} is not valid JSON`);
+  }
+}
+
+/**
+ * A picker that could not load says why, in words the form can show: a
+ * provider's refusal (bad token, unknown repository, missing scope) is the
+ * admin's to fix, so it is a BAD_USER_INPUT with the provider's message.
+ */
+async function picker<T>(what: string, load: () => Promise<T>): Promise<T> {
+  try {
+    return await load();
+  } catch (error) {
+    if (error instanceof ProviderError) {
+      const hint = error.status === 404 ? ' — check the owner and repository names and that the token can read them' : '';
+      throw badInput(`${what}: ${error.message}${hint}`);
+    }
+    throw error;
   }
 }
 
@@ -68,7 +88,19 @@ export const intelAdminResolvers = {
     },
     intelGithubBranches: (_: unknown, args: { entry_id: string; owner: string; repo: string }, ctx: GraphQLContext) => {
       admin(ctx);
-      return intelConnectorService.githubBranches(args.entry_id, args.owner, args.repo);
+      return picker(`GitHub could not list the branches of ${args.owner}/${args.repo}`, () => intelConnectorService.githubBranches(args.entry_id, args.owner, args.repo));
+    },
+    intelGithubRepos: (_: unknown, args: { entry_id: string }, ctx: GraphQLContext) => {
+      admin(ctx);
+      return picker('GitHub could not list the repositories', () => intelConnectorService.githubRepos(args.entry_id));
+    },
+    intelOpenAiModels: (_: unknown, __: unknown, ctx: GraphQLContext) => {
+      admin(ctx);
+      return picker('OpenAI could not list the models', openAiChatModels);
+    },
+    intelGmailAccounts: (_: unknown, __: unknown, ctx: GraphQLContext) => {
+      admin(ctx);
+      return intelGmailAccounts.list();
     },
     intelSyncRuns: (_: unknown, args: { connector_id?: string | null; limit?: number | null }, ctx: GraphQLContext) => {
       admin(ctx);
@@ -88,6 +120,7 @@ export const intelAdminResolvers = {
       return {
         qdrant_configured: h.qdrant.configured,
         qdrant_reachable: h.qdrant.reachable,
+        qdrant_error: h.qdrant.error,
         collections: h.qdrant.collections,
         queue_configured: h.queue.configured,
         openai_configured: h.openai.configured,
@@ -127,5 +160,7 @@ export const intelAdminResolvers = {
       if (args.scope && !(INDEX_SCOPES as readonly string[]).includes(args.scope)) throw badInput('Unknown index scope');
       return rebuildIndex(actor, (args.scope as IndexScope | null) ?? null);
     },
+    intelGmailConnectUrl: (_: unknown, __: unknown, ctx: GraphQLContext) => intelGmailAccounts.connectUrl(admin(ctx)),
+    intelDisconnectGmail: (_: unknown, args: { id: string }, ctx: GraphQLContext) => intelGmailAccounts.disconnect(admin(ctx), args.id),
   },
 };

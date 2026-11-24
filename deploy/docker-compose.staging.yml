@@ -39,6 +39,9 @@ services:
       # The Tests console the staging server links to (E2E run messages). Unset,
       # it falls back to the compiled-in production host.
       TESTS_URL: https://staging.tests.duncit.com
+      # The Intel console "Connect with Google" returns to. Unset, it falls back
+      # to the compiled-in production host.
+      INTEL_URL: https://staging.intel.duncit.com
     ports:
       - "127.0.0.1:2101:2001"
     volumes:

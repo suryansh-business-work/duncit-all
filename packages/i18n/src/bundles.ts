@@ -9,6 +9,7 @@ import { CHALLENGE_BUNDLE } from './bundles/challenge';
 import { CHANGE_REQUEST_BUNDLE } from './bundles/change-request';
 import { CONTENT_REPORT_BUNDLE } from './bundles/content-report';
 import { CRM_BUNDLE } from './bundles/crm';
+import { CRM_APP_BUNDLE } from './bundles/crm-app';
 import { DEVELOPERS_BUNDLE } from './bundles/developers';
 import { ECOMM_PORTAL_BUNDLE } from './bundles/ecomm-portal';
 import { ECOMM_STORE_BUNDLE } from './bundles/ecomm-store';
@@ -105,6 +106,7 @@ export {
   CHALLENGE_BUNDLE,
   CONTENT_REPORT_BUNDLE,
   CRM_BUNDLE,
+  CRM_APP_BUNDLE,
   CHANGE_REQUEST_BUNDLE,
   DEVELOPERS_BUNDLE,
   ECOMM_PORTAL_BUNDLE,
@@ -216,6 +218,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   changeRequest: CHANGE_REQUEST_BUNDLE,
   contentReport: CONTENT_REPORT_BUNDLE,
   crm: CRM_BUNDLE,
+  crmApp: CRM_APP_BUNDLE,
   developers: DEVELOPERS_BUNDLE,
   ecommPortal: ECOMM_PORTAL_BUNDLE,
   ecommStore: ECOMM_STORE_BUNDLE,

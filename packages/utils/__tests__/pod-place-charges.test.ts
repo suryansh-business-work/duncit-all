@@ -53,4 +53,19 @@ describe('placeChargesTicketDraft', () => {
     expect(lines).toContain('- Table: ₹300');
     expect(lines).toContain('Total: ₹500');
   });
+
+  it('writes a charge with no note and an unreadable amount as ₹0, without parentheses', () => {
+    const lines = placeChargesTicketDraft({
+      podId: 'pod-2',
+      podTitle: 'Open Mic',
+      currencySymbol: '₹',
+      charges: [
+        { label: 'Cover', amount: Number.NaN },
+        { label: 'Entry', amount: 150, note: null },
+      ],
+    }).body_text.split('\n');
+    expect(lines).toContain('- Cover: ₹0');
+    expect(lines).toContain('- Entry: ₹150');
+    expect(lines).toContain('Total: ₹150');
+  });
 });

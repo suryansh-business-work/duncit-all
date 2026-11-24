@@ -50,6 +50,8 @@ const SDL_CATEGORIES = [
   'SERPER',
   'ANTHROPIC',
   'REMOTION',
+  'PIXABAY',
+  'JAMENDO',
   'MONGODB',
   'MCP_SERVER',
   'GMAIL',
@@ -97,6 +99,8 @@ export const envEntryTypeDefs = gql`
     SERPER
     ANTHROPIC
     REMOTION
+    PIXABAY
+    JAMENDO
     MONGODB
     MCP_SERVER
     GMAIL

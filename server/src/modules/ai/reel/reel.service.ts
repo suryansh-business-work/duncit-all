@@ -10,7 +10,8 @@ import { emptySpec, sanitizeSpec, specDurationMs, type ReelAspect } from './reel
 import { assertRoom, badInput, load, notFound, shortId, str, toPub, toSummary, type ReelActor } from './reel.shared';
 import { analyticsOf, listFiguresOf } from './reel.analytics';
 import { reelChecks } from './reel.checks';
-import { newStockAssets, searchReelMedia, uploadAsset, type ReelStockAssetInput, type ReelUploadInput } from './reel.stock';
+import { searchReelMedia, uploadAsset, type ReelMediaSearchInput, type ReelStockAssetInput, type ReelUploadInput } from './reel.stock';
+import { pickedStockAssets } from './reel.picks';
 import { generateReelIdeas, generateReelScript, generateReelVariants, recommendNextReel, type ReelConceptInput } from './reel.ai';
 import { applyReelStoryboard, type ReelScriptInput } from './reel.storyboard';
 import { generateReelSubtitles, generateReelVoiceover } from './reel.voice';
@@ -172,10 +173,28 @@ export const reelService = {
     return addAssets(doc, assets, actor);
   },
 
-  /** Stock the operator picked from the media search; items the reel already holds are skipped. */
+  /**
+   * Stock the operator picked from the media search; items the reel already
+   * holds are skipped. Pixabay and Jamendo picks are imported first, which
+   * takes seconds — so the new assets are pushed atomically rather than by
+   * saving the document read before the imports, which would write stale
+   * footage back over anything added or removed meanwhile.
+   */
   async addStockAssets(projectId: string, items: ReelStockAssetInput[], actor: ReelActor) {
     const doc = await load(projectId);
-    return addAssets(doc, newStockAssets(doc, items), actor);
+    // A full reel is refused before anything is downloaded; the exact count is
+    // checked once duplicates are known, as it always was.
+    if (items.length > 0) assertRoom(doc, 1);
+    const assets = await pickedStockAssets(doc, items);
+    assertRoom(doc, assets.length);
+    if (assets.length === 0) return toPub(doc);
+    const updated = await ReelProjectModel.findByIdAndUpdate(
+      doc._id,
+      { $push: { assets: { $each: assets } }, $set: { updated_by: actor.email } },
+      { new: true }
+    );
+    if (!updated) throw notFound();
+    return toPub(updated);
   },
 
   /** Pictures, clips and sound files already in the media store. */
@@ -184,7 +203,7 @@ export const reelService = {
     return addAssets(doc, uploads.map(uploadAsset), actor);
   },
 
-  mediaSearch(input: { query: string; kind: ReelAssetKind; orientation?: ReelAspect | null; page?: number | null }) {
+  mediaSearch(input: ReelMediaSearchInput) {
     return searchReelMedia(input);
   },
 
@@ -249,6 +268,7 @@ export const reelService = {
       asset_ids: [],
       spec: turn.spec,
       failed: !turn.ok,
+      fix_category: turn.fix_category ?? '',
       at: new Date(),
     };
     // One atomic update rather than a second save of `doc`. The model takes

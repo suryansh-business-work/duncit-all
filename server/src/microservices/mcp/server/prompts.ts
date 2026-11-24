@@ -253,6 +253,42 @@ export const MCP_PROMPTS: readonly McpPrompt[] = [
       ),
   },
   {
+    name: 'make_reel',
+    title: 'Make a reel in Reel Studio',
+    description: "Make or edit a reel — first choosing whether Reel Studio's AI (Duncit's API key) or this chat's own subscription does the creative work.",
+    arguments: [
+      { name: 'reel', description: 'Which reel (its name), or empty for a new one.' },
+      { name: 'brief', description: 'What the reel should be about.' },
+    ],
+    tools: [
+      'marketing_reel_projects',
+      'marketing_create_reel_project',
+      'marketing_reel_project',
+      'marketing_reel_media_search',
+      'marketing_add_reel_stock_assets',
+      'marketing_save_reel_spec',
+      'marketing_send_reel_message',
+      'marketing_generate_reel_ideas',
+      'marketing_generate_reel_script',
+      'marketing_apply_reel_storyboard',
+    ],
+    render: (args) => {
+      const reel = promptValue(args.reel);
+      const brief = promptValue(args.brief);
+      const which = reel ? ` from "${reel}"` : '';
+      const about = brief ? ` about: ${brief}` : '';
+      return lines(
+        `Help me make a reel${which}${about}.`,
+        "1. Before anything else, ask me which to use: (a) Reel Studio — its AI runs on Duncit's own API key; or (b) this chat's own subscription — you do the creative work yourself and Reel Studio only stores the result. Wait for my answer.",
+        '2. Find the reel with marketing_reel_projects, or create it with marketing_create_reel_project after confirming the name with me. Read it with marketing_reel_project.',
+        `3a. Reel Studio: use marketing_generate_reel_ideas, marketing_generate_reel_script and marketing_apply_reel_storyboard, or marketing_send_reel_message for edits. Each needs ${META_CONFIRM}: true — pass it only after I said yes to (a).`,
+        '3b. This chat: plan the scenes yourself, find footage with marketing_reel_media_search (provider PEXELS or PIXABAY; provider JAMENDO with kind AUDIO for music), add what I approve with marketing_add_reel_stock_assets, then write the whole spec and save it with marketing_save_reel_spec. Do not call any Reel Studio AI tool on this path.',
+        '4. Tell me what changed and that I can watch and export it in Marketing → Reel Studio.',
+        DATA_RULE
+      );
+    },
+  },
+  {
     name: 'find_tool',
     title: 'Find the right tool',
     description: 'Find the tool for a task and explain how to call it.',

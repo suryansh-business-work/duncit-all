@@ -65,6 +65,8 @@ export interface ReelMessage {
    */
   spec: unknown;
   failed: boolean;
+  /** ASSISTANT, failed: the Tech portal env category whose missing key stopped it; '' otherwise. */
+  fix_category?: string;
   at: Date;
 }
 
@@ -130,6 +132,7 @@ const messageSchema = new Schema<ReelMessage>(
     asset_ids: { type: [String], default: [] },
     spec: { type: Schema.Types.Mixed, default: null },
     failed: { type: Boolean, default: false },
+    fix_category: { type: String, default: '' },
     at: { type: Date, default: Date.now },
   },
   { _id: false }

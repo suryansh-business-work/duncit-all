@@ -31,6 +31,27 @@ const TRUSTED_MEDIA_HOSTS = [/(^|\.)pexels\.com$/i, /(^|\.)imagekit\.io$/i, /(^|
 
 export const isTrustedMediaHost = (hostname: string): boolean => TRUSTED_MEDIA_HOSTS.some((re) => re.test(hostname));
 
+/**
+ * Stock libraries whose files are COPIED into the media store and never played
+ * from their own CDN: Pixabay does not allow hotlinking, and neither it nor
+ * Jamendo promises the CORS headers the in-browser reel exporter needs. Kept
+ * apart from TRUSTED_MEDIA_HOSTS so an address on them is never accepted as
+ * something the media store itself served.
+ */
+const STOCK_LIBRARY_HOSTS = [/(^|\.)pixabay\.com$/i, /(^|\.)jamendo\.com$/i];
+
+export const isStockLibraryHost = (hostname: string): boolean => STOCK_LIBRARY_HOSTS.some((re) => re.test(hostname));
+
+/** An https address on a stock library the media store imports from. */
+export function isStockLibraryUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' && isStockLibraryHost(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
 /** An https address on a trusted media host. */
 export function isTrustedMediaUrl(url: string): boolean {
   try {

@@ -65,6 +65,7 @@ const pubMessage = (message: ReelMessage) => ({
   asset_ids: message.asset_ids,
   restorable: message.role === 'ASSISTANT' && message.spec != null,
   failed: message.failed,
+  fix_category: message.fix_category ?? '',
   at: message.at.toISOString(),
 });
 

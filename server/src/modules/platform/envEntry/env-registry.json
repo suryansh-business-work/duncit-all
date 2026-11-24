@@ -49,6 +49,8 @@
       "categories": [
         "IMAGEKIT",
         "PEXELS",
+        "PIXABAY",
+        "JAMENDO",
         "GOOGLE_MAPS",
         "GOOGLE_DRIVE",
         "REMOTION"
@@ -287,6 +289,56 @@
           },
           "usedIn": [
             "server/src/modules/platform/upload/upload.service.ts"
+          ]
+        }
+      ]
+    },
+    "PIXABAY": {
+      "label": "Pixabay",
+      "description": "Stock photos and videos for Reel Studio",
+      "docUrl": "https://pixabay.com/api/docs/",
+      "usedIn": [
+        "server/src/modules/ai/reel/reel.pixabay.ts"
+      ],
+      "fields": [
+        {
+          "name": "api_key",
+          "label": "API Key",
+          "hint": "pixabay.com/api/docs → your key, e.g. 12345678-0a1b2c3d4e5f… (digits, a dash, then letters and digits, no spaces)",
+          "secret": true,
+          "envKey": "PIXABAY_API_KEY",
+          "description": "Searches Pixabay photos and videos in Marketing → Reel Studio → Pixabay. Answers are cached for a day and the key's 100-searches-a-minute limit is respected, as Pixabay's terms ask; picked files are copied into the media store, never hotlinked.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/modules/ai/reel/reel.pixabay.ts"
+          ]
+        }
+      ]
+    },
+    "JAMENDO": {
+      "label": "Jamendo (music)",
+      "description": "Music for Reel Studio",
+      "docUrl": "https://devportal.jamendo.com/",
+      "usedIn": [
+        "server/src/modules/ai/reel/reel.jamendo.ts"
+      ],
+      "fields": [
+        {
+          "name": "client_id",
+          "label": "Client ID",
+          "hint": "devportal.jamendo.com → your app → Client ID (8 letters and digits)",
+          "secret": true,
+          "envKey": "JAMENDO_CLIENT_ID",
+          "description": "Searches Jamendo music in Marketing → Reel Studio → Music. Only tracks whose Creative Commons licence allows commercial use and adaptation are listed; a picked track is copied into the media store with its licence and credit.",
+          "validation": {
+            "type": "text",
+            "required": true
+          },
+          "usedIn": [
+            "server/src/modules/ai/reel/reel.jamendo.ts"
           ]
         }
       ]

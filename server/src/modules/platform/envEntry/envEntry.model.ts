@@ -45,6 +45,9 @@ export const ENV_CATEGORIES = [
   'ANTHROPIC',
   // Reel Studio's Remotion company licence (was the REMOTION_LICENSE_KEY build arg).
   'REMOTION',
+  // Reel Studio stock: Pixabay photos and videos, Jamendo music.
+  'PIXABAY',
+  'JAMENDO',
   // Duncit Intel connectors: databases, MCP servers and mailboxes it reads.
   'MONGODB',
   'MCP_SERVER',

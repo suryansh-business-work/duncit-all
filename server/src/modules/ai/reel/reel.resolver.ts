@@ -1,8 +1,10 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import type { SocialPlatform } from '@modules/crm/marketing/social/social.types';
-import type { ReelAspect } from './reel.edit';
-import type { ReelAssetKind } from './reel.model';
+import { callerEnvironment } from '@modules/ai/askBot/askBot.links';
+import { consoleLink, linkUrl } from '@modules/platform/analytics/entity/links';
+import { reelLayoutService, type ReelStudioPane } from './reel.layout';
+import type { ReelMediaSearchInput } from './reel.stock';
 import {
   reelService,
   type ReelActor,
@@ -47,14 +49,11 @@ export const reelResolvers = {
       requireRole(ctx, REEL_ROLES);
       return reelService.driveFolder(args.folder);
     },
-    reelMediaSearch: (
-      _p: unknown,
-      args: { query: string; kind: ReelAssetKind; orientation?: ReelAspect | null; page?: number | null },
-      ctx: GraphQLContext
-    ) => {
+    reelMediaSearch: (_p: unknown, args: ReelMediaSearchInput, ctx: GraphQLContext) => {
       requireRole(ctx, REEL_ROLES);
       return reelService.mediaSearch(args);
     },
+    myReelStudioLayout: (_p: unknown, _args: unknown, ctx: GraphQLContext) => reelLayoutService.mine(actorOf(ctx).id),
     validateReel: (_p: unknown, args: ProjectArgs & { platforms: SocialPlatform[] }, ctx: GraphQLContext) => {
       requireRole(ctx, REEL_ROLES);
       return reelService.validate(args.project_id, args.platforms);
@@ -77,6 +76,9 @@ export const reelResolvers = {
       reelService.addDriveAssets(args.project_id, args.file_ids, actorOf(ctx)),
     addReelStockAssets: (_p: unknown, args: ProjectArgs & { items: ReelStockAssetInput[] }, ctx: GraphQLContext) =>
       reelService.addStockAssets(args.project_id, args.items, actorOf(ctx)),
+    saveReelStudioLayout: (_p: unknown, args: { panes: ReelStudioPane[] }, ctx: GraphQLContext) =>
+      reelLayoutService.save(actorOf(ctx).id, args.panes),
+    resetReelStudioLayout: (_p: unknown, _args: unknown, ctx: GraphQLContext) => reelLayoutService.reset(actorOf(ctx).id),
     addReelUploadAssets: (_p: unknown, args: ProjectArgs & { uploads: ReelUploadInput[] }, ctx: GraphQLContext) =>
       reelService.addUploadAssets(args.project_id, args.uploads, actorOf(ctx)),
     removeReelAsset: (_p: unknown, args: ProjectArgs & { asset_id: string }, ctx: GraphQLContext) =>
@@ -109,5 +111,12 @@ export const reelResolvers = {
       reelService.setCover(args.project_id, args.at_ms, actorOf(ctx)),
     recommendNextReel: (_p: unknown, args: ProjectArgs, ctx: GraphQLContext) =>
       reelService.recommendNext(args.project_id, actorOf(ctx)),
+  },
+  ReelMessage: {
+    /** The Tech portal tab holding the missing key, in the environment the caller is using. */
+    fix_url: (message: { fix_category?: string }, _args: unknown, ctx: GraphQLContext) =>
+      message.fix_category
+        ? linkUrl(consoleLink('tech', `/?selectedtab_category=${encodeURIComponent(message.fix_category)}`), callerEnvironment(ctx.req))
+        : null,
   },
 };

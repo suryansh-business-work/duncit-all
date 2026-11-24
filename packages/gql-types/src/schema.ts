@@ -12195,11 +12195,13 @@ export type EnvCategory =
   | 'GOOGLE_OAUTH'
   | 'GOOGLE_PLAY'
   | 'IMAGEKIT'
+  | 'JAMENDO'
   | 'MCP_SERVER'
   | 'MONGODB'
   | 'MSG91'
   | 'OPENAI'
   | 'PEXELS'
+  | 'PIXABAY'
   | 'RAZORPAY'
   | 'REMOTION'
   | 'SERPER'
@@ -19094,7 +19096,7 @@ export type Mutation = {
   addPostComment: Post;
   /** Add Drive files to a reel's footage. Files it already holds are skipped. */
   addReelDriveAssets: ReelProject;
-  /** Add stock photos or videos as the library listed them. Items the reel already holds are skipped. */
+  /** Add stock photos, videos or music as the library listed them. Items the reel already holds are skipped; at most 6 Pixabay or Jamendo files at a time, as each is copied into the media store. */
   addReelStockAssets: ReelProject;
   /** Add pictures, clips or sound files from the media store; the kind is read off the address. */
   addReelUploadAssets: ReelProject;
@@ -19425,8 +19427,10 @@ export type Mutation = {
    *   records whichever of them a multi-seat booking was given.
    *
    * Neither door is gated on the companion count, unlike the host's scan — the
-   * group is not standing at this one. Every mark records who made it and
-   * notifies the member, so it is contestable rather than silent.
+   * group is not standing at this one. Every mark records who made it,
+   * notifies the member and is written to the pod's event log (Pod Monitoring)
+   * as ATTENDANCE_FORCED, so it is contestable rather than silent. Refused once
+   * the roster is closed (the pod is completed or cancelled).
    */
   clubAdminForceAttendance: EventTicket;
   /** Edit a club the signed-in user administers (governance fields are ignored). */
@@ -20795,6 +20799,8 @@ export type Mutation = {
   resetRateLimitCounters: Scalars['Boolean']['output'];
   /** Zero one rule's lifetime hit/blocked counters without changing what it does. */
   resetRateLimitRuleCounters: RateLimitRule;
+  /** Forget the signed-in person's Reel Studio arrangement so the default view returns. True whether or not one was saved. */
+  resetReelStudioLayout: Scalars['Boolean']['output'];
   resolveBouncerSos: BouncerSosAlert;
   /** Close a request once the club's venues have published slots. */
   resolveClubSlotRequest: ClubSlotRequest;
@@ -20994,9 +21000,13 @@ export type Mutation = {
   /**
    * Save an edit made by hand on the timeline. spec_json is the whole ReelSpec as
    * JSON; it is sanitized against the project's footage exactly as the editor's
-   * answers are, and the reel comes back as it now stands.
+   * answers are, and the reel comes back as it now stands. This is also how an AI
+   * chat builds a reel on its own subscription: read the reel with reelProject,
+   * write the whole spec, and save it here — no Reel Studio AI call is made.
    */
   saveReelSpec: ReelProject;
+  /** Save how the signed-in person has Reel Studio arranged, replacing what they saved before. */
+  saveReelStudioLayout: ReelStudioLayout;
   /**
    * Store the caller's chrome arrangement. Only the fields present in the input
    * are written, so two consoles open at once cannot overwrite each other's
@@ -21048,7 +21058,11 @@ export type Mutation = {
   sendPodMessage: PodMessage;
   /** Send a Pod Request. LIMIT_REACHED past the monthly cap; CONFLICT if the pair already has a live one. */
   sendPodPartnerRequest: PodPartnerRequest;
-  /** One chat turn: the request (and any attached pictures) goes to the editor, and the reel comes back as it now stands. */
+  /**
+   * One chat turn: the request (and any attached pictures) goes to the editor, and the reel comes back as it now stands.
+   * Runs on Reel Studio's own AI key, billed to Duncit. From an AI chat, first ask the person whether to use Reel
+   * Studio's key or the chat's own subscription; for the second, write the edit yourself and save it with saveReelSpec.
+   */
   sendReelMessage: ReelProject;
   /** Finance managers: send a rental refund that is waiting for review through Razorpay (never marks anything paid). note: why, at least 10 characters. */
   sendRentalRefund: RentalBookingDetail;
@@ -26397,6 +26411,11 @@ export type MutationSavePushSubscriptionArgs = {
 export type MutationSaveReelSpecArgs = {
   project_id: Scalars['ID']['input'];
   spec_json: Scalars['String']['input'];
+};
+
+
+export type MutationSaveReelStudioLayoutArgs = {
+  panes: Array<ReelStudioPaneInput>;
 };
 
 
@@ -37762,6 +37781,8 @@ export type Query = {
   myReceivedEventRequestCounts: EventRequestCounts;
   /** Requests addressed to the caller: the venues they own (VENUE) or themself as host (HOST). */
   myReceivedEventRequestsTable: EventRequestTablePage;
+  /** The signed-in person's saved Reel Studio arrangement, or null when they have never saved one. */
+  myReelStudioLayout?: Maybe<ReelStudioLayout>;
   /** My code + everyone I brought in (generates the code on first read). */
   myReferral: MyReferral;
   /** The signed-in Regional Club Admin's own region, created on first read. */
@@ -38239,7 +38260,11 @@ export type Query = {
   /** The videos, pictures, sound files and sub-folders of a Drive folder. folder is a link or a folder id. */
   reelDriveFolder: ReelDriveFolder;
   reelDriveStatus: ReelDriveStatus;
-  /** Stock photos or videos from Pexels for a reel; portrait unless another orientation is asked for. Pages start at 1. */
+  /**
+   * Stock for a reel: photos or videos from Pexels (the default) or Pixabay, or
+   * music (kind AUDIO) from Jamendo — only tracks a marketing reel may use.
+   * Portrait unless another orientation is asked for. Pages start at 1.
+   */
   reelMediaSearch: ReelMediaPage;
   reelProject?: Maybe<ReelProject>;
   reelProjects: Array<ReelProjectSummary>;
@@ -42590,6 +42615,7 @@ export type QueryReelMediaSearchArgs = {
   kind: ReelAssetKind;
   orientation?: InputMaybe<ReelAspect>;
   page?: InputMaybe<Scalars['Int']['input']>;
+  provider?: InputMaybe<ReelStockProvider>;
   query: Scalars['String']['input'];
 };
 
@@ -44331,7 +44357,7 @@ export type ReelAssetSource =
   | 'DRIVE'
   /** Sound made here — a voiceover. */
   | 'GENERATED'
-  /** A Pexels photo or video, kept by its CDN address with its licence line. */
+  /** A stock library file with its licence line: a Pexels photo or video kept by its CDN address, or a Pixabay photo or video or a Jamendo track copied into the media store. */
   | 'STOCK'
   /** A picture or clip from the media store — attached in the chat or picked from the library. */
   | 'UPLOAD';
@@ -44442,7 +44468,7 @@ export type ReelIdeas = {
   run_id: Scalars['ID']['output'];
 };
 
-/** One stock photo or video as the library lists it. */
+/** One stock photo, video or track as the library lists it. */
 export type ReelMediaItem = {
   __typename?: 'ReelMediaItem';
   attribution: Scalars['String']['output'];
@@ -44454,6 +44480,8 @@ export type ReelMediaItem = {
   licence: Scalars['String']['output'];
   /** A small picture for the picker. */
   preview_url: Scalars['String']['output'];
+  /** The library that listed it; pass it back with the pick. */
+  provider: ReelStockProvider;
   provider_id: Scalars['String']['output'];
   /** The file the reel would use, on the library's CDN. */
   url: Scalars['String']['output'];
@@ -44473,6 +44501,8 @@ export type ReelMessage = {
   at: Scalars['String']['output'];
   /** ASSISTANT: true when the editor could not be reached or read. */
   failed: Scalars['Boolean']['output'];
+  /** ASSISTANT, failed: the Tech portal page where the missing AI key is added, when a missing key is why; null otherwise. */
+  fix_url?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   /** ASSISTANT: true when this reply produced an edit that can be put back. */
   restorable: Scalars['Boolean']['output'];
@@ -44677,11 +44707,66 @@ export type ReelStockAssetInput = {
   licence: Scalars['String']['input'];
   name: Scalars['String']['input'];
   preview_url?: InputMaybe<Scalars['String']['input']>;
+  /** The library reelMediaSearch named; PEXELS when absent. Pixabay and Jamendo picks are copied into the media store. */
+  provider?: InputMaybe<ReelStockProvider>;
   provider_id: Scalars['String']['input'];
   /** On the library's CDN. */
   url: Scalars['String']['input'];
   width?: InputMaybe<Scalars['Int']['input']>;
 };
+
+/** The stock libraries Reel Studio searches. Pexels and Pixabay have photos and videos; Jamendo has music. */
+export type ReelStockProvider =
+  | 'JAMENDO'
+  | 'PEXELS'
+  | 'PIXABAY';
+
+/** The signed-in person's saved Reel Studio arrangement. */
+export type ReelStudioLayout = {
+  __typename?: 'ReelStudioLayout';
+  panes: Array<ReelStudioPane>;
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/** One pane of the studio as its owner left it. Sizes are CSS pixels. */
+export type ReelStudioPane = {
+  __typename?: 'ReelStudioPane';
+  height: Scalars['Int']['output'];
+  id: ReelStudioPaneId;
+  mode: ReelStudioPaneMode;
+  /** DOCKED: the pane's width, or the timeline's height. */
+  size: Scalars['Int']['output'];
+  width: Scalars['Int']['output'];
+  /** POPPED: where the window floats and how big it is. */
+  x: Scalars['Int']['output'];
+  y: Scalars['Int']['output'];
+};
+
+/** A part of the Reel Studio screen that can be resized, popped out into its own window or closed. */
+export type ReelStudioPaneId =
+  /** The player — the middle pane. */
+  | 'PREVIEW'
+  /** Chat, Create and Edit — the right pane. */
+  | 'SIDE'
+  /** Footage, stock, music, uploads and voice — the left pane. */
+  | 'SOURCES'
+  /** The timeline along the bottom. */
+  | 'TIMELINE';
+
+export type ReelStudioPaneInput = {
+  height: Scalars['Int']['input'];
+  id: ReelStudioPaneId;
+  mode: ReelStudioPaneMode;
+  size: Scalars['Int']['input'];
+  width: Scalars['Int']['input'];
+  x: Scalars['Int']['input'];
+  y: Scalars['Int']['input'];
+};
+
+export type ReelStudioPaneMode =
+  | 'CLOSED'
+  | 'DOCKED'
+  | 'POPPED';
 
 /** Words on top of a scene. Times are milliseconds from the start of that scene. */
 export type ReelText = {

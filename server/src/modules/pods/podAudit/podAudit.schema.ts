@@ -12,6 +12,8 @@ export const podAuditTypeDefs = /* GraphQL */ `
     COMPLETE
     "A content-guideline check refused the edit — nothing was written to the pod."
     REJECTED
+    "A Club Admin marked a member present without a scan (with or without an OTP)."
+    ATTENDANCE_FORCED
   }
 
   "Which surface performed the action."

@@ -2169,6 +2169,7 @@ clubAdminRangeFrom('all')                            // null
 clubAdminRangeLabels(t)['12m']                       // 'Last 12 months'
 
 podAuditActionLabel('VENUE_DECLINED', t)   // 'Venue Rejected'
+podAuditActionLabel('ATTENDANCE_FORCED', t) // 'Attendance Marked by Club Admin' — a no-scan mark, toned warning
 podAuditRiskOptions(t).map((o) => o.value) // ['LOW', 'MEDIUM', 'HIGH', 'PENDING']
 ```
 

@@ -57,6 +57,10 @@ describe('snapshot + diff + heuristics', () => {
   it('grades risk deterministically', () => {
     expect(heuristicRisk('DELETE', [])).toBe('HIGH');
     expect(heuristicRisk('VENUE_DECLINED', [])).toBe('MEDIUM');
+    // A no-scan mark moves the host's payout.
+    expect(heuristicRisk('ATTENDANCE_FORCED', [{ field: 'attendance', from: '', to: 'CHECKED_IN (no OTP)' }])).toBe(
+      'MEDIUM'
+    );
     expect(heuristicRisk('UPDATE', [{ field: 'pod_amount', from: '500', to: '900' }])).toBe('HIGH');
     expect(heuristicRisk('UPDATE', [{ field: 'pod_amount', from: '0', to: '100' }])).toBe('HIGH');
     expect(heuristicRisk('UPDATE', [{ field: 'pod_amount', from: '500', to: '600' }])).toBe('MEDIUM');

@@ -186,8 +186,10 @@ export const eventTicketTypeDefs = /* GraphQL */ `
       records whichever of them a multi-seat booking was given.
 
     Neither door is gated on the companion count, unlike the host's scan — the
-    group is not standing at this one. Every mark records who made it and
-    notifies the member, so it is contestable rather than silent.
+    group is not standing at this one. Every mark records who made it,
+    notifies the member and is written to the pod's event log (Pod Monitoring)
+    as ATTENDANCE_FORCED, so it is contestable rather than silent. Refused once
+    the roster is closed (the pod is completed or cancelled).
     """
     clubAdminForceAttendance(
       pod_doc_id: ID!

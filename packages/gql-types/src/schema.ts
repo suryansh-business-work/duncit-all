@@ -32233,6 +32233,8 @@ export type PodAttendeeSeats = {
 
 /** What kind of pod action was recorded. */
 export type PodAuditAction =
+  /** A Club Admin marked a member present without a scan (with or without an OTP). */
+  | 'ATTENDANCE_FORCED'
   | 'COMPLETE'
   | 'CREATE'
   | 'DELETE'

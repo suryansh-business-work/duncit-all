@@ -15,9 +15,16 @@ jest.mock('../../ticket.model', () => ({
   TicketModel: { findOne: jest.fn(), findById: jest.fn(), find: jest.fn(), create: jest.fn() },
 }));
 jest.mock('../../attendance.service', () => ({
-  attendanceLock: jest.fn(),
+  attendanceLock: jest.fn(() => 'OPEN'),
+  canMarkAttendance: jest.fn(() => true),
   consumeAttendanceProof: jest.fn(),
   markTicketPresent: jest.fn(),
+}));
+jest.mock('@modules/platform/settings/settings.service', () => ({
+  settingsService: { getPodCompletionSettings: jest.fn(async () => ({ timeout_hours: 48 })) },
+}));
+jest.mock('@modules/pods/podAudit/podAudit.service', () => ({
+  podAuditService: { record: jest.fn() },
 }));
 jest.mock('../../ticket.download', () => ({
   ticketPdfFilename: (code: string) => `ticket-${code}.pdf`,
@@ -53,7 +60,13 @@ jest.mock('@modules/engagement/notification/notification.service', () => ({
 
 import { logs } from '@observability/log';
 import { TicketModel } from '../../ticket.model';
-import { consumeAttendanceProof, markTicketPresent } from '../../attendance.service';
+import {
+  attendanceLock,
+  canMarkAttendance,
+  consumeAttendanceProof,
+  markTicketPresent,
+} from '../../attendance.service';
+import { podAuditService } from '@modules/pods/podAudit/podAudit.service';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
@@ -69,6 +82,9 @@ const ticketFindById = TicketModel.findById as jest.Mock;
 const ticketFind = TicketModel.find as jest.Mock;
 const proof = consumeAttendanceProof as jest.Mock;
 const mark = markTicketPresent as jest.Mock;
+const lock = attendanceLock as jest.Mock;
+const canMark = canMarkAttendance as jest.Mock;
+const auditRecord = podAuditService.record as jest.Mock;
 const memberFindOne = PodMemberModel.findOne as jest.Mock;
 const podFindById = PodModel.findById as jest.Mock;
 const userFindById = UserModel.findById as jest.Mock;
@@ -90,6 +106,7 @@ const CHECKED_AT = new Date('2026-11-01T13:30:00.000Z');
 
 const q = (value: unknown) => {
   const chain: any = {
+    setOptions: jest.fn(() => chain),
     select: jest.fn(() => chain),
     sort: jest.fn(() => chain),
     limit: jest.fn(() => chain),
@@ -476,6 +493,69 @@ describe('ticketService.clubAdminForceAttendance', () => {
     });
     expect(membership.save).not.toHaveBeenCalled();
     expect(mark).toHaveBeenCalledTimes(1);
+  });
+
+  // Hiding the board's Mark button is not the gate: a completed or cancelled
+  // pod must refuse the write itself.
+  it('refuses once attendance is closed for the pod, and logs nothing', async () => {
+    arrange();
+    lock.mockReturnValueOnce('COMPLETED');
+    canMark.mockReturnValueOnce(false);
+
+    await expect(
+      ticketService.clubAdminForceAttendance(String(POD), String(MEMBERSHIP), ACTOR)
+    ).rejects.toMatchObject({ message: 'Attendance is closed for this pod', extensions: { code: 'BAD_REQUEST' } });
+    expect(lock).toHaveBeenCalledWith(expect.objectContaining({ pod_title: 'Sunday Run' }), 48);
+    expect(canMark).toHaveBeenCalledWith('COMPLETED', 'CLUB_ADMIN');
+    expect(memberFindOne).not.toHaveBeenCalled();
+    expect(mark).not.toHaveBeenCalled();
+    expect(auditRecord).not.toHaveBeenCalled();
+  });
+
+  it('refuses a pod that does not exist', async () => {
+    podFindById.mockImplementationOnce(() => q(null));
+    await expect(
+      ticketService.clubAdminForceAttendance(String(POD), String(MEMBERSHIP), ACTOR)
+    ).rejects.toMatchObject({ message: 'Pod not found', extensions: { code: 'NOT_FOUND' } });
+    expect(mark).not.toHaveBeenCalled();
+  });
+
+  it('writes a no-code mark to the pod event log, naming the member and seats', async () => {
+    arrange({ seats: 2 }, { seats: 2 });
+    userFindById.mockImplementation(() => q({ profile: { first_name: 'Asha', last_name: 'Rao' } }));
+
+    await ticketService.clubAdminForceAttendance(String(POD), String(MEMBERSHIP), ACTOR);
+
+    expect(auditRecord).toHaveBeenCalledTimes(1);
+    expect(auditRecord).toHaveBeenCalledWith({
+      pod: expect.objectContaining({ pod_title: 'Sunday Run' }),
+      action: 'ATTENDANCE_FORCED',
+      source: 'CLUB_ADMIN',
+      actorUserId: ACTOR.id,
+      note: 'Asha Rao (2 seats) marked present by the Club Admin without a scan or code.',
+      changes: [{ field: 'attendance', from: '', to: 'CHECKED_IN (no OTP)' }],
+    });
+  });
+
+  it('says on the event log when a one-time code backed the mark', async () => {
+    arrange();
+    proof.mockResolvedValue({ challenge_id: 'otp-9', mediums: ['SMS'] });
+
+    await ticketService.clubAdminForceAttendance(String(POD), String(MEMBERSHIP), ACTOR, {
+      otpChallengeId: 'otp-9',
+    });
+
+    // No profile name to read: the note still says who, generically.
+    expect(auditRecord.mock.calls[0][0]).toMatchObject({
+      note: 'A member marked present by the Club Admin after a one-time code.',
+      changes: [{ field: 'attendance', from: '', to: 'CHECKED_IN (OTP)' }],
+    });
+  });
+
+  it('logs nothing for a ticket that was already marked', async () => {
+    arrange({ status: 'CHECKED_IN', checked_in_at: CHECKED_AT });
+    await ticketService.clubAdminForceAttendance(String(POD), String(MEMBERSHIP), ACTOR);
+    expect(auditRecord).not.toHaveBeenCalled();
   });
 
   it('rejects a name the schema refuses, before marking anyone', async () => {

@@ -22,6 +22,7 @@ export const POD_AUDIT_ACTION_ORDER = [
   'VENUE_DECLINED',
   'COMPLETE',
   'REJECTED',
+  'ATTENDANCE_FORCED',
 ] as const;
 
 export type PodAuditAction = (typeof POD_AUDIT_ACTION_ORDER)[number];
@@ -71,6 +72,8 @@ export const POD_AUDIT_ACTION_COLORS: Record<PodAuditAction, StatusTone> = {
   VENUE_DECLINED: 'warning',
   COMPLETE: 'default',
   REJECTED: 'error',
+  // A mark with no scan behind it moves the payout, so it reads as a caution.
+  ATTENDANCE_FORCED: 'warning',
 };
 
 export const POD_AUDIT_RISK_COLORS: Record<PodAuditRisk, StatusTone> = {
@@ -90,6 +93,7 @@ export function podAuditActionLabel(action: PodAuditAction, t: ClubAdminTranslat
   if (action === 'VENUE_APPROVED') return t('clubAdmin.audit.action.venueApproved');
   if (action === 'VENUE_DECLINED') return t('clubAdmin.audit.action.venueDeclined');
   if (action === 'COMPLETE') return t('clubAdmin.audit.action.complete');
+  if (action === 'ATTENDANCE_FORCED') return t('clubAdmin.audit.action.attendanceForced');
   return t('clubAdmin.audit.action.rejected');
 }
 

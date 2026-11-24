@@ -6461,6 +6461,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "changeRequest.withdrawBody": "Duncit will stop looking for a replacement. Your Account Health points are not returned.",
   "changeRequest.withdrawn": "Request withdrawn.",
   "changeRequest.withdrawTitle": "Withdraw this request?",
+  "clubAdmin.audit.action.attendanceForced": "Attendance Marked by Club Admin",
   "clubAdmin.audit.action.complete": "Completed",
   "clubAdmin.audit.action.create": "Created",
   "clubAdmin.audit.action.delete": "Deleted",

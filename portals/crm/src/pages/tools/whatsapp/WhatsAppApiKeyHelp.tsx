@@ -30,7 +30,7 @@ function Step({ n, children }: Readonly<{ n: number; children: React.ReactNode }
   );
 }
 
-/** How the connection works — shown under the connect card until WhatsApp is linked. */
+/** "How do I get the API key?" — shown under the Gateway step of the connect stepper. */
 export default function WhatsAppApiKeyHelp() {
   const { t } = useTranslation();
   return (
@@ -38,22 +38,22 @@ export default function WhatsAppApiKeyHelp() {
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <HelpOutlineIcon fontSize="small" color="primary" />
-          <Typography sx={{ fontWeight: 800 }}>{t('crm.tools.howDoIGetTheApi')}</Typography>
+          <Typography sx={{ fontWeight: 800 }}>{t('crm.tools.howToGetApiKey')}</Typography>
         </Stack>
       </AccordionSummary>
       <AccordionDetails>
         <Stack component="ol" spacing={1.5} sx={{ m: 0, p: 0, listStyle: 'none' }}>
           <li>
-            <Step n={1}>{t('crm.tools.helpStepAutoKey')}</Step>
+            <Step n={1}>{t('crm.tools.apiKeyHelpGenerate')}</Step>
           </li>
           <li>
-            <Step n={2}>{t('crm.tools.helpStepScan')}</Step>
+            <Step n={2}>{t('crm.tools.apiKeyHelpDashboard')}</Step>
           </li>
           <li>
-            <Step n={3}>{t('crm.tools.helpStepStuck')}</Step>
+            <Step n={3}>{t('crm.tools.apiKeyHelpSelfHosted')}</Step>
           </li>
           <li>
-            <Step n={4}>{t('crm.tools.helpStepAdvanced')}</Step>
+            <Step n={4}>{t('crm.tools.apiKeyHelpKept')}</Step>
           </li>
         </Stack>
       </AccordionDetails>

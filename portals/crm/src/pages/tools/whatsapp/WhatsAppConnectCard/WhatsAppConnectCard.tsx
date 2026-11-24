@@ -1,12 +1,10 @@
-import { Alert, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
-import WhatsAppIcon from '@mui/icons-material/WhatsApp';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import { DuncitButton } from '@duncit/buttons';
+import { useState } from 'react';
+import { Card, CardContent, Chip, Stack, Step, StepLabel, Stepper, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import type { WaConnection } from '../whatsappQueries';
 import ConnectedSummary from './ConnectedSummary';
-import QrSection from './QrSection';
-import AdvancedSettings from './AdvancedSettings';
+import GatewayStep from './GatewayStep';
+import LinkStep from './LinkStep';
 import { useWaConnect } from './useWaConnect';
 
 const STATUS_COLOR: Record<WaConnection['status'], 'success' | 'warning' | 'error' | 'default'> = {
@@ -23,53 +21,55 @@ const STATUS_LABEL_KEY: Record<WaConnection['status'], string> = {
   DISCONNECTED: 'crm.tools.statusDisconnected',
 };
 
+/** Step indexes of the connect stepper. */
+const GATEWAY_STEP = 0;
+const LINK_STEP = 1;
+
 interface Props {
   connection: WaConnection;
   onChanged: () => void;
 }
 
 /**
- * Connect panel. Opening the page starts the WhatsApp session by itself and
- * shows its QR here; the server creates and keeps the gateway API key, so there
- * is nothing to generate or paste. Manual URL/key entry for another gateway
- * stays under Advanced settings. On CONNECT it flips to the connected summary.
+ * Connect panel as a two-step stepper: 1) gateway URL + API key, 2) Connect and scan the QR.
+ * Nothing connects until the person presses Connect. A session that is already booting, or one
+ * linked before, opens on step 2. On CONNECTED it flips to the connected summary and the page
+ * opens the lead tools.
  */
 export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<Props>) {
   const { t } = useTranslation();
   const wa = useWaConnect(connection, onChanged);
+  const [step, setStep] = useState(
+    connection.status === 'CONNECTING' || connection.connected_at ? LINK_STEP : GATEWAY_STEP,
+  );
 
   if (connection.status === 'CONNECTED') {
     return <ConnectedSummary connection={connection} busy={wa.busy} onDisconnect={wa.stop} />;
   }
 
-  const stalled = wa.connecting || connection.status === 'ERROR';
   return (
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
       <CardContent>
-        <Stack spacing={2}>
+        <Stack spacing={2.5}>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             <Typography component="h2" sx={{ fontWeight: 800 }}>
               {t('crm.tools.gatewayConnection')}
             </Typography>
             <Chip size="small" label={t(STATUS_LABEL_KEY[connection.status])} color={STATUS_COLOR[connection.status]} />
           </Stack>
-          {wa.actionError && <Alert severity="error">{wa.actionError}</Alert>}
-          {!wa.actionError && connection.last_error && <Alert severity="error">{connection.last_error}</Alert>}
-          <QrSection connecting={wa.connecting || wa.starting} qr={wa.qr} />
-          <DuncitButton
-            variant="contained"
-            startIcon={stalled ? <RestartAltIcon /> : <WhatsAppIcon />}
-            disabled={wa.busy}
-            onClick={() => wa.start(stalled)}
-          >
-            {stalled ? t('crm.tools.restartConnection') : t('crm.tools.connect')}
-          </DuncitButton>
-          <AdvancedSettings
-            baseUrl={connection.base_url}
-            hasKey={connection.has_api_key}
-            busy={wa.busy}
-            onSave={wa.saveAndConnect}
-          />
+          <Stepper activeStep={step} alternativeLabel>
+            <Step completed={step > GATEWAY_STEP}>
+              <StepLabel>{t('crm.tools.stepGateway')}</StepLabel>
+            </Step>
+            <Step>
+              <StepLabel>{t('crm.tools.stepLink')}</StepLabel>
+            </Step>
+          </Stepper>
+          {step === GATEWAY_STEP ? (
+            <GatewayStep connection={connection} onChanged={onChanged} onDone={() => setStep(LINK_STEP)} />
+          ) : (
+            <LinkStep connection={connection} wa={wa} onBack={() => setStep(GATEWAY_STEP)} />
+          )}
         </Stack>
       </CardContent>
     </Card>

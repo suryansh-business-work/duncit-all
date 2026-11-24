@@ -21977,6 +21977,7 @@ export type Mutation = {
   waImportUserLeads: WaImportResult;
   /** Synchronous pull of latest communities/groups/contacts into the cache. */
   waRefresh: WaSyncResult;
+  /** Save the gateway URL / API key. The URL must be http(s) and a new key must be accepted by the gateway. */
   waSaveConfig: WaConnection;
   /** Start a non-blocking background extraction; poll waExtraction for progress. */
   waStartExtraction: WaExtraction;

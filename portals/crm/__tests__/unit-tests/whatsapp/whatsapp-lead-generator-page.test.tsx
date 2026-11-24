@@ -33,19 +33,20 @@ afterEach(() => {
 });
 
 describe('WhatsAppLeadGeneratorPage', () => {
-  it('explains the automatic connect flow to an unconnected account', async () => {
+  it('starts an unconnected account on the Gateway step, with the lead tools locked', async () => {
     renderPage([connectionMock(waConnection())]);
 
-    expect(await screen.findByText('How does connecting work?')).toBeInTheDocument();
+    expect(await screen.findByText('How do I get the API key?')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'WhatsApp Lead Generator' })).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Communities' })).toBeNull();
   });
 
-  it('opens the browser once the account is connected', async () => {
+  it('opens the lead tools once the account is connected', async () => {
     renderPage([connectionMock(waConnection({ status: 'CONNECTED', phone: '919812345678' })), communitiesMock]);
 
     expect(await screen.findByText('+919812345678')).toBeInTheDocument();
     expect(await screen.findByRole('tab', { name: 'Communities' })).toBeInTheDocument();
-    expect(screen.queryByText('How does connecting work?')).toBeNull();
+    expect(screen.queryByText('How do I get the API key?')).toBeNull();
   });
 
   it('shows the error when the connection cannot be read', async () => {

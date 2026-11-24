@@ -295,3 +295,80 @@ describe('mapSessionStatus (OpenWA 0.31 lowercase statuses)', () => {
     expect(mapSessionStatus('QR_READY')).toBe('CONNECTING');
   });
 });
+
+/** What undici throws when nothing answers: a bare "fetch failed" with the errno in `cause`. */
+const refusedConnection = () =>
+  new TypeError('fetch failed', { cause: Object.assign(new Error('connect ECONNREFUSED 10.0.0.5:2024'), { code: 'ECONNREFUSED' }) });
+
+describe('Gateway step (saveConfig with verify)', () => {
+  beforeEach(async () => {
+    await whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'owa_k1_old' });
+  });
+
+  it.each(['open-wa-server', 'ftp://wa.test', ''])('refuses the gateway URL %p and saves nothing', async (base_url) => {
+    setFetch(() => ({ status: 200, body: {} }));
+    await expect(whatsappService.saveConfig({ base_url, api_key: 'owa_k1_new' }, { verify: true })).rejects.toThrow(
+      /starting with https:\/\/ or http:\/\//
+    );
+    expect(calls).toHaveLength(0);
+    expect(await WaConnectionModel.findOne({ key: 'default' })).toMatchObject({ base_url: 'https://wa.test', api_key: 'owa_k1_old' });
+  });
+
+  it('asks the gateway about the new key alone, then saves URL and key', async () => {
+    setFetch(({ key }) => (key === 'owa_k1_new' ? { status: 200, body: { valid: true } } : { status: 401, body: {} }));
+    const conn = await whatsappService.saveConfig({ base_url: ' http://wa2.test ', api_key: ' owa_k1_new ' }, { verify: true });
+    expect(calls).toEqual([{ method: 'POST', url: 'http://wa2.test/api/auth/validate', key: 'owa_k1_new', body: undefined }]);
+    expect(conn).toMatchObject({ base_url: 'http://wa2.test', api_key: 'owa_k1_new' });
+  });
+
+  it('refuses a key the gateway rejects and keeps the saved one', async () => {
+    process.env.OPENWA_API_MASTER_KEY = LONG_MASTER;
+    setFetch(() => ({ status: 401, body: { message: 'Invalid API key' } }));
+    await expect(whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'owa_k1_wrong' }, { verify: true })).rejects.toThrow(
+      'The WhatsApp gateway refused this API key. Check it and try again.'
+    );
+    // Only the typed key is tried: the master key must not make a wrong key look right.
+    expect(calls.map((c) => c.key)).toEqual(['owa_k1_wrong']);
+    expect((await WaConnectionModel.findOne({ key: 'default' }))?.api_key).toBe('owa_k1_old');
+  });
+
+  it('says in words when the gateway cannot be reached', async () => {
+    setFetch(() => {
+      throw refusedConnection();
+    });
+    await expect(whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'owa_k1_new' }, { verify: true })).rejects.toThrow(
+      'The WhatsApp gateway refused the connection.'
+    );
+  });
+
+  it('keeps the saved key without asking the gateway when the key is left blank', async () => {
+    setFetch(() => ({ status: 500, body: {} }));
+    const conn = await whatsappService.saveConfig({ base_url: 'https://wa3.test' }, { verify: true });
+    expect(calls).toHaveLength(0);
+    expect(conn).toMatchObject({ base_url: 'https://wa3.test', api_key: 'owa_k1_old' });
+  });
+});
+
+describe('connection status in words', () => {
+  it('refreshStatus() stores why the gateway was unreachable instead of "fetch failed"', async () => {
+    await whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'k' });
+    setFetch(() => {
+      throw refusedConnection();
+    });
+    const conn = await whatsappService.refreshStatus();
+    expect(conn.status).toBe('ERROR');
+    expect(conn.last_error).toBe('The WhatsApp gateway refused the connection.');
+  });
+
+  it('disconnect() forgets the link so the CRM does not resume the session by itself', async () => {
+    await WaConnectionModel.updateOne(
+      { key: 'default' },
+      { base_url: 'https://wa.test', api_key: 'k', status: 'CONNECTED', connected_at: new Date('2026-11-20T10:00:00Z') },
+      { upsert: true }
+    );
+    setFetch(() => ({ status: 200, body: {} }));
+    const conn = await whatsappService.disconnect();
+    expect(conn.status).toBe('DISCONNECTED');
+    expect(conn.connected_at).toBeNull();
+  });
+});

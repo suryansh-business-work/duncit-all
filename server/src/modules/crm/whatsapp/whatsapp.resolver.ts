@@ -132,7 +132,7 @@ export const waLeadsResolvers = {
   Mutation: {
     waSaveConfig: async (_p: unknown, args: { input: WaConfigInput }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
-      return toConnection(await whatsappService.saveConfig(args.input ?? {}));
+      return toConnection(await whatsappService.saveConfig(args.input ?? {}, { verify: true }));
     },
     waGenerateApiKey: async (
       _p: unknown,

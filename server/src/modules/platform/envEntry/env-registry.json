@@ -2388,7 +2388,9 @@
       "description": "Signs the .pkpass behind \"Add to Apple Wallet\"",
       "docUrl": "https://developer.apple.com/account/resources/identifiers/list/passTypeId",
       "apiDocsUrl": "https://developer.apple.com/documentation/walletpasses/building-a-pass",
-      "usedIn": [],
+      "usedIn": [
+        "server/src/modules/pods/ticket/wallet/wallet.config.ts"
+      ],
       "fields": [
         {
           "name": "certificate",
@@ -2400,7 +2402,9 @@
             "type": "pem",
             "required": true
           },
-          "usedIn": []
+          "usedIn": [
+            "server/src/modules/pods/ticket/wallet/wallet.config.ts"
+          ]
         },
         {
           "name": "private_key",
@@ -2413,7 +2417,9 @@
             "type": "pem",
             "required": true
           },
-          "usedIn": []
+          "usedIn": [
+            "server/src/modules/pods/ticket/wallet/wallet.config.ts"
+          ]
         },
         {
           "name": "private_key_passphrase",
@@ -2425,7 +2431,9 @@
           "validation": {
             "type": "text"
           },
-          "usedIn": []
+          "usedIn": [
+            "server/src/modules/pods/ticket/wallet/wallet.config.ts"
+          ]
         },
         {
           "name": "wwdr_certificate",
@@ -2437,7 +2445,9 @@
             "type": "pem",
             "required": true
           },
-          "usedIn": []
+          "usedIn": [
+            "server/src/modules/pods/ticket/wallet/wallet.config.ts"
+          ]
         }
       ]
     },
@@ -2446,7 +2456,9 @@
       "description": "Signs the \"Add to Google Wallet\" save link",
       "docUrl": "https://pay.google.com/business/console",
       "apiDocsUrl": "https://developers.google.com/wallet/tickets/events/web",
-      "usedIn": [],
+      "usedIn": [
+        "server/src/modules/pods/ticket/wallet/wallet.config.ts"
+      ],
       "fields": [
         {
           "name": "issuer_id",
@@ -2458,7 +2470,9 @@
             "type": "text",
             "required": true
           },
-          "usedIn": []
+          "usedIn": [
+            "server/src/modules/pods/ticket/wallet/wallet.config.ts"
+          ]
         },
         {
           "name": "service_account_json",
@@ -2471,7 +2485,9 @@
             "type": "json",
             "required": true
           },
-          "usedIn": []
+          "usedIn": [
+            "server/src/modules/pods/ticket/wallet/wallet.config.ts"
+          ]
         }
       ]
     }

@@ -1226,7 +1226,7 @@ describe('SessionOwnershipService', () => {
 
       // Verify renew SELECT filtered on DB clock and UPDATE used RETURNING with DB clock.
       const selectQueries = queries.filter(q => q.kind === 'select');
-      expect(selectQueries.length).toBe(5);
+      expect(selectQueries).toHaveLength(5);
       for (const q of selectQueries) {
         expect(allWhereSql(q)).toContain("clock_timestamp() AT TIME ZONE 'UTC'");
       }

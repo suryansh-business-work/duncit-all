@@ -623,7 +623,7 @@ describe('chat-scoped WebSocket rooms', () => {
         const setsBeforeDestroy = (redis.client.set as jest.Mock).mock.calls.length;
         await gateway.onModuleDestroy();
         await jest.advanceTimersByTimeAsync(30_000);
-        expect((redis.client.set as jest.Mock).mock.calls.length).toBe(setsBeforeDestroy);
+        expect((redis.client.set as jest.Mock).mock.calls).toHaveLength(setsBeforeDestroy);
       } finally {
         jest.useRealTimers();
       }

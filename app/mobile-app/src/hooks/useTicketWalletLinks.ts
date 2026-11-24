@@ -25,7 +25,10 @@ export function useTicketWalletLinks(podId: string | undefined): TicketWalletLin
     let live = true;
     graphqlRequest(TicketWalletLinksDocument, { podId }, { auth: true })
       .then((data) => {
-        if (live) setLinks(data.myEventTicketWalletLinks);
+        if (!live) return;
+        // The generated fields are optional; an absent link means no button.
+        const { apple_pass_url, google_save_url } = data.myEventTicketWalletLinks;
+        setLinks({ apple_pass_url: apple_pass_url ?? null, google_save_url: google_save_url ?? null });
       })
       .catch((error: unknown) => logs.mobileApp.error('checkout', 'ticketWalletLinks', { error }));
     return () => {

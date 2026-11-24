@@ -3,6 +3,7 @@ import { logs } from '@duncit/logs';
 
 import { MobileCheckoutPodDocument } from '@/graphql/checkout';
 import { TicketWalletLinksDocument } from '@/graphql/pod-history';
+import type { TicketWalletLinks } from '@/hooks/useTicketWalletLinks';
 import { FreeJoinSuccessScreen } from '@/screens/FreeJoinSuccessScreen';
 import { graphqlRequest } from '@/services/graphql.client';
 import { renderWithProviders } from '@/utils/test-utils';
@@ -32,7 +33,7 @@ const pod = {
   pod_images_and_videos: [],
 };
 
-const noWallets = { apple_pass_url: null, google_save_url: null };
+const noWallets: TicketWalletLinks = { apple_pass_url: null, google_save_url: null };
 
 /** Answers the pod query with `answer`, the wallet links with `wallets`, and
  * every other request (coins, settings) with nothing. */

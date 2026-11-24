@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useTranslation } from '@duncit/shell';
 
@@ -39,6 +39,13 @@ export function useLeadEditorFlow<T>(basePath: string, id: string | undefined, s
   const arrival = location.state as LeadEditorState | null;
   const from = arrival?.from;
   const [notice, setNotice] = useState<string | null>(arrival?.notice ?? null);
+  // The router may keep the same editor instance when /new becomes /:id (both
+  // render the same page), so a notice that arrives with a new navigation is
+  // picked up here too, not only on the first mount.
+  const arrivalNotice = arrival?.notice;
+  useEffect(() => {
+    if (arrivalNotice) setNotice(arrivalNotice);
+  }, [location.key, arrivalNotice]);
 
   const exit = () => navigate(from ?? (id ? `${basePath}/${id}/view` : basePath));
 

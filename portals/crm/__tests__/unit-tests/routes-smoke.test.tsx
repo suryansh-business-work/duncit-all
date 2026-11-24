@@ -305,7 +305,8 @@ const WITH_DATA_TIMEOUT = 90_000;
  * over 91 s on 2026-11-22, so they get a budget of their own.
  */
 const HEAVY_WITH_DATA = new Set(['/settings/lead-quality', '/lead-quality/analytics']);
-const HEAVY_WITH_DATA_TIMEOUT = 180_000;
+// /lead-quality/analytics ran past 180 s under coverage on CI (2026-11-24) while passing locally.
+const HEAVY_WITH_DATA_TIMEOUT = 300_000;
 /**
  * Two waves, because a console page is layered.
  *

@@ -59,12 +59,18 @@ describe('AssigneeField', () => {
     fireEvent.change(input, { target: { value: 'pri' } });
     // The list re-renders once the narrowed search answers; pick from that list, not the first one.
     await waitFor(() => expect(screen.queryByRole('option', { name: /Amit Rao/ })).toBeNull());
-    // Name and email in one retried query: a separate within() check could read an
-    // option the next re-render had already replaced (seen under CI load).
-    const option = await screen.findByRole('option', { name: /Priya Sharma\s*priya@duncit\.test/ });
-    fireEvent.click(option);
-
-    expect(screen.getByTestId('values')).toHaveTextContent('u-priya|Priya Sharma');
+    // Pick from the live list and check the result in one retried step: under coverage on CI
+    // the narrowed search re-rendered the list between finding the option and clicking it,
+    // so the click landed on a detached node and nothing was picked. Once the pick lands
+    // the list closes, so no second click happens.
+    await waitFor(
+      () => {
+        const option = screen.queryByRole('option', { name: /Priya Sharma\s*priya@duncit\.test/ });
+        if (option) fireEvent.click(option);
+        expect(screen.getByTestId('values')).toHaveTextContent('u-priya|Priya Sharma');
+      },
+      { timeout: 10_000 },
+    );
     expect(input).toHaveValue('Priya Sharma');
   });
 

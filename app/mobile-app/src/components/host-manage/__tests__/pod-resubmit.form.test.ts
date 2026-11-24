@@ -239,11 +239,15 @@ describe('podResubmitInitialValues', () => {
   it('knows a free pod, and starts a declined free venue offer as free again', () => {
     expect(podResubmitInitialValues({ ...rejectedPod, pod_type: 'FREE' }).pod_free).toBe(true);
     expect(podResubmitInitialValues({ ...rejectedPod, pod_type: 'PAID' }).pod_free).toBe(false);
-    const values = podResubmitInitialValues(rejectedPod, { ...declined, model: 'FREE', rate: 0 });
+    const freeOffer = { ...declined, model: 'FREE' as const, rate: 0 };
+    const values = podResubmitInitialValues({ ...rejectedPod, pod_type: 'FREE' }, freeOffer);
     expect(values.venue_offer_model).toBe('FREE');
     expect(values.venue_offer_rate).toBe('');
     // The justification is given afresh for the new offer.
     expect(values.free_accepted).toBe(false);
+    // A free venue is only for a free pod, so a paid pod starts with no option picked.
+    const paid = podResubmitInitialValues({ ...rejectedPod, pod_type: 'PAID' }, freeOffer);
+    expect(paid.venue_offer_model).toBe('');
   });
 
   it('drops a pricing option this build does not know, and an amount of 0', () => {

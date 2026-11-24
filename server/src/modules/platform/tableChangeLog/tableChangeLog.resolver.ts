@@ -9,6 +9,6 @@ import { tableChangeLogService, type TableChangeLogsArgs } from './tableChangeLo
 export const tableChangeLogResolvers = {
   Query: {
     tableChangeLogs: (_p: unknown, args: TableChangeLogsArgs, ctx: GraphQLContext) =>
-      tableChangeLogService.logs(requireAuth(ctx), args),
+      tableChangeLogService.logs(requireAuth(ctx), args, ctx.req),
   },
 };

@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import type { Model } from 'mongoose';
-import type { AuthUser } from '@context';
+import type { AuthUser, GraphQLContext } from '@context';
 import { requestIdentity } from '@observability/requestIdentity';
 import { captureTableScope, runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { onePage, runAs, tableScopeDocument } from '@modules/platform/backgroundJob/bulkDelete.operations';
@@ -74,13 +74,14 @@ const toPub = (row: ITableChangeLog) => ({
 });
 
 export const tableChangeLogService = {
-  async logs(user: AuthUser, args: TableChangeLogsArgs) {
+  /** `req` is the caller's own request, so a table behind a session unlock (Environment Variables) reads as unlocked when the page is. */
+  async logs(user: AuthUser, args: TableChangeLogsArgs, req?: GraphQLContext['req']) {
     const document = tableScopeDocument(args.table);
     if (!document) throw badInput('This table has no change log.');
     const variables = parseVariables(args.variables);
     const identity = requestIdentity.current() ?? { user: actorOf(user) };
     // Throws the table resolver's own refusal when the caller may not read it.
-    const scope = await captureTableScope(() => runAs(document, onePage(variables), actorOf(user), identity));
+    const scope = await captureTableScope(() => runAs(document, onePage(variables), actorOf(user), identity, req));
     if (!scope) throw badInput('This table is not read from a single collection, so it keeps no change log.');
 
     const model = scope.model as unknown as Model<unknown>;

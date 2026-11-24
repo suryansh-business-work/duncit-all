@@ -117,18 +117,23 @@ export function bulkDeleteOperations(table: string): BulkDeleteOperations | null
   return operations.get(table) ?? null;
 }
 
-/** Run one operation as the job's actor; the first GraphQL error is thrown. */
+/**
+ * Run one operation as the job's actor; the first GraphQL error is thrown.
+ * `req` is passed only when a live request (not a job) runs the read, so a
+ * resolver that checks something bound to the caller's session — the
+ * Environment Variables unlock — sees the same session the page does.
+ */
 export async function runAs(
   document: DocumentNode,
   variables: Record<string, unknown>,
   actor: JobActor,
-  identity: RequestIdentity
+  identity: RequestIdentity,
+  req?: GraphQLContext['req']
 ): Promise<void> {
   const schema = currentSchema();
   if (!schema) throw new Error('The GraphQL schema is not ready yet.');
-  const result = await requestIdentity.run(identity, () =>
-    execute({ schema, document, variableValues: variables, contextValue: jobContext(actor) })
-  );
+  const contextValue = req ? { ...jobContext(actor), req } : jobContext(actor);
+  const result = await requestIdentity.run(identity, () => execute({ schema, document, variableValues: variables, contextValue }));
   const first = result.errors?.[0];
   if (first) throw first;
 }

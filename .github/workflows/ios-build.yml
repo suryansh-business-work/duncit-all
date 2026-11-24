@@ -140,9 +140,16 @@ jobs:
           # Full history: the report step describes the merged commit range.
           fetch-depth: 0
 
-      - name: Select the newest Xcode 26
-        # Two separate constraints, both from expo-modules-jsi (SDK 57), and
-        # only the newest 26.x satisfies both:
+      - name: Select the newest release Xcode (27 when the image has it)
+        # Apple ITMS-90725: from April 2027 App Store Connect only accepts
+        # builds made with the iOS 27 SDK (Xcode 27). So the newest RELEASE
+        # Xcode 27 wins whenever the runner image ships one; until then the
+        # newest 26.x is used and a warning on the run says so. Betas and RCs
+        # are skipped: App Store Connect refuses a binary built with them.
+        #
+        # The 26.x floor still matters for the fallback. Two separate
+        # constraints, both from expo-modules-jsi (SDK 57), and only the newest
+        # 26.x satisfies both:
         #
         #  - `apple/Package.swift` declares `swift-tools-version: 6.2`, so
         #    Xcode 16.4 (the macos-15 default, Swift 6.1) cannot even resolve
@@ -160,9 +167,23 @@ jobs:
         # empty glob fails the version call here instead of 20 minutes into the
         # archive.
         run: |
-          DEVELOPER_DIR=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)/Contents/Developer
+          echo "Installed: $(ls -d /Applications/Xcode_*.app | xargs -n1 basename | tr '\n' ' ')"
+          # Sorted without ".app": with it, sort -V ranks Xcode_27.0 above Xcode_27.0.1.
+          newest() {
+            local v
+            v=$(ls -d /Applications/Xcode_"$1"*.app 2>/dev/null | grep -viE 'beta|_rc|release.?candidate' | sed -e 's#/*$##' -e 's/\.app$//' | sort -V | tail -1)
+            [ -n "$v" ] && echo "$v.app"
+            return 0
+          }
+          XCODE_APP=$(newest 27)
+          if [ -z "$XCODE_APP" ]; then
+            XCODE_APP=$(newest 26)
+            echo "::warning title=iOS SDK (ITMS-90725)::No release Xcode 27 on this runner, building with $(basename "$XCODE_APP"). From April 2027 App Store Connect needs the iOS 27 SDK."
+          fi
+          DEVELOPER_DIR="$XCODE_APP/Contents/Developer"
           echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> "$GITHUB_ENV"
           "$DEVELOPER_DIR/usr/bin/xcodebuild" -version
+          echo "iOS SDK: $(DEVELOPER_DIR="$DEVELOPER_DIR" xcrun --sdk iphoneos --show-sdk-version)"
 
       - name: Record build start
         run: |

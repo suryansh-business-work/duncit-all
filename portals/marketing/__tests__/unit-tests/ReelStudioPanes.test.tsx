@@ -19,7 +19,7 @@ import StudioToolbar from '../../src/pages/reels/studio/StudioToolbar';
 import type { ReelActions } from '../../src/pages/reels/studio/useReelActions';
 import type { ReelAsset, ReelDriveEntry, ReelMessage, ReelProject, ReelScene } from '../../src/pages/reels/types';
 import { renderWithProviders } from '../testkit';
-import { answerQuery, resetApollo } from '../mocks/reel-apollo-mock';
+import { answerQuery, reelMessage, resetApollo } from '../mocks/reel-apollo-mock';
 
 const confirm = vi.hoisted(() => vi.fn());
 const player = vi.hoisted(() => ({ seekTo: vi.fn(), props: {} as Record<string, unknown> }));
@@ -344,6 +344,25 @@ describe('ChatTranscript', () => {
     expect(screen.getByTestId('reel-chat-intro')).toBeInTheDocument();
   });
 
+  it('links a reply stopped by a missing AI key to the Tech portal field that fixes it, in a new tab', () => {
+    const missingKey = reelMessage({
+      id: 'm9',
+      role: 'ASSISTANT',
+      failed: true,
+      text: 'Anthropic is not configured. Set the ANTHROPIC API key in the Tech portal.',
+      fix_url: 'https://tech.duncit.com/?selectedtab_category=ANTHROPIC',
+    });
+    const otherFailure = reelMessage({ id: 'm10', role: 'ASSISTANT', failed: true, text: 'OpenAI is unreachable', fix_url: null });
+    renderWithProviders(<ChatTranscript messages={[missingKey, otherFailure]} assets={[]} pending={null} onRestore={vi.fn()} />);
+    const fix = screen.getByTestId('reel-chat-fix-m9');
+    expect(fix).toHaveAttribute('href', 'https://tech.duncit.com/?selectedtab_category=ANTHROPIC');
+    expect(fix).toHaveAttribute('target', '_blank');
+    expect(fix).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(fix).toHaveTextContent('Add the key in the Tech portal (opens a new tab)');
+    // A failure a key would not fix offers no link.
+    expect(screen.queryByTestId('reel-chat-fix-m10')).not.toBeInTheDocument();
+  });
+
   it('shows the conversation, the pictures sent with it, and a way back to each edit', async () => {
     const onRestore = vi.fn(async () => undefined);
     renderWithProviders(
@@ -480,6 +499,7 @@ describe('ExportDialog', () => {
   const exporter = (state: ReelExport['state']): ReelExport => ({
     state,
     start: vi.fn(async () => undefined),
+    retry: vi.fn(async () => undefined),
     cancel: vi.fn(),
     dismiss: vi.fn(),
     save: vi.fn(),
@@ -520,7 +540,9 @@ describe('ExportDialog', () => {
     mount(failed);
     expect(screen.getByTestId('reel-export-error')).toHaveTextContent('The reel could not be exported: This browser cannot encode H.264.');
     fireEvent.click(screen.getByTestId('reel-export-retry'));
-    expect(failed.start).toHaveBeenCalledTimes(1);
+    // Try again renders the same file again: the options chosen last time, not the defaults.
+    expect(failed.retry).toHaveBeenCalledTimes(1);
+    expect(failed.start).not.toHaveBeenCalled();
     fireEvent.click(screen.getByTestId('reel-export-close'));
     expect(failed.dismiss).toHaveBeenCalledTimes(1);
   });
@@ -572,6 +594,7 @@ describe('ExportDialog', () => {
     fireEvent.click(screen.getByTestId('reel-export-retry'));
     expect(posting.post).toHaveBeenCalledWith(file);
     expect(ready.start).not.toHaveBeenCalled();
+    expect(ready.retry).not.toHaveBeenCalled();
     // Close goes back to the rendered reel, not out of the export: it can still be saved.
     fireEvent.click(screen.getByTestId('reel-export-close'));
     expect(posting.dismiss).toHaveBeenCalledTimes(1);

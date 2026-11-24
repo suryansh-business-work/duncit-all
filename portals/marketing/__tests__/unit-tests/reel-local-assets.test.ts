@@ -11,6 +11,8 @@ const spec = {
     { asset_id: 'clip' },
   ],
   music: { asset_id: 'song' },
+  voiceover: null,
+  brand: { watermark_asset_id: '' },
 } as unknown as ReelSpec;
 
 let fetchSpy: ReturnType<typeof vi.spyOn>;
@@ -30,7 +32,12 @@ afterEach(() => {
 describe('assetIdsInUse', () => {
   it('collects footage, overlays and music once each, skipping colour cards', () => {
     expect([...assetIdsInUse(spec)]).toEqual(['clip', 'logo', 'song']);
-    expect([...assetIdsInUse({ scenes: [], music: null } as unknown as ReelSpec)]).toEqual([]);
+    expect([...assetIdsInUse({ scenes: [], music: null, voiceover: null, brand: { watermark_asset_id: '' } } as unknown as ReelSpec)]).toEqual([]);
+  });
+
+  it('also collects the voiceover and the brand watermark, which the render reads too', () => {
+    const branded = { ...spec, voiceover: { asset_id: 'voice' }, brand: { watermark_asset_id: 'mark' } } as unknown as ReelSpec;
+    expect([...assetIdsInUse(branded)]).toEqual(['clip', 'logo', 'song', 'voice', 'mark']);
   });
 });
 

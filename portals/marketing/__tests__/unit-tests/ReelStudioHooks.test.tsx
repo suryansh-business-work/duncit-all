@@ -369,7 +369,16 @@ describe('useReelExport', () => {
     id: PROJECT_ID,
     name: 'Jam Night — Recap #2!',
     assets: [],
-    spec: { fps: 30, width: 1080, height: 1920, background: '#000000', music: null, scenes: [{ id: 's1', duration_ms: 2000, transition_ms: 0 }] },
+    spec: {
+      fps: 30,
+      width: 1080,
+      height: 1920,
+      background: '#000000',
+      music: null,
+      voiceover: null,
+      brand: { watermark_asset_id: '' },
+      scenes: [{ id: 's1', duration_ms: 2000, transition_ms: 0 }],
+    },
   } as unknown as ReelProject;
 
   const canRender = { canRender: true, issues: [] };
@@ -386,13 +395,27 @@ describe('useReelExport', () => {
 
     await act(() => result.current.start());
 
-    expect(renderer.canRenderMediaOnWeb).toHaveBeenCalledWith({ container: 'mp4', videoCodec: 'h264', width: 1080, height: 1920 });
+    // With no options chosen: H.264 in an MP4 at high quality, with sound.
+    expect(renderer.canRenderMediaOnWeb).toHaveBeenCalledWith({
+      container: 'mp4',
+      videoCodec: 'h264',
+      audioCodec: 'aac',
+      width: 1080,
+      height: 1920,
+      scale: 1,
+      muted: false,
+      videoBitrate: 'high',
+      audioBitrate: 'high',
+    });
     expect(renderer.renderMediaOnWeb).toHaveBeenCalledWith(
       expect.objectContaining({
         composition: expect.objectContaining({ id: 'reel', width: 1080, height: 1920, fps: 30, durationInFrames: 60 }),
         inputProps: { spec: project.spec, assets: project.assets },
         container: 'mp4',
         videoCodec: 'h264',
+        frameRange: null,
+        keyframeIntervalInSeconds: 5,
+        hardwareAcceleration: 'no-preference',
       })
     );
     // Nothing is downloaded on its own: the operator chooses to save or to post.
@@ -404,6 +427,34 @@ describe('useReelExport', () => {
     expect(state.file).toBeInstanceOf(File);
     expect(state.file.name).toBe('jam-night-recap-2.mp4');
     expect(state.file.type).toBe('video/mp4');
+  });
+
+  it('renders with the options the export form chose, names the file by its type, and tries again with the same ones', async () => {
+    renderer.canRenderMediaOnWeb.mockResolvedValue(canRender);
+    renderer.renderMediaOnWeb.mockRejectedValueOnce(new Error('encoder stalled')).mockResolvedValue(rendered);
+    const chosen = {
+      container: 'webm' as const,
+      videoCodec: 'vp9' as const,
+      audioCodec: null,
+      videoBitrate: 'medium' as const,
+      audioBitrate: 'low' as const,
+      muted: true,
+      scale: 0.5,
+      hardwareAcceleration: 'prefer-software' as const,
+      keyframeIntervalInSeconds: 2,
+      frameRange: [15, 44] as [number, number],
+      mimeType: 'video/webm',
+    };
+    const { result } = renderHook(() => useReelExport(project));
+    await act(() => result.current.start(chosen));
+    expect(result.current.state).toEqual({ phase: 'failed', message: 'encoder stalled' });
+    expect(renderer.canRenderMediaOnWeb).toHaveBeenCalledWith(expect.objectContaining({ container: 'webm', videoCodec: 'vp9', audioCodec: null, muted: true, scale: 0.5 }));
+
+    await act(() => result.current.retry());
+    expect(renderer.renderMediaOnWeb).toHaveBeenLastCalledWith(
+      expect.objectContaining({ container: 'webm', videoCodec: 'vp9', muted: true, scale: 0.5, hardwareAcceleration: 'prefer-software', keyframeIntervalInSeconds: 2, frameRange: [15, 44] })
+    );
+    expect(result.current.state).toMatchObject({ phase: 'rendered', file: expect.objectContaining({ name: 'jam-night-recap-2.webm', type: 'video/webm' }) });
   });
 
   it('renders under the Tech portal licence when one is set, and with none when it is not', async () => {

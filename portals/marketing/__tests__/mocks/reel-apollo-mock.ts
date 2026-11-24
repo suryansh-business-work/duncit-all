@@ -251,6 +251,7 @@ export const reelStockItem = (over: Partial<ReelStockItem> = {}): ReelStockItem 
     licence: 'Pexels Licence',
     attribution: 'Ana Ruiz',
     provider_id: 'pexels:1',
+    provider: 'PEXELS',
     ...over,
   });
 

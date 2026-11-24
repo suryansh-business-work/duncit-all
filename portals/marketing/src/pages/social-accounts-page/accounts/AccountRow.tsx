@@ -9,7 +9,7 @@ import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import PlatformIcon from '../PlatformIcon';
 import { STATUS_COLORS, STATUS_LABEL } from '../copy';
 import type { SocialAccount } from '../queries';
-import { ExpiryChip, HealthLine } from './AccountHealth';
+import { ExpiryChip, HealthLine, MessagingLine } from './AccountHealth';
 
 interface Props {
   account: SocialAccount;
@@ -65,6 +65,7 @@ export default function AccountRow({ account, onSync, onReconnect, onSetOwner, o
           {owner}
         </Typography>
         <HealthLine account={account} />
+        <MessagingLine account={account} />
         {account.status !== 'CONNECTED' && account.last_error && (
           <Typography variant="caption" component="p" sx={{ color: 'error.main' }} role="status">
             {account.last_error}

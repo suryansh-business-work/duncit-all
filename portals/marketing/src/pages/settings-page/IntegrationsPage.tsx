@@ -6,6 +6,10 @@ import EnvAccessGate from '../../../../tech/src/pages/environment/access-gate';
 import EnvVariablesTab from '../../../../tech/src/pages/environment/EnvVariablesTab';
 import { DEFAULT_INTEGRATION_TAB, INTEGRATION_TABS, integrationTabFor, type IntegrationCategory } from './integrations-tabs';
 import RedirectUrlCard from './RedirectUrlCard';
+import WebhookUrlCard from './WebhookUrlCard';
+
+/** The Meta apps whose events (DMs and comments) arrive by webhook. */
+const WEBHOOK_CATEGORIES = new Set<IntegrationCategory>(['SOCIAL_INSTAGRAM', 'SOCIAL_FACEBOOK']);
 
 /**
  * Marketing → Settings → Integrations: the keys this console runs on, one tab
@@ -34,6 +38,7 @@ export default function IntegrationsPage() {
           <EnvAccessGate>
             <Stack spacing={2}>
               {active.social && <RedirectUrlCard />}
+              {WEBHOOK_CATEGORIES.has(active.category) && <WebhookUrlCard />}
               <EnvVariablesTab category={active.category} />
             </Stack>
           </EnvAccessGate>

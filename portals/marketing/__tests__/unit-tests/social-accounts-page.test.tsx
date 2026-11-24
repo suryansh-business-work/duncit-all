@@ -40,6 +40,9 @@ vi.mock('../../src/pages/social-accounts-page/analytics/AnalyticsTab', () => ({
 vi.mock('../../src/pages/social-accounts-page/monitoring/MonitoringTab', () => ({
   default: () => <div data-testid="tab-monitoring" />,
 }));
+vi.mock('../../src/pages/social-accounts-page/settings/SocialSettingsTab', () => ({
+  default: () => <div data-testid="tab-settings" />,
+}));
 vi.mock('../../src/pages/social-accounts-page/ideas/IdeasTab', () => ({
   default: (props: { onUse: (idea: unknown) => void }) => (
     <button
@@ -123,6 +126,8 @@ describe('SocialAccountsPage', () => {
     expect(await screen.findByTestId('tab-analytics')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: 'Monitoring' }));
     expect(await screen.findByTestId('tab-monitoring')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Settings' }));
+    expect(await screen.findByTestId('tab-settings')).toBeInTheDocument();
   });
 
   it('turns a picked idea into a composer request with its hashtags', async () => {

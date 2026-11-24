@@ -30,19 +30,19 @@ export const INTEGRATION_TABS: readonly IntegrationTab[] = [
   {
     category: 'SOCIAL_INSTAGRAM',
     labelKey: 'marketing.integrations.tabInstagram',
-    hintKey: 'marketing.integrations.hintInstagram',
+    hintKey: 'marketing.integrations.hintInstagramUnified',
     social: true,
   },
   {
     category: 'SOCIAL_FACEBOOK',
     labelKey: 'marketing.integrations.tabFacebook',
-    hintKey: 'marketing.integrations.hintFacebook',
+    hintKey: 'marketing.integrations.hintFacebookUnified',
     social: true,
   },
   {
     category: 'SOCIAL_THREADS',
     labelKey: 'marketing.integrations.tabThreads',
-    hintKey: 'marketing.integrations.hintThreads',
+    hintKey: 'marketing.integrations.hintThreadsSetup',
     social: true,
   },
   {

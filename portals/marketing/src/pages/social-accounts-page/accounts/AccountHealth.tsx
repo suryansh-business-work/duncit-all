@@ -41,3 +41,23 @@ export function HealthLine({ account }: Readonly<{ account: SocialAccount }>) {
     </Typography>
   );
 }
+
+/**
+ * Whether the account can do direct messages: the permission a reconnect would
+ * grant, and why the last DM read or the Page's webhook subscription failed.
+ * Nothing at all for an account that is ready (or a network without DMs here).
+ */
+export function MessagingLine({ account }: Readonly<{ account: SocialAccount }>) {
+  const { t } = useTranslation();
+  const lines = [
+    account.messaging_missing_permission ? t('marketing.social.messagingMissing', { vars: { permission: account.messaging_missing_permission } }) : '',
+    account.webhook_error ? t('marketing.social.webhookError', { vars: { reason: account.webhook_error } }) : '',
+    account.dm_error ? t('marketing.social.dmError', { vars: { reason: account.dm_error } }) : '',
+  ].filter(Boolean);
+  if (lines.length === 0) return null;
+  return (
+    <Typography variant="caption" component="p" sx={{ color: 'warning.main' }} data-testid="social-messaging-line">
+      {lines.join(' · ')}
+    </Typography>
+  );
+}

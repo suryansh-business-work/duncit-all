@@ -14,12 +14,13 @@ import PostDetailDrawer from './posts/PostDetailDrawer';
 import AnalyticsTab from './analytics/AnalyticsTab';
 import MonitoringTab from './monitoring/MonitoringTab';
 import IdeasTab from './ideas/IdeasTab';
+import SocialSettingsTab from './settings/SocialSettingsTab';
 import { ideaText } from './ideas/idea-text';
 
-type Tab = 'accounts' | 'publish' | 'posts' | 'analytics' | 'monitoring' | 'ideas';
+type Tab = 'accounts' | 'publish' | 'posts' | 'analytics' | 'monitoring' | 'ideas' | 'settings';
 type Translate = ReturnType<typeof useTranslation>['t'];
 
-/** Connect, then plan and post, then read how it went, then listen — and ideas for what next. */
+/** Connect, then plan and post, then read how it went, then listen — ideas for what next, and the module's settings. */
 const socialTabs = (t: Translate): DuncitTabItem<Tab>[] => [
   { value: 'accounts', label: t('marketing.social.tabAccounts') },
   { value: 'publish', label: t('marketing.social.tabPublish') },
@@ -27,6 +28,7 @@ const socialTabs = (t: Translate): DuncitTabItem<Tab>[] => [
   { value: 'analytics', label: t('marketing.social.tabAnalytics') },
   { value: 'monitoring', label: t('marketing.social.tabMonitoring') },
   { value: 'ideas', label: t('marketing.social.tabIdeas') },
+  { value: 'settings', label: t('marketing.social.tabSettings') },
 ];
 
 /**
@@ -65,6 +67,7 @@ export default function SocialAccountsPage() {
         {tabs.value === 'analytics' && <AnalyticsTab accounts={accounts} />}
         {tabs.value === 'monitoring' && <MonitoringTab accounts={accounts} onChanged={reload} />}
         {tabs.value === 'ideas' && <IdeasTab onUse={pickIdea} />}
+        {tabs.value === 'settings' && <SocialSettingsTab />}
       </Box>
 
       <ComposerDialog request={composer} accounts={accounts} onClose={() => setComposer(null)} />

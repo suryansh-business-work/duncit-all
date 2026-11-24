@@ -42,6 +42,9 @@ export const makeSocialAccount = (over: Partial<SocialAccount> = {}): SocialAcco
   health_checked_at: null,
   health_ok: null,
   health_message: null,
+  messaging_missing_permission: null,
+  dm_error: '',
+  webhook_error: '',
   ...over,
 });
 

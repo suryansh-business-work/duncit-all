@@ -1,0 +1,95 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
+import type { MockedResponse } from '@apollo/client/testing';
+import { renderWithProviders } from '../testkit';
+import { makeSocialAccount, makeSocialSettings, socialSettingsErrorMock, socialSettingsMock, updateSocialSettingsErrorMock, updateSocialSettingsMock } from '../mocks';
+import { SOCIAL_WEBHOOK_URL } from '../../src/pages/settings-page/queries';
+
+const dialogsMock = vi.hoisted(() => ({ notify: vi.fn() }));
+vi.mock('@duncit/dialogs', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/dialogs')>()),
+  notify: dialogsMock.notify,
+}));
+const userCtx = vi.hoisted(() => ({ value: null as { user: { user_id: string; roles: string[] } | null } | null }));
+vi.mock('@duncit/user-context', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/user-context')>()),
+  useUserData: () => userCtx.value,
+}));
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()),
+  useDateFormat: () => ({ formatDateTime: (d: Date | string) => `fmt:${String(d)}` }),
+}));
+
+import SocialSettingsTab from '../../src/pages/social-accounts-page/settings/SocialSettingsTab';
+import { MessagingLine } from '../../src/pages/social-accounts-page/accounts/AccountHealth';
+import { settingsInput, settingsFormValues } from '../../src/pages/social-accounts-page/social-settings-form';
+
+const webhookMock: MockedResponse = { request: { query: SOCIAL_WEBHOOK_URL }, result: { data: { socialWebhookUrl: 'https://api/social/webhooks/meta' } } };
+const renderTab = (mocks: MockedResponse[]) => renderWithProviders(<SocialSettingsTab />, { mocks: [...mocks, webhookMock] });
+
+beforeEach(() => {
+  userCtx.value = { user: { user_id: 'u1', roles: ['MARKETING_MANAGER'] } };
+});
+
+afterEach(() => {
+  vi.clearAllMocks();
+});
+
+describe('SocialSettingsTab', () => {
+  it('lets a manager change a setting and save it, then reads it back', async () => {
+    const settings = makeSocialSettings();
+    const changed = settingsInput({ ...settingsFormValues(settings), backfill_days: 14 });
+    const saved = makeSocialSettings({ backfill_days: 14 });
+    renderTab([socialSettingsMock(settings), updateSocialSettingsMock(changed, saved), socialSettingsMock(saved)]);
+    const field = await screen.findByRole('spinbutton', { name: /DM history on connect/ });
+    expect(screen.getByTestId('webhook-url-field')).toBeInTheDocument();
+    fireEvent.change(field, { target: { value: '14' } });
+    fireEvent.click(screen.getByTestId('social-settings-save'));
+    await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Settings saved.', 'success'));
+    await waitFor(() => expect(screen.getByRole('spinbutton', { name: /DM history on connect/ })).toHaveValue(14));
+  });
+
+  it('shows the server’s refusal when a save fails', async () => {
+    const settings = makeSocialSettings();
+    const changed = settingsInput({ ...settingsFormValues(settings), expiry_alert_days: 10 });
+    renderTab([socialSettingsMock(settings), updateSocialSettingsErrorMock(changed, 'Access denied')]);
+    fireEvent.change(await screen.findByRole('spinbutton', { name: /Token reminder/ }), { target: { value: '10' } });
+    fireEvent.click(screen.getByTestId('social-settings-save'));
+    await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Access denied', 'error'));
+  });
+
+  it('is read-only for an editor, and for nobody signed in', async () => {
+    userCtx.value = { user: { user_id: 'u2', roles: ['MARKETING_EDITOR'] } };
+    renderTab([socialSettingsMock()]);
+    expect(await screen.findByTestId('social-settings-read-only')).toBeInTheDocument();
+  });
+
+  it('treats a missing user as someone who may only read', async () => {
+    userCtx.value = { user: null };
+    renderTab([socialSettingsMock()]);
+    expect(await screen.findByTestId('social-settings-read-only')).toBeInTheDocument();
+    expect(screen.queryByTestId('settings-assignee-change')).not.toBeInTheDocument();
+  });
+
+  it('says when the settings cannot be read', async () => {
+    renderTab([socialSettingsErrorMock('Settings down')]);
+    expect(await screen.findByText('Settings down')).toBeInTheDocument();
+    expect(screen.queryByTestId('social-settings-form')).not.toBeInTheDocument();
+  });
+});
+
+describe('MessagingLine', () => {
+  it('asks for a reconnect when the messaging permission is missing, and names failed reads and webhooks', () => {
+    renderWithProviders(
+      <MessagingLine account={makeSocialAccount({ messaging_missing_permission: 'instagram_manage_messages', webhook_error: 'needs pages_manage_metadata', dm_error: 'boom' })} />
+    );
+    expect(screen.getByTestId('social-messaging-line')).toHaveTextContent(
+      'Reconnect to enable messaging (needs instagram_manage_messages). · Webhooks are not set up for this Page: needs pages_manage_metadata · Direct messages could not be read: boom'
+    );
+  });
+
+  it('says nothing for an account that is ready', () => {
+    renderWithProviders(<MessagingLine account={makeSocialAccount()} />);
+    expect(screen.queryByTestId('social-messaging-line')).not.toBeInTheDocument();
+  });
+});

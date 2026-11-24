@@ -9,6 +9,8 @@ const getRowId = (row: InboxComment) => row.id;
 
 interface Props {
   view: SocialInboxView;
+  /** Every network's comments, or Threads replies on their own. */
+  channel: 'COMMENTS' | 'THREADS_REPLIES';
   accounts: readonly InboxAccount[];
   onOpen: (row: InboxComment) => void;
   refetchRef: RefObject<(() => void) | null>;
@@ -16,17 +18,17 @@ interface Props {
 }
 
 /** The queue, server-paged, newest first, on the slice the URL names; a row opens the comment. */
-export default function InboxTable({ view, accounts, onOpen, refetchRef, toolbarActions }: Readonly<Props>) {
+export default function InboxTable({ view, channel, accounts, onOpen, refetchRef, toolbarActions }: Readonly<Props>) {
   const { t } = useTranslation();
   const client = useApolloClient();
-  const fetchRows = useApolloTableFetch<InboxComment>(client, SOCIAL_INBOX_TABLE, 'socialInboxTable', { extraVariables: { view } }, [view]);
+  const fetchRows = useApolloTableFetch<InboxComment>(client, SOCIAL_INBOX_TABLE, 'socialInboxTable', { extraVariables: { view, channel } }, [view, channel]);
   const columns = useMemo(() => getInboxColumns(accounts, t), [accounts, t]);
 
   return (
     <DuncitTable<InboxComment>
-      key={view}
+      key={`${view}-${channel}`}
       ariaLabel={t('marketing.inbox.tableLabel')}
-      tableId="marketing-inbox"
+      tableId={channel === 'THREADS_REPLIES' ? 'marketing-inbox-threads' : 'marketing-inbox'}
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}

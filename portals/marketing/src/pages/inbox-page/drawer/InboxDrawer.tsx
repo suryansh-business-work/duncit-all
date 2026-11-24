@@ -63,7 +63,7 @@ export default function InboxDrawer({ comment, capabilities, onClose, onChanged 
           <>
             <InboxCommentDetails comment={comment} />
             <InboxWorkBar
-              comment={comment}
+              item={comment}
               userId={user?.user_id ?? null}
               canPick={canPickOwner(user?.roles)}
               busy={actions.busy}

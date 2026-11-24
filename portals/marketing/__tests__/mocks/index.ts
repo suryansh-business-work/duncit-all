@@ -23,5 +23,6 @@ export * from './leads.mock';
 export * from './agents.mock';
 export * from './outreach.mock';
 export * from './inbox.mock';
+export * from './dm.mock';
 export * from './analytics.mock';
 export * from './podPromo.mock';

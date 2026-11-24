@@ -100,8 +100,8 @@ describe('StartScreen', () => {
     const onPrompt = vi.fn();
     renderWithProviders(<StartScreen environment="STAGING" onPrompt={onPrompt} />);
     expect(screen.getByText('intel.start.heading')).toBeInTheDocument();
-    expect(screen.getByRole('group', { name: 'intel.sources.MCP: intel.states.ERROR' })).toBeInTheDocument();
-    expect(screen.getByRole('group', { name: 'intel.sources.SLACK: intel.states.DISCONNECTED' })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: /^intel.sources.MCP: intel.states.ERROR./ })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: /^intel.sources.SLACK: intel.states.DISCONNECTED./ })).toBeInTheDocument();
     fireEvent.click(screen.getByText('intel.start.prompts.podPerformance'));
     expect(onPrompt).toHaveBeenCalledWith('intel.start.prompts.podPerformance');
   });

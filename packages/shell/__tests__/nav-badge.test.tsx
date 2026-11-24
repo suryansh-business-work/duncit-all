@@ -113,6 +113,16 @@ describe('a sidebar row with waiting work', () => {
     expect(await screen.findByRole('tooltip')).toHaveTextContent(WAITING);
   });
 
+  it('reads out the bare number for an unlabelled count and offers no hover text', async () => {
+    inRouter(<NavNode item={{ ...requests, badge: { count: 4 } }} pathname="/" />);
+    const link = screen.getByRole('link', { name: /Workshop & Event Requests/ });
+    const spoken = within(link).getAllByText('4');
+    expect(spoken).toHaveLength(2);
+    expect(spoken[0]).toHaveAttribute('aria-hidden', 'true');
+    await userEvent.hover(link);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
   it('shows no count on a row with nothing waiting', () => {
     inRouter(<NavNode item={{ ...requests, badge: { count: 0 } }} pathname="/" />);
     expect(screen.queryByTestId('shell-nav-badge')).toBeNull();
@@ -125,6 +135,10 @@ describe('a sidebar row with waiting work', () => {
 
     await userEvent.click(header);
 
+    // Same element after opening (not remounted), so keyboard focus stays on it.
+    expect(header).toBeInTheDocument();
+    expect(header).toHaveFocus();
+    expect(header).toHaveAttribute('aria-expanded', 'true');
     expect(within(header).queryByTestId('shell-nav-badge')).toBeNull();
     expect(within(screen.getByRole('link', { name: /Workshop & Event Requests/ })).getByText('3')).toBeInTheDocument();
   });

@@ -63,12 +63,14 @@ function SpokenLabel({ badge }: Readonly<{ badge: NavBadge }>) {
 /**
  * Hovering (or focusing) a row with waiting work says what is waiting, e.g.
  * "3 waiting for your action". `describeChild` keeps the row's own name — a
- * string title would otherwise replace the link's accessible name.
+ * string title would otherwise replace the link's accessible name. The Tooltip
+ * stays mounted with an empty (never shown) title when nothing waits, so a group
+ * header that drops its badge on opening keeps its element, and with it focus.
  */
 export function NavBadgeTooltip({ badge, children }: Readonly<{ badge?: NavBadge | null; children: ReactElement }>) {
-  if (!hasNavBadge(badge) || !badge.label) return children;
+  const title = hasNavBadge(badge) ? (badge.label ?? '') : '';
   return (
-    <Tooltip title={badge.label} placement="right" describeChild>
+    <Tooltip title={title} placement="right" describeChild>
       {children}
     </Tooltip>
   );

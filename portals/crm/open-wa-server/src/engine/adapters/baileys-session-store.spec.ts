@@ -2628,5 +2628,121 @@ describe('BaileysSessionStore', () => {
       expect(s.findContact('62100001@s.whatsapp.net')).not.toBeNull();
       expect(s.findContact('62105000@s.whatsapp.net')).not.toBeNull();
     });
+
+    it('evicts oldest unpinned contact in O(1) without scanning pinned head entries', () => {
+      const s = storeWithCap('2');
+      // Populate many pinned (saved) contacts at the map head.
+      for (let i = 0; i < 200; i++) {
+        s.upsertContacts([{ id: `6280${String(i).padStart(4, '0')}@s.whatsapp.net`, name: `Saved ${i}` }]);
+      }
+      const contactsMap = (s as unknown as { contacts: { pinned: (v: unknown) => boolean } }).contacts;
+      const pinnedSpy = jest.spyOn(contactsMap, 'pinned');
+
+      for (let i = 0; i < 10; i++) {
+        s.upsertContacts([{ id: `6299${String(i).padStart(4, '0')}@s.whatsapp.net`, notify: `Peer ${i}` }]);
+      }
+
+      // O(1) eviction only evaluates the predicate during set/drop, never scanning the 200 pinned entries.
+      expect(pinnedSpy.mock.calls.length).toBeLessThan(40);
+      expect(s.listContacts()).toHaveLength(200);
+      expect(s.findContact('62990000@s.whatsapp.net')).toBeNull();
+      expect(s.findContact('62990008@s.whatsapp.net')?.pushName).toBe('Peer 8');
+      expect(s.findContact('62990009@s.whatsapp.net')?.pushName).toBe('Peer 9');
+    });
+
+    it('preserves LRU recency and pinned transitions across overwrites', () => {
+      const s = storeWithCap('2');
+      // Unpinned -> pinned promotion must remove the key from eviction candidates.
+      s.upsertContacts([{ id: '628111@s.whatsapp.net', notify: 'Peer1' }]);
+      s.upsertContacts([{ id: '628111@s.whatsapp.net', name: 'Saved1' }]);
+      s.upsertContacts([{ id: '628222@s.whatsapp.net', notify: 'Peer2' }]);
+      s.upsertContacts([{ id: '628333@s.whatsapp.net', notify: 'Peer3' }]);
+      // Refresh Peer2 so Peer3 becomes LRU evictable.
+      expect(s.findContact('628222@s.whatsapp.net')?.pushName).toBe('Peer2');
+      s.upsertContacts([{ id: '628444@s.whatsapp.net', notify: 'Peer4' }]);
+
+      expect(s.findContact('628111@s.whatsapp.net')?.name).toBe('Saved1');
+      expect(s.findContact('628222@s.whatsapp.net')?.pushName).toBe('Peer2');
+      expect(s.findContact('628333@s.whatsapp.net')).toBeNull();
+      expect(s.findContact('628444@s.whatsapp.net')?.pushName).toBe('Peer4');
+    });
+  });
+
+  describe('batched state updates and device-suffixed LID twins', () => {
+    const SID = 'sess-batch';
+    const PHONE = '628111@s.whatsapp.net';
+    const LID = '424242@lid';
+    const DEVICE_LID = '424242:1@lid';
+    const K = (chatId: string) => `${SID}\u0000${chatId}`;
+
+    it('normalizes device-suffixed LIDs when indexing and indexes lidKeysByPhone once for multi-state batches', () => {
+      const fake = new FakeChatStateStore();
+      const s = new BaileysSessionStore(undefined, SID, fake);
+      s.upsertChats([{ id: LID, pinned: 3 }]);
+      s.addLidMappings([
+        { lid: DEVICE_LID, pn: PHONE },
+        { lid: '515151:2@lid', pn: '628222@s.whatsapp.net' },
+      ]);
+      // Pre-populate phone chat so namesNoChat does not trigger the index on its own.
+      s.upsertChats([
+        { id: PHONE, conversationTimestamp: 100 },
+        { id: '628222@s.whatsapp.net', conversationTimestamp: 100 },
+      ]);
+
+      const lidsByPhoneSpy = jest.spyOn(s as unknown as { lidsByPhone(): Map<string, string[]> }, 'lidsByPhone');
+      const lidKeysByPhoneSpy = jest.spyOn(
+        s as unknown as { lidKeysByPhone(): Map<string, string[]> },
+        'lidKeysByPhone',
+      );
+
+      s.upsertChats([
+        { id: PHONE, muteEndTime: -1 },
+        { id: '628222@s.whatsapp.net', archived: true },
+      ]);
+
+      expect(lidsByPhoneSpy).not.toHaveBeenCalled();
+      expect(lidKeysByPhoneSpy).toHaveBeenCalledTimes(1);
+      // The row under 424242@lid must be found and folded into 628111@s.whatsapp.net even though lidToPn stored 424242:1@lid.
+      expect([...fake.rows.keys()].sort()).toEqual([K(PHONE), K('628222@s.whatsapp.net')]);
+      expect(fake.get(SID, PHONE)).toMatchObject({ pinned: true, muteEndTime: -1 });
+    });
+
+    it('routes heldChatUpdates twin replay through persistChatState, withoutReadEcho, and markCovered', () => {
+      const fake = new FakeChatStateStore();
+      const s = new BaileysSessionStore(undefined, SID, fake);
+      const T = 1_700_000_000;
+      s.addLidMappings([{ lid: LID, pn: PHONE }]);
+      const markMs = T * 1000;
+      const origNow = Date.now;
+      Date.now = () => markMs;
+      try {
+        // Delete PHONE while both spellings exist, then hold a LID update in the deletion second.
+        s.upsertChats([{ id: PHONE, conversationTimestamp: T - 10 }]);
+        s.removeChats([PHONE]);
+        s.upsertChats([
+          {
+            id: LID,
+            muteEndTime: -1,
+            unreadCount: 0,
+            conversationTimestamp: T,
+            messages: [{ message: { key: { id: 'M-HELD', remoteJid: LID, fromMe: false } } }],
+          },
+        ]);
+        // Re-create the LID entry with an active unread count, seed a state row after deletion forget(), arm a read echo, then record M-HELD.
+        s.upsertChats([{ id: LID, conversationTimestamp: T + 1, unreadCount: 3 }]);
+        s.upsertChats([{ id: LID, archived: true }]);
+        s.expectReadEcho(LID);
+        s.recordMessage({ key: { id: 'M-HELD', remoteJid: LID, fromMe: false }, messageTimestamp: T + 1 }, 'text');
+
+        expect(fake.get(SID, PHONE)).toMatchObject({ archived: true, muteEndTime: -1 });
+        // The read-echo zero held inside the update must not override/clear unread state via raw Object spread.
+        expect(s.listChats().find(chat => chat.id === LID)).toMatchObject({
+          archived: true,
+          unreadCount: 3,
+        });
+      } finally {
+        Date.now = origNow;
+      }
+    });
   });
 });

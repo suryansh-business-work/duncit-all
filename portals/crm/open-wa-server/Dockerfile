@@ -121,7 +121,6 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     xdg-utils \
     dumb-init \
     gosu \
-    patch \
     curl \
     unzip \
     procps \
@@ -187,14 +186,10 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Backport upstream whatsapp-web.js#201832 (id._serialized -> id.$1 normalization,
-# broken by WA Web 2.3000.x ~2026-07-14) into the installed dep at build time.
-# The patcher stands down once every site it writes carries the fix; a release that fixes the ids
-# another way fails the build until the backport is retired.
 # scripts/postinstall.js rides along so a bare local `npm ci` keeps working, but the
 # --ignore-scripts install below skips the hook here: the explicit fatal run right
 # after is the sole (and stricter) applier for the image.
-COPY scripts/postinstall.js scripts/atomic-write.js scripts/patch-wwebjs-201832.js scripts/wwebjs-201832.patch scripts/patch-wwebjs-newsletter-preview.js scripts/patch-wwebjs-status.js scripts/patch-wwebjs-ready-sync.js scripts/patch-wwebjs-participant-arity.js scripts/patch-wwebjs-group-description.js scripts/patch-wwebjs-media-id.js scripts/patch-wwebjs-send-error.js scripts/patch-wwebjs-puppeteer.js scripts/patch-baileys-appstate.js scripts/patch-baileys-newsletter-create.js scripts/patch-baileys-pairing.js scripts/patch-baileys-media-stream.js scripts/patch-baileys-status-ack.js scripts/patch-baileys-event-buffer.js ./scripts/
+COPY scripts/postinstall.js scripts/atomic-write.js scripts/patch-wwebjs-newsletter-preview.js scripts/patch-wwebjs-status.js scripts/patch-wwebjs-ready-sync.js scripts/patch-wwebjs-participant-arity.js scripts/patch-wwebjs-media-id.js scripts/patch-wwebjs-send-error.js scripts/patch-wwebjs-puppeteer.js scripts/patch-baileys-appstate.js scripts/patch-baileys-newsletter-create.js scripts/patch-baileys-pairing.js scripts/patch-baileys-media-stream.js scripts/patch-baileys-media-signal.js scripts/patch-baileys-status-ack.js scripts/patch-baileys-event-buffer.js ./scripts/
 
 # Install production dependencies only, then apply the backports. Each patcher matches the pristine
 # library on its own and none depends on another's edits, so the order below is not load-bearing:
@@ -221,18 +216,17 @@ COPY scripts/postinstall.js scripts/atomic-write.js scripts/patch-wwebjs-201832.
 # a line of its own, ahead of the cache clean that docs/10 quotes, and
 # scripts/smoke-test-engine-libs.sh checks the built image on each architecture.
 RUN npm ci --omit=dev --ignore-scripts \
-    && node scripts/patch-wwebjs-201832.js \
     && node scripts/patch-wwebjs-newsletter-preview.js \
     && node scripts/patch-wwebjs-status.js \
     && node scripts/patch-wwebjs-ready-sync.js \
     && node scripts/patch-wwebjs-participant-arity.js \
-    && node scripts/patch-wwebjs-group-description.js \
     && node scripts/patch-wwebjs-media-id.js \
     && node scripts/patch-wwebjs-send-error.js \
     && node scripts/patch-baileys-appstate.js \
     && node scripts/patch-baileys-newsletter-create.js \
     && node scripts/patch-baileys-pairing.js \
     && node scripts/patch-baileys-media-stream.js \
+    && node scripts/patch-baileys-media-signal.js \
     && node scripts/patch-baileys-status-ack.js \
     && node scripts/patch-baileys-event-buffer.js \
     && node scripts/patch-wwebjs-puppeteer.js \
@@ -279,7 +273,7 @@ RUN if [ "$TARGETARCH" = arm64 ]; then \
         ln -s /usr/bin/chromium /usr/local/bin/puppeteer-chrome; \
     else \
         mkdir -p /opt/puppeteer && \
-        PUPPETEER_CACHE_DIR=/opt/puppeteer ./node_modules/.bin/puppeteer browsers install 'chrome@158.0.8127.36' && \
+        PUPPETEER_CACHE_DIR=/opt/puppeteer ./node_modules/.bin/puppeteer browsers install 'chrome@158.0.8127.88' && \
         chown -R openwa:openwa /opt/puppeteer && \
         chrome_path=$(find /opt/puppeteer/chrome/linux*/chrome-linux64/chrome | head -n 1) && \
         test -n "$chrome_path" && \
@@ -317,6 +311,11 @@ ENV XDG_CACHE_HOME=/tmp/.cache
 # failed with "auth timeout" before a QR existed (docs/12-troubleshooting-faq.md, "QR generation times
 # out on slow first boot"). Two minutes; the start deadline grows with it. An env_file value overrides.
 ENV WWEBJS_AUTH_TIMEOUT_MS=120000
+# Duncit: use the WhatsApp Web build WhatsApp itself serves. Under 0.31's default the gateway pinned a
+# build from a third-party registry; on 2026-11-24 that registry's newest build was the logged-out page,
+# the older fallback never authenticated, and every start ended in "auth timeout" with no QR. 0.32 made
+# "off" the default; this keeps it so if that default ever changes back.
+ENV WWEBJS_WEB_VERSION=off
 
 # Operator backup/restore scripts. docs/11-operational-runbooks.md drives them in-container
 # (`docker exec` against the named-volume mount at /app/data), and the sqlite3 CLI installed above

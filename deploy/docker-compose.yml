@@ -135,6 +135,8 @@ services:
     volumes:
       - /opt/duncit/open-wa-data:/app/data
     shm_size: "1gb"
+    # OpenWA 0.32 force-exits after an 82 s teardown; a shorter grace period kills it mid-save.
+    stop_grace_period: 90s
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:2024/api/health/ready || exit 1"]
       interval: 30s

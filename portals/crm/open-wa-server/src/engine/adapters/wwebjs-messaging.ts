@@ -56,6 +56,9 @@ import { recoverGroupChatById } from './wwebjs-chats';
 import { isNotice, isUnlistedContentless } from './wwebjs-message-events';
 import { noteVideoLoadTimeout } from './wwebjs-video-load-timeout';
 
+/** Upper bound on the per-session resolved-recipient LRU cache ({@link WwebjsMessaging}). */
+export const RESOLVED_SEND_IDS_MAX = 5000;
+
 /**
  * Map a whatsapp-web.js MessageAck integer to the neutral DeliveryStatus.
  * wwebjs: -1 ERROR, 0 PENDING, 1 SERVER (sent), 2 DEVICE (delivered), 3 READ, 4 PLAYED.
@@ -509,8 +512,8 @@ export class WwebjsMessaging {
   // confirmed resolution keeps ordinary sends from re-probing on each message (#580). A `@lid` is
   // stable; a stale entry (a contact that migrates mid-session) self-heals via the retry in
   // `sendResolved`.
-  // Unbounded Map, bounded in practice by distinct recipients per session; add an LRU only if a
-  // session ever addresses a truly unbounded set of fresh numbers.
+  // LRU-bounded at RESOLVED_SEND_IDS_MAX entries so a long-lived session addressing fresh numbers
+  // cannot grow memory without bound; evicting an entry also drops it from `unreportedLids`.
   private readonly resolvedSendIds = new Map<string, string>();
   // The `<phone>@c.us` keys of the cache above whose `@lid` the mapping store has not taken (its write failed):
   // the next send reports the pair again, so a failed write costs one more write, not a fresh probe.
@@ -543,19 +546,33 @@ export class WwebjsMessaging {
     const chatId = toNeutralJid(recipient);
     const cached = this.resolvedSendIds.get(chatId);
     if (cached) {
+      // Touch recency so active recipients stay in the cache.
+      this.resolvedSendIds.delete(chatId);
+      this.resolvedSendIds.set(chatId, cached);
       if (this.unreportedLids.delete(chatId)) this.reportLid(chatId, cached);
       return { id: cached, answered: true };
     }
     try {
       const wid = await this.host.getNumberId(chatId);
       if (wid) {
-        this.resolvedSendIds.set(chatId, wid);
+        this.rememberResolvedSendId(chatId, wid);
         if (wid.endsWith('@lid')) this.reportLid(chatId, wid);
         return { id: wid, answered: true };
       }
       return { id: chatId, answered: true };
     } catch (failure) {
       return { id: chatId, answered: false, failure };
+    }
+  }
+
+  private rememberResolvedSendId(chatId: string, wid: string): void {
+    this.resolvedSendIds.delete(chatId);
+    this.resolvedSendIds.set(chatId, wid);
+    while (this.resolvedSendIds.size > RESOLVED_SEND_IDS_MAX) {
+      const oldest = this.resolvedSendIds.keys().next().value;
+      if (oldest === undefined) break;
+      this.resolvedSendIds.delete(oldest);
+      this.unreportedLids.delete(oldest);
     }
   }
 
@@ -968,20 +985,12 @@ export class WwebjsMessaging {
     ensureSendable(chatId, 'reply');
     try {
       // Find the message to quote
-      const chat = await this.readBeforeSend('replyToMessage', () =>
-        this.client()
-          .getChatById(chatId)
-          .catch(error => recoverGroupChatById(this.host, 'replyToMessage', chatId, error)),
-      );
-      if (!chat) {
-        throw markNothingSent(new MessageNotFoundError(quotedMsgId, chatId));
-      }
-      const messages = await this.readBeforeSend('replyToMessage', () => chat.fetchMessages({ limit: 100 }));
-      const quotedMsg = messages.find(m => m.id._serialized === quotedMsgId);
-
-      if (!quotedMsg) {
-        throw markNothingSent(new MessageNotFoundError(quotedMsgId));
-      }
+      const quotedMsg = await this.readBeforeSend('replyToMessage', () =>
+        this.findInFetchWindow(chatId, quotedMsgId, () => this.ensureReadyToSend()),
+      ).catch((error: unknown) => {
+        if (error instanceof MessageNotFoundError) markNothingSent(error);
+        throw error;
+      });
 
       // Reply's send leg hits the same `No LID for user` path as a normal send for a migrated contact,
       // so route it through sendResolved (resolve @c.us->@lid, cache, self-heal). reply(content, chatId)
@@ -1005,20 +1014,12 @@ export class WwebjsMessaging {
   async forwardMessage(fromChatId: string, toChatId: string, messageId: string): Promise<MessageResult> {
     this.ensureReadyToSend();
     try {
-      const chat = await this.readBeforeSend('forwardMessage', () =>
-        this.client()
-          .getChatById(fromChatId)
-          .catch(error => recoverGroupChatById(this.host, 'forwardMessage', fromChatId, error)),
-      );
-      if (!chat) {
-        throw markNothingSent(new MessageNotFoundError(messageId, fromChatId));
-      }
-      const messages = await this.readBeforeSend('forwardMessage', () => chat.fetchMessages({ limit: 100 }));
-      const msgToForward = messages.find(m => m.id._serialized === messageId);
-
-      if (!msgToForward) {
-        throw markNothingSent(new MessageNotFoundError(messageId));
-      }
+      const msgToForward = await this.readBeforeSend('forwardMessage', () =>
+        this.findInFetchWindow(fromChatId, messageId, () => this.ensureReadyToSend()),
+      ).catch((error: unknown) => {
+        if (error instanceof MessageNotFoundError) markNothingSent(error);
+        throw error;
+      });
 
       // The forward's send leg fails with `No LID for user` for a LID-migrated destination, so resolve
       // it (and self-heal a stale mapping) via sendResolved. Capture the id actually sent to so the
@@ -1111,22 +1112,7 @@ export class WwebjsMessaging {
       // NOTE: do NOT resolve chatId to @lid here — whatsapp-web.js reacts using the found message's own
       // id, not this chatId, so LID-resolving the lookup gives no send benefit and would miss a message
       // stored under the pre-migration @c.us chat (#583).
-      const chat = await this.client()
-        .getChatById(chatId)
-        .catch(error => recoverGroupChatById(this.host, 'reactToMessage', chatId, error));
-      // getChatById RESOLVES undefined for an unknown chat (wwebjs does not throw); guard it so the
-      // caller gets the 404 editMessage returns rather than a TypeError surfacing as an opaque 500.
-      if (!chat) {
-        throw new MessageNotFoundError(messageId, chatId);
-      }
-      const messages = await chat.fetchMessages({ limit: 100 });
-      const message = messages.find(m => m.id._serialized === messageId);
-      if (!message) {
-        throw new MessageNotFoundError(messageId, chatId);
-      }
-      // The message acts through the client that read it, which the host's check on getClient never sees
-      // again: a teardown that landed in the lookup is the retryable 409, not a write on a closing page.
-      this.host.ensureReady();
+      const message = await this.findInFetchWindow(chatId, messageId);
       await (message as MessageWithReactions).react(emoji);
     });
     this.host.logger.debug('Reacted to message', { messageId, emoji: emoji || '(removed)' });
@@ -1135,17 +1121,7 @@ export class WwebjsMessaging {
   async getMessageReactions(chatId: string, messageId: string): Promise<MessageReaction[]> {
     this.host.ensureReady();
     const reactions = await this.withPage('getMessageReactions', async () => {
-      const chat = await this.client()
-        .getChatById(chatId)
-        .catch(error => recoverGroupChatById(this.host, 'getMessageReactions', chatId, error));
-      if (!chat) {
-        throw new MessageNotFoundError(messageId, chatId);
-      }
-      const messages = await chat.fetchMessages({ limit: 100 });
-      const message = messages.find(m => m.id._serialized === messageId);
-      if (!message) {
-        throw new MessageNotFoundError(messageId, chatId);
-      }
+      const message = await this.findInFetchWindow(chatId, messageId);
       const msgWithReactions = message as MessageWithReactions;
       return msgWithReactions.hasReaction ? msgWithReactions.getReactions() : [];
     });
@@ -1321,6 +1297,10 @@ export class WwebjsMessaging {
           const contact = await msg.getContact();
           if (contact) resolved = mapContactFields(contact, process.env.WEBHOOK_CONTACT_DETAILS === 'true');
         } catch (error) {
+          if (this.host.isPageTransportError(error)) {
+            this.host.reportIfPageTransportError(error, 'getChatHistory');
+            break;
+          }
           this.host.logger.warn(
             `Failed to resolve contact for history message ${msg.id._serialized}: ${String(error)}`,
           );
@@ -1349,6 +1329,10 @@ export class WwebjsMessaging {
           const quoted = await msg.getQuotedMessage();
           out.quotedMessage = { id: quoted.id._serialized, body: wwebjsBody(quoted) };
         } catch (error) {
+          if (this.host.isPageTransportError(error)) {
+            this.host.reportIfPageTransportError(error, 'getChatHistory');
+            break;
+          }
           this.host.logger.warn(`Failed to resolve quoted message for ${msg.id._serialized}: ${String(error)}`);
         }
       }
@@ -1368,6 +1352,10 @@ export class WwebjsMessaging {
               }
             }
           } catch (error) {
+            if (this.host.isPageTransportError(error)) {
+              this.host.reportIfPageTransportError(error, 'getChatHistory');
+              break;
+            }
             this.host.logger.warn(`Failed to download media for ${msg.id._serialized}: ${String(error)}`);
           }
         }
@@ -1449,7 +1437,11 @@ export class WwebjsMessaging {
    * Readiness is checked again before the message is returned: it acts through the client that read it, so
    * a teardown that landed in the lookup would otherwise reach a closing page.
    */
-  private async findInFetchWindow(chatId: string, messageId: string): Promise<Message> {
+  private async findInFetchWindow(
+    chatId: string,
+    messageId: string,
+    ensureReady: () => void = () => this.host.ensureReady(),
+  ): Promise<Message> {
     const chat = await this.client()
       .getChatById(chatId)
       .catch(error => recoverGroupChatById(this.host, 'findInFetchWindow', chatId, error));
@@ -1459,7 +1451,7 @@ export class WwebjsMessaging {
     const messages = await chat.fetchMessages({ limit: 100 });
     const message = messages.find(m => m.id._serialized === messageId || m.id.id === messageId);
     if (!message) throw new MessageNotFoundError(messageId, chatId);
-    this.host.ensureReady();
+    ensureReady();
     return message;
   }
 

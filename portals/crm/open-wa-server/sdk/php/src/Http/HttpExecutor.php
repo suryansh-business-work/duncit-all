@@ -194,10 +194,10 @@ class HttpExecutor
         string $method,
         string $path,
         array $query = [],
-        $body = null,
+        mixed $body = null,
         ?string $idempotencyKey = null,
         bool $allowText = false
-    ) {
+    ): mixed {
         $response = $this->send($method, $path, $query, $body, $idempotencyKey);
 
         $text = (string) $response->getBody();
@@ -211,6 +211,46 @@ class HttpExecutor
                 throw new OpenWAException("OpenWA: non-JSON response for {$method} {$path}");
             }
             return $text;
+        }
+        return $decoded;
+    }
+
+    /** @return array<mixed> */
+    public function requestArray(
+        string $method,
+        string $path,
+        array $query = [],
+        mixed $body = null,
+        ?string $idempotencyKey = null,
+        bool $emptyOnNull = false
+    ): array {
+        $decoded = $this->request($method, $path, $query, $body, $idempotencyKey);
+        if ($decoded === null) {
+            if ($emptyOnNull) {
+                return [];
+            }
+            throw new OpenWAException("OpenWA: expected JSON object/array response for {$method} {$path}");
+        }
+        if (!is_array($decoded)) {
+            throw new OpenWAException("OpenWA: expected JSON object/array response for {$method} {$path}");
+        }
+        return $decoded;
+    }
+
+    /** @return array<mixed>|null */
+    public function requestNullableArray(
+        string $method,
+        string $path,
+        array $query = [],
+        mixed $body = null,
+        ?string $idempotencyKey = null
+    ): ?array {
+        $decoded = $this->request($method, $path, $query, $body, $idempotencyKey);
+        if ($decoded === null) {
+            return null;
+        }
+        if (!is_array($decoded)) {
+            throw new OpenWAException("OpenWA: expected JSON object/array response for {$method} {$path}");
         }
         return $decoded;
     }
@@ -247,8 +287,13 @@ class HttpExecutor
      * @param array<string,mixed> $query
      * @param mixed|null          $body
      */
-    private function send(string $method, string $path, array $query, $body, ?string $idempotencyKey = null): ResponseInterface
-    {
+    private function send(
+        string $method,
+        string $path,
+        array $query,
+        mixed $body,
+        ?string $idempotencyKey = null
+    ): ResponseInterface {
         // Guzzle 7 upper-cased the method itself; Guzzle 8 sends it as written, and the gateway refuses "get".
         $method = strtoupper($method);
         if ($idempotencyKey !== null && preg_match('/\A[\x21-\x7E]{1,255}\z/', $idempotencyKey) !== 1) {
@@ -306,7 +351,10 @@ class HttpExecutor
         // Build query string, skipping null values (so absent optionals aren't sent). Guzzle's
         // 'query' option would replace a query already in a raw path, so extend the URL instead.
         $url = $this->baseUrl . $path;
-        $query = array_filter($query, fn ($v) => $v !== null);
+        $query = array_map(
+            static fn (mixed $v): mixed => is_bool($v) ? ($v ? 'true' : 'false') : $v,
+            array_filter($query, static fn (mixed $v): bool => $v !== null),
+        );
         if ($query !== []) {
             $parts = explode('#', $url, 2);
             $url = $parts[0] . (str_contains($parts[0], '?') ? '&' : '?') . http_build_query($query, '', '&', PHP_QUERY_RFC3986);

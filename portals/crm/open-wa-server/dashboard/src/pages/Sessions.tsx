@@ -576,7 +576,12 @@ export function Sessions() {
     }
   };
 
-  const proxySessionId = proxySession?.id ?? null;
+  const openProxyModal = (session: Session) => {
+    if (!canEditProxy) return;
+    setProxySession(session);
+  };
+
+  const proxySessionId = canEditProxy ? (proxySession?.id ?? null) : null;
   // Cancel stays enabled while a save runs, so a save that answers after its modal closed must neither
   // close nor unlock whichever proxy modal is open by then.
   const proxyVisit = useRef(0);
@@ -1136,7 +1141,7 @@ export function Sessions() {
         </Modal>
       )}
 
-      {proxySession && (
+      {proxySession && canEditProxy && (
         <Modal
           open
           onClose={() => setProxySession(null)}
@@ -1243,13 +1248,14 @@ export function Sessions() {
       {deleteConfirmId && (
         <Modal
           open
-          onClose={() => setDeleteConfirmId(null)}
+          onClose={() => deletingId === null && setDeleteConfirmId(null)}
+          hideCloseButton={deletingId !== null}
           title={t('sessions.delete.title')}
           className="confirm-modal"
           closeLabel={t('common.close')}
           footer={
             <>
-              <button className="btn-secondary" onClick={() => setDeleteConfirmId(null)}>
+              <button className="btn-secondary" onClick={() => setDeleteConfirmId(null)} disabled={deletingId !== null}>
                 {t('common.cancel')}
               </button>
               <button
@@ -1276,13 +1282,14 @@ export function Sessions() {
       {killConfirmId && (
         <Modal
           open
-          onClose={() => setKillConfirmId(null)}
+          onClose={() => killingId === null && setKillConfirmId(null)}
+          hideCloseButton={killingId !== null}
           title={t('sessions.forceKill.title')}
           className="confirm-modal"
           closeLabel={t('common.close')}
           footer={
             <>
-              <button className="btn-secondary" onClick={() => setKillConfirmId(null)}>
+              <button className="btn-secondary" onClick={() => setKillConfirmId(null)} disabled={killingId !== null}>
                 {t('common.cancel')}
               </button>
               <button
@@ -1309,13 +1316,18 @@ export function Sessions() {
       {unlinkConfirmId && (
         <Modal
           open
-          onClose={() => setUnlinkConfirmId(null)}
+          onClose={() => unlinkingId === null && setUnlinkConfirmId(null)}
+          hideCloseButton={unlinkingId !== null}
           title={t('sessions.unlink.title')}
           className="confirm-modal"
           closeLabel={t('common.close')}
           footer={
             <>
-              <button className="btn-secondary" onClick={() => setUnlinkConfirmId(null)}>
+              <button
+                className="btn-secondary"
+                onClick={() => setUnlinkConfirmId(null)}
+                disabled={unlinkingId !== null}
+              >
                 {t('common.cancel')}
               </button>
               <button
@@ -1417,10 +1429,12 @@ export function Sessions() {
                   <Eye size={16} />
                   {t('sessions.actions.view')}
                 </button>
-                <button className="btn-action" onClick={() => setProxySession(session)}>
-                  <Globe size={16} />
-                  {t('sessions.actions.proxy')}
-                </button>
+                {canEditProxy && (
+                  <button className="btn-action" onClick={() => openProxyModal(session)}>
+                    <Globe size={16} />
+                    {t('sessions.actions.proxy')}
+                  </button>
+                )}
                 {canWrite && isSessionStarted(session) ? (
                   <button className="btn-action" onClick={() => handleStop(session.id)}>
                     <Square size={16} />

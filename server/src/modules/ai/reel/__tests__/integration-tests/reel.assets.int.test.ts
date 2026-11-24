@@ -6,7 +6,7 @@
  * posts the composer stamped with the reel.
  */
 jest.mock('@services/servam/servam.service', () => ({ servamService: { tts: jest.fn(), transcribe: jest.fn() } }));
-jest.mock('@modules/platform/upload/upload.service', () => ({ pexelsSearch: jest.fn(), pexelsSearchVideos: jest.fn(), uploadToImagekit: jest.fn() }));
+jest.mock('@modules/platform/upload/upload.service', () => ({ pexelsSearch: jest.fn(), pexelsSearchVideos: jest.fn(), uploadToImagekit: jest.fn(), importRemoteMedia: jest.fn() }));
 jest.mock('@observability/log', () => ({ logs: { server: { info: jest.fn(), warn: jest.fn(), error: jest.fn() } } }));
 jest.mock('../../reel.media', () => ({
   reelMediaLinks: async () => ({ media: (id: string) => `media:${id}`, thumbnail: (id: string) => `thumb:${id}` }),
@@ -21,7 +21,7 @@ jest.mock('../../reel.drive', () => ({
 
 import { Types } from 'mongoose';
 import { servamService } from '@services/servam/servam.service';
-import { pexelsSearch, uploadToImagekit } from '@modules/platform/upload/upload.service';
+import { importRemoteMedia, pexelsSearch, uploadToImagekit } from '@modules/platform/upload/upload.service';
 import { SocialPostModel } from '@modules/crm/marketing/social/social.model';
 import { SocialScheduledPostModel } from '@modules/crm/marketing/social/social.publish.model';
 import { MarketingRunModel } from '@modules/crm/marketing/runs/marketingRun.model';
@@ -95,6 +95,22 @@ describe('stock and uploaded footage', () => {
     expect((await reelService.get(reel.id))?.assets).toEqual([]);
     await ReelProjectModel.updateOne({ _id: reel.id }, { $set: { assets: Array.from({ length: 60 }, (_item, index) => ({ id: `s${index}`, kind: 'IMAGE', source: 'UPLOAD', url: PHOTO })) } });
     await expect(reelService.addStockAssets(reel.id, [stock('1')], ACTOR)).rejects.toMatchObject({ ...BAD_INPUT, message: expect.stringContaining('at most 60') });
+  });
+
+  it('copies a Pixabay pick into the media store and pushes it without overwriting footage added meanwhile', async () => {
+    const reel = await newReel();
+    (importRemoteMedia as jest.Mock).mockImplementation(async () => {
+      // Someone adds footage while the file is being copied.
+      await reelService.addStockAssets(reel.id, [stock('5')], ACTOR);
+      return { url: 'https://ik.imagekit.io/duncit/reels/stock/pixabay-77.mp4' };
+    });
+    const added = await reelService.addStockAssets(
+      reel.id,
+      [{ provider: 'PIXABAY', provider_id: '77', kind: 'VIDEO', url: 'https://cdn.pixabay.com/video/77_medium.mp4', name: 'Pixabay clip', licence: 'x', attribution: 'Video by Arun on Pixabay', duration_ms: 9000 }],
+      ACTOR
+    );
+    expect(added.assets.map((asset) => asset.provider_id)).toEqual(['5', 'pixabay:77']);
+    expect(added.assets[1]).toMatchObject({ source: 'STOCK', url: 'https://ik.imagekit.io/duncit/reels/stock/pixabay-77.mp4', duration_ms: 9000 });
   });
 
   it('adds media-store files with the kind read off the address, or none of them when one is not from the store', async () => {

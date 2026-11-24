@@ -8,7 +8,7 @@ import { annotationsFor } from '../../catalog/annotations';
 import { listTools } from '../../catalog/visibility';
 import type { CallSession } from '../../execute/pipeline';
 import { GATEWAY_ENDPOINT } from '../../mcp.constants';
-import { instructionsFor, MCP_SERVER_VERSION, mcpServerFactory, sessionOf } from '../../server/mcp.server';
+import { instructionsFor, MCP_SERVER_VERSION, mcpServerFactory, REEL_ENGINE_RULE, sessionOf } from '../../server/mcp.server';
 import { findPrompt, MCP_PROMPTS } from '../../server/prompts';
 import { recordToolCall } from '../../usage/usage.recorder';
 import { buildFixtureCatalog, caller, PODS_STAFF, PUBLIC_URL, READ_ONLY, READ_WRITE, settings } from './fixtures';
@@ -83,6 +83,15 @@ describe('instructionsFor', () => {
     expect(text).toContain('Find tools with mcp_list_tools or mcp_search_tools');
     expect(text).not.toContain('mcp_call_tool');
     expect(text).not.toContain('This is the gateway');
+  });
+
+  it('tells the gateway and the Marketing connector to ask who pays for a reel’s AI, and no one else', () => {
+    expect(instructionsFor(GATEWAY_ENDPOINT)).toContain(REEL_ENGINE_RULE);
+    expect(instructionsFor('marketing')).toContain(REEL_ENGINE_RULE);
+    expect(instructionsFor('pods')).not.toContain('Reel Studio');
+    expect(REEL_ENGINE_RULE).toContain('ask the user which to use');
+    expect(REEL_ENGINE_RULE).toContain('marketing_save_reel_spec');
+    expect(REEL_ENGINE_RULE).toContain('Never choose for them');
   });
 
   it('gives every client the rules on reasons, confirmation and untrusted results', () => {

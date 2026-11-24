@@ -24,7 +24,7 @@ import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { isAiFeatureEnabled } from '@modules/ai/aiFeature/aiFeature.guard';
 import { openAiUsageService } from '@modules/ai/openaiUsage/openaiUsage.service';
 import { OPENAI_TASKS } from '@modules/ai/openaiUsage/openaiUsage.tasks';
-import { openaiChat, type OpenAiChatRequest } from '../../openai.client';
+import { envCategoryOfModel, openaiChat, type OpenAiChatRequest } from '../../openai.client';
 import { claudeMessages } from '@services/anthropic/anthropic.client';
 
 const env = getRuntimeEnvValue as unknown as jest.Mock;
@@ -336,5 +336,14 @@ describe('openaiChat — a claude- model', () => {
 
     expect(await openaiChat(request({ model: 'claude-opus-5-5' }))).toMatchObject({ code: 'DISABLED', model: 'claude-opus-5-5' });
     expect(claude).not.toHaveBeenCalled();
+  });
+});
+
+describe('envCategoryOfModel', () => {
+  it('names the Tech portal category whose key a model is sent with', () => {
+    expect(envCategoryOfModel('claude-sonnet-5-5')).toBe('ANTHROPIC');
+    expect(envCategoryOfModel('gemini-2.5-flash')).toBe('GEMINI');
+    expect(envCategoryOfModel('gpt-5-mini')).toBe('OPENAI');
+    expect(envCategoryOfModel('')).toBe('OPENAI');
   });
 });

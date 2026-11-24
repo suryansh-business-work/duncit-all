@@ -6,7 +6,10 @@ import { driveThumbnail } from '../../reel.drive';
 import type { ReelAsset, ReelMessage } from '../../reel.model';
 import { emptySpec } from '../../reel.edit';
 
-jest.mock('@services/openai/openai.client', () => ({ openaiChat: jest.fn() }));
+jest.mock('@services/openai/openai.client', () => ({
+  openaiChat: jest.fn(),
+  envCategoryOfModel: (model: string) => (model.startsWith('claude-') ? 'ANTHROPIC' : 'OPENAI'),
+}));
 jest.mock('@modules/ai/prompt/prompt.service', () => ({ resolvePrompt: jest.fn() }));
 jest.mock('@observability/log', () => ({ logs: { server: { warn: jest.fn(), error: jest.fn() } } }));
 jest.mock('../../reel.drive', () => ({ driveThumbnail: jest.fn() }));
@@ -70,6 +73,13 @@ describe('directReel — the answer', () => {
   it('reports the failure when the model cannot be reached', async () => {
     mockChat.mockResolvedValue({ ok: false, message: 'OpenAI is not configured.' });
     await expect(directReel(input())).resolves.toEqual({ ok: false, reply: 'OpenAI is not configured.', spec: null });
+  });
+
+  it('names the Tech portal category when a missing key is why, and only then', async () => {
+    mockChat.mockResolvedValue({ ok: false, code: 'NOT_CONFIGURED', model: 'claude-sonnet-5-5', message: 'Anthropic is not configured.' });
+    await expect(directReel(input())).resolves.toEqual({ ok: false, reply: 'Anthropic is not configured.', spec: null, fix_category: 'ANTHROPIC' });
+    mockChat.mockResolvedValue({ ok: false, code: 'NETWORK', model: 'claude-sonnet-5-5', message: 'Anthropic is unreachable' });
+    await expect(directReel(input())).resolves.toEqual({ ok: false, reply: 'Anthropic is unreachable', spec: null });
   });
 
   it.each(['not json at all', '[1, 2]', 'null'])('refuses an answer it cannot read: %s', async (content) => {

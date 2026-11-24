@@ -1011,6 +1011,7 @@
       "description": "Team alerts and channel notifications",
       "docUrl": "https://api.slack.com/apps",
       "usedIn": [
+        "server/src/modules/platform/appBuild/appBuild.apps.ts",
         "server/src/modules/platform/appBuild/appBuild.service.ts",
         "server/src/modules/platform/appBuild/appStoreRelease.service.ts",
         "server/src/modules/platform/appBuild/playRelease.service.ts",
@@ -1152,6 +1153,32 @@
           },
           "usedIn": [
             "server/src/modules/platform/appBuild/appBuild.service.ts"
+          ]
+        },
+        {
+          "name": "crm_android_builds_channel",
+          "label": "Duncit CRM Production Builds Channel (optional)",
+          "hint": "Channel ID production Duncit CRM APKs announce to; blank uses the Android builds channel (CRM portal → Download CRM App → Settings, or Tech → App Builds → Settings)",
+          "envKey": "SLACK_CRM_ANDROID_BUILDS_CHANNEL",
+          "description": "Channel the internal Duncit CRM app's production CI builds announce to, so sales staff get each new APK without the member app's build noise.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/appBuild/appBuild.apps.ts"
+          ]
+        },
+        {
+          "name": "crm_android_staging_builds_channel",
+          "label": "Duncit CRM Staging Builds Channel (optional)",
+          "hint": "Channel ID staging Duncit CRM APKs announce to; blank uses the Duncit CRM production builds channel (CRM portal → Download CRM App → Settings, or Tech → App Builds → Settings)",
+          "envKey": "SLACK_CRM_ANDROID_STAGING_BUILDS_CHANNEL",
+          "description": "Channel the internal Duncit CRM app's staging CI builds announce to, so testers get each staging APK apart from production releases.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/appBuild/appBuild.apps.ts"
           ]
         },
         {
@@ -2796,6 +2823,7 @@
       "usedIn": [
         ".github/workflows/android-build.yml",
         ".github/workflows/coverage.yml",
+        ".github/workflows/crm-android-build.yml",
         ".github/workflows/e2e.yml",
         ".github/workflows/ios-build.yml",
         ".github/workflows/sonar.yml",
@@ -2812,6 +2840,7 @@
       "usedIn": [
         ".github/workflows/android-build.yml",
         ".github/workflows/coverage.yml",
+        ".github/workflows/crm-android-build.yml",
         ".github/workflows/e2e.yml",
         ".github/workflows/ios-build.yml",
         ".github/workflows/sonar.yml",
@@ -2828,6 +2857,7 @@
       "usedIn": [
         ".github/workflows/android-build.yml",
         ".github/workflows/coverage.yml",
+        ".github/workflows/crm-android-build.yml",
         ".github/workflows/e2e.yml",
         ".github/workflows/ios-build.yml",
         ".github/workflows/sonar.yml",
@@ -2844,6 +2874,7 @@
       "usedIn": [
         ".github/workflows/android-build.yml",
         ".github/workflows/coverage.yml",
+        ".github/workflows/crm-android-build.yml",
         ".github/workflows/e2e.yml",
         ".github/workflows/ios-build.yml",
         ".github/workflows/sonar.yml",
@@ -2902,7 +2933,8 @@
         "type": "text"
       },
       "usedIn": [
-        ".github/workflows/android-build.yml"
+        ".github/workflows/android-build.yml",
+        ".github/workflows/crm-android-build.yml"
       ]
     },
     "ANDROID_UPLOAD_STORE_PASSWORD": {
@@ -2913,7 +2945,8 @@
         "type": "text"
       },
       "usedIn": [
-        ".github/workflows/android-build.yml"
+        ".github/workflows/android-build.yml",
+        ".github/workflows/crm-android-build.yml"
       ]
     },
     "ANDROID_UPLOAD_KEY_ALIAS": {
@@ -2924,7 +2957,8 @@
         "type": "text"
       },
       "usedIn": [
-        ".github/workflows/android-build.yml"
+        ".github/workflows/android-build.yml",
+        ".github/workflows/crm-android-build.yml"
       ]
     },
     "ANDROID_UPLOAD_KEY_PASSWORD": {
@@ -2935,7 +2969,8 @@
         "type": "text"
       },
       "usedIn": [
-        ".github/workflows/android-build.yml"
+        ".github/workflows/android-build.yml",
+        ".github/workflows/crm-android-build.yml"
       ]
     },
     "MWEB_ANDROID_CERT_SHA256": {

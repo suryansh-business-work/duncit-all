@@ -149,6 +149,8 @@ export const appConfig = {
       children: [
         { label: 'Android', labelKey: 'shell.nav.android', to: '/app-builds/android', icon: 'android' },
         { label: 'iOS', labelKey: 'shell.nav.ios', to: '/app-builds/ios', icon: 'apple' },
+        // The internal Duncit CRM Android app — built by crm-android-build.yml.
+        { label: 'Duncit CRM', labelKey: 'shell.nav.crmAppBuilds', to: '/app-builds/crm', icon: 'android' },
         // What the stores show — name, descriptions, screenshots, review contact —
         // kept once and applied by every push from the two tables above.
         { label: 'Store Listing', labelKey: 'shell.nav.storeListing', to: '/app-builds/store-listing', icon: 'storefront' },

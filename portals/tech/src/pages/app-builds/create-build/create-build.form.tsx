@@ -12,7 +12,7 @@ import {
   TextField,
 } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
-import type { AppBuildPlatform, AppBuildTriggerConfig } from '../queries';
+import type { AppBuildArtifactKind, AppBuildPlatform, AppBuildTriggerConfig } from '../queries';
 import {
   createBuildSchema,
   defaultRefFor,
@@ -23,6 +23,8 @@ import ArtifactField from './ArtifactField';
 
 interface Props {
   platform: AppBuildPlatform;
+  /** The Duncit CRM app: one APK, no artifact choice, no store submission. */
+  crm?: boolean;
   config: AppBuildTriggerConfig;
   onSubmit: (values: CreateBuildValues) => void;
 }
@@ -30,9 +32,9 @@ interface Props {
 /** Submits this form from outside it — the dialog owns the action buttons. */
 export const CREATE_BUILD_FORM_ID = 'create-build-form';
 
-export default function CreateBuildForm({ platform, config, onSubmit }: Readonly<Props>) {
+export default function CreateBuildForm({ platform, crm = false, config, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
-  const kinds = PLATFORM_ARTIFACTS[platform];
+  const kinds: AppBuildArtifactKind[] = crm ? ['APK'] : PLATFORM_ARTIFACTS[platform];
   const { control, getValues, handleSubmit, watch, setValue } = useForm<CreateBuildValues, any, CreateBuildValues>({
     defaultValues: {
       app_env: 'PRODUCTION',
@@ -91,7 +93,7 @@ export default function CreateBuildForm({ platform, config, onSubmit }: Readonly
           <ArtifactField control={control} kinds={kinds} label={t('tech.appBuilds.artifactsLabel')} />
         )}
 
-        {platform === 'ANDROID' && (
+        {platform === 'ANDROID' && !crm && (
           <Controller
             control={control}
             name="submit_to_play_store"

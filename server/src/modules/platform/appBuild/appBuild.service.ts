@@ -15,6 +15,7 @@ import { clip, contextBlock, escapeMrkdwn } from '@utils/slack-blocks';
 import {
   AppBuildModel,
   nextBuildNo,
+  type AppBuildApp,
   type AppBuildArtifactKind,
   type AppBuildEnv,
   type AppBuildPlatform,
@@ -28,6 +29,15 @@ import {
 import { playStoreSettings, pushBuildToPlayStore } from './playRelease.service';
 import { pushBuildToAppStore } from './appStoreRelease.service';
 import { appStoreSettings } from './iosSigning.service';
+import {
+  appFilter,
+  appLabel,
+  appOf,
+  channelKeysFor,
+  CRM_CHANNEL_CONFIG_FIELDS,
+  CRM_CHANNEL_ENV_KEYS,
+  CRM_WORKFLOW_FILE,
+} from './appBuild.apps';
 import {
   dispatchWorkflow,
   githubRepoConfig,
@@ -72,10 +82,13 @@ const APP_ENVS = new Set<string>(['PRODUCTION', 'STAGING']);
  * channel; until one is chosen it keeps going where every build went before,
  * so choosing nothing loses no announcement.
  */
-async function channelFor(build: Pick<IAppBuild, 'platform' | 'app_env'>): Promise<string> {
-  const production = optionalStr(await getRuntimeEnvValue(CHANNEL_ENV_KEY[build.platform]));
-  if (build.app_env !== 'STAGING') return production;
-  return optionalStr(await getRuntimeEnvValue(STAGING_CHANNEL_ENV_KEY[build.platform])) || production;
+async function channelFor(build: Pick<IAppBuild, 'platform' | 'app_env' | 'app'>): Promise<string> {
+  const keys = channelKeysFor(build, { production: CHANNEL_ENV_KEY, staging: STAGING_CHANNEL_ENV_KEY });
+  for (const key of keys) {
+    const channel = optionalStr(await getRuntimeEnvValue(key));
+    if (channel) return channel;
+  }
+  return '';
 }
 
 const PLATFORM_LABEL: Record<AppBuildPlatform, string> = {
@@ -221,6 +234,7 @@ const pub = (doc: IAppBuild) => ({
   trigger_source: doc.trigger_source,
   triggered_by: doc.triggered_by,
   app_env: doc.app_env,
+  app: appOf(doc.app),
   requested_artifacts: doc.requested_artifacts,
   submit_to_play_store: doc.submit_to_play_store,
   stage: doc.stage,
@@ -263,7 +277,7 @@ function commitUrl(build: IAppBuild): string {
 function headline(build: IAppBuild): string {
   // Production reads as it always has; a staging build says so in the first words.
   const staging = build.app_env === 'STAGING' ? `${ENV_LABEL.STAGING} ` : '';
-  const label = `${staging}${PLATFORM_LABEL[build.platform]}`;
+  const label = `${appLabel(build.app)}${staging}${PLATFORM_LABEL[build.platform]}`;
   if (build.status === 'FAILED') {
     return `:x: ${label} build failed — v${build.version} (${build.build_no})`;
   }
@@ -383,7 +397,7 @@ async function announce(
 ): Promise<{ channel?: string | null; ts?: string | null; skipped?: string | null }> {
   const channel = await channelFor(build);
   if (!channel) {
-    return { skipped: `No Slack channel is configured for ${PLATFORM_LABEL[build.platform]} builds` };
+    return { skipped: `No Slack channel is configured for ${appLabel(build.app)}${PLATFORM_LABEL[build.platform]} builds` };
   }
   const result = await postMessage({
     channel,
@@ -599,6 +613,8 @@ async function upsertBuild(
     status,
     version,
     ...appEnvOf(input, existing),
+    // Fixed by the first report: a later one cannot move a build to the other app.
+    ...(existing ? {} : { app: appOf(input.app) }),
     // Minted once per run, so a report that lacks it (an older reporter) must
     // not blank the one an earlier report of the same run carried.
     ...(optionalStr(input.build_number) ? { build_number: optionalStr(input.build_number) } : {}),
@@ -674,14 +690,45 @@ export const appBuildService = {
     return pub(build);
   },
 
-  async table(platform: AppBuildPlatform, input?: TableQueryInput | null, appEnv?: AppBuildEnv | null) {
+  async table(
+    platform: AppBuildPlatform,
+    input?: TableQueryInput | null,
+    appEnv?: AppBuildEnv | null,
+    app?: AppBuildApp | null
+  ) {
     const { docs, total, page, page_size } = await runTableQuery<IAppBuild>(
       AppBuildModel,
-      { platform, ...(appEnv ? { app_env: appEnv } : {}), ...presenceFilter(input, 'slack_ts') },
+      { platform, ...(appEnv ? { app_env: appEnv } : {}), ...appFilter(app), ...presenceFilter(input, 'slack_ts') },
       input,
       APP_BUILD_TABLE_CONFIG
     );
     return { rows: docs.map(pub), total, page, page_size };
+  },
+
+  /** The newest successful CRM APK per environment, for the CRM portal's Download app page. */
+  async crmDownload() {
+    const newest = async (app_env: AppBuildEnv) => {
+      const doc = await AppBuildModel.findOne({
+        app: 'CRM',
+        platform: 'ANDROID',
+        app_env,
+        status: 'SUCCESS',
+        $or: [{ 'artifacts.kind': 'APK', 'artifacts.url': { $nin: ['', null] } }, { artifact_url: { $nin: ['', null] } }],
+      }).sort({ created_at: -1 });
+      const apk = doc ? artifactsOf(doc).find((a) => a.kind === 'APK' && a.url) : undefined;
+      if (!doc || !apk) return null;
+      return {
+        build_no: doc.build_no,
+        version: doc.version,
+        build_number: doc.build_number || null,
+        apk_url: apk.url,
+        size_mb: apk.size_mb ?? null,
+        app_env: doc.app_env,
+        created_at: doc.created_at.toISOString(),
+      };
+    };
+    const [production, staging] = await Promise.all([newest('PRODUCTION'), newest('STAGING')]);
+    return { production, staging };
   },
 
   /**
@@ -750,13 +797,14 @@ export const appBuildService = {
   async trigger(input: any, user: AuthUser) {
     const platform: AppBuildPlatform = input.platform;
     const appEnv: AppBuildEnv = input.app_env;
-    const artifacts = requestedArtifacts(platform, input.artifacts);
-    const submitToPlayStore = playStoreSubmission(
-      input.submit_to_play_store,
-      platform,
-      appEnv,
-      artifacts
-    );
+    const app = appOf(input.app);
+    // The CRM app is an Android APK installed by hand: no iOS build, no bundle,
+    // no store submission — its workflow declares none of those inputs.
+    if (app === 'CRM' && platform !== 'ANDROID') throw badInput('Duncit CRM is built for Android only.');
+    const artifacts: AppBuildArtifactKind[] = app === 'CRM' ? ['APK'] : requestedArtifacts(platform, input.artifacts);
+    const submitToPlayStore =
+      app === 'CRM' ? false : playStoreSubmission(input.submit_to_play_store, platform, appEnv, artifacts);
+    const workflow = app === 'CRM' ? CRM_WORKFLOW_FILE : WORKFLOW_FILE[platform];
     const ref = optionalStr(input.ref) || DEFAULT_REF[appEnv];
     const cfg = await requireGithubRepoConfig();
 
@@ -770,6 +818,7 @@ export const appBuildService = {
       trigger_source: 'PORTAL',
       triggered_by: user.email ?? user.id,
       app_env: appEnv,
+      app,
       requested_artifacts: artifacts,
       submit_to_play_store: submitToPlayStore,
       branch: ref,
@@ -792,11 +841,11 @@ export const appBuildService = {
       // choice to make. The dispatch API refuses any input a workflow does not
       // declare — 422 "Unexpected inputs provided" — so sending it to iOS
       // anyway would fail every iOS build before it started.
-      if (platform === 'ANDROID') {
+      if (platform === 'ANDROID' && app !== 'CRM') {
         inputs.artifacts = artifacts.join(',');
         inputs.submit_to_play_store = String(submitToPlayStore);
       }
-      await dispatchWorkflow(cfg, WORKFLOW_FILE[platform], ref, inputs);
+      await dispatchWorkflow(cfg, workflow, ref, inputs);
     } catch (err) {
       // The build never started, so its row must not survive to look queued
       // forever. Removing it also returns the build_no's slot to nothing —
@@ -808,13 +857,14 @@ export const appBuildService = {
     logs.server.warn('appBuild', 'trigger', {
       build_no: build.build_no,
       platform,
+      app,
       app_env: appEnv,
       ref,
       artifacts: artifacts.join(','),
       submit_to_play_store: submitToPlayStore,
       triggered_by: build.triggered_by,
     });
-    return { build: pub(build), actions_url: workflowRunsUrl(cfg, WORKFLOW_FILE[platform], ref) };
+    return { build: pub(build), actions_url: workflowRunsUrl(cfg, workflow, ref) };
   },
 
   async settings() {
@@ -831,6 +881,8 @@ export const appBuildService = {
       ios_channel: optionalStr(await getRuntimeEnvValue(CHANNEL_ENV_KEY.IOS)) || null,
       android_staging_channel: optionalStr(await getRuntimeEnvValue(STAGING_CHANNEL_ENV_KEY.ANDROID)) || null,
       ios_staging_channel: optionalStr(await getRuntimeEnvValue(STAGING_CHANNEL_ENV_KEY.IOS)) || null,
+      crm_channel: optionalStr(await getRuntimeEnvValue(CRM_CHANNEL_ENV_KEYS.PRODUCTION)) || null,
+      crm_staging_channel: optionalStr(await getRuntimeEnvValue(CRM_CHANNEL_ENV_KEYS.STAGING)) || null,
       last_reported_at: latest?.created_at?.toISOString() ?? null,
       last_reported_by: optionalStr(latest?.reported_by) || null,
       play_store_configured: play.configured,
@@ -883,6 +935,8 @@ export const appBuildService = {
     ios_channel?: string | null;
     android_staging_channel?: string | null;
     ios_staging_channel?: string | null;
+    crm_channel?: string | null;
+    crm_staging_channel?: string | null;
   }) {
     const entry = await slackEntry();
     if (!entry) {
@@ -902,6 +956,12 @@ export const appBuildService = {
     }
     if (input.ios_staging_channel !== undefined) {
       set['config.ios_staging_builds_channel'] = optionalStr(input.ios_staging_channel);
+    }
+    if (input.crm_channel !== undefined) {
+      set[CRM_CHANNEL_CONFIG_FIELDS.PRODUCTION] = optionalStr(input.crm_channel);
+    }
+    if (input.crm_staging_channel !== undefined) {
+      set[CRM_CHANNEL_CONFIG_FIELDS.STAGING] = optionalStr(input.crm_staging_channel);
     }
     if (Object.keys(set).length > 0) {
       await EnvEntryModel.updateOne({ _id: entry._id }, { $set: set });

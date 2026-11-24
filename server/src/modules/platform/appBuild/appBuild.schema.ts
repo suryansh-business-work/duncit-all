@@ -24,6 +24,14 @@ export const appBuildTypeDefs = gql`
     FAILED
   }
 
+  "Which app a build is of. Builds from before the CRM app existed are DUNCIT."
+  enum AppBuildApp {
+    "The member app (app/mobile-app)."
+    DUNCIT
+    "The internal Duncit CRM app (app/crm-app)."
+    CRM
+  }
+
   "Which server and database the built app talks to."
   enum AppBuildEnv {
     PRODUCTION
@@ -245,6 +253,8 @@ export const appBuildTypeDefs = gql`
     triggered_by: String!
     "Which server and database this build's app points at."
     app_env: AppBuildEnv!
+    "Which app was built."
+    app: AppBuildApp!
     """
     What was asked for, as opposed to the artifacts list, which is what was
     actually produced.
@@ -303,6 +313,10 @@ export const appBuildTypeDefs = gql`
     android_staging_channel: String
     "Where staging iOS builds are announced. Null sends them to the production channel."
     ios_staging_channel: String
+    "Where production Duncit CRM builds are announced. Null sends them to the Android builds channel."
+    crm_channel: String
+    "Where staging Duncit CRM builds are announced. Null sends them to the CRM production channel."
+    crm_staging_channel: String
     "When CI last reported any build. Null means the workflows have never reached us."
     last_reported_at: String
     "Which account the last report authenticated as."
@@ -418,6 +432,8 @@ export const appBuildTypeDefs = gql`
 
   input ReportAppBuildInput {
     platform: AppBuildPlatform!
+    "Which app was built. Left out, the member app (every reporter from before the CRM app)."
+    app: AppBuildApp
     "Which server the built app talks to. Left out, a new build from the staging branch is STAGING and any other PRODUCTION."
     app_env: AppBuildEnv
     "Defaults to SUCCESS. FAILED rows carry no artifact."
@@ -475,6 +491,8 @@ export const appBuildTypeDefs = gql`
   """
   input TriggerAppBuildInput {
     platform: AppBuildPlatform!
+    "Which app to build. Left out, the member app. CRM builds an Android APK only (artifacts and Play submission are ignored)."
+    app: AppBuildApp
     """
     Which server and database the built app talks to. This is baked into the
     binary at compile time and cannot be changed afterwards, which is the whole
@@ -513,6 +531,10 @@ export const appBuildTypeDefs = gql`
     android_staging_channel: String
     "Slack channel ID staging iOS builds announce to. Empty sends them to the production channel."
     ios_staging_channel: String
+    "Slack channel ID production Duncit CRM builds announce to. Empty falls back to the Android builds channel."
+    crm_channel: String
+    "Slack channel ID staging Duncit CRM builds announce to. Empty falls back to the CRM production channel."
+    crm_staging_channel: String
   }
 
   "Whether the portal can start builds, and what it would build from."
@@ -536,9 +558,56 @@ export const appBuildTypeDefs = gql`
     reports_to: String!
   }
 
+  "One downloadable Duncit CRM APK."
+  type CrmAppDownloadBuild {
+    build_no: String!
+    version: String!
+    build_number: String
+    apk_url: String!
+    size_mb: Float
+    app_env: AppBuildEnv!
+    created_at: String
+  }
+
+  "A Slack channel CRM staff can pick for their app's build announcements."
+  type CrmSlackChannel {
+    id: ID!
+    name: String!
+    is_private: Boolean!
+    "Whether the Duncit bot is in it — it must be, to post."
+    is_member: Boolean!
+  }
+
+  "Where each environment's Duncit CRM APK is announced on Slack."
+  type CrmAppBuildSettings {
+    slack_configured: Boolean!
+    production_channel: String
+    staging_channel: String
+    channels: [CrmSlackChannel!]!
+    "Why the channel list could not be read, when it could not."
+    channels_error: String
+  }
+
+  input UpdateCrmAppBuildSettingsInput {
+    "Slack channel ID for production builds; empty falls back to the Android builds channel."
+    production_channel: String
+    "Slack channel ID for staging builds; empty falls back to the production channel."
+    staging_channel: String
+  }
+
+  "The newest successful Duncit CRM APK of each environment; null where none has been built yet."
+  type CrmAppDownload {
+    production: CrmAppDownloadBuild
+    staging: CrmAppDownloadBuild
+  }
+
   extend type Query {
-    "CI builds of one platform, newest first (Tech portal App Builds tables). app_env narrows them to one environment; left out lists both."
-    appBuildsTable(platform: AppBuildPlatform!, query: TableQueryInput, app_env: AppBuildEnv): AppBuildTablePage!
+    "CI builds of one platform, newest first (Tech portal App Builds tables). app_env narrows them to one environment; left out lists both. app picks which app; left out, the member app."
+    appBuildsTable(platform: AppBuildPlatform!, query: TableQueryInput, app_env: AppBuildEnv, app: AppBuildApp): AppBuildTablePage!
+    "The newest downloadable Duncit CRM Android build per environment, for the CRM portal's Download app page. CRM staff only."
+    crmAppDownload: CrmAppDownload!
+    "Which Slack channels Duncit CRM builds announce to, with the channels the bot can see. CRM staff only."
+    crmAppBuildSettings: CrmAppBuildSettings!
     appBuildSettings: AppBuildSettings!
     appBuildTriggerConfig: AppBuildTriggerConfig!
     "The iOS signing identity a build was signed with. Null on Android and on builds from before one existed."
@@ -548,6 +617,8 @@ export const appBuildTypeDefs = gql`
   }
 
   extend type Mutation {
+    "Choose the Slack channels Duncit CRM builds announce to (each must be one the bot can see, or empty). CRM staff only."
+    updateCrmAppBuildSettings(input: UpdateCrmAppBuildSettingsInput!): CrmAppBuildSettings!
     """
     Record a CI build (and, once it finishes, announce it on the platform's
     Slack channel, best-effort). Tech/Super admin only — the workflow

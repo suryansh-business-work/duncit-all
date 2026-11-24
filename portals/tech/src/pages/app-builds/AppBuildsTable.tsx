@@ -5,10 +5,11 @@ import { getRowId } from './cells';
 import { makeAppBuildColumns } from './appBuildColumns';
 import type { PushToPlay } from './usePlayStorePush';
 import type { PushToAppStore } from './useAppStorePush';
-import type { AppBuildPlatform, AppBuildRow } from './queries';
+import type { AppBuildApp, AppBuildPlatform, AppBuildRow } from './queries';
 
 interface Props {
   platform: AppBuildPlatform;
+  app?: AppBuildApp;
   fetchRows: TableFetch<AppBuildRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
   onRowClick: (row: AppBuildRow) => void;
@@ -21,6 +22,7 @@ interface Props {
 
 export default function AppBuildsTable({
   platform,
+  app = 'DUNCIT',
   fetchRows,
   refetchRef,
   onRowClick,
@@ -30,10 +32,13 @@ export default function AppBuildsTable({
   ariaLabel,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const tableId = platform === 'ANDROID' ? 'tech-app-builds-android' : 'tech-app-builds-ios';
+  let tableId = platform === 'ANDROID' ? 'tech-app-builds-android' : 'tech-app-builds-ios';
+  if (app === 'CRM') tableId = 'tech-app-builds-crm';
+  // The CRM APK is installed by hand and never goes to a store, so its table has no store column.
+  const withStore = app !== 'CRM';
   const columns = useMemo(
-    () => makeAppBuildColumns(t, platform, onDelete, onPush, onPushAppStore),
-    [t, onDelete, onPush, onPushAppStore, platform]
+    () => makeAppBuildColumns(t, platform, onDelete, onPush, onPushAppStore, withStore),
+    [t, onDelete, onPush, onPushAppStore, platform, withStore]
   );
 
   return (

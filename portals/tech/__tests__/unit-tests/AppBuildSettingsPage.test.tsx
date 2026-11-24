@@ -42,6 +42,8 @@ const appSettings = (over: Record<string, unknown> = {}) => ({
   ios_channel: null,
   android_staging_channel: null,
   ios_staging_channel: null,
+  crm_channel: null,
+  crm_staging_channel: 'C0CRMQA',
   last_reported_at: '2026-01-02T10:00:00.000Z',
   last_reported_by: 'ci@example.test',
   play_store_configured: true,
@@ -117,6 +119,8 @@ describe('App build settings page / channels', () => {
             ios_channel: 'C0IOS12345',
             android_staging_channel: '',
             ios_staging_channel: '',
+            crm_channel: '',
+            crm_staging_channel: 'C0CRMQA',
           },
         },
       }),
@@ -387,20 +391,21 @@ describe('App build settings page / release notices', () => {
 describe('settings schemas and mappers', () => {
   it('opens the channel form with empty text for a channel that was never set', () => {
     expect(
-      toAppBuildSettingsForm({ android_channel: 'C0A', ios_channel: null, android_staging_channel: null, ios_staging_channel: 'C0B' }),
-    ).toEqual({ android_channel: 'C0A', ios_channel: '', android_staging_channel: '', ios_staging_channel: 'C0B' });
+      toAppBuildSettingsForm({ android_channel: 'C0A', ios_channel: null, android_staging_channel: null, ios_staging_channel: 'C0B', crm_channel: 'C0CRM', crm_staging_channel: null }),
+    ).toEqual({ android_channel: 'C0A', ios_channel: '', android_staging_channel: '', ios_staging_channel: 'C0B', crm_channel: 'C0CRM', crm_staging_channel: '' });
     expect(
-      toAppBuildSettingsForm({ android_channel: null, ios_channel: 'C0I', android_staging_channel: 'C0S', ios_staging_channel: null }),
-    ).toEqual({ android_channel: '', ios_channel: 'C0I', android_staging_channel: 'C0S', ios_staging_channel: '' });
+      toAppBuildSettingsForm({ android_channel: null, ios_channel: 'C0I', android_staging_channel: 'C0S', ios_staging_channel: null, crm_channel: null, crm_staging_channel: 'C0Q' }),
+    ).toEqual({ android_channel: '', ios_channel: 'C0I', android_staging_channel: 'C0S', ios_staging_channel: '', crm_channel: '', crm_staging_channel: 'C0Q' });
   });
 
   it('accepts an empty channel and a channel id, and refuses anything else', () => {
     const schema = appBuildSettingsSchema({ channelFormat: 'bad' });
-    const base = { android_channel: '', ios_channel: 'C0123ABCD', android_staging_channel: ' G0123ABCD ', ios_staging_channel: '' };
+    const base = { android_channel: '', ios_channel: 'C0123ABCD', android_staging_channel: ' G0123ABCD ', ios_staging_channel: '', crm_channel: 'C0CRM1234', crm_staging_channel: '' };
 
     expect(schema.safeParse(base).success).toBe(true);
     expect(schema.safeParse({ ...base, ios_channel: 'c0123abcd' }).success).toBe(false);
     expect(schema.safeParse({ ...base, ios_channel: 'C01' }).success).toBe(false);
+    expect(schema.safeParse({ ...base, crm_staging_channel: 'not-a-channel' }).success).toBe(false);
   });
 
   it('splits addresses on newlines, commas and semicolons, lower-cased and de-duplicated', () => {

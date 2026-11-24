@@ -33,6 +33,9 @@
  *                            no changelog, no diff stat, no upload.
  *   DISPATCH_ID              set by the Tech portal; claims the row it already
  *                            created instead of opening a second one.
+ *   APP                      CRM for the Duncit CRM app (app/crm-app); unset for the
+ *                            member app (app/mobile-app). Picks the app.json read and
+ *                            the server's app field, and so its table and Slack channel.
  *   APP_ENV                  production | staging — which server the built app
  *                            talks to. Recorded on the build; a staging build is
  *                            never recorded as anything else.
@@ -167,12 +170,20 @@ const { gql, gqlOnce, withRetry, resolveToken } = createCiClient({
  */
 async function lastReportedSha(token, platform) {
   try {
-    const data = await gql(
-      `query($platform: AppBuildPlatform!){
+    // The member app keeps the query it has always sent (an older server has no
+    // `app` argument); the CRM app asks for its own builds only.
+    const query =
+      APP === 'CRM'
+        ? `query($platform: AppBuildPlatform!){
+            appBuildsTable(platform: $platform, app: CRM, query: { page_size: 5 }) { rows { commit_sha workflow_run_id } }
+          }`
+        : `query($platform: AppBuildPlatform!){
         appBuildsTable(platform: $platform, query: { page_size: 5 }) {
           rows { commit_sha workflow_run_id }
         }
-      }`,
+      }`;
+    const data = await gql(
+      query,
       { platform },
       token,
       // A deadline already past, i.e. no retry: this only picks a nicer
@@ -288,6 +299,19 @@ class StagingNotRecordable extends Error {
   }
 }
 
+/**
+ * The same refusal for the app dimension: a server that has never heard of
+ * `app` would record a Duncit CRM build as the member app — listed in its
+ * table, announced in its channel and offered to its store listing.
+ */
+class AppNotRecordable extends Error {
+  constructor() {
+    super(
+      'This server cannot tell Duncit CRM builds apart yet (it predates the app field), so this build was not recorded or announced. Its files are on this run as artifacts. Deploy the server, then build again.'
+    );
+  }
+}
+
 const UNKNOWN_FIELD_RE = /Field "([^"]+)" is not defined by type "ReportAppBuildInput"/g;
 
 /** Every input field the server said it has never heard of, across all errors. */
@@ -317,6 +341,7 @@ async function reportBuild(input, token) {
     // it the row would say PRODUCTION, and a build that talks to the staging
     // database would be offered to the stores.
     if (unknown.includes('app_env') && input.app_env === 'STAGING') throw new StagingNotRecordable();
+    if (unknown.includes('app') && input.app === 'CRM') throw new AppNotRecordable();
     console.warn(
       `⚠ server predates this commit — resending without: ${unknown.join(', ')}`
     );
@@ -326,9 +351,16 @@ async function reportBuild(input, token) {
   }
 }
 
+/**
+ * Which app this run built: APP=CRM for the Duncit CRM app (app/crm-app),
+ * anything else for the member app (app/mobile-app), as every run before it.
+ */
+const APP = (process.env.APP || '').trim().toUpperCase() === 'CRM' ? 'CRM' : 'DUNCIT';
+const APP_DIR = APP === 'CRM' ? 'crm-app' : 'mobile-app';
+
 function readVersion() {
   try {
-    const appJson = path.join('app', 'mobile-app', 'app.json');
+    const appJson = path.join('app', APP_DIR, 'app.json');
     return JSON.parse(fs.readFileSync(appJson, 'utf8')).expo.version;
   } catch {
     return '0.0.0';
@@ -349,7 +381,7 @@ function buildNumber() {
  * on iOS, `android.package` on Android. */
 function readBundleId(platform) {
   try {
-    const appJson = path.join('app', 'mobile-app', 'app.json');
+    const appJson = path.join('app', APP_DIR, 'app.json');
     const { expo } = JSON.parse(fs.readFileSync(appJson, 'utf8'));
     return platform === 'IOS' ? expo.ios.bundleIdentifier : expo.android.package;
   } catch {
@@ -383,6 +415,8 @@ function appEnv() {
 function reportIdentity(platform) {
   return {
     platform,
+    // Sent only for the CRM app, so the member app's reports stay byte-for-byte what they were.
+    ...(APP === 'CRM' ? { app: 'CRM' } : {}),
     ...appEnv(),
     dispatch_id: (process.env.DISPATCH_ID || '').trim(),
     // Only a push build has a GitHub actor worth naming; a portal build already

@@ -14,6 +14,10 @@ export type AppBuildArtifactKind = 'APK' | 'AAB' | 'IPA';
 /** Which stack the built app talks to — NOT where this row is recorded. */
 export type AppBuildEnv = 'PRODUCTION' | 'STAGING';
 
+/** Which app a build is of: the member app or the internal Duncit CRM app. */
+export type AppBuildApp = 'DUNCIT' | 'CRM';
+export const APP_BUILD_APPS: readonly AppBuildApp[] = ['DUNCIT', 'CRM'];
+
 /** What started the build. */
 export type AppBuildTrigger = 'PUSH' | 'PORTAL';
 
@@ -197,6 +201,8 @@ export interface IAppBuild extends Document {
   triggered_by: string;
   /** Which server + database the built app points at. */
   app_env: AppBuildEnv;
+  /** Which app was built. Rows from before the CRM app existed hold the default, the member app. */
+  app: AppBuildApp;
   /**
    * What the operator asked for. Kept apart from `artifacts` (what was
    * actually produced) so an APK that was requested and never appeared is a
@@ -323,6 +329,7 @@ const appBuildSchema = new Schema<IAppBuild>(
     trigger_source: { type: String, enum: ['PUSH', 'PORTAL'], default: 'PUSH', index: true },
     triggered_by: { type: String, default: '' },
     app_env: { type: String, enum: ['PRODUCTION', 'STAGING'], default: 'PRODUCTION', index: true },
+    app: { type: String, enum: APP_BUILD_APPS, default: 'DUNCIT', index: true },
     requested_artifacts: { type: [String], default: [] },
     submit_to_play_store: { type: Boolean, default: false },
     stage: { type: String, default: '' },

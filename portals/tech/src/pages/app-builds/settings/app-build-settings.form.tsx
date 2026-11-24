@@ -43,6 +43,8 @@ export default function AppBuildSettingsForm({
     settings.ios_channel,
     settings.android_staging_channel,
     settings.ios_staging_channel,
+    settings.crm_channel,
+    settings.crm_staging_channel,
   ]);
 
   return (
@@ -83,6 +85,25 @@ export default function AppBuildSettingsForm({
           name="ios_staging_channel"
           label={t('tech.appBuilds.iosStagingChannel')}
           hint={t('tech.appBuilds.stagingChannelHint')}
+          channels={channels}
+          unknownHint={t('tech.appBuilds.channelUnknown')}
+        />
+        <Typography variant="subtitle2" component="h2">
+          {t('tech.appBuilds.crmChannels')}
+        </Typography>
+        <SlackChannelField
+          control={control}
+          name="crm_channel"
+          label={t('tech.appBuilds.crmChannel')}
+          hint={t('tech.appBuilds.crmChannelHint')}
+          channels={channels}
+          unknownHint={t('tech.appBuilds.channelUnknown')}
+        />
+        <SlackChannelField
+          control={control}
+          name="crm_staging_channel"
+          label={t('tech.appBuilds.crmStagingChannel')}
+          hint={t('tech.appBuilds.crmStagingChannelHint')}
           channels={channels}
           unknownHint={t('tech.appBuilds.channelUnknown')}
         />

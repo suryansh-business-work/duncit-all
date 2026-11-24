@@ -44,6 +44,11 @@ export async function releasableBuild(id: string, platform: AppBuildPlatform, st
   if (build.app_env !== 'PRODUCTION') {
     throw badInput(`Only a production build can go to ${store} — this one talks to staging.`);
   }
+  // The store listings belong to the member app. The internal CRM app is
+  // installed from its APK and must never be uploaded under the member app.
+  if (build.app === 'CRM') {
+    throw badInput(`Duncit CRM builds are installed from their APK and cannot go to ${store}.`);
+  }
   return build;
 }
 

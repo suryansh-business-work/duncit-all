@@ -88,9 +88,12 @@ export function ImagePill({ children, top, maxWidth }: Readonly<ImagePillProps>)
 interface PodCardInfoProps {
   title: string;
   price: string;
-  /** "N joining now"; empty when nobody has booked yet. */
+  /** "N joining now" ("N Attended" once over); empty hides it. */
   joiningText: string;
   spotsText: string;
+  /** The pod is over: a checked-calendar icon instead of the people icon. The
+   * caller passes the "N Attended" / "Completed" copy. */
+  expired?: boolean;
   /** The place line; empty hides it. */
   subText: string;
   /** The pod's area chip — two clubs can share a name, so the area tells them apart. */
@@ -105,6 +108,7 @@ export function PodCardInfo({
   price,
   joiningText,
   spotsText,
+  expired = false,
   subText,
   locality,
 }: Readonly<PodCardInfoProps>) {
@@ -112,15 +116,8 @@ export function PodCardInfo({
   return (
     <YStack paddingTop={10} paddingHorizontal={4} paddingBottom={2} gap={4}>
       <XStack alignItems="center" gap={4}>
-        <MaterialIcons name="group" size={14} color={muted} />
-        <Text
-          flex={1}
-          fontSize={12}
-          lineHeight={16}
-          fontWeight="500"
-          color="$muted"
-          numberOfLines={1}
-        >
+        <MaterialIcons name={expired ? 'event-available' : 'group'} size={14} color={muted} />
+        <Text flex={1} fontSize={12} lineHeight={16} fontWeight="500" color="$muted" numberOfLines={1}>
           {joiningText ? (
             <Text color="$success" fontWeight="600">
               {`${joiningText} · `}

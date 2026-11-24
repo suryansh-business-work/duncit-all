@@ -1,13 +1,17 @@
 import { Box, Stack, Typography } from '@mui/material';
 import GroupIcon from '@mui/icons-material/GroupOutlined';
+import EventAvailableIcon from '@mui/icons-material/EventAvailableOutlined';
 import LocalityChip from '../../components/LocalityChip';
 
 interface Props {
   title: string;
   price: string;
-  /** "N joining now"; empty when nobody has booked yet. */
+  /** "N joining now" ("N Attended" once over); empty hides it. */
   joiningText: string;
   spotsText: string;
+  /** The pod is over: a checked-calendar icon instead of the people icon. The
+   * caller passes the "N Attended" / "Completed" copy. */
+  expired?: boolean;
   /** Host and/or place, already joined; empty hides the line. */
   subText: string;
   /** The pod's area (venue locality, else zone) — two clubs can share a name,
@@ -29,6 +33,7 @@ export default function PodCardInfo({
   price,
   joiningText,
   spotsText,
+  expired = false,
   subText,
   locality,
   testIdPrefix,
@@ -36,7 +41,11 @@ export default function PodCardInfo({
   return (
     <Stack spacing={0.5} sx={{ pt: 1.25, px: 0.5, pb: 0.25 }}>
       <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', minWidth: 0, color: 'text.secondary' }}>
-        <GroupIcon sx={{ fontSize: 14, flex: '0 0 auto' }} />
+        {expired ? (
+          <EventAvailableIcon sx={{ fontSize: 14, flex: '0 0 auto' }} />
+        ) : (
+          <GroupIcon sx={{ fontSize: 14, flex: '0 0 auto' }} />
+        )}
         <Typography
           data-testid={testIdPrefix ? `${testIdPrefix}-spots` : undefined}
           noWrap

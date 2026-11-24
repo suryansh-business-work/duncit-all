@@ -8,6 +8,7 @@ import type { TableQueryInput } from '@utils/table-query';
 import { coHostService } from './coHost.service';
 import { podMediaService } from './podMedia.service';
 import { loadClub } from '@modules/clubs/club/club.loaders';
+import { loadPodAttendance } from './pod.attendance.loader';
 import type { GraphQLContext } from '@context';
 import { requireRole, requireAuth } from '@middleware/rbac';
 import { loadUserActors } from '@modules/access/user/user.loaders';
@@ -120,18 +121,16 @@ export const podResolvers = {
       };
     },
     /**
-     * Resolved from the SAME roster the settlement is computed from, so a pod's
-     * detail view and the payout can never quote different attendance. Live,
-     * not stored: a scan after this read changes the answer, which is exactly
-     * why the completed release freezes its own copy.
+     * Counted by the settlement roster's rule (see pod.attendance.loader), so a
+     * pod's card, its detail view and the payout never disagree. Batched per
+     * request: Previous Pods and club lists ask for it on every row. Live, not
+     * stored: a scan after this read changes the answer, which is exactly why
+     * the completed release freezes its own copy.
      */
-    attendance: async (parent: any) => {
+    attendance: async (parent: any, _a: unknown, ctx: GraphQLContext) => {
       const id = parent?.id ?? parent?._id;
       if (!id) return { attended_seats: 0, booked_seats: 0, recorded: false };
-      const { podAttendanceRoster } = await import(
-        '@modules/finance/finance/settlement.service'
-      );
-      const roster = await podAttendanceRoster(String(id));
+      const roster = await loadPodAttendance(ctx, String(id));
       return {
         attended_seats: roster.attended_seats,
         booked_seats: roster.booked_seats,

@@ -15,7 +15,8 @@ const podWith = (over: Record<string, unknown>) =>
     id: 'p1',
     pod_id: 'pod-1',
     pod_title: 'Pod',
-    pod_date_time: '2026-06-10T18:30:00.000Z',
+    // Far ahead so a PodCard stays UPCOMING whenever the suite runs.
+    pod_date_time: '2099-06-10T18:30:00.000Z',
     pod_type: 'PAID',
     pod_amount: 250,
     pod_attendees: ['u1', 'u2'],

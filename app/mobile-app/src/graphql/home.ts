@@ -63,6 +63,9 @@ export const HomePodsDocument = gql(`
       no_of_spots
       pod_attendees
       seats_taken
+      attendance {
+        attended_seats
+      }
       host_names
       pod_images_and_videos {
         url

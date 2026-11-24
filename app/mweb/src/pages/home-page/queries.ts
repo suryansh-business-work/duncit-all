@@ -71,6 +71,9 @@ export const HOME_LIVE = gql`
       pod_attendees
       seats_taken
       no_of_spots
+      attendance {
+        attended_seats
+      }
       pod_hosts_id
       host_names
       pod_images_and_videos {

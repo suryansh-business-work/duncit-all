@@ -9,6 +9,7 @@ import { activeSection } from '../../config/partner-sections';
 import StudioMenu from './StudioMenu';
 import { activeStudioOption, readStudioMenuCollapsed, showsStudioMenu, writeStudioMenuCollapsed } from './studio-menu-state';
 import { useActiveStudio } from './useActiveStudio';
+import { REQUESTS_OPTION_KEY, useVenueRequestsWaiting } from './useVenueRequestsWaiting';
 
 /**
  * A studio page with the studio's menu beside it.
@@ -37,6 +38,8 @@ export default function StudioWorkspace({ children }: Readonly<{ children: JSX.E
   const tight = useMediaQuery((theme: Theme) => theme.breakpoints.between('md', 'lg'));
   const [chosen, setChosen] = useState(readStudioMenuCollapsed);
   const collapsed = chosen ?? tight;
+  // The count AppShell already fetched for the sidebar; this menu shows it too.
+  const waiting = useVenueRequestsWaiting(section?.role === 'VENUE_OWNER', 'cache');
 
   if (!section || !showsStudioMenu(section, options, pathname)) return children;
 
@@ -62,6 +65,7 @@ export default function StudioWorkspace({ children }: Readonly<{ children: JSX.E
         active={activeStudioOption(options, pathname, search)}
         collapsed={collapsed}
         onToggle={toggle}
+        badges={{ [REQUESTS_OPTION_KEY]: waiting }}
       />
       <Box sx={{ flex: 1, minWidth: 0, width: { xs: '100%', md: 'auto' } }}>{children}</Box>
     </Box>

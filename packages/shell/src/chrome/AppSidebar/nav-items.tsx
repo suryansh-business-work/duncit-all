@@ -7,7 +7,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { NavLink } from 'react-router';
 import type { AppNavItem } from '../../types';
 import { AppIcon } from '../AppIcon';
-import { bestChild, groupActive, matches } from './helpers';
+import { bestChild, groupActive, matches, navBadgeOf } from './helpers';
+import { NavBadgeTooltip, NavCountBadge } from './NavCountBadge';
 
 /** Broadcast from the Expand-all / Collapse-all button: `nonce` forces groups to
  * re-sync their open state to `open` even after the user toggled them manually. */
@@ -67,29 +68,32 @@ const featuredLeafSx = {
 function LeafItem({ item, pathname, onNavigate, forceSelected }: Readonly<LeafItemProps>) {
   const selected = forceSelected ?? matches(pathname, item.to);
   return (
-    <ListItemButton
-      component={NavLink}
-      to={item.to ?? '#'}
-      selected={selected}
-      // NavLink marks every prefix match current, so `/host-leads` would claim
-      // the page alongside `/host-leads/services`; the group's single winner
-      // is the one page a screen reader should hear as current.
-      aria-current={selected ? 'page' : false}
-      onClick={onNavigate}
-      data-testid="shell-nav-leaf"
-      sx={item.featured ? featuredLeafSx : leafSx}
-    >
-      <ListItemIcon sx={navIconSx}>
-        <AppIcon name={item.icon} fontSize="small" />
-      </ListItemIcon>
-      <ListItemText
-        primary={item.label}
-        secondary={item.featured ? item.caption : undefined}
-        slotProps={{
-          primary: { variant: 'body2', sx: { fontWeight: item.featured ? 'fontWeightBold' : 'fontWeightMedium' } },
-          secondary: { variant: 'caption' }
-        }} />
-    </ListItemButton>
+    <NavBadgeTooltip badge={item.badge}>
+      <ListItemButton
+        component={NavLink}
+        to={item.to ?? '#'}
+        selected={selected}
+        // NavLink marks every prefix match current, so `/host-leads` would claim
+        // the page alongside `/host-leads/services`; the group's single winner
+        // is the one page a screen reader should hear as current.
+        aria-current={selected ? 'page' : false}
+        onClick={onNavigate}
+        data-testid="shell-nav-leaf"
+        sx={item.featured ? featuredLeafSx : leafSx}
+      >
+        <ListItemIcon sx={navIconSx}>
+          <AppIcon name={item.icon} fontSize="small" />
+        </ListItemIcon>
+        <ListItemText
+          primary={item.label}
+          secondary={item.featured ? item.caption : undefined}
+          slotProps={{
+            primary: { variant: 'body2', sx: { fontWeight: item.featured ? 'fontWeightBold' : 'fontWeightMedium' } },
+            secondary: { variant: 'caption' }
+          }} />
+        <NavCountBadge badge={item.badge} />
+      </ListItemButton>
+    </NavBadgeTooltip>
   );
 }
 
@@ -105,29 +109,34 @@ function GroupItem({ item, pathname, onNavigate, searching, expandAll }: Readonl
     if (expandAll) setOpen(expandAll.open);
   }, [expandAll]);
   const isOpen = searching ? true : open;
+  // While closed, the group carries its children's waiting work so it is not hidden.
+  const badge = isOpen ? null : navBadgeOf(item);
   return (
     <Box sx={{ mb: 0.25 }}>
-      <ListItemButton
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={isOpen}
-        data-testid="shell-nav-group"
-        sx={rowSx}
-      >
-        <ListItemIcon sx={{ ...navIconSx, color: active ? 'primary.main' : 'text.secondary' }}>
-          <AppIcon name={item.icon} fontSize="small" />
-        </ListItemIcon>
-        <ListItemText
-          primary={item.label}
-          slotProps={{
-            primary: {
-              variant: 'body2',
-              color: active ? 'primary.main' : 'inherit',
-              sx: { fontWeight: active ? 'fontWeightBold' : 'fontWeightMedium' },
-            },
-          }}
-        />
-        {isOpen ? <ExpandLessIcon sx={chevronSx} /> : <ExpandMoreIcon sx={chevronSx} />}
-      </ListItemButton>
+      <NavBadgeTooltip badge={badge}>
+        <ListItemButton
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={isOpen}
+          data-testid="shell-nav-group"
+          sx={rowSx}
+        >
+          <ListItemIcon sx={{ ...navIconSx, color: active ? 'primary.main' : 'text.secondary' }}>
+            <AppIcon name={item.icon} fontSize="small" />
+          </ListItemIcon>
+          <ListItemText
+            primary={item.label}
+            slotProps={{
+              primary: {
+                variant: 'body2',
+                color: active ? 'primary.main' : 'inherit',
+                sx: { fontWeight: active ? 'fontWeightBold' : 'fontWeightMedium' },
+              },
+            }}
+          />
+          <NavCountBadge badge={badge} />
+          {isOpen ? <ExpandLessIcon sx={chevronSx} /> : <ExpandMoreIcon sx={chevronSx} />}
+        </ListItemButton>
+      </NavBadgeTooltip>
       <Collapse in={isOpen} timeout="auto" unmountOnExit>
         {/* A guide line down the group's children, so nesting reads at a glance. */}
         <List disablePadding sx={{ ml: 2.25, pl: 0.75, borderLeft: 1, borderColor: 'divider' }}>

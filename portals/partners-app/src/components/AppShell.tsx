@@ -4,9 +4,11 @@ import { useUserData } from '@duncit/user-context';
 import { useFeatureFlag, useProductVisibility } from '@duncit/app-settings';
 import { AppShell as ShellAppShell } from '@duncit/shell';
 import { appConfig, buildNav } from '../config/app-config';
+import { activeSection } from '../config/partner-sections';
 import { clearToken } from '../lib/session';
 import StudioSwitcher from './studio/StudioSwitcher';
 import { useActiveStudio } from './studio/useActiveStudio';
+import { REQUESTS_OPTION_KEY, useVenueRequestsWaiting } from './studio/useVenueRequestsWaiting';
 
 /**
  * Thin adapter over the shared @duncit/shell chrome: wires this portal's
@@ -24,6 +26,10 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
   const autoPods = useFeatureFlag('auto_pods');
   // ONE studio's menu at a time; the switcher above it moves between them.
   const activeRole = useActiveStudio();
+  const roles = user?.roles;
+  // Workshop & Event Requests' red count, while the venue studio is the one open.
+  const inVenueStudio = activeSection(roles, products, activeRole)?.role === 'VENUE_OWNER';
+  const waiting = useVenueRequestsWaiting(inVenueStudio);
 
   const logout = () => {
     clearToken();
@@ -34,8 +40,8 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
   return (
     <ShellAppShell
       config={appConfig}
-      nav={buildNav(user?.roles, { products, activeRole, autoPods })}
-      sidebarHeader={<StudioSwitcher roles={user?.roles} products={products} active={activeRole} />}
+      nav={buildNav(roles, { products, activeRole, autoPods, badges: { [REQUESTS_OPTION_KEY]: waiting } })}
+      sidebarHeader={<StudioSwitcher roles={roles} products={products} active={activeRole} />}
       user={user ?? undefined}
       loading={loading}
       profileTo="/profile"

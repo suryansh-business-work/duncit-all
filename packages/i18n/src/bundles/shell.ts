@@ -1214,6 +1214,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       foodMenu: 'Menu',
       // The studio menu's groups and the options under them.
       requests: 'Requests',
+      // A nav entry's red count, on hover: how much waits on the partner.
+      waitingForYourAction: '{count} waiting for your action',
       yourPods: 'Your Pods',
       venueManagement: 'Venue Management',
       yourBrands: 'Your Brands',

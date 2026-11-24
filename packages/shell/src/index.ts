@@ -20,7 +20,7 @@ export {
   type PortalBuildEnv,
 } from './mountWelcomePortal';
 export { PortalBranding } from './PortalBranding';
-export type { MountPortalOptions, PortalBootConfig, AppConfig, AppModule, AppNavItem, SearchItem } from './types';
+export type { MountPortalOptions, PortalBootConfig, AppConfig, AppModule, AppNavItem, NavBadge, SearchItem } from './types';
 export { useColorMode, type AccentColors } from '@duncit/theme';
 
 // Unified chrome.
@@ -32,6 +32,7 @@ export { AppHeader, type AppHeaderProps } from './chrome/AppHeader';
 export { HeaderSearch, deriveSearchItems, type HeaderSearchProps } from './chrome/HeaderSearch';
 export { AppSidebar, type AppSidebarProps } from './chrome/AppSidebar';
 export { SidebarUserCard, type SidebarUserCardProps } from './chrome/AppSidebar/SidebarUserCard';
+export { NavCountBadge, NavBadgeTooltip } from './chrome/AppSidebar/NavCountBadge';
 export {
   AppBreadcrumbs,
   BreadcrumbProvider,

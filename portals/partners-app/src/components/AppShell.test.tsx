@@ -3,7 +3,7 @@ import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import AppShell from './AppShell';
 import { partnerUser, renderWithProviders } from '../__tests__/render';
-import { scriptedLink } from '../__tests__/groupC-link';
+import { scriptedLink, type ScriptedAnswer, type SentOperation } from '../__tests__/groupC-link';
 import { getToken, setToken } from '../lib/session';
 import type { DuncitUser } from '@duncit/user-context';
 
@@ -11,11 +11,16 @@ interface NavStub {
   to?: string;
   label: string;
   children?: NavStub[];
+  badge?: { count: number };
 }
 
 /** Every route in the menu, groups opened — the Venue Studio nests its options. */
 const navRoutes = (items: readonly NavStub[]): string[] =>
   items.flatMap((item) => [...(item.to ? [item.to] : []), ...navRoutes(item.children ?? [])]);
+
+/** Every entry carrying a red count, as `route: count`. */
+const navBadges = (items: readonly NavStub[]): string[] =>
+  items.flatMap((item) => [...(item.badge ? [`${item.to}: ${item.badge.count}`] : []), ...navBadges(item.children ?? [])]);
 
 interface ShellStubProps {
   nav: NavStub[];
@@ -38,6 +43,7 @@ function ShellStub({ nav, sidebarHeader, user, loading, profileTo, onLogout, chi
           <li key={to}>{to}</li>
         ))}
       </ul>
+      <p data-testid="nav-badges">{navBadges(nav).join(', ')}</p>
       <button type="button" onClick={onLogout}>
         Log out
       </button>
@@ -56,7 +62,12 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-const mount = (user: DuncitUser | null, route = '/') =>
+const mount = (
+  user: DuncitUser | null,
+  route = '/',
+  answers: Readonly<Record<string, ScriptedAnswer>> = {},
+  sent: SentOperation[] = [],
+) =>
   renderWithProviders(
     <AppShell>
       <p>page body</p>
@@ -66,7 +77,8 @@ const mount = (user: DuncitUser | null, route = '/') =>
       route,
       link: scriptedLink({
         PublicFeatureFlags: { publicFeatureFlags: [{ __typename: 'FeatureFlag', key: 'is_product_visible', enabled: true }] },
-      }),
+        ...answers,
+      }, sent),
     },
   );
 
@@ -101,5 +113,34 @@ describe('AppShell', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Log out' }));
     await waitFor(() => expect(screen.getByTestId('location').textContent).toBe('/login'));
     expect(getToken()).toBeFalsy();
+  });
+
+  it('puts what waits on the venue on Workshop & Event Requests', async () => {
+    mount(partnerUser({ roles: ['USER', 'VENUE_OWNER'] }), '/venues/dashboard', {
+      VenueRequestsWaiting: {
+        venueSlotRequestCount: 2,
+        myReceivedEventRequestCounts: { __typename: 'EventRequestCounts', open: 1 },
+      },
+    });
+    await waitFor(() => expect(screen.getByTestId('nav-badges').textContent).toBe('/venues/requests: 3'));
+  });
+
+  it('shows no count when nothing waits on the venue', async () => {
+    const sent: SentOperation[] = [];
+    mount(
+      partnerUser({ roles: ['USER', 'VENUE_OWNER'] }),
+      '/venues/dashboard',
+      { VenueRequestsWaiting: { venueSlotRequestCount: 0, myReceivedEventRequestCounts: { __typename: 'EventRequestCounts', open: 0 } } },
+      sent,
+    );
+    await waitFor(() => expect(sent.map((op) => op.name)).toContain('VenueRequestsWaiting'));
+    expect(screen.getByTestId('nav-badges').textContent).toBe('');
+  });
+
+  it('asks nothing about venue requests outside the venue studio', async () => {
+    const sent: SentOperation[] = [];
+    mount(partnerUser({ roles: ['USER', 'HOST'] }), '/host/options', {}, sent);
+    await screen.findByTestId('shell');
+    expect(sent.map((op) => op.name)).not.toContain('VenueRequestsWaiting');
   });
 });

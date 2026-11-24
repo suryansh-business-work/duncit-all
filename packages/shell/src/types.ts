@@ -35,6 +35,22 @@ export interface AppNavItem {
    * without it renders exactly as before.
    */
   pinBottom?: boolean;
+  /**
+   * Work waiting on the signed-in user behind this entry (e.g. requests to
+   * answer): an animated red count beside the label, its `label` on hover.
+   * A group shows the sum of its children's badges while it is closed.
+   * Omitted or a count of 0, nothing renders.
+   */
+  badge?: NavBadge;
+}
+
+/** `AppNavItem.badge`: how many things wait, and what to call them on hover. */
+export interface NavBadge {
+  count: number;
+  /** Hover / screen-reader text, e.g. "3 waiting for your action". */
+  label?: string;
+  /** Translation key for `label`; its `{count}` placeholder gets `count`. */
+  labelKey?: string;
 }
 
 /** One entry of the header-wide global search. */

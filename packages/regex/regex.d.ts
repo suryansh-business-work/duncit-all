@@ -201,6 +201,14 @@ export function isMongoCollection(value: string): boolean;
 export const MONGO_DATABASE: RegExp;
 /** MONGO_DATABASE shape check. Trim before calling it. */
 export function isMongoDatabase(value: string): boolean;
+/** A MongoDB connection string — `mongodb+srv://…` (Atlas) or `mongodb://…`: the scheme, then 3–2000 non-whitespace characters. One class, bounded count — linear. */
+export const MONGO_URI: RegExp;
+/** MONGO_URI shape check. Trim before calling it. */
+export function isMongoUri(value: string): boolean;
+/** A database host — a DNS name, a Docker service name such as `duncit-mongo` or an IPv4 address: 1–253 letters, digits, `.` or `-`. One class, bounded count — linear. */
+export const DB_HOST: RegExp;
+/** DB_HOST shape check. Trim before calling it. */
+export function isDbHost(value: string): boolean;
 /**
  * A fully-qualified hostname such as `ns1.example.com`: at least two labels,
  * each a {@link HOSTNAME_LABEL}, 253 characters at most. A trailing dot (the

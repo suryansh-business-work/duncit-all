@@ -21,7 +21,9 @@ import { getCatalog, registerCatalogSource } from '../../catalog/catalog';
 import { categoryLabel, MODULE_CATEGORY } from '../../catalog/categories';
 import { deniedReason } from '../../catalog/denylist';
 import { endpointsForCategory, MCP_ENDPOINTS } from '../../catalog/endpoints';
+import { MEMBER_SELF_SERVICE_FIELDS } from '../../catalog/self-service';
 import { isSensitiveName } from '../../catalog/sensitivity';
+import { isListedOn } from '../../catalog/visibility';
 import { parseCallArgs, ToolInputError } from '../../execute/validate';
 import { GATEWAY_ENDPOINT, META_CONFIRM, META_GUARD, META_PARAMS, META_REASON, TOOL_NAME_PATTERN } from '../../mcp.constants';
 import { MCP_PROMPTS } from '../../server/prompts';
@@ -123,6 +125,11 @@ describe('the catalog as a whole', () => {
       expect(skipped.reason.length).toBeGreaterThan(5);
       expect(built.has(`${skipped.kind}:${skipped.field}`)).toBe(false);
     }
+  });
+
+  it.each([...MEMBER_SELF_SERVICE_FIELDS])('member self-service field %s is a read tool the member app serves', (field) => {
+    const tool = catalog.tools.find((entry) => entry.source === 'graphql' && entry.field === field);
+    expect(tool && { field, risk: tool.risk, onApp: isListedOn(tool, 'app') }).toEqual({ field, risk: 'READ', onApp: true });
   });
 
   it.each(MCP_PROMPTS.map((prompt) => [prompt.name, prompt.tools] as const))('prompt %s names only tools that exist', (_name, tools) => {

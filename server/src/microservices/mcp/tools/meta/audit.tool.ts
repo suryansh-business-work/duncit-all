@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { MCP_CATEGORIES } from '../../catalog/categories';
 import { accessibleEndpoints, endpointsForCategory, MCP_ENDPOINTS } from '../../catalog/endpoints';
+import { categoriesOf } from '../../catalog/self-service';
 import { listTools, reachableCategories, refusalFor, type ToolRefusal } from '../../catalog/visibility';
 import { defineTool } from '../define';
 import type { McpCatalog } from '../tool.types';
@@ -46,7 +47,7 @@ function catalogAudit(catalog: McpCatalog, publicUrl: string) {
       label: endpoint.label,
       url: connectorUrl(publicUrl, endpoint.key),
       categories: endpoint.categories,
-      tools: tools.filter((tool) => tool.source === 'graphql' && endpoint.categories.includes(tool.category)).length,
+      tools: tools.filter((tool) => tool.source === 'graphql' && categoriesOf(tool).some((key) => endpoint.categories.includes(key))).length,
     })),
     not_exposed: {
       total: skipped.length,

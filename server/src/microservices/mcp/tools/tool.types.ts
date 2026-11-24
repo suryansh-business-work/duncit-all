@@ -22,6 +22,8 @@ interface ToolBase {
   title: string;
   description: string;
   category: McpCategoryKey;
+  /** Further categories it is offered under — a member's own reads filed under a console (catalog/self-service.ts). */
+  alsoIn?: readonly McpCategoryKey[];
   kind: ToolKind;
   risk: ToolRisk;
   /** Refuses to run until `mcp_confirm: true` says the person agreed. */

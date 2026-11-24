@@ -3,6 +3,7 @@ import { GATEWAY_ENDPOINT, SCOPE_WRITE } from '../mcp.constants';
 import type { McpSettingsValue } from '../settings/settings.types';
 import type { McpCatalog, McpTool } from '../tools/tool.types';
 import { accessibleEndpoints, findEndpoint } from './endpoints';
+import { categoriesOf } from './self-service';
 
 /**
  * Who sees which tool, where.
@@ -34,7 +35,8 @@ export const REFUSAL_MESSAGES: Record<ToolRefusal, string> = {
 export function isListedOn(tool: McpTool, endpointKey: string): boolean {
   if (tool.source === 'curated') return tool.listedOn.includes('*') || tool.listedOn.includes(endpointKey);
   if (endpointKey === GATEWAY_ENDPOINT) return false;
-  return Boolean(findEndpoint(endpointKey)?.categories.includes(tool.category));
+  const served = findEndpoint(endpointKey)?.categories;
+  return Boolean(served && categoriesOf(tool).some((category) => served.includes(category)));
 }
 
 /** Every category some console of theirs serves — computed once per listing, not per tool. */
@@ -56,7 +58,7 @@ export function refusalFor(
     if (!scopes.includes(SCOPE_WRITE)) return 'READ_ONLY_CONNECTION';
     if (!settings.write_tools_enabled) return 'WRITES_DISABLED';
   }
-  return reachable.has(tool.category) ? null : 'NO_PORTAL_ACCESS';
+  return categoriesOf(tool).some((category) => reachable.has(category)) ? null : 'NO_PORTAL_ACCESS';
 }
 
 /** Every tool this person may call right now, wherever it is served (what the gateway can reach). */

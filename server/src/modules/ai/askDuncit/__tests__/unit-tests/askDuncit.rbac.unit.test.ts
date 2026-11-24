@@ -101,6 +101,12 @@ describe('policyAllows', () => {
     expect(policyAllows(finance, { ...member, allowed_tools: ['finance_my_wallet'] }, true)).toBe(true);
   });
 
+  it('lets a member reach their own reads that a console category files (wallet under Finance)', () => {
+    const wallet = tool({ category: 'finance', alsoIn: ['account'], name: 'finance_my_wallet' });
+    expect(policyAllows(wallet, member, true)).toBe(true);
+    expect(policyAllows(wallet, { ...member, allowed_categories: ['pods'] }, true)).toBe(false);
+  });
+
   it('opens every category to a wildcard role (the MCP console gate still applies per person)', () => {
     expect(policyAllows(tool({ category: 'finance' }), defaultRolePolicy('STAFF'), true)).toBe(true);
   });

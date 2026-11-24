@@ -745,6 +745,7 @@ export {
 export {
   POD_LIVE_TAIL_MS,
   POD_SCAN_LEAD_MINUTES,
+  POD_COMPLETE_LEAD_MINUTES,
   canAmendPod,
   canCompletePod,
   canScanPodTickets,

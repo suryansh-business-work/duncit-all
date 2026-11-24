@@ -55,7 +55,8 @@ async function seedPod(hostIds: Types.ObjectId[], venueId?: Types.ObjectId, venu
     venue_id: venueId ?? null,
     venue_slot_id: venueSlotId ?? null,
     pod_description: 'desc',
-    pod_date_time: new Date(),
+    // Already over (start + the 4h tail is an hour ago): a host may complete only from shortly before the end.
+    pod_date_time: new Date(Date.now() - 5 * 60 * 60 * 1000),
     pod_type: 'PAID',
   });
 }

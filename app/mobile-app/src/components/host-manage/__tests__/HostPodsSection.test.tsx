@@ -269,20 +269,29 @@ describe('HostPodsSection', () => {
     expect(hookApi.refetch).toHaveBeenCalledTimes(1);
   });
 
-  it('offers Complete only for a pod that has run, then closes or refetches on submit', () => {
+  it('opens Complete only near the end of a pod, then closes or refetches on submit', () => {
     const hookApi = api({ pods: [...pods, pastPod] });
     mockedUse.mockReturnValue(hookApi);
     // Completion also notifies the screen, which refetches the Host Share list
     // the completion just added a payout to.
     const onPodCompleted = jest.fn();
     renderWithProviders(<HostPodsSection onPodCompleted={onPodCompleted} />);
-    // An upcoming pod cannot be completed yet.
+    // An upcoming pod cannot be completed yet: the row stays, inert, saying
+    // when it opens — the same greyed row mWeb shows.
     fireEvent.press(screen.getByTestId('host-pod-actions-p1'));
-    expect(screen.queryByTestId('pod-action-complete')).toBeNull();
+    expect(screen.getByTestId('pod-action-complete-why')).toHaveTextContent(/15/);
+    // Asserted on the rendered row rather than pressed: RNTL's fireEvent would
+    // walk up to the composite ActionRow and call its prop, which a real tap on
+    // the inert native view never reaches.
+    expect(screen.getByTestId('pod-action-complete')).toBeDisabled();
     fireEvent.press(screen.getByTestId('pod-action-slot-request'));
     expect(mockNavigate).toHaveBeenCalledWith('PodPending', { podId: 'p1' });
 
-    pickAction('host-pod-actions-p6', 'pod-action-complete');
+    fireEvent.press(screen.getByTestId('host-pod-actions-p6'));
+    // A pod that has run: open, with no reason under it.
+    expect(screen.queryByTestId('pod-action-complete-why')).toBeNull();
+    expect(screen.getByTestId('pod-action-complete')).toBeEnabled();
+    fireEvent.press(screen.getByTestId('pod-action-complete'));
     expect(screen.getByTestId('mock-complete-dialog')).toBeOnTheScreen();
     fireEvent(screen.getByTestId('mock-complete-completed'), 'touchEnd');
     expect(hookApi.refetch).toHaveBeenCalledTimes(1);

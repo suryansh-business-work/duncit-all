@@ -3339,6 +3339,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       scanClosed: 'This pod has ended — tickets can no longer be scanned.',
       scanNotOpen: 'Scanning opens {minutes} minutes before the pod starts.',
       completePod: 'Complete pod',
+      completeNotOpen: 'Complete pod opens {minutes} minutes before the pod ends.',
       editPod: 'Edit pod',
       cancelPod: 'Cancel pod',
       close: 'Close',

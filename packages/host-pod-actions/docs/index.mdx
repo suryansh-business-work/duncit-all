@@ -189,20 +189,23 @@ Unlike Edit and Cancel it stays live on a pod that has ended — running a pod a
 a host wants once the last one is over, a cancelled one included. A surface with no Create Pod
 route (the Partners console) omits the prop and keeps the menu it had.
 
-### Complete Pod is a PAST-pod action
+### Complete Pod opens 15 minutes before the end
 
 `menuHandlers` reads `canCompletePod` from `@duncit/utils` off the pod's own
-`pod_date_time` / `pod_end_date_time` and hands it to the menu as `canComplete`. An **upcoming**
-or **ongoing** pod carries no Complete row at all — not a disabled one.
+`pod_date_time` / `pod_end_date_time` and hands it to the menu as `canComplete`. The row is
+always there (unless the venue rejected the pod); until `POD_COMPLETE_LEAD_MINUTES` before the
+end it is **disabled**, with `labels.completeNotOpen` ("Complete pod opens 15 minutes before
+the pod ends.") under it.
 
 Completing a pod IS the settlement: it prices the host, venue and club-admin payouts off the
-seats scanned in and hands Finance the releases to approve. Run on a pod whose door is still
-open, it freezes that answer early — every guest who walks in afterwards is a seat the host is
-never paid for. Host Studio therefore offers it only once the pod is over, which is the same
-instant `podPhase` calls `PREVIOUS`, so the Past filter and the menu can never disagree.
+seats scanned in and hands Finance the releases to approve. Run while the door is still wide
+open, it freezes that answer early, so it opens only in the last few minutes, once the guests
+are in. A pod that has not started never qualifies. The server holds the same rule
+(`podCompletionOpen` in `pod.lifecycle.ts`) and refuses an earlier completion by a host; an
+admin settling a pod by hand is not held to it.
 
-The native `PodActionsSheet` takes the identical `canComplete` prop from the same helper
-(rule 27).
+The native `PodActionsSheet` takes the identical `canComplete` prop from the same helper and
+shows the row inert with the same sentence (rule 27).
 
 ### Capacity, after the pod is live
 

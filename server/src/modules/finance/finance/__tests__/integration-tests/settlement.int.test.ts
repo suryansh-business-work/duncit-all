@@ -51,7 +51,8 @@ async function seedPod(hostId: Types.ObjectId, venueId?: Types.ObjectId, venueSl
     venue_id: venueId ?? null,
     venue_slot_id: venueSlotId ?? null,
     pod_description: 'desc',
-    pod_date_time: new Date(),
+    // Already over (start + the 4h tail is an hour ago): a host may complete only from shortly before the end.
+    pod_date_time: new Date(Date.now() - 5 * 60 * 60 * 1000),
     pod_type: 'PAID',
   });
 }
@@ -464,7 +465,8 @@ describe('pod settlement (engine v2: venue slot price off the pool, host keeps t
         pod_hosts_id: [],
         club_id: new Types.ObjectId(),
         pod_description: 'desc',
-        pod_date_time: new Date(),
+        // Already over (start + the 4h tail is an hour ago): a host may complete only from shortly before the end.
+        pod_date_time: new Date(Date.now() - 5 * 60 * 60 * 1000),
         pod_type: 'PAID',
       });
       await seedPayment(pod._id, 1000);
@@ -778,7 +780,8 @@ describe('completePod — one PENDING request; nothing is paid until Finance app
         pod_hosts_id: [host._id],
         club_id: club._id,
         pod_description: 'desc',
-        pod_date_time: new Date(),
+        // Already over (start + the 4h tail is an hour ago): a host may complete only from shortly before the end.
+        pod_date_time: new Date(Date.now() - 5 * 60 * 60 * 1000),
         pod_type: 'PAID',
       });
       await seedPayment(pod._id, 1000);
@@ -864,6 +867,47 @@ describe('completePod — one PENDING request; nothing is paid until Finance app
     await expect(
       paymentReleaseService.completePod(input, { id: String(host._id), isAdmin: false })
     ).rejects.toThrow(/already been submitted/i);
+  });
+
+  // Host Studio greys Complete until shortly before the end; the server is the
+  // gate, so a host calling the API early is refused and nothing is written.
+  it('refuses a host completing before the last 15 minutes, and lets an admin settle it', async () => {
+    const host = await seedHost();
+    const pod = await seedPod(host._id, (await seedVenue(host._id))._id);
+    const HOUR = 60 * 60 * 1000;
+    // Running now, ending in an hour: outside the host's window.
+    await PodModel.updateOne(
+      { _id: pod._id },
+      { $set: { pod_date_time: new Date(Date.now() - HOUR), pod_end_date_time: new Date(Date.now() + HOUR) } }
+    );
+    await seedPayment(pod._id, 5000);
+    const input = { pod_id: String(pod._id), venue_bill_amount: 1000 };
+
+    await expect(
+      paymentReleaseService.completePod(input, { id: String(host._id), isAdmin: false })
+    ).rejects.toMatchObject({
+      message: 'This pod can be completed from 15 minutes before it ends',
+      extensions: { code: 'BAD_REQUEST' },
+    });
+    expect(await PaymentReleaseModel.countDocuments({ pod_id: pod._id })).toBe(0);
+
+    // Ten minutes from the end the window is open.
+    await PodModel.updateOne({ _id: pod._id }, { $set: { pod_end_date_time: new Date(Date.now() + 10 * 60 * 1000) } });
+    const { releases } = await paymentReleaseService.completePod(input, { id: String(host._id), isAdmin: false });
+    expect(releases.length).toBeGreaterThan(0);
+  });
+
+  it('lets an admin complete a pod before the host window opens', async () => {
+    const host = await seedHost();
+    const pod = await seedPod(host._id, (await seedVenue(host._id))._id);
+    await PodModel.updateOne({ _id: pod._id }, { $set: { pod_date_time: new Date(Date.now() + 60 * 60 * 1000) } });
+    await seedPayment(pod._id, 5000);
+
+    const { releases } = await paymentReleaseService.completePod(
+      { pod_id: String(pod._id), venue_bill_amount: 1000 },
+      { id: new Types.ObjectId().toString(), isAdmin: true }
+    );
+    expect(releases.length).toBeGreaterThan(0);
   });
 
   /*

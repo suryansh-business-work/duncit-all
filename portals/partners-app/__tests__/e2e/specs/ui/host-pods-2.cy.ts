@@ -80,7 +80,7 @@ describe('Partners UI · Host pods (run host, its own FREE pod)', () => {
     });
   });
 
-  it('HP2-01 an upcoming pod offers Edit, both links, Request Change Host and Cancel; scanning waits for the door; no Complete', () => {
+  it('HP2-01 an upcoming pod offers Edit, both links, Request Change Host and Cancel; scanning and Complete wait, saying when', () => {
     const pod = world.freePod;
     openYourPods(pod);
     openMenu(pod);
@@ -93,7 +93,10 @@ describe('Partners UI · Host pods (run host, its own FREE pod)', () => {
     enabled(`host-pod-action-feedback-link-${pod.id}`).and('contain.text', 'Feedback link');
     enabled(`host-pod-action-request-change-${pod.id}`).and('contain.text', 'Request Change Host');
     enabled(`host-pod-action-cancel-${pod.id}`).and('contain.text', 'Cancel pod');
-    cy.byTestId(`host-pod-action-complete-${pod.id}`).should('not.exist');
+    cy.byTestId(`host-pod-action-complete-${pod.id}`)
+      .should('have.class', 'Mui-disabled')
+      .and('contain.text', 'Complete pod')
+      .and('contain.text', 'Complete pod opens 15 minutes before the pod ends');
   });
 
   it('HP2-02 Edit pod refuses a short title, a short description and no image, and sends nothing', () => {

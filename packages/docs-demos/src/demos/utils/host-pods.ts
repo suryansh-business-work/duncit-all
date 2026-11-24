@@ -28,9 +28,9 @@ export const hostPodsDemos: PackageDemo[] = [
     title: 'Which Home rail a pod lands on',
     note:
       "Move `now` past a pod's end and watch it cross from Ongoing to Previous. " +
-      'DUN-POD-5502 has no end set, so it rides the 4h tail instead. That same crossing is ' +
-      "what puts Host Studio's Complete Pod action on a pod: it is offered on a PREVIOUS " +
-      'pod only, never while the door is still open. Scanning tickets is the exact mirror — ' +
+      'DUN-POD-5502 has no end set, so it rides the 4h tail instead. ' +
+      "Host Studio's Complete Pod action opens 15 minutes before that crossing and stays " +
+      'greyed (saying when it opens) until then. Scanning tickets is the mirror — ' +
       'the same crossing greys that row out, because a scanner belongs at a door that is ' +
       'still open. Happening nearby lists only the upcoming pods starting within the admin window (a week by default).',
     mock: {
@@ -71,7 +71,7 @@ export const hostPodsDemos: PackageDemo[] = [
           mock.pods.map((pod) => [
             pod.pod_id,
             `${podPhase(pod.pod_date_time, pod.pod_end_date_time, now)}   ·   Complete Pod ${
-              canCompletePod(pod, now) ? 'offered' : 'hidden'
+              canCompletePod(pod, now) ? 'open' : 'greyed (opens 15 min before the end)'
             }   ·   Scan tickets ${canScanPodTickets(pod, now) ? 'live' : 'closed'}`,
           ])
         ),

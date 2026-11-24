@@ -10,9 +10,10 @@ export interface PodActionsSheetProps {
    */
   venueRejected: boolean;
   /**
-   * The pod has ended. Completion is the settlement — it prices the payout off
-   * the seats scanned in — so it is offered on a PAST pod only: an upcoming or
-   * ongoing pod would freeze the answer while the door is still open.
+   * Completion is open: the pod is within `POD_COMPLETE_LEAD_MINUTES` of its
+   * end, or past it. Completion is the settlement, so before then the row stays
+   * but goes inert, with a line under it saying when it opens — the same thing
+   * mWeb's menu does with a disabled item (rule 27).
    */
   canComplete: boolean;
   /**

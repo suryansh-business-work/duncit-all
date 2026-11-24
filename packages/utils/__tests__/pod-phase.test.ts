@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  POD_COMPLETE_LEAD_MINUTES,
   POD_LIVE_TAIL_MS,
   POD_SCAN_LEAD_MINUTES,
   canAmendPod,
@@ -131,9 +132,14 @@ describe('canScanPodTickets', () => {
 });
 
 describe('canCompletePod', () => {
-  // Completing settles the payout off the seats scanned in, so it is offered
-  // only once the door is shut — a pod still running would freeze the answer
-  // while guests are still arriving.
+  // Completing settles the payout off the seats scanned in, so it opens only in
+  // the last POD_COMPLETE_LEAD_MINUTES of the pod — once the guests are in.
+  const COMPLETE_LEAD = POD_COMPLETE_LEAD_MINUTES * 60 * 1000;
+
+  it('opens fifteen minutes before the end', () => {
+    expect(POD_COMPLETE_LEAD_MINUTES).toBe(15);
+  });
+
   it('offers Complete on a pod that is over', () => {
     expect(canCompletePod({ pod_date_time: at(-5 * HOUR), pod_end_date_time: at(-4 * HOUR) }, NOW)).toBe(
       true,
@@ -144,8 +150,32 @@ describe('canCompletePod', () => {
     expect(canCompletePod({ pod_date_time: at(2 * HOUR) }, NOW)).toBe(false);
   });
 
-  it('offers nothing while the pod is running', () => {
+  it('offers nothing while the pod is running and more than the lead from its end', () => {
     expect(canCompletePod({ pod_date_time: at(-HOUR), pod_end_date_time: at(HOUR) }, NOW)).toBe(false);
+    // One minute outside the lead is still too early.
+    const end = COMPLETE_LEAD + 60_000;
+    expect(canCompletePod({ pod_date_time: at(-HOUR), pod_end_date_time: at(end) }, NOW)).toBe(false);
+  });
+
+  it('offers Complete inside the last fifteen minutes of a running pod', () => {
+    const end = COMPLETE_LEAD - 60_000;
+    expect(canCompletePod({ pod_date_time: at(-HOUR), pod_end_date_time: at(end) }, NOW)).toBe(true);
+  });
+
+  it('never opens before the start, even on a pod shorter than the lead', () => {
+    // Starts in 5 minutes, ends in 10: inside the lead of its end, but not begun.
+    const pod = { pod_date_time: at(5 * 60_000), pod_end_date_time: at(10 * 60_000) };
+    expect(canCompletePod(pod, NOW)).toBe(false);
+  });
+
+  it('measures the lead from the 4h tail when the host set no end', () => {
+    const almostOver = -(POD_LIVE_TAIL_MS - COMPLETE_LEAD + 60_000);
+    expect(canCompletePod({ pod_date_time: at(almostOver) }, NOW)).toBe(true);
+    expect(canCompletePod({ pod_date_time: at(-HOUR) }, NOW)).toBe(false);
+  });
+
+  it('never opens on a pod with no usable start', () => {
+    expect(canCompletePod({ pod_date_time: null }, NOW)).toBe(false);
   });
 
   it('reads the clock when no `now` is passed', () => {

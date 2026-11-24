@@ -3,8 +3,8 @@
  *
  * Which rows appear is not decoration: a venue-rejected pod must not offer the
  * attendee-facing actions (there is nobody to scan and no page to send), a pod
- * that has not finished must not offer Complete (it would settle a door still
- * open), and a surface with no media route must not offer a link to a page that
+ * not yet near its end shows Complete greyed with when it opens (it would
+ * settle a door still open), and a surface with no media route must not offer a link to a page that
  * would 404 for every guest who taps it.
  */
 import type { ReactNode } from 'react';
@@ -73,13 +73,31 @@ describe('HostPodActionsMenu rows', () => {
     return handlers;
   };
 
-  it('offers Complete only on a pod whose door is already shut', async () => {
-    await open({ canComplete: true });
-    expect(itemNames().some((name) => name.includes(labels.completePod))).toBe(true);
+  const completeRow = () =>
+    [...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].find((item) =>
+      item.textContent?.includes(labels.completePod),
+    ) as HTMLElement;
 
-    cleanup();
-    await open({ canComplete: false });
-    expect(itemNames().some((name) => name.includes(labels.completePod))).toBe(false);
+  it('enables Complete once its window is open, with no reason under it', async () => {
+    const handlers = await open({ canComplete: true });
+    const row = completeRow();
+    expect(row).not.toHaveAttribute('aria-disabled', 'true');
+    expect(row.textContent).toContain(labels.completePod);
+    expect(row.textContent).not.toContain(labels.completeNotOpen);
+    fireEvent.click(row);
+    expect(handlers.onComplete).toHaveBeenCalledTimes(1);
+  });
+
+  // A host looking for Complete mid-pod should learn when it opens, not find
+  // it missing.
+  it('keeps Complete visible but greyed until shortly before the end, saying when', async () => {
+    const handlers = await open({ canComplete: false });
+    const row = completeRow();
+    expect(row).toHaveAttribute('aria-disabled', 'true');
+    expect(row.textContent).toContain(labels.completeNotOpen);
+    // The minutes travel as a variable, so the copy can quote them.
+    expect(labels.completeNotOpen).toBe('mweb.hostPodActions.completeNotOpen 15');
+    expect(handlers.onComplete).not.toHaveBeenCalled();
   });
 
   // The scanner is for a door that is still open, and Edit / Request Change

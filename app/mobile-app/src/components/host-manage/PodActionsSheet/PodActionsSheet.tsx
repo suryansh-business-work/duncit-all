@@ -1,4 +1,4 @@
-import { POD_SCAN_LEAD_MINUTES } from '@duncit/utils';
+import { POD_COMPLETE_LEAD_MINUTES, POD_SCAN_LEAD_MINUTES } from '@duncit/utils';
 
 import { ActionRow } from '@/components/host-manage/ActionRow';
 import { GatedActionRow } from '@/components/host-manage/GatedActionRow';
@@ -106,12 +106,18 @@ export function PodActionsSheet({
             onPress={onChatWithVenue}
           />
         ) : null}
-        {showAttendeeActions && canComplete ? (
-          <ActionRow
+        {/* Inert until shortly before the end, saying when it opens — the
+            same greyed row mWeb's menu shows (rule 27). */}
+        {showAttendeeActions ? (
+          <GatedActionRow
             testID="pod-action-complete"
             icon="task-alt"
             label={t('mweb.hostManage.completePod')}
             tint={success}
+            enabled={canComplete}
+            reason={t('mweb.hostPodActions.completeNotOpen', {
+              vars: { minutes: POD_COMPLETE_LEAD_MINUTES },
+            })}
             onPress={onComplete}
           />
         ) : null}

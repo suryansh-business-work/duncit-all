@@ -609,6 +609,7 @@ exports:
   - 'isFreeArrangement'
   - 'FREE_POLICY_KEYS'
   - 'venueOfferPriceInput'
+  - 'venueOfferPrefillValues'
   - 'offeringsFromText'
   - 'offerQuoteRange'
   - 'offerEarningsArgs'
@@ -3918,6 +3919,7 @@ offer's pricing (the legacy venue pricing calendar's `VenueBookingModel` still h
 | `VENUE_OFFER_ASK_LIMITS` / `offeringsFromText(text)` / `offeringsToText(list)` | The server's bounds (20 points, 120 characters each, a 1000-character note); the box's text as points (trimmed, typed bullets and blank lines dropped) and back. |
 | `venueOfferInput(source)` | The `venue_offer` input (`start_at`, `end_at`, `space_label` — `''` for the whole venue — `pax`, `pets`, `model`, `rate`, and `offerings` / `note` when the source has them), or null until a window, an option and an amount are all there. A `FREE` offer needs no amount (rate 0) and carries `free_justification` once `source.freeJustification` is complete and accepted. |
 | `venueOfferPriceInput(input)` | The same input without the points and note — what a live quote asks with, so typing them never re-prices. |
+| `venueOfferPrefillValues(prefill, { podFree })` | A declined offer's terms (`VenueOfferPrefill`) as the resubmit forms hold them — window, space, pets, option, amount, points and note. A paid pod (`podFree: false`) drops a declined `FREE` (a free venue is only for a free pod) so an option is picked again; left out, the option is kept. |
 | `offerQuoteRange(quote, quoteMin)` / `moneyRangeText(min, max, money)` | A quote pair as `{ venueMin, venueMax, totalMin, totalMax, ranged }`, and one amount or "min – max" written with the surface's formatter. |
 | `offerEarningsArgs(quote, quoteMin, minGuests, spots)` | The venue arguments `potentialPodEarnings` takes, with `min_spots` and the money at the minimum when it is below the spots. |
 | `offerGuestFloor(venueMinimum, capacity)` / `offerGuestsText(t, min, max)` | The fewest spots an offer may be for (the venue's minimum, never more than the space holds — the server's rule), and "8–20 guests" / "20 guests". |

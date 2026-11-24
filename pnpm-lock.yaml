@@ -6949,6 +6949,9 @@ importers:
       react-router:
         specifier: ^8.4.0
         version: 8.4.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react-split-pane:
+        specifier: 3.3.0
+        version: 3.3.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       remotion:
         specifier: 4.0.545
         version: 4.0.545(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -18537,6 +18540,13 @@ packages:
     peerDependencies:
       react: ^0.14.0 || ^15.0.1 || ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^0.14.0 || ^15.0.1 || ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  react-split-pane@3.3.0:
+    resolution: {integrity: sha512-OmeZ2rsCeU/N6h/cvjbdoglNkqQY3T4RMSrK7lz5UKJrfgJISi3Qhsn6R02NDynsg9IsElGu33pvw5aW2JFTTw==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      react: ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^17.0.0 || ^18.0.0 || ^19.0.0
 
   react-terminal@1.4.5:
     resolution: {integrity: sha512-uv50LYNb4G/ACr8ghPUuZkypY0UxWm+YBK3M0MLaBG6kALeS9FxNCBhmQw/Uu9ckkE2k5E3kZPUVbR5D6uGOlA==}
@@ -30601,6 +30611,11 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
       resize-observer-polyfill: 1.5.1
+
+  react-split-pane@3.3.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+    dependencies:
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
 
   react-terminal@1.4.5:
     dependencies:

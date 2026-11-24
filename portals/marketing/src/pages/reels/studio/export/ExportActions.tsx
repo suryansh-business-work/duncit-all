@@ -42,7 +42,7 @@ export default function ExportActions({ view, exporter, poster }: Readonly<Props
         <DuncitButton onClick={file ? poster.dismiss : exporter.dismiss} data-testid="reel-export-close">
           {t('shell.common.close')}
         </DuncitButton>
-        <DuncitButton variant="contained" onClick={file ? () => post(file) : exporter.start} data-testid="reel-export-retry">
+        <DuncitButton variant="contained" onClick={file ? () => post(file) : exporter.retry} data-testid="reel-export-retry">
           {t('ai.reels.export.retry')}
         </DuncitButton>
       </>

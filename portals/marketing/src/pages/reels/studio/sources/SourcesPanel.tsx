@@ -6,11 +6,12 @@ import type { ReelProject } from '../../types';
 import type { ReelActions } from '../useReelActions';
 import AssetList from './AssetList';
 import DriveTab from './DriveTab';
+import MusicTab from './MusicTab';
 import StockTab from './StockTab';
 import UploadTab from './UploadTab';
 import VoiceTab from './VoiceTab';
 
-export type SourceTab = 'drive' | 'stock' | 'upload' | 'voice';
+export type SourceTab = 'drive' | 'stock' | 'pixabay' | 'music' | 'upload' | 'voice';
 
 /** Its own query key: the side panel owns `selectedtab`. */
 export const SOURCE_TAB_PARAM = 'sources';
@@ -24,9 +25,9 @@ interface Props {
 }
 
 /**
- * The left pane: what the reel holds, and the four shelves it is filled from —
- * the Drive folder, stock footage, the operator's own files, and generated
- * voice. The editor only ever sees what is in the reel, so a shelf of
+ * The left pane: what the reel holds, and the shelves it is filled from —
+ * the Drive folder, Pexels and Pixabay footage, Jamendo music, the operator's
+ * own files, and generated voice. The editor only ever sees what is in the reel, so a shelf of
  * hundreds of files costs nothing until something is taken off it.
  */
 export default function SourcesPanel({ project, actions, onEditDetails }: Readonly<Props>) {
@@ -35,6 +36,8 @@ export default function SourcesPanel({ project, actions, onEditDetails }: Readon
     () => [
       { value: 'drive' as const, label: t('ai.reels.sources.driveTitle'), testId: 'reel-sources-tab-drive' },
       { value: 'stock' as const, label: t('ai.reels.sources.tabStock'), testId: 'reel-sources-tab-stock' },
+      { value: 'pixabay' as const, label: t('ai.reels.sources.tabPixabay'), testId: 'reel-sources-tab-pixabay' },
+      { value: 'music' as const, label: t('ai.reels.sources.tabMusic'), testId: 'reel-sources-tab-music' },
       { value: 'upload' as const, label: t('ai.reels.sources.tabUpload'), testId: 'reel-sources-tab-upload' },
       { value: 'voice' as const, label: t('ai.reels.sources.tabVoice'), testId: 'reel-sources-tab-voice' },
     ],
@@ -68,10 +71,12 @@ export default function SourcesPanel({ project, actions, onEditDetails }: Readon
         <AssetList assets={project.assets} usedAssetIds={usedAssetIds} onRemove={actions.removeAsset} />
       </Box>
       <Divider />
-      <DuncitTabs {...tabs} idPrefix={ID_PREFIX} variant="fullWidth" aria-label={t('ai.reels.sources.tabsLabel')} />
+      <DuncitTabs {...tabs} idPrefix={ID_PREFIX} variant="scrollable" scrollButtons="auto" allowScrollButtonsMobile aria-label={t('ai.reels.sources.tabsLabel')} />
       <Stack {...tabPanelProps(ID_PREFIX, tabs.value)} sx={{ flex: 1, minHeight: 0 }}>
         {tabs.value === 'drive' && <DriveTab project={project} actions={actions} onEditDetails={onEditDetails} />}
-        {tabs.value === 'stock' && <StockTab project={project} actions={actions} />}
+        {tabs.value === 'stock' && <StockTab project={project} actions={actions} provider="PEXELS" />}
+        {tabs.value === 'pixabay' && <StockTab key="pixabay" project={project} actions={actions} provider="PIXABAY" />}
+        {tabs.value === 'music' && <MusicTab project={project} actions={actions} />}
         {tabs.value === 'upload' && <UploadTab actions={actions} />}
         {tabs.value === 'voice' && <VoiceTab project={project} />}
       </Stack>

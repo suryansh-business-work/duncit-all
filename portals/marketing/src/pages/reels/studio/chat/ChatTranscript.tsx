@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
+import KeyIcon from '@mui/icons-material/Key';
 import RestoreIcon from '@mui/icons-material/Restore';
 import { useDateFormat } from '@duncit/app-settings';
 import { DuncitButton } from '@duncit/buttons';
@@ -59,7 +60,19 @@ export default function ChatTranscript({ messages, assets, pending, onRestore }:
           imageUrls={message.asset_ids.flatMap((id) => urlById.get(id) ?? [])}
           testId={`reel-chat-message-${message.id}`}
           footer={
-            <Stack direction="row" sx={{ mt: 0.5, alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+            <Stack direction="row" sx={{ mt: 0.5, alignItems: 'center', justifyContent: 'space-between', gap: 1, flexWrap: 'wrap' }}>
+              {message.failed && message.fix_url && (
+                <DuncitButton
+                  size="small"
+                  href={message.fix_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  startIcon={<KeyIcon fontSize="small" />}
+                  data-testid={`reel-chat-fix-${message.id}`}
+                >
+                  {t('ai.reels.chat.addKey')}
+                </DuncitButton>
+              )}
               {message.restorable ? (
                 <DuncitButton
                   size="small"

@@ -1,6 +1,11 @@
 import type { ReelAsset, ReelSpec } from '@duncit/gql-types';
 
-/** The assets the edit actually draws or plays — footage, overlays and music. */
+/**
+ * The assets the edit actually draws or plays — footage, overlays, music, the
+ * voiceover and the brand watermark. Every one is read during the render, so
+ * every one is downloaded first: a sound file left on the network stalls a
+ * frame exactly as footage did.
+ */
 export function assetIdsInUse(spec: ReelSpec): Set<string> {
   const ids = new Set<string>();
   for (const scene of spec.scenes) {
@@ -8,6 +13,8 @@ export function assetIdsInUse(spec: ReelSpec): Set<string> {
     for (const overlay of scene.overlays ?? []) ids.add(overlay.asset_id);
   }
   if (spec.music) ids.add(spec.music.asset_id);
+  if (spec.voiceover?.asset_id) ids.add(spec.voiceover.asset_id);
+  if (spec.brand.watermark_asset_id) ids.add(spec.brand.watermark_asset_id);
   return ids;
 }
 

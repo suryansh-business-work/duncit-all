@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { REEL_MEDIA_SEARCH } from '../../queries';
-import type { ReelAspect, ReelStockItem, ReelStockPage } from '../../types';
+import type { ReelAspect, ReelAssetKind, ReelStockItem, ReelStockPage, ReelStockProvider } from '../../types';
 
-export type StockKind = 'IMAGE' | 'VIDEO';
+/** What a shelf searches for: a picture or a clip from the footage libraries, a track from the music one. */
+export type StockKind = ReelAssetKind;
 
 interface Search {
   query: string;
@@ -17,9 +18,10 @@ interface Search {
  *
  * The orientation follows the reel's aspect — a portrait reel wants portrait
  * footage — and a change of aspect starts the search over: the pages already
- * shown were the wrong shape.
+ * shown were the wrong shape. The library is the shelf's — Pexels, Pixabay
+ * or Jamendo — and is fixed for the hook's life.
  */
-export function useStockSearch(aspect: ReelAspect) {
+export function useStockSearch(aspect: ReelAspect, provider: ReelStockProvider) {
   const [search, setSearch] = useState<Search | null>(null);
   const [pages, setPages] = useState<Record<number, ReelStockItem[]>>({});
 
@@ -29,7 +31,7 @@ export function useStockSearch(aspect: ReelAspect) {
   }, [aspect]);
 
   const { data, loading, error } = useQuery<{ reelMediaSearch: ReelStockPage }>(REEL_MEDIA_SEARCH, {
-    variables: { query: search?.query ?? '', kind: search?.kind ?? 'VIDEO', orientation: aspect, page: search?.page ?? 1 },
+    variables: { query: search?.query ?? '', kind: search?.kind ?? 'VIDEO', orientation: aspect, page: search?.page ?? 1, provider },
     skip: search === null,
     fetchPolicy: 'network-only',
   });

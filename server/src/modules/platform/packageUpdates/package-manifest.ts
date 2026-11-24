@@ -3255,6 +3255,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "react-dom", range: "^19.2.8", kind: "dependencies" },
       { name: "react-hook-form", range: "^7.89.0", kind: "dependencies" },
       { name: "react-router", range: "^8.4.0", kind: "dependencies" },
+      { name: "react-split-pane", range: "3.3.0", kind: "dependencies" },
       { name: "remotion", range: "4.0.545", kind: "dependencies" },
       { name: "zod", range: "^4.6.5", kind: "dependencies" },
       { name: "@duncit/gql-types", range: "workspace:*", kind: "devDependencies" },

@@ -6,6 +6,7 @@ import { SocialAccountModel } from './social.model';
 import { READERS } from './providers';
 import { SocialApiError } from './providers/http';
 import { socialCredentials } from './social.credentials';
+import { SOCIAL_SETTINGS_DEFAULTS, loadSocialSettings } from './social.settings';
 import { freshHandle, type AccountWithTokens } from './social.sync';
 import type { SocialAccountStatus, SocialPlatform } from './social.types';
 
@@ -17,12 +18,12 @@ import type { SocialAccountStatus, SocialPlatform } from './social.types';
  * question: does this token still work? The answer lands on the account row
  * (health_ok, health_message, health_checked_at), a dead token flips the
  * account to EXPIRED the way a failed sync would, and the owner is emailed
- * when the token has a week or less to live — before the account goes quiet,
+ * when the token is within the Settings' reminder window (a week by default) — before the account goes quiet,
  * not after.
  */
 const DAY_MS = 86_400_000;
-/** Accounts whose token lapses within this many days are worth a reminder. */
-export const EXPIRY_ALERT_DAYS = 7;
+/** Accounts whose token lapses within this many days are worth a reminder, until Settings says otherwise (expiry_alert_days). */
+export const EXPIRY_ALERT_DAYS = SOCIAL_SETTINGS_DEFAULTS.expiry_alert_days;
 /** How many accounts one pass checks; the pass runs daily, so this is a ceiling, not a budget. */
 const CHECK_LIMIT = 200;
 const NOT_CONFIGURED = 'This network’s app is not set up yet — add it under Marketing › Settings › Integrations.';
@@ -152,7 +153,8 @@ async function recipientOf(doc: HealthRow): Promise<string> {
  */
 export async function sendExpiryAlert(doc: HealthRow, health: AccountHealth, now = Date.now()): Promise<boolean> {
   const days = health.expires_in_days;
-  const due = health.expired || (days !== null && days <= EXPIRY_ALERT_DAYS);
+  const alertDays = (await loadSocialSettings()).expiry_alert_days;
+  const due = health.expired || (days !== null && days <= alertDays);
   if (!due) return false;
   const alertedAt = doc.alerted_at ? new Date(doc.alerted_at).getTime() : 0;
   if (alertedAt && now - alertedAt < DAY_MS) return false;

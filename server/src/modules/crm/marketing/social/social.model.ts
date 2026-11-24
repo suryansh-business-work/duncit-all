@@ -51,6 +51,12 @@ const accountSchema = new Schema(
     // When the owner was last emailed about this account's token, so a
     // check that runs twice in a day does not send two reminders.
     alerted_at: { type: Date, default: null },
+    // Direct messages: the sync cursor (conversations updated after it are
+    // read on the next pass) and why the last DM read or the Page's webhook
+    // subscription failed, if one did.
+    dm_synced_at: { type: Date, default: null },
+    dm_error: { type: String, default: '' },
+    webhook_error: { type: String, default: '' },
   },
   { timestamps }
 );

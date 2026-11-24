@@ -14,6 +14,7 @@ import { providerReadiness, socialCredentials, socialRedirectUri } from './socia
 import { readConnectState, startConnect } from './social.oauth';
 import { handleOf, syncSocialAccount, type AccountWithTokens } from './social.sync';
 import { sealToken } from './social.tokens';
+import { subscribeConnectedPages } from './social.dm.sync';
 import { tokenExpiresInDays } from './social.health';
 import { analyzePendingComments } from './social.ai';
 import { sentimentCounts, socialAnalytics } from './social.analytics';
@@ -355,6 +356,7 @@ export const socialService = {
     // A consent that granted nothing used to come back as "0 connected" and look like success.
     if (found.length === 0) throw new Error(NOTHING_GRANTED[parsed.provider] ?? NOTHING_GRANTED_DEFAULT);
     const ids = await saveDiscovered(parsed.provider, found, parsed.userId);
+    await subscribeConnectedPages(found, creds);
     // In the background: the marketer is being sent back to the page now, and
     // the first read is several API calls per account.
     for (const id of ids) {

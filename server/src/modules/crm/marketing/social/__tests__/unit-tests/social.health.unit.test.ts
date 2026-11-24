@@ -15,6 +15,7 @@ jest.mock('../../social.model', () => ({
 jest.mock('../../providers', () => ({ READERS: { X: { profile: jest.fn() }, YOUTUBE: { profile: jest.fn() } } }));
 jest.mock('../../social.credentials', () => ({ socialCredentials: jest.fn() }));
 jest.mock('../../social.sync', () => ({ freshHandle: jest.fn() }));
+jest.mock('../../social.settings', () => ({ SOCIAL_SETTINGS_DEFAULTS: { expiry_alert_days: 7 }, loadSocialSettings: jest.fn() }));
 
 import { logs } from '@observability/log';
 import { getUrlConfigs } from '@config/url-configs';
@@ -25,6 +26,7 @@ import { READERS } from '../../providers';
 import { SocialApiError } from '../../providers/http';
 import { socialCredentials } from '../../social.credentials';
 import { freshHandle } from '../../social.sync';
+import { SOCIAL_SETTINGS_DEFAULTS, loadSocialSettings } from '../../social.settings';
 import {
   EXPIRY_ALERT_DAYS,
   accountHealthOf,
@@ -85,10 +87,12 @@ beforeEach(() => {
     freshHandle,
     sendHtmlEmail,
     getUrlConfigs,
+    loadSocialSettings,
   ]) {
     m(fn).mockReset();
   }
   m(socialCredentials).mockResolvedValue(CREDS);
+  m(loadSocialSettings).mockResolvedValue({ expiry_alert_days: SOCIAL_SETTINGS_DEFAULTS.expiry_alert_days });
   m(freshHandle).mockImplementation(async (doc: Record<string, unknown>) => ({ ...doc, access_token: 'fresh' }));
   m(READERS.X.profile).mockResolvedValue({ name: 'Duncit X', handle: 'duncit', avatar_url: '', followers: 1 });
   m(SocialAccountModel.updateOne).mockResolvedValue({ matchedCount: 1 });
@@ -218,6 +222,19 @@ describe('checkAccountHealth', () => {
     const [mail] = m(sendHtmlEmail).mock.calls[0];
     expect(mail.subject).toBe('Duncit X on X: access expires in 5 days');
     expect(mail.html).toContain('expires in <strong>5 days</strong>');
+  });
+
+  it('warns as many days ahead as Settings asks, not a fixed week', async () => {
+    m(loadSocialSettings).mockResolvedValue({ expiry_alert_days: 14 });
+    arrange(account({ token_expires_at: new Date(NOW + 10 * DAY) }));
+    await checkAccountHealth('acc-1', NOW);
+    expect(sendHtmlEmail).toHaveBeenCalledTimes(1);
+
+    m(sendHtmlEmail).mockClear();
+    m(loadSocialSettings).mockResolvedValue({ expiry_alert_days: 3 });
+    arrange(account({ token_expires_at: new Date(NOW + 5 * DAY) }));
+    await checkAccountHealth('acc-1', NOW);
+    expect(sendHtmlEmail).not.toHaveBeenCalled();
   });
 
   it('does not warn about a token with more than a week left', async () => {

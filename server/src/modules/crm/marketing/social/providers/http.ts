@@ -14,17 +14,22 @@ export class SocialApiError extends Error {
   readonly status: number;
   /** The token is dead: a person must reconnect before anything else works. */
   readonly expired: boolean;
+  /** Meta's `error.code` / `error.error_subcode`, when the network sent them (social.errors.ts reads them). */
+  readonly code: number | null;
+  readonly subcode: number | null;
 
-  constructor(service: string, status: number, detail: string, expired: boolean) {
+  constructor(service: string, status: number, detail: string, expired: boolean, codes: { code?: number; subcode?: number } = {}) {
     super(`${service}: ${detail}`);
     this.name = 'SocialApiError';
     this.status = status;
     this.expired = expired;
+    this.code = codes.code ?? null;
+    this.subcode = codes.subcode ?? null;
   }
 }
 
 type ErrorBody = {
-  error?: string | { message?: string; code?: number };
+  error?: string | { message?: string; code?: number; error_subcode?: number };
   error_description?: string;
   /** The Instagram and Threads token endpoints answer `{error_type, code, error_message}`. */
   error_message?: string;
@@ -61,7 +66,11 @@ export async function socialFetch<T>(service: string, url: string, init?: Reques
   const res = await outboundFetch(service, url, init);
   const body = (await res.json().catch(() => ({}))) as T & ErrorBody;
   if (!res.ok) {
-    throw new SocialApiError(service, res.status, reasonOf(body) || `HTTP ${res.status}`, isExpired(res.status, body));
+    const meta = typeof body.error === 'object' ? body.error : undefined;
+    throw new SocialApiError(service, res.status, reasonOf(body) || `HTTP ${res.status}`, isExpired(res.status, body), {
+      code: meta?.code,
+      subcode: meta?.error_subcode,
+    });
   }
   return { body, headers: res.headers };
 }

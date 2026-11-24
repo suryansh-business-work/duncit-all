@@ -2,16 +2,16 @@ import { logs } from '@observability/log';
 import { mailPreferenceService } from '@modules/content/mailPreference/mailPreference.service';
 import { waPreferenceAllows } from '@modules/platform/whatsapp/whatsapp.service';
 import { MarketingLeadModel, type MarketingLeadDoc } from '../leads/marketingLead.model';
-import { emailKey, phoneKey } from '../leads/marketingLead.keys';
+import { emailKey, handleKey, phoneKey } from '../leads/marketingLead.keys';
 import { timelineEntry } from '../leads/marketingLead.service';
 import { SYSTEM_LEAD_ACTOR } from '../leads/marketingLead.types';
 import { OutreachEnrollmentModel, OutreachSequenceModel, type OutreachEnrollmentDoc, type OutreachSequenceDoc } from './outreach.model';
 import { stopEnrollment } from './outreach.runner';
 
 /**
- * A lead writing back. Called from the automation engine's two inbound doors
- * (WhatsApp webhook, connected Gmail mailbox) after STOP / START has already
- * been applied to the number, so the preference read here is the answer: a
+ * A lead writing back. Called from the inbound doors (the automation engine's
+ * WhatsApp webhook and connected Gmail mailbox, the social Inbox's Instagram DMs)
+ * after STOP / START has already been applied, so the preference read here is the answer: a
  * number that just opted out ends its enrollments OPTED_OUT, anything else is
  * a reply. A reply moves the lead to REPLIED and, when the sequence says so,
  * stops it.
@@ -51,6 +51,16 @@ export async function outreachEmailReply(fromEmail: string): Promise<number> {
   const key = emailKey(fromEmail);
   if (!key) return 0;
   return onLeadReply({ email_keys: key }, !(await mailPreferenceService.allows(key, 'marketing')), 'email');
+}
+
+/**
+ * An Instagram DM from a lead's handle (the social Inbox's webhook). Opting out
+ * is the stop keyword the person just sent, already applied to the conversation.
+ */
+export async function outreachInstagramReply(username: string, optedOut: boolean): Promise<number> {
+  const key = handleKey(username);
+  if (!key) return 0;
+  return onLeadReply({ instagram_handle: key }, optedOut, 'Instagram');
 }
 
 /** The inbound doors never fail on our account: a reply we could not match is logged, not thrown. */

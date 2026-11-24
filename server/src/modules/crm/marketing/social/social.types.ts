@@ -43,6 +43,22 @@ export type SocialReviewStatus = (typeof SOCIAL_REVIEW_STATUSES)[number];
 export const SOCIAL_INBOX_STATUSES = ['OPEN', 'REPLIED', 'DONE', 'SPAM'] as const;
 export type SocialInboxStatus = (typeof SOCIAL_INBOX_STATUSES)[number];
 
+/** A direct-message conversation's messages: what the person sent us, and what we sent back. */
+export const SOCIAL_MESSAGE_DIRECTIONS = ['IN', 'OUT'] as const;
+export type SocialMessageDirection = (typeof SOCIAL_MESSAGE_DIRECTIONS)[number];
+
+/** RECEIVED for an inbound message; an outbound one is SENT once the network took it, FAILED when it refused. */
+export const SOCIAL_MESSAGE_STATUSES = ['RECEIVED', 'SENT', 'FAILED'] as const;
+export type SocialMessageStatus = (typeof SOCIAL_MESSAGE_STATUSES)[number];
+
+/**
+ * Meta's messaging window for a conversation: free-form replies within 24
+ * hours of the person's last message, a human agent's reply (HUMAN_AGENT tag)
+ * up to 7 days, nothing after — and nothing ever to someone who never wrote.
+ */
+export const SOCIAL_WINDOW_STATES = ['OPEN', 'HUMAN_AGENT', 'CLOSED'] as const;
+export type SocialWindowState = (typeof SOCIAL_WINDOW_STATES)[number];
+
 /** The slices of the Inbox its summary cards open. */
 export const SOCIAL_INBOX_VIEWS = ['OPEN', 'FLAGGED', 'UNASSIGNED', 'MINE', 'ALL'] as const;
 export type SocialInboxView = (typeof SOCIAL_INBOX_VIEWS)[number];

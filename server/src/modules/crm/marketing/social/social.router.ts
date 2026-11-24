@@ -4,6 +4,7 @@ import { getUrlConfigs } from '@config/url-configs';
 import { trimTrailingSlash } from '@utils/url';
 import { socialService } from './social.service';
 import { readConnectState } from './social.oauth';
+import { mountMetaWebhook } from './social.webhook.router';
 import type { SocialConnectReturn } from './social.types';
 
 const RETURN_PATH: Record<SocialConnectReturn, string> = {
@@ -53,6 +54,9 @@ export function buildSocialOAuthRouter(): Router {
     }
     res.redirect(destination.toString());
   });
+
+  // Meta's Instagram and Page events (DMs and comments) — social.webhook.router.ts.
+  mountMetaWebhook(router);
 
   return router;
 }

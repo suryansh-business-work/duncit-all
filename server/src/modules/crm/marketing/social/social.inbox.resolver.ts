@@ -1,6 +1,7 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
+import { socialConversationMutations, socialConversationQueries } from './social.conversation.resolver';
 import { socialInbox } from './social.inbox';
 import { suggestReply } from './social.inbox.ai';
 import { replyCapabilities, replyToComment } from './social.replies';
@@ -25,6 +26,8 @@ export const socialInboxResolvers = {
       requireRole(ctx, INBOX_ROLES);
       return replyCapabilities();
     },
+    // Direct messages and Social Settings (social.conversation.resolver.ts).
+    ...socialConversationQueries,
   },
   Mutation: {
     assignSocialComment: (_p: unknown, args: { id: string; user_id?: string | null }, ctx: Ctx) => {
@@ -43,5 +46,6 @@ export const socialInboxResolvers = {
       const user = requireRole(ctx, INBOX_ROLES);
       return replyToComment(args.id, args.text, user);
     },
+    ...socialConversationMutations,
   },
 };

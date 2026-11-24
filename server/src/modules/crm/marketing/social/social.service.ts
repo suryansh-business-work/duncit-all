@@ -25,6 +25,15 @@ import type { DiscoveredAccount, SocialConnectReturn, SocialProvider, SocialRevi
 
 const iso = (value: unknown) => (value instanceof Date ? value.toISOString() : null);
 
+const META_NOTHING_GRANTED =
+  'Meta connected no Facebook Page or Instagram professional account. Press Connect again and pick at least one on the consent screen; an Instagram account must be a professional account linked to a Facebook Page.';
+/** Why a finished consent connected nothing, per provider — the Accounts page shows it. */
+const NOTHING_GRANTED: Partial<Record<SocialProvider, string>> = {
+  INSTAGRAM: META_NOTHING_GRANTED,
+  FACEBOOK: META_NOTHING_GRANTED,
+};
+const NOTHING_GRANTED_DEFAULT = 'The network connected no account. Press Connect again and allow access to at least one account.';
+
 function notFound(what: string): never {
   throw new GraphQLError(`${what} not found`, { extensions: { code: 'NOT_FOUND' } });
 }
@@ -343,6 +352,8 @@ export const socialService = {
     const creds = await socialCredentials(parsed.provider);
     if (!creds) throw new Error('This network is not set up yet — add its app under Marketing › Settings › Integrations.');
     const found = await CONNECTORS[parsed.provider].connect({ code, creds, verifier: parsed.verifier });
+    // A consent that granted nothing used to come back as "0 connected" and look like success.
+    if (found.length === 0) throw new Error(NOTHING_GRANTED[parsed.provider] ?? NOTHING_GRANTED_DEFAULT);
     const ids = await saveDiscovered(parsed.provider, found, parsed.userId);
     // In the background: the marketer is being sent back to the page now, and
     // the first read is several API calls per account.

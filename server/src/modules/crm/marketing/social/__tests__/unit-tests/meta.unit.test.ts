@@ -1,9 +1,8 @@
 /**
- * The Facebook app: the Graph helpers' host and service, the App ID / Secret
- * probe, and Facebook Login's code → long-lived token → Pages handshake. The
- * outbound fetch is faked; what is under test is every URL, host, body and
- * mapped value — and that a Page's linked Instagram account no longer rides
- * along, now that Instagram has an app of its own.
+ * The Graph helpers every Meta network shares: hosts, services, the Facebook
+ * Login marker, and the App ID / Secret probe. The connect itself is
+ * meta.login.unit.test.ts. The outbound fetch is faked; what is under test is
+ * every URL, host and body.
  */
 jest.mock('@utils/outboundFetch', () => ({ outboundFetch: jest.fn() }));
 
@@ -14,27 +13,19 @@ import {
   INSTAGRAM_GRAPH,
   INSTAGRAM_SERVICE,
   META_SERVICE,
-  facebookConnector,
   graphGet,
   graphPost,
   graphTime,
   graphUrl,
-  metaConnector,
+  isFacebookLogin,
   probeFacebookApp,
   probeMetaApp,
+  probeMetaAppPair,
 } from '../../providers/meta';
 
 const mockFetch = outboundFetch as jest.Mock;
 
 const CREDS = { clientId: 'app-1', clientSecret: 'shh', redirectUri: 'https://api.duncit.test/social/callback', version: 'v21.0' };
-const PAGE_SCOPES = [
-  'pages_show_list',
-  'pages_read_engagement',
-  'pages_read_user_content',
-  'pages_manage_posts',
-  'read_insights',
-  'business_management',
-];
 
 /** A fetch Response stand-in: Graph answers JSON, and the status says whether it is an error. */
 const reply = (body: unknown, status = 200) => ({
@@ -67,7 +58,6 @@ describe('names and hosts', () => {
     expect(META_SERVICE).toBe(FACEBOOK_SERVICE);
     expect(INSTAGRAM_SERVICE).toBe('Instagram');
     expect(probeMetaApp).toBe(probeFacebookApp);
-    expect(metaConnector).toBe(facebookConnector);
   });
 
   it('builds a versioned URL on graph.facebook.com unless told another host', () => {
@@ -172,88 +162,24 @@ describe('probeFacebookApp', () => {
   });
 });
 
-describe('facebookConnector', () => {
-  it('sends the person to the Facebook dialog asking for the Page scopes only', () => {
-    const url = new URL(facebookConnector.authorizeUrl({ creds: CREDS, state: 'st-1', challenge: 'unused' }));
-    expect(`${url.origin}${url.pathname}`).toBe('https://www.facebook.com/v21.0/dialog/oauth');
-    expect(Object.fromEntries(url.searchParams)).toEqual({
-      client_id: 'app-1',
-      redirect_uri: CREDS.redirectUri,
-      state: 'st-1',
-      response_type: 'code',
-      scope: PAGE_SCOPES.join(','),
-    });
-    expect(url.searchParams.get('scope')).not.toMatch(/instagram/);
-  });
-
-  it('swaps the code for a short token, that for a long one, and lists the Pages with it', async () => {
-    queue({ access_token: 'short' }, { access_token: 'long' }, { data: [] });
-    await expect(facebookConnector.connect({ code: 'the-code', creds: CREDS, verifier: '' })).resolves.toEqual([]);
-    expect(at(0)).toEqual({
-      endpoint: `${FACEBOOK_GRAPH}/v21.0/oauth/access_token`,
-      params: { client_id: 'app-1', client_secret: 'shh', redirect_uri: CREDS.redirectUri, code: 'the-code' },
-    });
-    expect(at(1)).toEqual({
-      endpoint: `${FACEBOOK_GRAPH}/v21.0/oauth/access_token`,
-      params: { grant_type: 'fb_exchange_token', client_id: 'app-1', client_secret: 'shh', fb_exchange_token: 'short' },
-    });
-    expect(at(2)).toEqual({
-      endpoint: `${FACEBOOK_GRAPH}/v21.0/me/accounts`,
-      params: { fields: 'id,name,username,link,access_token,followers_count,fan_count,picture{url}', limit: '100', access_token: 'long' },
-    });
-    expect(at(2).params.fields).not.toContain('instagram_business_account');
-  });
-
-  it('returns one FACEBOOK account per Page — never the Instagram account a Page is linked to', async () => {
-    queue(
-      { access_token: 'short' },
-      { access_token: 'long' },
-      {
-        data: [
-          {
-            id: 'p1',
-            name: 'Duncit',
-            username: 'duncitpage',
-            link: 'https://www.facebook.com/duncitpage',
-            access_token: 'page-1',
-            followers_count: 1200,
-            fan_count: 900,
-            picture: { data: { url: 'https://cdn/p1.jpg' } },
-            instagram_business_account: { id: 'ig1', username: 'duncit', name: 'Duncit IG' },
-          },
-          { id: 'p2', username: 'second', access_token: 'page-2', fan_count: 7, picture: {} },
-          { id: 'p3', access_token: 'page-3' },
-        ],
-      }
-    );
-    const found = await facebookConnector.connect({ code: 'c', creds: CREDS, verifier: '' });
-    expect(found.map((a) => a.platform)).toEqual(['FACEBOOK', 'FACEBOOK', 'FACEBOOK']);
-    expect(found[0]).toEqual({
-      platform: 'FACEBOOK',
-      external_id: 'p1',
-      name: 'Duncit',
-      handle: 'duncitpage',
-      avatar_url: 'https://cdn/p1.jpg',
-      profile_url: 'https://www.facebook.com/duncitpage',
-      followers: 1200,
-      tokens: { access_token: 'page-1', refresh_token: '', expires_at: null, scopes: PAGE_SCOPES },
-      meta: {},
-    });
-    // No name falls back to the username, then to the id; no picture or link to blanks and the Page's address.
-    expect(found[1]).toMatchObject({ external_id: 'p2', name: 'second', handle: 'second', avatar_url: '', followers: 7 });
-    expect(found[2]).toMatchObject({
-      external_id: 'p3',
-      name: 'p3',
-      handle: '',
-      avatar_url: '',
-      profile_url: 'https://www.facebook.com/p3',
-      followers: 0,
-      tokens: { access_token: 'page-3' },
+describe('probeMetaAppPair', () => {
+  it('speaks as the app it tests, so an Instagram entry says Instagram', async () => {
+    queue({ access_token: 'app|tok' }, { name: 'Duncit Social' });
+    await expect(probeMetaAppPair(CREDS, 'Instagram')).resolves.toEqual({ ok: true, message: 'Instagram accepted the App ID and Secret (Duncit Social)' });
+    mockFetch.mockResolvedValueOnce(reply({ error: { message: 'Error validating client secret.', code: 1 } }, 400));
+    await expect(probeMetaAppPair(CREDS, 'Instagram')).resolves.toEqual({
+      ok: false,
+      message: 'Instagram rejected the App ID or Secret — Facebook: Error validating client secret.',
     });
   });
+});
 
-  it('connects nothing when Graph lists no Pages at all', async () => {
-    queue({ access_token: 'short' }, { access_token: 'long' }, {});
-    await expect(facebookConnector.connect({ code: 'c', creds: CREDS, verifier: '' })).resolves.toEqual([]);
+describe('isFacebookLogin', () => {
+  it('is true only for an account marked as connected through Facebook Login', () => {
+    expect(isFacebookLogin({ login: 'FACEBOOK' })).toBe(true);
+    expect(isFacebookLogin({ login: 'INSTAGRAM' })).toBe(false);
+    expect(isFacebookLogin({})).toBe(false);
+    expect(isFacebookLogin(null)).toBe(false);
+    expect(isFacebookLogin(undefined)).toBe(false);
   });
 });

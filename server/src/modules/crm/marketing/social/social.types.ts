@@ -82,6 +82,12 @@ export interface SocialAppCredentials {
   redirectUri: string;
   /** LinkedIn's `LinkedIn-Version` header or a Meta app's Graph version; '' for the others. */
   version: string;
+  /**
+   * The Facebook Login for Business configuration (Instagram and Facebook
+   * only). When set, Meta takes the permissions and assets from it; '' falls
+   * back to asking for the default permission list.
+   */
+  configId?: string;
 }
 
 export interface SocialTokens {

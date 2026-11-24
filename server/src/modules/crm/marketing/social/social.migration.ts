@@ -2,6 +2,7 @@ import { logs } from '@observability/log';
 import { EnvEntryModel, type EnvCategory } from '@modules/platform/envEntry/envEntry.model';
 import { CATEGORY_LABELS } from '@modules/platform/envEntry/envEntry.fields';
 import { envEntryService } from '@modules/platform/envEntry/envEntry.service';
+import { EnvTestLogModel } from '@modules/platform/envEntry/envTestLog.model';
 import { SocialAccountModel } from './social.model';
 
 /**
@@ -102,6 +103,8 @@ export async function migrateSocialAppEntries(): Promise<number> {
   const legacy = await EnvEntryModel.find({ category: LEGACY_CATEGORY as never }).lean<LegacyEntry[]>();
   let created = 0;
   for (const entry of legacy) created += await splitEntry(entry);
+  // The entry's test history moves with its Meta keys, so no line is left in a category the API cannot name.
+  await EnvTestLogModel.updateMany({ category: LEGACY_CATEGORY }, { $set: { category: 'SOCIAL_FACEBOOK' } });
   if (legacy.length > 0) {
     logs.server.info('social-accounts', 'migrateSocialAppEntries', { legacy_entries: legacy.length, created });
   }

@@ -9,11 +9,11 @@ import type {
 } from '../social.types';
 import { facebookReader } from './facebook';
 import { facebookPublisher } from './facebook.publish';
-import { instagramConnector, instagramReader, probeInstagramApp } from './instagram';
+import { instagramReader } from './instagram';
 import { instagramPublisher } from './instagram.publish';
 import { linkedinConnector, linkedinReader, probeLinkedInApp } from './linkedin';
 import { linkedinPublisher } from './linkedin.publish';
-import { facebookConnector, probeFacebookApp } from './meta';
+import { metaLoginConnector, probeMetaLogin } from './meta.login';
 import { probeThreadsApp, threadsConnector, threadsReader } from './threads';
 import { threadsPublisher } from './threads.publish';
 import { probeXApp, xConnector, xReader } from './x';
@@ -21,10 +21,10 @@ import { xPublisher } from './x.publish';
 import { probeYouTubeApp, youtubeConnector, youtubeReader } from './youtube';
 import { youtubePublisher } from './youtube.publish';
 
-/** How each network's app is connected — one app, one consent screen per network. */
+/** How each network's app is connected. Instagram and Facebook share Facebook Login for Business (meta.login.ts). */
 export const CONNECTORS: Record<SocialProvider, SocialConnector> = {
-  INSTAGRAM: instagramConnector,
-  FACEBOOK: facebookConnector,
+  INSTAGRAM: metaLoginConnector,
+  FACEBOOK: metaLoginConnector,
   THREADS: threadsConnector,
   YOUTUBE: youtubeConnector,
   LINKEDIN: linkedinConnector,
@@ -33,8 +33,8 @@ export const CONNECTORS: Record<SocialProvider, SocialConnector> = {
 
 /** How each network's app keys are proven without anyone signing in. */
 export const PROBES: Record<SocialProvider, (creds: SocialAppCredentials) => Promise<ProbeOutcome>> = {
-  INSTAGRAM: probeInstagramApp,
-  FACEBOOK: probeFacebookApp,
+  INSTAGRAM: probeMetaLogin('Instagram'),
+  FACEBOOK: probeMetaLogin('Facebook'),
   THREADS: probeThreadsApp,
   YOUTUBE: probeYouTubeApp,
   LINKEDIN: probeLinkedInApp,

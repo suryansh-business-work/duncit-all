@@ -1,15 +1,10 @@
-import type { DiscoveredAccount, ProbeOutcome, SocialAppCredentials, SocialConnector, SocialTokens } from '../social.types';
-import { count, postForm, socialJson, withQuery } from './http';
+import type { ProbeOutcome, SocialAppCredentials } from '../social.types';
+import { postForm, socialJson, withQuery } from './http';
 
 /**
- * The Facebook app, through Facebook Login for Business: one consent hands
- * back every Facebook Page the person manages. Instagram has an app and a
- * login of its own now (instagram.ts); an Instagram account connected through
- * Facebook before that keeps working on its Page token, with provider FACEBOOK.
- *
- * The short-lived user token is swapped for a long-lived one first, because
- * Page tokens read with a long-lived user token do not expire — so a Page
- * stays connected until someone removes the app, not for an hour.
+ * The Graph API helpers every Meta network shares: the hosts, the names the
+ * errors carry, GET/POST/DELETE with the token where Graph takes it, and the
+ * App ID / Secret probe. The connect itself is meta.login.ts.
  */
 export const FACEBOOK_SERVICE = 'Facebook';
 /** The name this app went by while it served Instagram too. */
@@ -20,17 +15,15 @@ export const FACEBOOK_GRAPH = 'https://graph.facebook.com';
 /** The only host that honours a token from Instagram Login. */
 export const INSTAGRAM_GRAPH = 'https://graph.instagram.com';
 
-/** Read Pages, posts, comments and insights; post to Pages. */
-const SCOPES = [
-  'pages_show_list',
-  'pages_read_engagement',
-  'pages_read_user_content',
-  'pages_manage_posts',
-  'read_insights',
-  'business_management',
-];
-
 export const graphUrl = (version: string, path: string, base = FACEBOOK_GRAPH) => `${base}/${version}${path}`;
+
+/**
+ * `meta.login` on an account connected through Facebook Login for Business
+ * (Meta's "Unified login"): its token — a Page token, or the login's own — is
+ * honoured on graph.facebook.com, whichever button started the connect.
+ */
+export const FACEBOOK_LOGIN = 'FACEBOOK';
+export const isFacebookLogin = (meta: Record<string, unknown> | null | undefined): boolean => meta?.login === FACEBOOK_LOGIN;
 
 /** Each host answers for its own app, so an error names the app whose token was refused. */
 const serviceOf = (base: string) => (base === INSTAGRAM_GRAPH ? INSTAGRAM_SERVICE : FACEBOOK_SERVICE);
@@ -82,7 +75,7 @@ export function graphDelete<T>(version: string, path: string, token: string, bas
  * Facebook issues an APP token for the ID and secret alone, so this is a real
  * check of the pair — and the app's name comes back to show which app it is.
  */
-export async function probeFacebookApp(creds: SocialAppCredentials): Promise<ProbeOutcome> {
+export async function probeMetaAppPair(creds: SocialAppCredentials, label: string): Promise<ProbeOutcome> {
   try {
     const token = await socialJson<TokenResponse>(
       FACEBOOK_SERVICE,
@@ -94,12 +87,14 @@ export async function probeFacebookApp(creds: SocialAppCredentials): Promise<Pro
     );
     const app = await graphGet<{ name?: string }>(creds.version, `/${creds.clientId}`, token.access_token, { fields: 'name' });
     const named = app.name ? ` (${app.name})` : '';
-    return { ok: true, message: `Facebook accepted the App ID and Secret${named}` };
+    return { ok: true, message: `${label} accepted the App ID and Secret${named}` };
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
-    return { ok: false, message: `Facebook rejected the App ID or Secret — ${reason}` };
+    return { ok: false, message: `${label} rejected the App ID or Secret — ${reason}` };
   }
 }
+
+export const probeFacebookApp = (creds: SocialAppCredentials): Promise<ProbeOutcome> => probeMetaAppPair(creds, 'Facebook');
 /** The probe's name while the app served Instagram too. */
 export const probeMetaApp = probeFacebookApp;
 
@@ -110,86 +105,3 @@ export const graphTime = (value?: string): Date =>
 interface TokenResponse {
   access_token: string;
 }
-
-interface Page {
-  id: string;
-  name?: string;
-  username?: string;
-  link?: string;
-  access_token: string;
-  followers_count?: number;
-  fan_count?: number;
-  picture?: { data?: { url?: string } };
-}
-
-const PAGE_FIELDS = 'id,name,username,link,access_token,followers_count,fan_count,picture{url}';
-
-const pageToken = (page: Page): SocialTokens => ({
-  access_token: page.access_token,
-  refresh_token: '',
-  expires_at: null,
-  scopes: SCOPES,
-});
-
-function facebookAccount(page: Page): DiscoveredAccount {
-  return {
-    platform: 'FACEBOOK',
-    external_id: page.id,
-    name: page.name ?? page.username ?? page.id,
-    handle: page.username ?? '',
-    avatar_url: page.picture?.data?.url ?? '',
-    profile_url: page.link ?? `https://www.facebook.com/${page.id}`,
-    followers: count(page.followers_count ?? page.fan_count),
-    tokens: pageToken(page),
-    meta: {},
-  };
-}
-
-export const facebookConnector: SocialConnector = {
-  authorizeUrl: ({ creds, state }) =>
-    withQuery(`https://www.facebook.com/${creds.version}/dialog/oauth`, {
-      client_id: creds.clientId,
-      redirect_uri: creds.redirectUri,
-      state,
-      response_type: 'code',
-      scope: SCOPES.join(','),
-    }),
-
-  async connect({ code, creds }) {
-    const short = await socialJson<TokenResponse>(
-      FACEBOOK_SERVICE,
-      withQuery(graphUrl(creds.version, '/oauth/access_token'), {
-        client_id: creds.clientId,
-        client_secret: creds.clientSecret,
-        redirect_uri: creds.redirectUri,
-        code,
-      })
-    );
-    const long = await socialJson<TokenResponse>(
-      FACEBOOK_SERVICE,
-      withQuery(graphUrl(creds.version, '/oauth/access_token'), {
-        grant_type: 'fb_exchange_token',
-        client_id: creds.clientId,
-        client_secret: creds.clientSecret,
-        fb_exchange_token: short.access_token,
-      })
-    );
-    const pages = await graphGet<{ data?: Page[] }>(creds.version, '/me/accounts', long.access_token, {
-      fields: PAGE_FIELDS,
-      limit: '100',
-    });
-    return (pages.data ?? []).map(facebookAccount);
-  },
-
-  /**
-   * De-authorise the app for the account the token belongs to. Permissions are
-   * revoked per USER, and the stored token is a Page token, so `/me` is the
-   * most the Graph can be asked for — Meta may refuse, which the caller treats
-   * as best effort.
-   */
-  async revoke(account, creds) {
-    await graphDelete(creds.version, '/me/permissions', account.access_token);
-  },
-};
-/** The connector's name while the app served Instagram too. */
-export const metaConnector = facebookConnector;

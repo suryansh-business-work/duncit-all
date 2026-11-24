@@ -5,6 +5,7 @@
  */
 import { Types } from 'mongoose';
 import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
+import { EnvTestLogModel } from '@modules/platform/envEntry/envTestLog.model';
 import { SocialAccountModel } from '../../social.model';
 import { migrateSocialAppEntries, migrateSocialApps, migrateSocialProviders, splitLegacyConfig } from '../../social.migration';
 
@@ -36,7 +37,7 @@ const FULL = {
 };
 
 afterEach(async () => {
-  await Promise.all([EnvEntryModel.deleteMany({}), SocialAccountModel.deleteMany({})]);
+  await Promise.all([EnvEntryModel.deleteMany({}), SocialAccountModel.deleteMany({}), EnvTestLogModel.deleteMany({})]);
 });
 
 describe('splitLegacyConfig', () => {
@@ -98,6 +99,15 @@ describe('migrateSocialAppEntries', () => {
 
   it('does nothing when there is nothing to split', async () => {
     expect(await migrateSocialAppEntries()).toBe(0);
+  });
+
+  it('moves test history left under SOCIAL_APPS to the Facebook app, touching no other line', async () => {
+    const line = (category: string) => ({ entry_id: new Types.ObjectId(), category, entry_name: 'x', kind: 'CONNECTION', ok: true, message: 'ok' });
+    await EnvTestLogModel.collection.insertMany([line('SOCIAL_APPS'), line('SOCIAL_APPS'), line('OPENAI')]);
+    await migrateSocialAppEntries();
+    expect(await EnvTestLogModel.countDocuments({ category: 'SOCIAL_APPS' })).toBe(0);
+    expect(await EnvTestLogModel.countDocuments({ category: 'SOCIAL_FACEBOOK' })).toBe(2);
+    expect(await EnvTestLogModel.countDocuments({ category: 'OPENAI' })).toBe(1);
   });
 });
 

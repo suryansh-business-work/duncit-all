@@ -245,6 +245,15 @@ describe('reply capability', () => {
     expect(missingReplyPermission({ platform: 'YOUTUBE', provider: 'YOUTUBE', scopes: null })).toBeNull();
     expect(missingReplyPermission({ platform: 'THREADS', provider: 'THREADS', scopes: [] })).toBeNull();
   });
+
+  it('lets an Instagram account from Facebook Login reply only when its grant includes instagram_manage_comments', () => {
+    const unified = { platform: 'INSTAGRAM' as const, provider: 'INSTAGRAM' as const, meta: { login: 'FACEBOOK' } };
+    expect(missingReplyPermission({ ...unified, scopes: ['instagram_basic', 'instagram_manage_comments'] })).toBeNull();
+    expect(missingReplyPermission({ ...unified, scopes: ['instagram_basic'] })).toBe('instagram_manage_comments');
+    // An empty grant says nothing for an older account, but a Facebook Login token always reports its scopes.
+    expect(missingReplyPermission({ ...unified, scopes: [] })).toBe('instagram_manage_comments');
+    expect(missingReplyPermission({ platform: 'INSTAGRAM', provider: 'FACEBOOK', scopes: ['instagram_manage_comments'] })).toBeNull();
+  });
 });
 
 describe('replyToComment', () => {

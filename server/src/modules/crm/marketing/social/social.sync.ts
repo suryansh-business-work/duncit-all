@@ -9,6 +9,7 @@ import {
 } from './social.model';
 import { READERS } from './providers';
 import { SocialApiError } from './providers/http';
+import { isFacebookLogin } from './providers/meta';
 import { socialCredentials } from './social.credentials';
 import { openToken, sealToken } from './social.tokens';
 import { analyzePendingComments } from './social.ai';
@@ -61,7 +62,8 @@ export const handleOf = (doc: AccountWithTokens): SocialAccountHandle => ({
 export async function freshHandle(doc: AccountWithTokens, reader: SocialReader, creds: SocialAppCredentials) {
   const handle = handleOf(doc);
   const expires = doc.token_expires_at ? new Date(doc.token_expires_at).getTime() : 0;
-  const renewsFromAccessToken = RENEWS_FROM_ACCESS_TOKEN.has(doc.provider);
+  // A Facebook Login token (Unified login) is not one of them: it cannot be renewed without a person.
+  const renewsFromAccessToken = RENEWS_FROM_ACCESS_TOKEN.has(doc.provider) && !isFacebookLogin(handle.meta);
   const margin = renewsFromAccessToken ? LONG_LIVED_MARGIN_MS : REFRESH_MARGIN_MS;
   if (!expires || expires - margin > Date.now()) return handle;
   if (!reader.refresh || (!handle.refresh_token && !renewsFromAccessToken)) {

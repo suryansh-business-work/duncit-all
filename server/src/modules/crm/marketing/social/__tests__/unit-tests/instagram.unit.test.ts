@@ -1,24 +1,17 @@
 /**
- * The Instagram app (Instagram Login): the App ID / Secret probe, the code →
- * long-lived token → profile handshake, token renewal, and the reader and
- * publisher — on graph.instagram.com for an account connected this way, on
- * graph.facebook.com for one connected through Facebook earlier, whose Page
- * token only that host honours. The outbound fetch is faked and the clock is
- * frozen; every host, URL, body and mapped value is asserted.
+ * Instagram accounts: token renewal for the ones from the retired Instagram
+ * Login, and the reader and publisher — on graph.instagram.com for those, on
+ * graph.facebook.com for one connected through Facebook Login (Unified login,
+ * or the Facebook app before it), whose token only that host honours. The
+ * connect itself is meta.login.unit.test.ts. The outbound fetch is faked and
+ * the clock is frozen; every host, URL, body and mapped value is asserted.
  */
 jest.mock('@utils/outboundFetch', () => ({ outboundFetch: jest.fn() }));
 
 import { outboundFetch } from '@utils/outboundFetch';
 import type { SocialAccountHandle } from '../../social.types';
-import { PROBE_CODE, SocialApiError } from '../../providers/http';
-import {
-  INSTAGRAM_SCOPES,
-  INSTAGRAM_SERVICE,
-  graphBase,
-  instagramConnector,
-  instagramReader,
-  probeInstagramApp,
-} from '../../providers/instagram';
+import { SocialApiError } from '../../providers/http';
+import { INSTAGRAM_SCOPES, INSTAGRAM_SERVICE, graphBase, instagramReader, usesFacebookGraph } from '../../providers/instagram';
 import { instagramPublisher } from '../../providers/instagram.publish';
 import { FACEBOOK_GRAPH, INSTAGRAM_GRAPH } from '../../providers/meta';
 import { publishContent } from '../../social.rules';
@@ -28,22 +21,22 @@ const mockFetch = outboundFetch as jest.Mock;
 const CREDS = { clientId: 'ig-app', clientSecret: 'shh', redirectUri: 'https://api.duncit.test/social/callback', version: 'v21.0' };
 const NOW = Date.UTC(2026, 9, 31, 12, 0, 0);
 const SIXTY_DAYS_S = 5_184_000;
-const SCOPE_LIST =
-  'instagram_business_basic,instagram_business_content_publish,instagram_business_manage_comments,instagram_business_manage_insights';
 
-const account = (provider: 'INSTAGRAM' | 'FACEBOOK'): SocialAccountHandle => ({
+const account = (provider: 'INSTAGRAM' | 'FACEBOOK', meta: Record<string, string> = {}): SocialAccountHandle => ({
   provider,
   platform: 'INSTAGRAM',
   external_id: '1784140',
   handle: 'duncit',
   access_token: `${provider.toLowerCase()}-tok`,
   refresh_token: '',
-  meta: {},
+  meta,
 });
 /** Connected through Instagram Login: an Instagram user token. */
 const viaInstagram = account('INSTAGRAM');
 /** Connected through Facebook before Instagram had its own app: a Page token. */
 const viaFacebook = account('FACEBOOK');
+/** Connected through Facebook Login for Business from the Instagram button: the Page token, provider INSTAGRAM. */
+const viaUnified = account('INSTAGRAM', { login: 'FACEBOOK', page_id: 'p1' });
 
 const reply = (body: unknown, status = 200) => ({
   ok: status >= 200 && status < 300,
@@ -84,158 +77,13 @@ beforeEach(() => {
 afterEach(() => jest.useRealTimers());
 
 describe('graphBase', () => {
-  it('reads a Page token through graph.facebook.com and an Instagram token through graph.instagram.com', () => {
+  it('reads a Facebook Login token through graph.facebook.com and an Instagram Login token through graph.instagram.com', () => {
     expect(graphBase(viaFacebook)).toBe(FACEBOOK_GRAPH);
+    expect(graphBase(viaUnified)).toBe(FACEBOOK_GRAPH);
     expect(graphBase(viaInstagram)).toBe(INSTAGRAM_GRAPH);
+    expect(usesFacebookGraph({ provider: 'INSTAGRAM', meta: null })).toBe(false);
+    expect(usesFacebookGraph({ provider: 'INSTAGRAM', meta: { login: 'INSTAGRAM' } })).toBe(false);
     expect(INSTAGRAM_SERVICE).toBe('Instagram');
-  });
-});
-
-describe('probeInstagramApp', () => {
-  const fetchMock = jest.fn();
-  const realFetch = global.fetch;
-  beforeEach(() => {
-    fetchMock.mockReset();
-    global.fetch = fetchMock as unknown as typeof fetch;
-  });
-  afterAll(() => {
-    global.fetch = realFetch;
-  });
-
-  const answer = (status: number, body: unknown) => fetchMock.mockResolvedValueOnce({ ok: status < 300, status, json: async () => body });
-  /** Instagram's shape: no OAuth `error` word — the sentence is in `error_message`. */
-  const oauthError = (error_message: string) => ({ error_type: 'OAuthException', code: 400, error_message });
-
-  it('posts the keys and a code that cannot be real to the token endpoint, with a timeout', async () => {
-    answer(400, oauthError('Invalid authorization code'));
-    await probeInstagramApp(CREDS);
-    const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe('https://api.instagram.com/oauth/access_token');
-    expect(init.method).toBe('POST');
-    expect(init.headers).toEqual({ 'content-type': 'application/x-www-form-urlencoded' });
-    expect(Object.fromEntries(new URLSearchParams(init.body))).toEqual({
-      client_id: 'ig-app',
-      client_secret: 'shh',
-      grant_type: 'authorization_code',
-      redirect_uri: CREDS.redirectUri,
-      code: PROBE_CODE,
-    });
-    expect(init.signal).toBeInstanceOf(AbortSignal);
-  });
-
-  it.each(['Invalid authorization code', 'Matching code was not found or was already used'])(
-    'accepts the keys when only the code is refused: %s',
-    async (sentence) => {
-      answer(400, oauthError(sentence));
-      await expect(probeInstagramApp(CREDS)).resolves.toEqual({ ok: true, message: 'Instagram accepted the App ID and Secret' });
-    }
-  );
-
-  it('accepts the keys when the endpoint somehow issues a token', async () => {
-    answer(200, { access_token: 'x', user_id: 1 });
-    await expect(probeInstagramApp(CREDS)).resolves.toEqual({ ok: true, message: 'Instagram accepted the App ID and Secret' });
-  });
-
-  it.each(['Invalid Client ID', 'Invalid Client Secret', 'Invalid platform app', 'Unsupported app id'])(
-    'rejects the keys when Instagram refuses the client: %s',
-    async (sentence) => {
-      answer(400, oauthError(sentence));
-      await expect(probeInstagramApp(CREDS)).resolves.toEqual({ ok: false, message: `Instagram rejected the App ID or Secret (${sentence})` });
-    }
-  );
-
-  it('rejects the keys on a 401 even when the body is not JSON', async () => {
-    fetchMock.mockResolvedValueOnce({ ok: false, status: 401, json: async () => Promise.reject(new Error('not json')) });
-    await expect(probeInstagramApp(CREDS)).resolves.toEqual({ ok: false, message: 'Instagram rejected the App ID or Secret (HTTP 401)' });
-  });
-
-  it('gives the keys the benefit of the doubt when a 400 says nothing about the client', async () => {
-    answer(400, {});
-    await expect(probeInstagramApp(CREDS)).resolves.toEqual({ ok: true, message: 'Instagram accepted the App ID and Secret' });
-  });
-});
-
-describe('instagramConnector', () => {
-  it("sends the person to Instagram's own consent screen for the business scopes", () => {
-    const url = new URL(instagramConnector.authorizeUrl({ creds: CREDS, state: 'st-1', challenge: 'unused' }));
-    expect(`${url.origin}${url.pathname}`).toBe('https://www.instagram.com/oauth/authorize');
-    expect(Object.fromEntries(url.searchParams)).toEqual({
-      client_id: 'ig-app',
-      redirect_uri: CREDS.redirectUri,
-      scope: SCOPE_LIST,
-      response_type: 'code',
-      state: 'st-1',
-      force_reauth: 'true',
-    });
-    expect(INSTAGRAM_SCOPES.join(',')).toBe(SCOPE_LIST);
-  });
-
-  it('swaps the code for a short token, that for a long one, and reads the account with it', async () => {
-    queue(
-      { access_token: 'short', user_id: 17841400000000000, permissions: SCOPE_LIST },
-      { access_token: 'long', token_type: 'bearer', expires_in: SIXTY_DAYS_S },
-      { user_id: '17841405793187218', username: 'duncit', name: 'Duncit', profile_picture_url: 'https://cdn/ig.jpg', followers_count: '1200' }
-    );
-    const found = await instagramConnector.connect({ code: 'the-code', creds: CREDS, verifier: '' });
-
-    expect(serviceOf(0)).toBe('Instagram');
-    expect(urlOf(0)).toBe('https://api.instagram.com/oauth/access_token');
-    expect(initOf(0)?.method).toBe('POST');
-    expect(formOf(0)).toEqual({
-      client_id: 'ig-app',
-      client_secret: 'shh',
-      grant_type: 'authorization_code',
-      redirect_uri: CREDS.redirectUri,
-      code: 'the-code',
-    });
-    expect(at(1)).toEqual({
-      endpoint: `${INSTAGRAM_GRAPH}/access_token`,
-      params: { grant_type: 'ig_exchange_token', client_secret: 'shh', access_token: 'short' },
-    });
-    expect(at(2)).toEqual({
-      endpoint: `${INSTAGRAM_GRAPH}/v21.0/me`,
-      params: { fields: 'user_id,username,name,profile_picture_url,followers_count', access_token: 'long' },
-    });
-    expect(found).toEqual([
-      {
-        platform: 'INSTAGRAM',
-        external_id: '17841405793187218',
-        name: 'Duncit',
-        handle: 'duncit',
-        avatar_url: 'https://cdn/ig.jpg',
-        profile_url: 'https://www.instagram.com/duncit',
-        followers: 1200,
-        tokens: { access_token: 'long', refresh_token: '', expires_at: new Date(NOW + SIXTY_DAYS_S * 1000), scopes: INSTAGRAM_SCOPES },
-        meta: {},
-      },
-    ]);
-  });
-
-  it("takes a token wrapped in `data`, falls back to the token endpoint's id, and leaves blanks blank", async () => {
-    queue({ data: [{ access_token: 'short', user_id: 17841 }] }, { access_token: 'long' }, {});
-    const [found] = await instagramConnector.connect({ code: 'c', creds: CREDS, verifier: '' });
-    expect(found).toEqual({
-      platform: 'INSTAGRAM',
-      external_id: '17841',
-      name: '',
-      handle: '',
-      avatar_url: '',
-      profile_url: '',
-      followers: 0,
-      tokens: { access_token: 'long', refresh_token: '', expires_at: null, scopes: INSTAGRAM_SCOPES },
-      meta: {},
-    });
-  });
-
-  it.each([[{ data: [] }], [{ data: null }], [{}]])('refuses a token response that carries no token: %j', async (body) => {
-    queue(body);
-    await expect(instagramConnector.connect({ code: 'c', creds: CREDS, verifier: '' })).rejects.toMatchObject({
-      name: 'SocialApiError',
-      status: 502,
-      expired: false,
-      message: 'Instagram: no token came back from the code exchange',
-    });
-    expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -255,12 +103,12 @@ describe('instagramReader.refresh', () => {
     });
   });
 
-  it('cannot renew a Page token — Meta revoked it, so a person must reconnect', async () => {
-    const outcome = await settle(refresh(viaFacebook));
+  it.each([['the old Facebook app', viaFacebook], ['Unified login', viaUnified]])('cannot renew a token from %s — a person must reconnect', async (_via, acct) => {
+    const outcome = await settle(refresh(acct));
     expect(outcome).toHaveProperty('error');
     const error = (outcome as { error: unknown }).error;
     expect(error).toBeInstanceOf(SocialApiError);
-    expect(error).toMatchObject({ status: 401, expired: true, message: 'Instagram: the Page token has expired — reconnect this account' });
+    expect(error).toMatchObject({ status: 401, expired: true, message: 'Instagram: the Facebook Login token has expired — reconnect this account' });
     expect(mockFetch).not.toHaveBeenCalled();
   });
 });
@@ -269,6 +117,7 @@ describe('instagramReader.refresh', () => {
 const HOSTS: Array<[string, SocialAccountHandle, string, string]> = [
   ['Instagram Login', viaInstagram, INSTAGRAM_GRAPH, '/me'],
   ['Facebook', viaFacebook, FACEBOOK_GRAPH, '/1784140'],
+  ['Unified login', viaUnified, FACEBOOK_GRAPH, '/1784140'],
 ];
 
 describe.each(HOSTS)('instagramReader for an account connected through %s', (_via, acct, host, profilePath) => {

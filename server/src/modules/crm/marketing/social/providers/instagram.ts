@@ -1,21 +1,22 @@
-import type { FetchedComment, FetchedPost, SocialAccountHandle, SocialReader } from '../social.types';
+import type { FetchedComment, FetchedPost, SocialAccountHandle, SocialProvider, SocialReader } from '../social.types';
 import { SocialApiError, count } from './http';
 import { refreshInstagramToken } from './instagram.auth';
-import { FACEBOOK_GRAPH, INSTAGRAM_GRAPH, INSTAGRAM_SERVICE, graphGet, graphTime } from './meta';
+import { FACEBOOK_GRAPH, INSTAGRAM_GRAPH, INSTAGRAM_SERVICE, graphGet, graphTime, isFacebookLogin } from './meta';
 
 export { INSTAGRAM_SERVICE } from './meta';
-export { INSTAGRAM_SCOPES, instagramConnector, probeInstagramApp, refreshInstagramToken } from './instagram.auth';
+export { INSTAGRAM_SCOPES, refreshInstagramToken } from './instagram.auth';
 
 /**
  * An Instagram professional account. Which Graph host answers for it depends
- * on the app it was connected through: Instagram Login hands out a token only
- * graph.instagram.com honours, while an account connected through Facebook
- * before Instagram had its own app holds a Page token, which only
- * graph.facebook.com does — that account keeps provider FACEBOOK and reads
- * exactly as it always did.
+ * on how it was connected: through Facebook Login for Business (Unified login,
+ * every connect today) or the Facebook app before that, its token is honoured
+ * on graph.facebook.com; through the retired Instagram Login, only
+ * graph.instagram.com honours it.
  */
-export const graphBase = (account: SocialAccountHandle): string =>
-  account.provider === 'FACEBOOK' ? FACEBOOK_GRAPH : INSTAGRAM_GRAPH;
+export const usesFacebookGraph = (account: { provider: SocialProvider; meta?: Record<string, unknown> | null }): boolean =>
+  account.provider === 'FACEBOOK' || isFacebookLogin(account.meta);
+
+export const graphBase = (account: SocialAccountHandle): string => (usesFacebookGraph(account) ? FACEBOOK_GRAPH : INSTAGRAM_GRAPH);
 
 const PROFILE_FIELDS = 'username,name,profile_picture_url,followers_count';
 
@@ -47,10 +48,10 @@ interface InstagramComment {
 }
 
 export const instagramReader: SocialReader = {
-  /** Only a token from Instagram Login renews; a Page token never expires, so one that has needs a person. */
+  /** Only a token from Instagram Login renews; one from Facebook Login cannot be renewed without a person. */
   async refresh(account) {
-    if (account.provider === 'FACEBOOK') {
-      throw new SocialApiError(INSTAGRAM_SERVICE, 401, 'the Page token has expired — reconnect this account', true);
+    if (usesFacebookGraph(account)) {
+      throw new SocialApiError(INSTAGRAM_SERVICE, 401, 'the Facebook Login token has expired — reconnect this account', true);
     }
     return refreshInstagramToken(account.access_token);
   },

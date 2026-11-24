@@ -8,6 +8,8 @@ import { mcpConsentService } from '../../auth/consent.service';
 import { McpClientModel } from '../../auth/oauth.models';
 import { registerCatalogSource } from '../../catalog/catalog';
 import { MCP_ENDPOINTS } from '../../catalog/endpoints';
+import { toolNameFor } from '../../catalog/naming';
+import { MEMBER_SELF_SERVICE_FIELDS } from '../../catalog/self-service';
 import { mcpSettingsService } from '../../settings/settings.service';
 import { McpToolCallModel } from '../../usage/usage.model';
 
@@ -287,14 +289,21 @@ describe('mcpCatalog', () => {
 
   it('filters by category across the whole catalog and says why a tool is out of reach', async () => {
     const { mcpCatalog } = await read<Catalog>(podsLead, CATALOG, { category: 'finance' });
+    // The member's own reads filed under Finance (wallet, payments) reach every
+    // member through the app; nothing else of Finance does.
+    const ownReads = new Set([...MEMBER_SELF_SERVICE_FIELDS].map((field) => toolNameFor('finance', field)));
 
     expect(mcpCatalog.total).toBeGreaterThan(0);
     expect(mcpCatalog.categories).toEqual([{ category: 'finance', label: 'Finance', tools: mcpCatalog.total }]);
+    expect(mcpCatalog.tools.filter((tool) => tool.available).map((tool) => tool.name)).toEqual(
+      expect.arrayContaining(['finance_my_wallet', 'finance_my_payments'])
+    );
     for (const tool of mcpCatalog.tools) {
+      const own = ownReads.has(tool.name);
       expect(tool).toMatchObject({
         category: 'finance',
-        available: false,
-        unavailable_reason: 'Your account has no console that includes this tool.',
+        available: own,
+        unavailable_reason: own ? null : 'Your account has no console that includes this tool.',
       });
     }
   });

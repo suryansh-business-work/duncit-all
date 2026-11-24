@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { logs } from '@duncit/logs';
 import { placeChargesTicketDraft, type PodPlaceCharge } from '@duncit/utils';
 
@@ -32,7 +32,9 @@ export function usePlaceChargesConfirm(pod: PlaceChargesPod, currency: string) {
   // A second tap while the first is still with the server must not open a
   // second ticket; state alone updates too late to stop it.
   const inFlight = useRef(false);
-  const charges = pod.place_charges ?? [];
+  // Memoised so the empty fallback is one array, not a new one every render
+  // that would re-create onReport each time.
+  const charges = useMemo(() => pod.place_charges ?? [], [pod.place_charges]);
   const hasCharges = charges.length > 0;
 
   const answer = useCallback((go: boolean) => {

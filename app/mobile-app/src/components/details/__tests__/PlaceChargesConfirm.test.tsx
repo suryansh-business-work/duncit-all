@@ -3,7 +3,10 @@ import { Text } from 'tamagui';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import type { PodPlaceCharge } from '@duncit/utils';
 
-import { PlaceChargesConfirmDialog, usePlaceChargesConfirm } from '@/components/details/place-charges';
+import {
+  PlaceChargesConfirmDialog,
+  usePlaceChargesConfirm,
+} from '@/components/details/place-charges';
 import type { PlaceChargesPod } from '@/components/details/place-charges/usePlaceChargesConfirm';
 import { createTicket } from '@/hooks/useSupport';
 import { renderWithProviders } from '@/utils/test-utils';
@@ -15,7 +18,11 @@ const CHARGES: PodPlaceCharge[] = [
   { label: 'Entry', amount: 200, note: 'Includes one drink' },
   { label: 'Table', amount: 300 },
 ];
-const POD: PlaceChargesPod = { id: 'pod-1', pod_title: 'Sunday Board Games', place_charges: CHARGES };
+const POD: PlaceChargesPod = {
+  id: 'pod-1',
+  pod_title: 'Sunday Board Games',
+  place_charges: CHARGES,
+};
 
 /** A Book action behind the gate, the way PodDetailsOverlays runs it. */
 function Harness({ pod }: Readonly<{ pod: PlaceChargesPod }>) {
@@ -23,7 +30,10 @@ function Harness({ pod }: Readonly<{ pod: PlaceChargesPod }>) {
   const [answer, setAnswer] = useState('none');
   return (
     <>
-      <Text testID="book" onPress={() => placeCharges.confirm().then((go) => setAnswer(String(go)))}>
+      <Text
+        testID="book"
+        onPress={() => placeCharges.confirm().then((go) => setAnswer(String(go)))}
+      >
         book
       </Text>
       <Text testID="answer">{answer}</Text>
@@ -57,8 +67,12 @@ describe('place charges confirmation (native)', () => {
     expect(screen.getAllByTestId('venue-charge-row')).toHaveLength(2);
     expect(screen.getByText('Includes one drink')).toBeOnTheScreen();
     expect(screen.getByTestId('venue-charges-total')).toHaveTextContent('₹500.00');
-    expect(screen.getByText('You pay these charges directly to the venue, at the venue.')).toBeOnTheScreen();
-    expect(screen.getByText(/Duncit does not collect these charges and has no role in them/)).toBeOnTheScreen();
+    expect(
+      screen.getByText('You pay these charges directly to the venue, at the venue.'),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByText(/Duncit does not collect these charges and has no role in them/),
+    ).toBeOnTheScreen();
   });
 
   it("answers yes on I'm OK and no on Cancel", async () => {

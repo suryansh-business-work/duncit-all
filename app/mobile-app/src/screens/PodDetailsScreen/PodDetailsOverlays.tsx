@@ -19,7 +19,10 @@ import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
 import { BookingClashDialog } from '@/components/details/BookingClashDialog';
-import { PlaceChargesConfirmDialog, usePlaceChargesConfirm } from '@/components/details/place-charges';
+import {
+  PlaceChargesConfirmDialog,
+  usePlaceChargesConfirm,
+} from '@/components/details/place-charges';
 
 import { PodBackoutDialogs } from './PodBackoutDialogs';
 import type { PodDetailActions } from './usePodDetailActions';

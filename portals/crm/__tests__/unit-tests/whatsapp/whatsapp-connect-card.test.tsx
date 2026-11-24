@@ -106,15 +106,26 @@ const toLinkStep = async (extraMocks: MockedResponse[]) => {
 };
 
 describe('WhatsAppConnectCard — Link step', () => {
-  it('starts the session only when Connect is pressed, and shows the QR spinner meanwhile', async () => {
+  it('starts the session only when Connect is pressed', async () => {
     const connect = connectMock(false);
-    await toLinkStep([{ ...connect.mock, delay: 30_000 }]);
+    const { onChanged } = await toLinkStep([connect.mock]);
+    expect(connect.fn).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Connect' }));
+
+    await waitFor(() => expect(connect.fn).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(2)); // after the save, then after the start
+  });
+
+  it('shows the QR spinner and locks Connect while the start request is in flight', async () => {
+    // A delayed mock only answers (and calls its result function) after the delay: the
+    // request is still out when these assertions run.
+    await toLinkStep([{ ...connectMock(false).mock, delay: 30_000 }]);
 
     fireEvent.click(screen.getByRole('button', { name: 'Connect' }));
 
     expect(await screen.findByText('Waiting for QR…')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Connect' })).toBeDisabled();
-    expect(connect.fn).toHaveBeenCalledTimes(1);
   });
 
   it('shows why a start failed', async () => {
@@ -134,15 +145,24 @@ describe('WhatsAppConnectCard — Link step', () => {
 });
 
 describe('WhatsAppConnectCard — saved session', () => {
-  it('resumes a linked session that dropped on its own, on the Link step', async () => {
+  it('resumes a linked session that dropped on its own, without a restart', async () => {
     const connect = connectMock(false);
     renderCard(waConnection({ connected_at: LINKED_AT, has_api_key: true }), [
       statusMock('DISCONNECTED', { connected_at: LINKED_AT }),
-      { ...connect.mock, delay: 30_000 },
+      connect.mock,
+    ]);
+
+    await waitFor(() => expect(connect.fn).toHaveBeenCalledTimes(1));
+    expect(screen.queryByRole('button', { name: 'Save & continue' })).toBeNull();
+  });
+
+  it('says it is reconnecting the saved session while the resume is in flight', async () => {
+    renderCard(waConnection({ connected_at: LINKED_AT, has_api_key: true }), [
+      statusMock('DISCONNECTED', { connected_at: LINKED_AT }),
+      { ...connectMock(false).mock, delay: 30_000 },
     ]);
 
     expect(await screen.findByText('Reconnecting your saved WhatsApp session…')).toBeInTheDocument();
-    expect(connect.fn).toHaveBeenCalledTimes(1);
   });
 
   it('restarts a linked session whose engine failed', async () => {

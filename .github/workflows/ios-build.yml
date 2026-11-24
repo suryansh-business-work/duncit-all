@@ -118,7 +118,10 @@ jobs:
     needs: plan
     if: always() && (github.event_name == 'workflow_dispatch' || needs.plan.outputs.any == 'true')
     name: Build & publish IPA
-    runs-on: macos-26
+    # GitHub's Xcode 27 image (GA 2026-10-15, Apple Silicon, macOS 27) ships
+    # release Xcode 27.x and the iOS 27 SDKs that App Store Connect requires
+    # from April 2027 (ITMS-90725). macos-26 tops out at Xcode 26.6 / iOS 26.5.
+    runs-on: xcode-27
     timeout-minutes: 120
     env:
       # Each server signs its own tokens, so a production JWT is not valid on

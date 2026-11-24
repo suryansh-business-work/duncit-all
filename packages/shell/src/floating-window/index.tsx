@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Paper, Stack, Typography } from '@mui/material';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { tokens } from '@duncit/theme';
@@ -27,6 +27,8 @@ export interface FloatingWindowProps {
    * off the bottom the moment somebody turned their camera on.
    */
   fill?: boolean;
+  /** Where the window was left after a drag or a resize, for a caller that keeps it. */
+  onRectChange?: (rect: WindowRect) => void;
   onClose: () => void;
   children: React.ReactNode;
 }
@@ -59,11 +61,19 @@ export default function FloatingWindow({
   initial,
   closeWarning,
   fill,
+  onRectChange,
   onClose,
   children,
 }: Readonly<FloatingWindowProps>) {
   const { t } = useTranslation();
   const { rect, begin, move, end } = useWindowDrag(initial);
+  // The last rect drawn; read when a gesture ends, so the caller hears once per drag, not per frame.
+  const rectRef = useRef(rect);
+  rectRef.current = rect;
+  const finish = (event: React.PointerEvent) => {
+    end(event);
+    onRectChange?.(rectRef.current);
+  };
   const taskbar = useWorkspaceWindow(open ? { id, title, subtitle, icon } : null);
   const [maximised, setMaximised] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -127,7 +137,7 @@ export default function FloatingWindow({
             onClose={askToClose}
             onPointerDown={maximised ? () => undefined : begin('MOVE')}
             onPointerMove={move}
-            onPointerUp={end}
+            onPointerUp={finish}
           />
 
           {rolledUp ? (
@@ -151,7 +161,7 @@ export default function FloatingWindow({
               in a wrapper of its own height — zero — so the grip floated above
               the corner it was meant to be. */}
           {!maximised && !rolledUp && (
-            <ResizeGrip onPointerDown={begin('RESIZE')} onPointerMove={move} onPointerUp={end} />
+            <ResizeGrip onPointerDown={begin('RESIZE')} onPointerMove={move} onPointerUp={finish} />
           )}
         </Paper>
       )}

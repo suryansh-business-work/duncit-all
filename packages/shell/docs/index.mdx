@@ -63,6 +63,7 @@ exports:
   - 'describeZone'
   - 'formatGmtOffset'
   - 'ABOVE_TASKBAR_HEIGHT'
+  - 'FloatingWindow'
   - 'SHELL_FALLBACK'
   - 'BackgroundJobsProvider'
   - 'BackgroundJobsIndicator'
@@ -550,6 +551,7 @@ non-empty one, else `http://localhost:2001/graphql` under `vite dev`, else
 | `zoneChoices` | `() => ZoneChoice[]` | Every zone the browser knows, described and ordered by offset: `{ value, offset, gmt, name }`. Built once per session — describing 400 zones is three `Intl` formatters each, and the tray re-renders every second. |
 | `describeZone` | `(zone: string, at?: Date) => ZoneChoice` | One zone on its own — used for the device's zone, which some engines resolve to a name their own list does not contain. |
 | `formatGmtOffset` | `(minutes: number) => string` | `330` → `'GMT+05:30'`. Padded, so a list of them sorts and reads straight. |
+| `FloatingWindow` | `(props: FloatingWindowProps) => JSX.Element` | A window over the page, not a modal: dragged by its title, resized from its corner, maximised, minimised to the taskbar (`useWorkspaceWindow`), closed — with an optional `closeWarning` confirm. `initial` is where it first opens (kept on screen); `onRectChange(rect)` fires once when a drag or a resize ends, so a page can save the place (Reel Studio's popped-out panes do); `fill` lets the content manage its own height. Demo: shell › floating-window. |
 | `ABOVE_TASKBAR_HEIGHT` | `string` | `calc(100% - 40px)` — the height a viewport-fixed paper needs so the taskbar does not swallow its last row. |
 | `useColorMode` | `() => …` | Light/dark mode, re-exported from `@duncit/theme`. |
 

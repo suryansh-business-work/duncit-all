@@ -93,6 +93,9 @@ export {
   type WorkspaceWindowHandle,
   type ZoneChoice,
 } from './workspace';
+// A window that floats over the page — dragged by its bar, resized from its
+// corner, minimised to the taskbar. Reel Studio pops its panes out into these.
+export { default as FloatingWindow, type FloatingWindowProps, type WindowRect } from './floating-window';
 export { ShellRuntimeProvider, useShellRuntime, type ShellRuntime } from './lib/runtime';
 export { UserMenu, type UserMenuProps } from './chrome/UserMenu';
 export { ProfilePage } from './chrome/ProfilePage';

@@ -290,3 +290,29 @@ describe('the Agent tab', () => {
     expect(box(tab).left).toBe('0px');
   });
 });
+
+describe('a floating window that reports where it was left', () => {
+  it('tells its owner the new place once a drag ends, not on every move', async () => {
+    const onRectChange = vi.fn();
+    mount(
+      <FloatingWindow
+        id="moved"
+        open
+        title="Footage"
+        initial={{ x: 40, y: 40, width: 400, height: 300 }}
+        onRectChange={onRectChange}
+        onClose={vi.fn()}
+      >
+        <div>the pane</div>
+      </FloatingWindow>
+    );
+    await settle();
+    const handle = screen.getByText('Footage');
+    fireEvent.pointerDown(handle, { clientX: 100, clientY: 100, pointerId: 1 });
+    fireEvent.pointerMove(handle, { clientX: 160, clientY: 130, pointerId: 1 });
+    expect(onRectChange).not.toHaveBeenCalled();
+    fireEvent.pointerUp(handle, { clientX: 160, clientY: 130, pointerId: 1 });
+    expect(onRectChange).toHaveBeenCalledTimes(1);
+    expect(onRectChange).toHaveBeenCalledWith({ x: 100, y: 70, width: 400, height: 300 });
+  });
+});

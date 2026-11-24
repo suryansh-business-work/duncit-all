@@ -1175,3 +1175,33 @@ server {
         proxy_read_timeout 90s;
     }
 }
+
+# --- Stray staging hostnames --------------------------------------------------
+# DNS records exist for these but nothing serves them on staging: SonarQube and
+# SigNoz run once, in production, and the staging site lives on the bare
+# staging.duncit.com. With no block, HTTPS fell through to another site's
+# default server ("Infinity MQTT broker"), so each keeps a certificate and
+# redirects to the host that does serve it.
+server {
+    listen 80;
+    listen [::]:80;
+    http2 on;
+    server_name staging.www.duncit.com;
+    return 301 https://staging.duncit.com$request_uri;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    http2 on;
+    server_name staging.sonarqube.duncit.com;
+    return 301 https://sonarqube.duncit.com$request_uri;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    http2 on;
+    server_name staging.signoz.duncit.com;
+    return 301 https://signoz.duncit.com$request_uri;
+}

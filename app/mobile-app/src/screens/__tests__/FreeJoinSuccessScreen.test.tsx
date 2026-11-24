@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import { logs } from '@duncit/logs';
 
 import { MobileCheckoutPodDocument } from '@/graphql/checkout';
@@ -68,7 +68,8 @@ describe('FreeJoinSuccessScreen', () => {
     expect(screen.queryByText('Amount paid')).toBeNull();
     expect(screen.queryByTestId('download-invoice')).toBeNull();
     // Nothing was paid, so the file is the ticket alone and the button says so.
-    expect(screen.getByTestId('download-ticket')).toHaveTextContent('Ticket');
+    // The label's own text node: the button's icon adds text of its own to the whole.
+    expect(within(screen.getByTestId('download-ticket')).getByText('Ticket')).toBeOnTheScreen();
     expect(screen.queryByText('Ticket & invoice')).toBeNull();
     // Neither wallet set up: no wallet buttons at all.
     expect(screen.queryByTestId('success-pod-wallets')).toBeNull();
@@ -81,8 +82,9 @@ describe('FreeJoinSuccessScreen', () => {
     });
     renderWithProviders(<FreeJoinSuccessScreen />);
 
-    expect(await screen.findByTestId('success-pod-apple-wallet')).toHaveTextContent('Add to Apple Wallet');
-    expect(screen.getByTestId('success-pod-google-wallet')).toHaveTextContent('Add to Google Wallet');
+    const apple = await screen.findByTestId('success-pod-apple-wallet');
+    expect(within(apple).getByText('Add to Apple Wallet')).toBeOnTheScreen();
+    expect(within(screen.getByTestId('success-pod-google-wallet')).getByText('Add to Google Wallet')).toBeOnTheScreen();
     expect(mockRequest).toHaveBeenCalledWith(TicketWalletLinksDocument, { podId: 'p1' }, { auth: true });
   });
 

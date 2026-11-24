@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { fireEvent, screen, within } from '@testing-library/react-native';
 
 import {
   BackoutConfirmDialog,
@@ -241,11 +241,12 @@ describe('PodHistoryActions', () => {
       );
 
     const paid = renderActions('pay-1');
-    expect(screen.getByTestId('ph-ticket')).toHaveTextContent('Ticket & invoice');
+    // The label's own text node: the button's icon adds text of its own to the whole.
+    expect(within(screen.getByTestId('ph-ticket')).getByText('Ticket & invoice')).toBeOnTheScreen();
     paid.unmount();
 
     renderActions(null);
-    expect(screen.getByTestId('ph-ticket')).toHaveTextContent('Ticket');
+    expect(within(screen.getByTestId('ph-ticket')).getByText('Ticket')).toBeOnTheScreen();
     expect(screen.queryByText('Ticket & invoice')).toBeNull();
   });
 

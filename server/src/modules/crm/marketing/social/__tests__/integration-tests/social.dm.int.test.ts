@@ -12,10 +12,13 @@ import { IgLeadModel } from '../../../igLeads/igLead.model';
 import { MarketingLeadModel } from '../../../leads/marketingLead.model';
 import { OutreachEnrollmentModel, OutreachSequenceModel } from '../../../outreach/outreach.model';
 import { SocialConversationModel, SocialMessageModel } from '../../social.conversation.model';
-import { conversationThread, socialConversations } from '../../social.conversations';
+import { conversationThread, createLeadFromConversation, socialConversations } from '../../social.conversations';
 import { linkDmToLeads, recordDm, type IncomingDm } from '../../social.dm.ingest';
+import { channelFilter, socialInbox } from '../../social.inbox';
+import { inboxItemsTable } from '../../social.inbox.items';
 import { socialInboxResolvers } from '../../social.inbox.resolver';
-import { SocialAccountModel } from '../../social.model';
+import { SocialAccountModel, SocialCommentModel, SocialPostModel } from '../../social.model';
+import { socialService } from '../../social.service';
 import { SOCIAL_SETTINGS_DEFAULTS, SocialSettingsModel, loadSocialSettings, resetSocialSettingsCache, saveSocialSettings } from '../../social.settings';
 
 const ACCOUNT = new Types.ObjectId().toHexString();
@@ -188,6 +191,14 @@ describe('Social Settings', () => {
     expect((await loadSocialSettings(now + 60_000)).backfill_days).toBe(10);
   });
 
+  it('names the default assignee for the Settings page, and nobody when there is none', async () => {
+    const person = await staff();
+    const resolve = socialInboxResolvers.SocialSettings.default_assignee_name;
+    expect(await resolve({ ...SOCIAL_SETTINGS_DEFAULTS, default_assignee_user_id: String(person._id) })).toBe('Dee Em');
+    expect(await resolve({ ...SOCIAL_SETTINGS_DEFAULTS })).toBeNull();
+    expect(await resolve({ ...SOCIAL_SETTINGS_DEFAULTS, default_assignee_user_id: new Types.ObjectId().toHexString() })).toBeNull();
+  });
+
   it('lets an Inbox editor read Settings but only a manager change them', async () => {
     const editor = makeContext({ roles: ['MARKETING_EDITOR'] });
     await expect(socialInboxResolvers.Query.socialSettings(undefined, undefined, editor)).resolves.toMatchObject({ backfill_days: 30 });
@@ -237,5 +248,98 @@ describe('the DM queue', () => {
     const outsider = makeContext({ roles: ['CLUB_ADMIN'] });
     expect(() => socialInboxResolvers.Query.socialConversationsTable(undefined, {}, outsider)).toThrow();
     expect(() => socialInboxResolvers.Query.socialDmSummary(undefined, undefined, outsider)).toThrow();
+  });
+});
+
+describe('the All tab and the channel tabs', () => {
+  async function seed() {
+    const account = await SocialAccountModel.create({ _id: new Types.ObjectId(ACCOUNT), provider: 'INSTAGRAM', platform: 'INSTAGRAM', external_id: 'ig-1', name: 'Duncit IG' });
+    const post = await SocialPostModel.create({ account_id: ACCOUNT, platform: 'INSTAGRAM', external_id: 'media-1', published_at: at('2026-11-20T00:00:00Z') });
+    await SocialCommentModel.create([
+      { account_id: ACCOUNT, post_id: String(post._id), platform: 'INSTAGRAM', external_id: 'c-1', author_name: 'Ravi', text: 'Love it', published_at: at('2026-11-24T08:00:00Z') },
+      { account_id: ACCOUNT, post_id: String(post._id), platform: 'THREADS', external_id: 't-1', author_handle: 'meera', text: 'Thread reply', published_at: at('2026-11-24T09:00:00Z') },
+      { account_id: ACCOUNT, post_id: String(post._id), platform: 'INSTAGRAM', external_id: 'c-done', author_name: 'Old', text: 'Done one', published_at: at('2026-11-24T11:00:00Z'), status: 'DONE' },
+    ]);
+    const { conversation_id } = await recordDm(dm({ text: 'Price please', sent_at: at('2026-11-24T10:00:00Z') }));
+    await SocialConversationModel.updateOne({ _id: conversation_id }, { $set: { 'participant.name': 'Asha' } });
+    return { account, conversation_id };
+  }
+
+  it('lists comments, Threads replies and DMs as one queue newest first, on the view', async () => {
+    const { conversation_id } = await seed();
+    const page = await inboxItemsTable({ page: 1, page_size: 10 }, 'OPEN', 'me');
+    expect(page.total).toBe(3);
+    expect(page.rows.map((row) => `${row.kind}:${row.author}:${row.text}`)).toEqual(['DM:Asha:Price please', 'THREADS_REPLY:meera:Thread reply', 'COMMENT:Ravi:Love it']);
+    expect(page.rows[0]).toMatchObject({ id: conversation_id, account_name: 'Duncit IG', unread_count: 1, status: 'OPEN', platform: 'INSTAGRAM' });
+    expect((await inboxItemsTable(null, 'ALL', 'me')).total).toBe(4);
+  });
+
+  it('searches text and author across both, pages the result, and pins "mine" to the asker', async () => {
+    const { conversation_id } = await seed();
+    expect((await inboxItemsTable({ search: 'asha' }, 'ALL', 'me')).rows.map((row) => row.kind)).toEqual(['DM']);
+    expect((await inboxItemsTable({ search: 'love' }, 'ALL', 'me')).rows.map((row) => row.kind)).toEqual(['COMMENT']);
+    const second = await inboxItemsTable({ page: 2, page_size: 2 }, 'ALL', 'me');
+    expect(second).toMatchObject({ page: 2, page_size: 2, total: 4 });
+    expect(second.rows).toHaveLength(2);
+    const person = await staff();
+    await socialConversations.assign(conversation_id, String(person._id), 'actor');
+    const mine = await inboxItemsTable(null, 'MINE', String(person._id));
+    expect(mine.rows.map((row) => [row.kind, row.assigned_name])).toEqual([['DM', 'Dee Em']]);
+  });
+
+  it('splits the comment queue into every network’s comments and Threads replies', async () => {
+    await seed();
+    const comments = await socialInbox.table(null, 'OPEN', 'me', 'COMMENTS');
+    expect(comments.rows.map((row) => row.platform)).toEqual(['INSTAGRAM']);
+    const threads = await socialInbox.table(null, 'OPEN', 'me', 'THREADS_REPLIES');
+    expect(threads.rows.map((row) => row.platform)).toEqual(['THREADS']);
+    expect(channelFilter(null)).toEqual({});
+  });
+
+  it('tells the Accounts page what messaging lacks, and why the last DM read or webhook subscription failed', async () => {
+    await SocialAccountModel.create({ provider: 'INSTAGRAM', platform: 'INSTAGRAM', external_id: 'ig-a', scopes: ['instagram_basic'], dm_error: 'boom', webhook_error: '' });
+    await SocialAccountModel.create({ provider: 'FACEBOOK', platform: 'FACEBOOK', external_id: 'page-a', scopes: ['pages_messaging'], webhook_error: 'needs pages_manage_metadata' });
+    await SocialAccountModel.create({ provider: 'X', platform: 'X', external_id: 'x-a' });
+    const accounts = await socialService.accounts();
+    const by = (id: string) => accounts.find((account) => account.platform === id);
+    expect(by('INSTAGRAM')).toMatchObject({ messaging_missing_permission: 'instagram_manage_messages', dm_error: 'boom', webhook_error: '' });
+    expect(by('FACEBOOK')).toMatchObject({ messaging_missing_permission: null, webhook_error: 'needs pages_manage_metadata' });
+    expect(by('X')).toMatchObject({ messaging_missing_permission: null, dm_error: '' });
+  });
+});
+
+describe('createLeadFromConversation', () => {
+  const user = { id: new Types.ObjectId().toHexString(), email: 'dee@duncit.com' };
+
+  it('adds the person to the pipeline as a replied Instagram lead and links the conversation', async () => {
+    const { conversation_id } = await recordDm(dm());
+    await SocialConversationModel.updateOne({ _id: conversation_id }, { $set: { 'participant.username': 'asha.k', 'participant.name': 'Asha K' } });
+    const made = await createLeadFromConversation(conversation_id, user);
+    expect(made.merged).toBe(false);
+    const lead = await MarketingLeadModel.findById(made.lead_id).lean();
+    expect(lead).toMatchObject({ name: 'Asha K', source: 'INSTAGRAM', instagram_handle: 'asha.k', stage: 'REPLIED' });
+    expect(made.thread.conversation.marketing_lead_id).toBe(made.lead_id);
+  });
+
+  it('matches a lead already in the pipeline by handle rather than adding a second', async () => {
+    const existing = await MarketingLeadModel.create({ name: 'Asha', source: 'MANUAL', instagram_handle: 'asha.k' });
+    const { conversation_id } = await recordDm(dm());
+    await SocialConversationModel.updateOne({ _id: conversation_id }, { $set: { 'participant.username': 'asha.k' } });
+    const made = await createLeadFromConversation(conversation_id, user);
+    expect(made).toMatchObject({ merged: true, lead_id: String(existing._id) });
+    expect(await MarketingLeadModel.countDocuments()).toBe(1);
+  });
+
+  it('refuses a person with no name yet, and a conversation that is not there', async () => {
+    const { conversation_id } = await recordDm(dm());
+    await expect(createLeadFromConversation(conversation_id, user)).rejects.toMatchObject({ extensions: { code: 'BAD_USER_INPUT' } });
+    await expect(createLeadFromConversation(new Types.ObjectId().toHexString(), user)).rejects.toMatchObject({ extensions: { code: 'NOT_FOUND' } });
+  });
+
+  it('opens a comment of the All tab by id through the resolver', async () => {
+    const post = await SocialPostModel.create({ account_id: ACCOUNT, platform: 'INSTAGRAM', external_id: 'media-9', published_at: new Date() });
+    const comment = await SocialCommentModel.create({ account_id: ACCOUNT, post_id: String(post._id), platform: 'INSTAGRAM', external_id: 'c-9', text: 'Hi', published_at: new Date() });
+    const ctx = makeContext({ roles: ['MARKETING_EDITOR'] });
+    await expect(socialInboxResolvers.Query.socialInboxComment(undefined, { id: String(comment._id) }, ctx)).resolves.toMatchObject({ id: String(comment._id), text: 'Hi', status: 'OPEN' });
   });
 });

@@ -16,6 +16,7 @@ import { handleOf, syncSocialAccount, type AccountWithTokens } from './social.sy
 import { sealToken } from './social.tokens';
 import { subscribeConnectedPages } from './social.dm.sync';
 import { tokenExpiresInDays } from './social.health';
+import { missingDmPermission } from './social.window';
 import { analyzePendingComments } from './social.ai';
 import { sentimentCounts, socialAnalytics } from './social.analytics';
 import { accountAverage, analyzePost, periodInsights } from './social.insights';
@@ -109,6 +110,10 @@ const pubAccount = (o: any, flaggedOpen: number, ownerNames: Map<string, string>
     health_checked_at: iso(o.health_checked_at),
     health_ok: typeof o.health_ok === 'boolean' ? o.health_ok : null,
     health_message: o.health_message ?? '',
+    // Messaging: what the Accounts card warns about (Reconnect to enable messaging).
+    messaging_missing_permission: o.platform === 'INSTAGRAM' || o.platform === 'FACEBOOK' ? missingDmPermission(o) : null,
+    dm_error: o.dm_error ?? '',
+    webhook_error: o.webhook_error ?? '',
   };
 };
 

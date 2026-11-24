@@ -176,6 +176,8 @@ export const socialInboxTypeDefs = gql`
     link_dms_to_leads: Boolean!
     "Who a new DM conversation is assigned to; null leaves it unassigned."
     default_assignee_user_id: ID
+    "That person's name, for the Settings page."
+    default_assignee_name: String
     "A DM that is exactly one of these opts the person out of every automated message."
     opt_out_keywords: [String!]!
     "A DM that is exactly one of these opts them back in."
@@ -205,14 +207,73 @@ export const socialInboxTypeDefs = gql`
     ai_reply_guidelines: String!
   }
 
+  "A tab of the comment queue: every network's comments, or Threads replies on their own."
+  enum SocialInboxChannel {
+    COMMENTS
+    THREADS_REPLIES
+  }
+
+  "What a row of the Inbox's All tab is."
+  enum SocialInboxItemKind {
+    COMMENT
+    THREADS_REPLY
+    DM
+  }
+
+  "One row of the All tab: a comment, a Threads reply or a DM conversation."
+  type SocialInboxItem {
+    "The comment's or the conversation's id, by kind."
+    id: ID!
+    kind: SocialInboxItemKind!
+    platform: SocialPlatform!
+    account_id: ID!
+    account_name: String!
+    author: String!
+    "The comment, or the conversation's latest message."
+    text: String!
+    status: SocialInboxStatus!
+    ai_sentiment: SocialSentiment
+    ai_severity: SocialSeverity
+    assigned_name: String
+    at: String
+    unread_count: Int!
+  }
+
+  type SocialInboxItemTablePage {
+    rows: [SocialInboxItem!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
+  "A lead made from a conversation, and whether it matched one already in the pipeline."
+  type SocialConversationLead {
+    thread: SocialConversationThread!
+    lead_id: ID!
+    merged: Boolean!
+  }
+
+  extend type SocialAccount {
+    "The messaging permission this connection lacks (Instagram and Facebook); null when it has it or the network has no DMs here."
+    messaging_missing_permission: String
+    "Why the last DM read failed; empty when it did not."
+    dm_error: String!
+    "Why subscribing the Page to webhooks failed; empty when it did not."
+    webhook_error: String!
+  }
+
   extend type Query {
     "Every comment from every connected account, newest first; view pins a summary card's slice."
-    socialInboxTable(query: TableQueryInput, view: SocialInboxView): SocialCommentTablePage!
+    socialInboxTable(query: TableQueryInput, view: SocialInboxView, channel: SocialInboxChannel): SocialCommentTablePage!
+    "Comments, Threads replies and DM conversations as one queue, newest first (the All tab)."
+    socialInboxItemsTable(query: TableQueryInput, view: SocialInboxView): SocialInboxItemTablePage!
     socialInboxSummary: SocialInboxSummary!
     socialReplyCapabilities: [SocialReplyCapability!]!
     "Every DM conversation from every connected account, latest first; view pins a summary card's slice."
     socialConversationsTable(query: TableQueryInput, view: SocialInboxView): SocialConversationTablePage!
     socialConversation(id: ID!): SocialConversationThread!
+    "One comment as the Inbox shows it, for opening a row of the All tab."
+    socialInboxComment(id: ID!): SocialComment!
     "Open, flagged, unassigned and mine, for DMs."
     socialDmSummary: SocialInboxSummary!
     socialSettings: SocialSettings!
@@ -230,9 +291,13 @@ export const socialInboxTypeDefs = gql`
     replyToSocialComment(id: ID!, text: String!): SocialComment!
     "Send a direct message. Refused with WINDOW_CLOSED outside Meta's window, NOT_CONFIGURED without the messaging permission or a linked Page."
     sendSocialMessage(id: ID!, text: String!): SocialConversationThread!
+    "Ask the AI for a draft direct message. Nothing is sent: the person edits it and presses Send."
+    suggestSocialMessage(id: ID!): SocialReplySuggestion!
     assignSocialConversation(id: ID!, user_id: ID): SocialConversationThread!
     setSocialConversationStatus(id: ID!, status: SocialInboxStatus!): SocialConversationThread!
     markSocialConversationRead(id: ID!): SocialConversationThread!
     updateSocialSettings(input: SocialSettingsInput!): SocialSettings!
+    "Put the person into the Marketing pipeline (matched by Instagram handle) and link the conversation to the lead."
+    createLeadFromSocialConversation(id: ID!): SocialConversationLead!
   }
 `;

@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { isValidObjectId } from 'mongoose';
 import { logs } from '@observability/log';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { marketingLeadService } from '../leads/marketingLead.service';
 import { allUsersExist, ownerNamesOf } from '../userNames';
 import { SocialConversationModel, SocialMessageModel, type SocialConversationDoc, type SocialMessageDoc } from './social.conversation.model';
 import { viewFilter } from './social.inbox';
@@ -147,3 +148,24 @@ export const socialConversations = {
   /** Opening a conversation reads it. */
   markRead: (id: string) => update(id, { unread_count: 0 }),
 };
+
+/**
+ * "Create lead from this conversation": the person goes into the Marketing
+ * pipeline through the one door every lead uses, so someone already there (by
+ * Instagram handle) is matched rather than added twice, and the conversation
+ * points at the lead from then on.
+ */
+export async function createLeadFromConversation(id: string, user: { id: string; email?: string | null }) {
+  const doc = isValidObjectId(id) ? await SocialConversationModel.findById(id).lean<SocialConversationDoc>() : null;
+  if (!doc) notFound();
+  const name = doc.participant?.name || doc.participant?.username || '';
+  if (!name) throw new GraphQLError('This person has no name yet. Let the next sync read their profile, then try again.', { extensions: { code: 'BAD_USER_INPUT' } });
+  const instagram = doc.platform === 'INSTAGRAM';
+  const { lead, merged } = await marketingLeadService.create(
+    { name, source: instagram ? 'INSTAGRAM' : 'MANUAL', instagram_handle: instagram ? doc.participant.username : '', stage: 'REPLIED' },
+    user
+  );
+  await SocialConversationModel.updateOne({ _id: id }, { $set: { marketing_lead_id: lead.id } });
+  logs.server.info('social-inbox', 'createLeadFromConversation', { conversation_id: id, lead_id: lead.id, merged, by: user.id });
+  return { thread: await conversationThread(id), lead_id: lead.id, merged };
+}

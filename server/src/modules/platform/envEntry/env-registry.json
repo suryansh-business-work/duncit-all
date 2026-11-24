@@ -2266,6 +2266,7 @@
       "docUrl": "https://console.anthropic.com/settings/keys",
       "apiDocsUrl": "https://platform.claude.com/docs/en/api/overview",
       "usedIn": [
+        "server/src/modules/crm/marketing/social/social.inbox.ai.ts",
         "server/src/services/anthropic/anthropic.client.ts",
         "server/src/services/openai/openai.client.ts"
       ],
@@ -2282,6 +2283,7 @@
             "required": true
           },
           "usedIn": [
+            "server/src/modules/crm/marketing/social/social.inbox.ai.ts",
             "server/src/services/openai/openai.client.ts"
           ]
         },

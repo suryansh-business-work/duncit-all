@@ -3,9 +3,11 @@ import { getUrlConfigs } from '@config/url-configs';
 import { requireRole } from '@middleware/rbac';
 import { trimTrailingSlash } from '@utils/url';
 import type { TableQueryInput } from '@utils/table-query';
-import { conversationThread, socialConversations } from './social.conversations';
+import { conversationThread, createLeadFromConversation, socialConversations } from './social.conversations';
+import { inboxComment } from './social.inbox';
 import { sendDirectMessage } from './social.dm.send';
-import { loadSocialSettings, saveSocialSettings } from './social.settings';
+import { loadSocialSettings, saveSocialSettings, type SocialSettings } from './social.settings';
+import { ownerNamesOf } from '../userNames';
 import type { SocialInboxStatus, SocialInboxView } from './social.types';
 
 /**
@@ -30,6 +32,10 @@ export const socialConversationQueries = {
   socialDmSummary: (_p: unknown, _a: unknown, ctx: Ctx) => {
     const user = requireRole(ctx, DM_ROLES);
     return socialConversations.summary(user.id);
+  },
+  socialInboxComment: (_p: unknown, args: { id: string }, ctx: Ctx) => {
+    requireRole(ctx, DM_ROLES);
+    return inboxComment(args.id);
   },
   socialSettings: (_p: unknown, _a: unknown, ctx: Ctx) => {
     requireRole(ctx, DM_ROLES);
@@ -60,8 +66,23 @@ export const socialConversationMutations = {
     requireRole(ctx, DM_ROLES);
     return socialConversations.markRead(args.id);
   },
+  createLeadFromSocialConversation: (_p: unknown, args: { id: string }, ctx: Ctx) => {
+    const user = requireRole(ctx, DM_ROLES);
+    return createLeadFromConversation(args.id, user);
+  },
   updateSocialSettings: (_p: unknown, args: { input: unknown }, ctx: Ctx) => {
     const user = requireRole(ctx, SETTINGS_MANAGE_ROLES);
     return saveSocialSettings(args.input, user.id);
+  },
+};
+
+/** Field resolvers of the types these operations return. */
+export const socialConversationTypes = {
+  SocialSettings: {
+    default_assignee_name: async (settings: SocialSettings) => {
+      if (!settings.default_assignee_user_id) return null;
+      const names = await ownerNamesOf([{ owner_user_id: settings.default_assignee_user_id }]);
+      return names.get(settings.default_assignee_user_id) ?? null;
+    },
   },
 };

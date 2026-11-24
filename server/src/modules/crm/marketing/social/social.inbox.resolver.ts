@@ -1,9 +1,10 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
-import { socialConversationMutations, socialConversationQueries } from './social.conversation.resolver';
-import { socialInbox } from './social.inbox';
-import { suggestReply } from './social.inbox.ai';
+import { socialConversationMutations, socialConversationQueries, socialConversationTypes } from './social.conversation.resolver';
+import { socialInbox, type SocialInboxChannel } from './social.inbox';
+import { inboxItemsTable } from './social.inbox.items';
+import { suggestDirectMessage, suggestReply } from './social.inbox.ai';
 import { replyCapabilities, replyToComment } from './social.replies';
 import type { SocialInboxStatus, SocialInboxView } from './social.types';
 
@@ -13,10 +14,19 @@ const INBOX_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'MARKETING_MANAGER', 'MARKETIN
 type Ctx = GraphQLContext;
 
 export const socialInboxResolvers = {
+  ...socialConversationTypes,
   Query: {
-    socialInboxTable: (_p: unknown, args: { query?: TableQueryInput | null; view?: SocialInboxView | null }, ctx: Ctx) => {
+    socialInboxTable: (
+      _p: unknown,
+      args: { query?: TableQueryInput | null; view?: SocialInboxView | null; channel?: SocialInboxChannel | null },
+      ctx: Ctx
+    ) => {
       const user = requireRole(ctx, INBOX_ROLES);
-      return socialInbox.table(args.query, args.view, user.id);
+      return socialInbox.table(args.query, args.view, user.id, args.channel);
+    },
+    socialInboxItemsTable: (_p: unknown, args: { query?: TableQueryInput | null; view?: SocialInboxView | null }, ctx: Ctx) => {
+      const user = requireRole(ctx, INBOX_ROLES);
+      return inboxItemsTable(args.query, args.view, user.id);
     },
     socialInboxSummary: (_p: unknown, _a: unknown, ctx: Ctx) => {
       const user = requireRole(ctx, INBOX_ROLES);
@@ -45,6 +55,10 @@ export const socialInboxResolvers = {
     replyToSocialComment: (_p: unknown, args: { id: string; text: string }, ctx: Ctx) => {
       const user = requireRole(ctx, INBOX_ROLES);
       return replyToComment(args.id, args.text, user);
+    },
+    suggestSocialMessage: (_p: unknown, args: { id: string }, ctx: Ctx) => {
+      const user = requireRole(ctx, INBOX_ROLES);
+      return suggestDirectMessage(args.id, user);
     },
     ...socialConversationMutations,
   },

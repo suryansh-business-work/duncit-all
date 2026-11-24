@@ -28,7 +28,10 @@ import { SocialApiError } from '../../providers/http';
 import { socialCredentials } from '../../social.credentials';
 import { SocialAccountModel, SocialCommentModel, SocialPostModel } from '../../social.model';
 import { migrateSocialInbox, socialInbox, viewFilter } from '../../social.inbox';
-import { parseDraft, suggestReply } from '../../social.inbox.ai';
+import { parseDraft, suggestDirectMessage, suggestReply } from '../../social.inbox.ai';
+import * as runtimeEnv from '@config/runtimeEnv';
+import { SocialConversationModel, SocialMessageModel } from '../../social.conversation.model';
+import { SocialSettingsModel, resetSocialSettingsCache } from '../../social.settings';
 import { missingReplyPermission, replyCapabilities, replyToComment } from '../../social.replies';
 import { socialInboxResolvers } from '../../social.inbox.resolver';
 import type { SocialPlatform } from '../../social.types';
@@ -371,7 +374,14 @@ describe('suggestReply', () => {
   const answer = (content: string, over: Record<string, unknown> = {}) =>
     m(openaiChat).mockResolvedValue({ ok: true, content, model: 'claude-opus-5-5', usage: USAGE, ...over });
 
+  /** An Anthropic key in the Tech portal, as the team that wants Claude drafts has. */
+  const withAnthropicKey = () => {
+    const real = runtimeEnv.getRuntimeEnvValue;
+    return jest.spyOn(runtimeEnv, 'getRuntimeEnvValue').mockImplementation(async (key: string) => (key === 'ANTHROPIC_API_KEY' ? 'sk-ant-test' : real(key)));
+  };
+
   it('drafts a reply with Claude on an INBOX_REPLY run, with its tokens, and sends nothing', async () => {
+    const spy = withAnthropicKey();
     const asha = await staff('Asha');
     const t = await thread('INSTAGRAM', {}, { ai_sentiment: 'NEUTRAL' });
     answer(JSON.stringify({ reply: '  Yes! Beginners are welcome.  ' }));
@@ -391,6 +401,35 @@ describe('suggestReply', () => {
     expect(run?.steps.map((s) => [s.key, s.status, s.tool])).toEqual([['draft', 'OK', 'claude.inbox_reply']]);
     expect(replierMock('INSTAGRAM')).not.toHaveBeenCalled();
     expect((await stored(t.id))?.replies).toEqual([]);
+    spy.mockRestore();
+  });
+
+  it("falls back to the OpenAI default model when there is no Anthropic key, and adds the team's guidelines", async () => {
+    resetSocialSettingsCache();
+    await SocialSettingsModel.create({ key: 'default', ai_reply_guidelines: 'Warm, no emojis.' });
+    const t = await thread('INSTAGRAM');
+    answer(JSON.stringify({ reply: 'Sure!' }));
+    await suggestReply(t.id, SOMEONE);
+    const call = m(openaiChat).mock.calls[0][0];
+    expect(call.model).toBe('');
+    expect(call.messages[0].content).toContain('Warm, no emojis.');
+    resetSocialSettingsCache();
+  });
+
+  it("drafts a direct message from the conversation's latest messages, within the DM limit", async () => {
+    const conversation = await SocialConversationModel.create({ account_id: String(new Types.ObjectId()), platform: 'INSTAGRAM', participant: { external_id: 'igsid-1', name: 'Asha' } });
+    const id = String(conversation._id);
+    await SocialMessageModel.create([
+      { conversation_id: id, account_id: conversation.account_id, direction: 'IN', text: 'Is Sunday full?', sent_at: new Date('2026-11-24T09:00:00Z'), status: 'RECEIVED' },
+      { conversation_id: id, account_id: conversation.account_id, direction: 'OUT', text: 'Two spots left', sent_at: new Date('2026-11-24T09:05:00Z'), status: 'SENT' },
+    ]);
+    answer(JSON.stringify({ reply: 'z'.repeat(1200) }));
+    const draft = await suggestDirectMessage(id, SOMEONE);
+    expect(draft.text).toHaveLength(1000);
+    const turn = m(openaiChat).mock.calls[0][0].messages[1].content as string;
+    expect(turn).toContain('Asha: Is Sunday full?\nUs: Two spots left');
+    expect(m(openaiChat).mock.calls[0][0].detail).toBe(`conversation:${id}`);
+    await expect(suggestDirectMessage('nope', SOMEONE)).rejects.toMatchObject({ extensions: { code: 'NOT_FOUND' } });
   });
 
   it('cuts a draft to what the network takes, and works for a comment whose post and account are gone', async () => {

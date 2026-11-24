@@ -11,6 +11,7 @@ import RolesDialog from './RolesDialog';
 import ProfileForm from './ProfileForm';
 import UserBadgesSection from './UserBadgesSection';
 import UserActivitySection from './UserActivitySection';
+import UserLastActivityCard from './UserLastActivityCard';
 import ContactActionDialog from './ContactActionDialog';
 import ContactActionsSection from './ContactActionsSection';
 import UserInterestsSection from './UserInterestsSection';
@@ -103,7 +104,16 @@ export default function UserDetailsPage() {
           { value: 'verification', label: t('admin.tabs.verification'), content: <UserVerificationsSection userId={userId} /> },
           { value: 'surveys', label: t('admin.tabs.surveys'), content: <UserSurveysSection userId={userId} /> },
           { value: 'health', label: t('admin.tabs.health'), content: <UserHealthSection userId={userId} /> },
-          { value: 'activity', label: t('admin.tabs.activity'), content: <UserActivitySection userId={userId} /> },
+          {
+            value: 'activity',
+            label: t('admin.tabs.activity'),
+            content: (
+              <Stack spacing={2}>
+                <UserLastActivityCard lastActivityAt={s.user.last_activity_at} platforms={s.user.platforms_used} />
+                <UserActivitySection userId={userId} />
+              </Stack>
+            ),
+          },
           {
             value: 'contact-logs',
             label: t('admin.tabs.callEmailLogs'),

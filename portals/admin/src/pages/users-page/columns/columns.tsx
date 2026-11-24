@@ -5,8 +5,7 @@ import { loginMeta, STATUS_OPTIONS } from '../helpers';
 import type { UserRow } from '../queries';
 import { renderContact, renderRoles, renderStatus, renderUser, rolesValue } from './cells';
 import { issueOptions, issuesValue, renderIssues } from './issues';
-import PlatformIcons from '../../../components/PlatformIcons';
-import { platformOptions, platformsValue } from '../../../components/platforms';
+import { PlatformIcons, type PlatformText } from '@duncit/ui';
 
 const STATUS_FILTER_OPTIONS = STATUS_OPTIONS.filter(Boolean).map((s) => ({ value: s, label: s }));
 const providerOptions = (t: ColumnDeps['t']) => [
@@ -22,6 +21,8 @@ interface ColumnDeps {
   /** Date and time in the Admin Panel's configured time zone, for Last Activity. */
   formatActivityAt: (s: string) => string;
   roleOptions: ReadonlyArray<{ value: string; label: string }>;
+  /** Platform names for the Platforms Used filter and its export text (`usePlatformText`). */
+  platformText: PlatformText;
 }
 
 export function getUsersColumns({
@@ -29,6 +30,7 @@ export function getUsersColumns({
   formatDateTime,
   formatActivityAt,
   roleOptions,
+  platformText,
   t,
 }: Readonly<ColumnDeps>): DuncitColumn<UserRow>[] {
   const renderLogin = (u: UserRow) => {
@@ -146,11 +148,12 @@ export function getUsersColumns({
       field: 'platforms_used',
       headerName: t('admin.users.colPlatforms'),
       type: 'enum',
-      options: platformOptions(t),
+      options: platformText.options,
       sortable: false,
       width: 150,
-      cellRenderer: (u) => <PlatformIcons platforms={u.platforms_used ?? []} t={t} />,
-      valueGetter: (u) => platformsValue(u.platforms_used, t),
+      // All three every row, the used ones dark, so a column of rows scans at a glance.
+      cellRenderer: (u) => <PlatformIcons platforms={u.platforms_used} variant="all" testId={`admin-user-platforms-${u.user_id}`} />,
+      valueGetter: (u) => platformText.valueText(u.platforms_used),
     },
     {
       // Stored and indexed, so it sorts both ways: most recently active, or inactive the longest.

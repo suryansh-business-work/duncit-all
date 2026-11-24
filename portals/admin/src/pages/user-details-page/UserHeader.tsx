@@ -1,6 +1,6 @@
 import { Link as RouterLink, useNavigate } from 'react-router';
 import { Link, Stack, Typography } from '@mui/material';
-import { BackHeader } from '@duncit/ui';
+import { BackHeader, PlatformIcons } from '@duncit/ui';
 import BlockIcon from '@mui/icons-material/Block';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PauseCircleIcon from '@mui/icons-material/PauseCircle';
@@ -10,7 +10,6 @@ import EmailIcon from '@mui/icons-material/Email';
 import { DuncitButton } from '@duncit/buttons';
 import type { EditForm } from './queries';
 import { useTranslation } from '@duncit/shell';
-import PlatformIcons from '../../components/PlatformIcons';
 
 interface Props {
   user: any;
@@ -52,7 +51,7 @@ export default function UserHeader({
       actions={
         <Stack spacing={1} sx={{ alignItems: 'flex-end' }}>
           {/* Top-right corner: every platform this person has used Duncit from. */}
-          <PlatformIcons platforms={user.platforms_used ?? []} t={t} />
+          <PlatformIcons platforms={user.platforms_used} testId="admin-user-platforms" />
           <Stack direction="row" spacing={1}>
             <DuncitButton size="small" variant="outlined" startIcon={<CallIcon />} onClick={onCallClick} data-testid="admin-user-call">
               {t('admin.contact.call')}

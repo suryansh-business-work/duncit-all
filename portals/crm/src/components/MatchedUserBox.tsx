@@ -1,25 +1,37 @@
 import { Avatar, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import { useDateFormat } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
+import { PlatformIcons } from '@duncit/ui';
 import type { CrmMatchedUser } from '../api/crm.types';
 import { EmailStatusBadge } from './email-status';
 
 const matchLabel = (m: CrmMatchedUser) => `Also a Duncit user · ${m.matched_on === 'EMAIL' ? 'Email' : 'Phone'} match`;
 
-/** Small chip for the lead hero row when the lead is also a Duncit user. */
+/**
+ * Small chip for the lead hero row when the lead is also a Duncit user, with
+ * the platforms that account uses Duncit from beside it.
+ */
 export function MatchedUserChip({ matched }: Readonly<{ matched: CrmMatchedUser }>) {
   return (
-    <Chip
-      size="small"
-      color="success"
-      icon={<VerifiedUserIcon fontSize="small" />}
-      label={matchLabel(matched)}
-      variant="outlined"
-    />
+    <Stack direction="row" spacing={1} component="span" sx={{ alignItems: 'center' }}>
+      <Chip
+        size="small"
+        color="success"
+        icon={<VerifiedUserIcon fontSize="small" />}
+        label={matchLabel(matched)}
+        variant="outlined"
+      />
+      <PlatformIcons platforms={matched.platforms_used} testId="matched-user-chip-platforms" />
+    </Stack>
   );
 }
 
 /** Separate box surfacing the matched Duncit user's details on a lead. */
 export default function MatchedUserBox({ matched }: Readonly<{ matched: CrmMatchedUser }>) {
+  const { t } = useTranslation();
+  // In the admin-configured zone, the same as Admin › Users.
+  const { formatDateTime } = useDateFormat({ timeZoneAware: true });
   return (
     <Card variant="outlined" sx={{ borderColor: 'success.main' }} data-testid="matched-user-box">
       <CardContent>
@@ -48,6 +60,22 @@ export default function MatchedUserBox({ matched }: Readonly<{ matched: CrmMatch
                 {[matched.email, matched.phone].filter(Boolean).join(' · ') || '—'}
               </Typography>
               <EmailStatusBadge email={matched.email} />
+            </Stack>
+            <Stack direction="row" spacing={3} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+              <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  {t('crm.matchedUser.devices')}
+                </Typography>
+                <PlatformIcons platforms={matched.platforms_used} variant="all" testId="matched-user-box-platforms" />
+              </Stack>
+              <Typography variant="caption" data-testid="matched-user-last-activity">
+                <Typography component="span" variant="caption" sx={{ color: 'text.secondary' }}>
+                  {t('crm.matchedUser.lastActivity')}:{' '}
+                </Typography>
+                {matched.last_activity_at
+                  ? formatDateTime(matched.last_activity_at)
+                  : t('crm.matchedUser.noActivity')}
+              </Typography>
             </Stack>
           </Stack>
         </Stack>

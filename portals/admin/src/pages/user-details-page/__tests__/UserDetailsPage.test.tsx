@@ -284,7 +284,7 @@ describe('UserDetailsPage — header, summary card and the default tab', () => {
     });
 
     await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Riya Sharma' })).toBeInTheDocument());
-    const platforms = within(screen.getByTestId('back-header')).getByRole('group', { name: 'Platforms Used' });
+    const platforms = within(screen.getByTestId('back-header')).getByRole('group', { name: 'Platforms used' });
     expect(within(platforms).getAllByRole('img').map((icon) => icon.getAttribute('aria-label'))).toEqual([
       'Android',
       'Web',
@@ -293,6 +293,23 @@ describe('UserDetailsPage — header, summary card and the default tab', () => {
     const expected = createDateFormatter({ timeZoneAware: true }).formatDateTime('2026-11-22T05:05:00.000Z');
     const activity = screen.getByRole('rowheader', { name: 'Last Activity' }).closest('tr');
     expect(activity).toHaveTextContent(`Last Activity${expected}`);
+    // Under it, all three platforms with iOS dimmed.
+    expect(screen.getByTestId('admin-user-summary-platforms-IOS')).toHaveAttribute('data-used', 'false');
+    expect(screen.getByTestId('admin-user-summary-platforms-ANDROID')).toHaveAttribute('data-used', 'true');
+  });
+
+  it('opens the Activity tab on the last activity and the platforms the user has used', async () => {
+    renderPage(<UserDetailsPage />, {
+      path: '/users/:user_id',
+      initialEntries: [`/users/${USER_ID}?selectedtab=activity`],
+      mocks: fullMocks(),
+    });
+
+    const card = await screen.findByTestId('admin-user-last-activity-card');
+    const expected = createDateFormatter({ timeZoneAware: true }).formatDateTime('2026-11-22T05:05:00.000Z');
+    expect(within(card).getByTestId('admin-user-last-activity-at')).toHaveTextContent(expected);
+    expect(within(card).getByRole('img', { name: 'Web: used' })).toBeInTheDocument();
+    expect(within(card).getByRole('img', { name: 'iOS: not used' })).toBeInTheDocument();
   });
 });
 

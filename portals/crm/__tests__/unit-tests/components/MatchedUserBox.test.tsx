@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import MatchedUserBox, { MatchedUserChip } from '@/components/MatchedUserBox';
 import type { CrmMatchedUser } from '@/api/crm.types';
+import { createDateFormatter } from '@duncit/app-settings';
 
 const matched = (overrides: Partial<CrmMatchedUser> = {}): CrmMatchedUser => ({
   user_id: 'user-1',
@@ -10,6 +11,8 @@ const matched = (overrides: Partial<CrmMatchedUser> = {}): CrmMatchedUser => ({
   phone: '+919800000000',
   profile_photo: 'https://cdn.example.com/asha.png',
   matched_on: 'EMAIL',
+  platforms_used: ['ANDROID'],
+  last_activity_at: '2026-11-23T10:30:00.000Z',
   ...overrides,
 });
 
@@ -22,6 +25,17 @@ describe('MatchedUserChip', () => {
   it('says the lead matched on phone', () => {
     render(<MatchedUserChip matched={matched({ matched_on: 'PHONE' })} />);
     expect(screen.getByText('Also a Duncit user · Phone match')).toBeInTheDocument();
+  });
+
+  it('shows the platforms the account uses beside the chip, only the ones used', () => {
+    render(<MatchedUserChip matched={matched({ platforms_used: ['IOS', 'WEB'] })} />);
+    const icons = within(screen.getByTestId('matched-user-chip-platforms')).getAllByRole('img');
+    expect(icons.map((icon) => icon.getAttribute('aria-label'))).toEqual(['iOS', 'Web']);
+  });
+
+  it('says no platform is recorded for an account never seen signed in', () => {
+    render(<MatchedUserChip matched={matched({ platforms_used: null })} />);
+    expect(screen.getByTestId('matched-user-chip-platforms-empty')).toHaveTextContent('None recorded yet');
   });
 });
 
@@ -54,5 +68,22 @@ describe('MatchedUserBox', () => {
     const box = screen.getByTestId('matched-user-box');
     expect(within(box).getByText('A')).toBeInTheDocument();
     expect(within(box).getByText('+919800000000')).toBeInTheDocument();
+  });
+
+  it('lists all three devices, the used ones marked used, and the last activity in the admin zone', () => {
+    render(<MatchedUserBox matched={matched()} />);
+    const devices = screen.getByTestId('matched-user-box-platforms');
+    expect(within(devices).getAllByRole('img').map((icon) => icon.getAttribute('aria-label'))).toEqual([
+      'Android: used',
+      'iOS: not used',
+      'Web: not used',
+    ]);
+    const expected = createDateFormatter({ timeZoneAware: true }).formatDateTime('2026-11-23T10:30:00.000Z');
+    expect(screen.getByTestId('matched-user-last-activity')).toHaveTextContent(`Last activity: ${expected}`);
+  });
+
+  it('says the last activity is not recorded yet for an account never seen', () => {
+    render(<MatchedUserBox matched={matched({ last_activity_at: null, platforms_used: [] })} />);
+    expect(screen.getByTestId('matched-user-last-activity')).toHaveTextContent('Last activity: Not recorded yet');
   });
 });

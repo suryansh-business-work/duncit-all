@@ -14,6 +14,7 @@ import { hasDataIssues } from './columns/issues';
 import CreateUserDialog from './CreateUserDialog';
 import { createUserSchema, toCreateUserInput } from './create-user.form';
 import { useTranslation } from '@duncit/shell';
+import { usePlatformText } from '@duncit/ui';
 
 const getUserRowId = (u: UserRow) => u.user_id;
 
@@ -34,6 +35,7 @@ export default function UsersPage() {
   const { formatDate, formatDateTime } = useDateFormat();
   // Last Activity reads in the Admin Panel's configured zone, whatever the browser's.
   const { formatDateTime: formatActivityAt } = useDateFormat({ timeZoneAware: true });
+  const platformText = usePlatformText();
 
   const { data: rolesData } = useQuery<any>(ROLES);
   const [createUser] = useMutation<any>(CREATE_USER);
@@ -68,8 +70,8 @@ export default function UsersPage() {
 
   const columns = useMemo(() => {
     const roleOptions = roles.map((r: any) => ({ value: r.key, label: r.name }));
-    return getUsersColumns({ formatDate, formatDateTime, formatActivityAt, roleOptions, t });
-  }, [formatDate, formatDateTime, formatActivityAt, roles]);
+    return getUsersColumns({ formatDate, formatDateTime, formatActivityAt, roleOptions, platformText, t });
+  }, [formatDate, formatDateTime, formatActivityAt, roles, platformText]);
 
   // An account with missing, duplicate or mismatched contact data reads red; its chips say why.
   const getRowStyle = useCallback(

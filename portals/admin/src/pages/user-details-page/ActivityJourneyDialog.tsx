@@ -18,6 +18,7 @@ import { USER_CLICKSTREAM } from './queries';
 import ActivityJourneyChart from './ActivityJourneyChart';
 import { formatTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
+import { PlatformIcons } from '@duncit/ui';
 
 interface Props {
   open: boolean;
@@ -92,6 +93,8 @@ export default function ActivityJourneyDialog({ open, userId, date, onClose }: R
                 flexWrap: "wrap"
               }}>
               <Chip size="small" color="success" label={event.event_type} />
+              {/* The device the event came from; events recorded before it was stored show none. */}
+              {event.platform && <PlatformIcons platforms={[event.platform]} testId={`admin-user-journey-platform-${event.id}`} />}
               <Typography variant="caption" sx={{
                 color: "text.secondary"
               }}>

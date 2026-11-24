@@ -174,7 +174,9 @@ describe('PodCard', () => {
   const PAST = '2020-01-05T09:00:00.000Z';
 
   it('says who attended and Completed, in place of who is joining and the spots, once the pod is over', () => {
-    renderWithProviders(<PodCard pod={paidPod({ pod_date_time: PAST, attendance: { attended_seats: 5 } })} />);
+    renderWithProviders(
+      <PodCard pod={paidPod({ pod_date_time: PAST, attendance: { attended_seats: 5 } })} />,
+    );
     expect(screen.getByText('5 Attended · Completed')).toBeOnTheScreen();
     expect(screen.queryByText(/joining now/)).toBeNull();
     expect(screen.queryByText(/spot left/)).toBeNull();
@@ -182,7 +184,9 @@ describe('PodCard', () => {
   });
 
   it('counts attendance, not bookings: nobody scanned in shows only Completed', () => {
-    renderWithProviders(<PodCard pod={paidPod({ pod_date_time: PAST, attendance: { attended_seats: 0 } })} />);
+    renderWithProviders(
+      <PodCard pod={paidPod({ pod_date_time: PAST, attendance: { attended_seats: 0 } })} />,
+    );
     expect(screen.getByText('Completed')).toBeOnTheScreen();
     expect(screen.queryByText(/Attended/)).toBeNull();
   });
@@ -208,7 +212,9 @@ describe('PodCard', () => {
 
   it('keeps who is joining and the spots while a started pod is still ongoing, even with scans', () => {
     const start = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    renderWithProviders(<PodCard pod={paidPod({ pod_date_time: start, attendance: { attended_seats: 3 } })} />);
+    renderWithProviders(
+      <PodCard pod={paidPod({ pod_date_time: start, attendance: { attended_seats: 3 } })} />,
+    );
     expect(screen.getByText(/7 joining now/)).toBeOnTheScreen();
     expect(screen.queryByText(/Completed/)).toBeNull();
   });

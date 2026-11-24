@@ -40,7 +40,8 @@ const noWallets: TicketWalletLinks = { apple_pass_url: null, google_save_url: nu
 const answerPodWith = (answer: () => Promise<unknown>, wallets = noWallets) =>
   mockRequest.mockImplementation((document: unknown) => {
     if (document === MobileCheckoutPodDocument) return answer();
-    if (document === TicketWalletLinksDocument) return Promise.resolve({ myEventTicketWalletLinks: wallets });
+    if (document === TicketWalletLinksDocument)
+      return Promise.resolve({ myEventTicketWalletLinks: wallets });
     return Promise.resolve({});
   });
 
@@ -84,8 +85,14 @@ describe('FreeJoinSuccessScreen', () => {
 
     const apple = await screen.findByTestId('success-pod-apple-wallet');
     expect(within(apple).getByText('Add to Apple Wallet')).toBeOnTheScreen();
-    expect(within(screen.getByTestId('success-pod-google-wallet')).getByText('Add to Google Wallet')).toBeOnTheScreen();
-    expect(mockRequest).toHaveBeenCalledWith(TicketWalletLinksDocument, { podId: 'p1' }, { auth: true });
+    expect(
+      within(screen.getByTestId('success-pod-google-wallet')).getByText('Add to Google Wallet'),
+    ).toBeOnTheScreen();
+    expect(mockRequest).toHaveBeenCalledWith(
+      TicketWalletLinksDocument,
+      { podId: 'p1' },
+      { auth: true },
+    );
   });
 
   it('downloads the ticket for this pod and routes Home and to Pod History', async () => {

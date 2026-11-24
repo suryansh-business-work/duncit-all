@@ -117,7 +117,14 @@ export function PodCardInfo({
     <YStack paddingTop={10} paddingHorizontal={4} paddingBottom={2} gap={4}>
       <XStack alignItems="center" gap={4}>
         <MaterialIcons name={expired ? 'event-available' : 'group'} size={14} color={muted} />
-        <Text flex={1} fontSize={12} lineHeight={16} fontWeight="500" color="$muted" numberOfLines={1}>
+        <Text
+          flex={1}
+          fontSize={12}
+          lineHeight={16}
+          fontWeight="500"
+          color="$muted"
+          numberOfLines={1}
+        >
           {joiningText ? (
             <Text color="$success" fontWeight="600">
               {`${joiningText} · `}

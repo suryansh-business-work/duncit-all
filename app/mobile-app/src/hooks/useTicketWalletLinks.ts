@@ -28,7 +28,10 @@ export function useTicketWalletLinks(podId: string | undefined): TicketWalletLin
         if (!live) return;
         // The generated fields are optional; an absent link means no button.
         const { apple_pass_url, google_save_url } = data.myEventTicketWalletLinks;
-        setLinks({ apple_pass_url: apple_pass_url ?? null, google_save_url: google_save_url ?? null });
+        setLinks({
+          apple_pass_url: apple_pass_url ?? null,
+          google_save_url: google_save_url ?? null,
+        });
       })
       .catch((error: unknown) => logs.mobileApp.error('checkout', 'ticketWalletLinks', { error }));
     return () => {

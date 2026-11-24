@@ -55,7 +55,9 @@ export function LivePodActions({
   // while the mutation is in flight, and "you have used them all" is a lie there.
   const onBackoutDisabled = backoutMaxed ? onBackoutBlocked : undefined;
   // The file holds the invoice only when something was paid — same words as mWeb.
-  const ticketLabel = item.payment_id ? t('mweb.ticket.download') : t('mweb.ticket.downloadTicketOnly');
+  const ticketLabel = item.payment_id
+    ? t('mweb.ticket.download')
+    : t('mweb.ticket.downloadTicketOnly');
   return (
     <>
       <ActionButton

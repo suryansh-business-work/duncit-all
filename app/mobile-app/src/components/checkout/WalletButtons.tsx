@@ -64,7 +64,7 @@ export function WalletButtons({ podId }: Readonly<{ podId: string | undefined }>
       Linking.openURL(url).catch((cause: unknown) => {
         logs.mobileApp.error('checkout', 'openWalletLink', { error: cause });
         setError(t('mweb.checkout.walletOpenFailed'));
-      })
+      }),
     );
   };
 

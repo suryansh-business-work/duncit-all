@@ -22,7 +22,11 @@ describe('useTicketWalletLinks', () => {
 
     expect(result.current).toEqual({ apple_pass_url: null, google_save_url: null });
     await waitFor(() => expect(result.current).toEqual(links));
-    expect(mockRequest).toHaveBeenCalledWith(TicketWalletLinksDocument, { podId: 'p1' }, { auth: true });
+    expect(mockRequest).toHaveBeenCalledWith(
+      TicketWalletLinksDocument,
+      { podId: 'p1' },
+      { auth: true },
+    );
   });
 
   it('asks nothing without a pod', () => {
@@ -38,7 +42,9 @@ describe('useTicketWalletLinks', () => {
     mockRequest.mockRejectedValue(failure);
     const { result } = renderHook(() => useTicketWalletLinks('p1'));
 
-    await waitFor(() => expect(logError).toHaveBeenCalledWith('checkout', 'ticketWalletLinks', { error: failure }));
+    await waitFor(() =>
+      expect(logError).toHaveBeenCalledWith('checkout', 'ticketWalletLinks', { error: failure }),
+    );
     expect(result.current).toEqual({ apple_pass_url: null, google_save_url: null });
     logError.mockRestore();
   });

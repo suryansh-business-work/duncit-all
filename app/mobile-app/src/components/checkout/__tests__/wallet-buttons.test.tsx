@@ -56,7 +56,9 @@ describe('WalletButtons', () => {
     renderWithProviders(<WalletButtons podId="p1" />);
 
     fireEvent.press(screen.getByTestId('success-pod-apple-wallet'));
-    expect(await screen.findByTestId('wallet-error')).toHaveTextContent('Could not open your wallet. Please try again.');
+    expect(await screen.findByTestId('wallet-error')).toHaveTextContent(
+      'Could not open your wallet. Please try again.',
+    );
     expect(logError).toHaveBeenCalledWith('checkout', 'openWalletLink', { error: failure });
 
     fireEvent.press(screen.getByTestId('success-pod-apple-wallet'));

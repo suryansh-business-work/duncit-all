@@ -1,8 +1,9 @@
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { useTranslation } from '@/hooks/useTranslation';
-import { formatMoney } from '@/utils/checkout-math';
+
+import { VenueChargesList } from './VenueChargesList';
 
 export interface VenueCharge {
   label: string;
@@ -32,7 +33,6 @@ export function VenueChargesSheet({
   onClose,
   testID = 'venue-charges-sheet',
 }: Readonly<Props>) {
-  const total = charges.reduce((sum, charge) => sum + charge.amount, 0);
   const { t } = useTranslation();
 
   return (
@@ -45,37 +45,12 @@ export function VenueChargesSheet({
       subtitle={t('mweb.checkout.venueChargesIntro')}
       closeLabel={t('mweb.checkout.close')}
     >
-      <YStack gap={8}>
-        {charges.map((charge) => (
-          <XStack
-            key={`${charge.label}|${charge.amount}|${charge.note ?? ''}`}
-            justifyContent="space-between"
-            gap={12}
-          >
-            <YStack flex={1}>
-              <Text fontSize={13} fontWeight="700" color="$color">
-                {charge.label}
-              </Text>
-              {charge.note ? (
-                <Text fontSize={11.5} color="$muted">
-                  {charge.note}
-                </Text>
-              ) : null}
-            </YStack>
-            <Text fontSize={13} fontWeight="600" color="$color">
-              {formatMoney(currency, charge.amount)}
-            </Text>
-          </XStack>
-        ))}
-        <YStack height={1} backgroundColor="$borderColor" marginVertical={2} />
-        <XStack justifyContent="space-between">
-          <Text fontSize={13} fontWeight="700" color="$color">
-            {t('mweb.checkout.venueChargesTotal')}
-          </Text>
-          <Text fontSize={13} fontWeight="700" color="$color">
-            {formatMoney(currency, total)}
-          </Text>
-        </XStack>
+      <YStack>
+        <VenueChargesList
+          charges={charges}
+          currency={currency}
+          totalLabel={t('mweb.checkout.venueChargesTotal')}
+        />
         <Text fontSize={11.5} color="$muted" paddingTop={12}>
           {t('mweb.checkout.venueChargesNote')}
         </Text>

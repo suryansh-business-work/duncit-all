@@ -1519,6 +1519,20 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       inclusiveOfGst: 'Price is inclusive of GST.',
       // mWeb only — the native charges section only renders when there are any.
       noVenueCharges: 'No additional venue charges listed.',
+      // Asked before Join / Book on a pod that lists place charges. They are
+      // paid to the venue at the venue, and Duncit plays no part in them:
+      // that is the one thing this copy has to make unmistakable.
+      placeChargesConfirmTitle: 'This pod has place charges',
+      placeChargesConfirmIntro: 'You pay these charges directly to the venue, at the venue.',
+      placeChargesConfirmNoRole:
+        'Duncit does not collect these charges and has no role in them. They are not part of any payment you make on Duncit.',
+      placeChargesTotal: 'Total place charges',
+      placeChargesConfirmAccept: "I'm OK, continue",
+      placeChargesWrongPrompt: 'Charges look wrong or not relevant?',
+      placeChargesReport: 'Report to support',
+      placeChargesReporting: 'Reporting…',
+      placeChargesReported: 'Ticket {ticketNo} raised. Our support team will check these charges.',
+      placeChargesReportFailed: 'Could not raise the ticket. Please try again.',
       // The booking bar — host state.
       goToDashboard: 'Go to Dashboard',
       // Native only — its bar pairs every CTA with a caption on the left.

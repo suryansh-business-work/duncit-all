@@ -1227,6 +1227,20 @@ paymentFailureReportInput(classifyPaymentFailure(null), {
 
 The deducted-payment claim's form rules live in `@duncit/forms/schemas` (`makePaymentClaimSchema`), since they need Zod.
 
+### Place charges — `pod-place-charges`
+
+A pod's place charges are billed by the venue at its own door and never pass through Duncit. Before Join / Book, both apps show them in a confirmation (mWeb `pod-details-page/place-charges`, native `details/place-charges`), and its "Report to support" link opens a ticket in one tap.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `placeChargesTotal` | `(charges) => number` | The listed amounts added up; `null` / `undefined` / a non-numeric amount count as 0. |
+| `placeChargesTicketDraft` | `(PlaceChargesTicketContext) => { subject, body_text, category: 'BOOKING', pod_id, pod_title }` | The ticket that tap opens: the pod and every charge as the member saw it, plus the total. |
+
+```ts
+placeChargesTicketDraft({ podId: 'p1', podTitle: 'Board Games', currencySymbol: '₹', charges: [{ label: 'Entry', amount: 200 }] });
+// { subject: 'Place charges look wrong — Board Games', category: 'BOOKING', pod_id: 'p1', … }
+```
+
 ### Delivery quote gate — `delivery-quote-gate`
 
 The product checkout's Pay button stays shut until the delivery charge for the cart and pincode

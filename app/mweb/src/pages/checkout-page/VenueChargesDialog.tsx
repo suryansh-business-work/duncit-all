@@ -1,9 +1,9 @@
-import { Box, Dialog, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import { Dialog, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
-import { formatMoney } from './checkoutMath';
+import VenueChargesList from './VenueChargesList';
 
 export interface VenueCharge {
   label: string;
@@ -23,7 +23,6 @@ interface Props {
  * payable amount, so this purely explains + itemises them. */
 export default function VenueChargesDialog({ open, charges, currency, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
-  const total = charges.reduce((sum, charge) => sum + Number(charge.amount || 0), 0);
 
   return (
     <Dialog data-testid="venue-charges-sheet" open={open} onClose={onClose} fullWidth maxWidth="xs">
@@ -42,60 +41,11 @@ export default function VenueChargesDialog({ open, charges, currency, onClose }:
             {t('mweb.checkout.venueChargesIntro')}
           </Typography>
           {charges.length > 0 && (
-            <Stack
-              spacing={1}
-              sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'action.hover' }}
-              divider={<Box sx={{ borderBottom: '1px dashed', borderColor: 'divider' }} />}
-            >
-              {charges.map((charge) => (
-                <Stack
-                  key={`${charge.label}|${charge.amount}|${charge.note ?? ''}`}
-                  data-testid="venue-charge-row"
-                  direction="row"
-                  spacing={1.5}
-                  sx={{
-                    alignItems: "flex-start",
-                    justifyContent: "space-between"
-                  }}>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body2" sx={{
-                      fontWeight: 600
-                    }}>
-                      {charge.label}
-                    </Typography>
-                    {charge.note && (
-                      <Typography variant="caption" sx={{
-                        color: "text.secondary"
-                      }}>
-                        {charge.note}
-                      </Typography>
-                    )}
-                  </Box>
-                  <Typography variant="body2" sx={{
-                    fontWeight: 700
-                  }}>
-                    {formatMoney(currency, charge.amount)}
-                  </Typography>
-                </Stack>
-              ))}
-              <Stack
-                direction="row"
-                sx={{
-                  justifyContent: "space-between",
-                  alignItems: "center"
-                }}>
-                <Typography variant="body2" sx={{
-                  fontWeight: 700
-                }}>
-                  {t('mweb.checkout.venueChargesTotal')}
-                </Typography>
-                <Typography variant="body2" sx={{
-                  fontWeight: 700
-                }}>
-                  {formatMoney(currency, total)}
-                </Typography>
-              </Stack>
-            </Stack>
+            <VenueChargesList
+              charges={charges}
+              currency={currency}
+              totalLabel={t('mweb.checkout.venueChargesTotal')}
+            />
           )}
           <Typography variant="caption" sx={{
             color: "text.secondary"

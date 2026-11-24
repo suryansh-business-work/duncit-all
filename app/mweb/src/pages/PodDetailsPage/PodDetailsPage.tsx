@@ -25,6 +25,7 @@ import PodDetailsDialogs from './PodDetailsDialogs';
 import SmartIncentiveOfferDialog from '../pod-details-page/SmartIncentiveOfferDialog';
 import PodHashtagsAndSupport from './PodHashtagsAndSupport';
 import { usePodDetailsData } from './usePodDetailsData';
+import { PlaceChargesConfirmDialog, usePlaceChargesConfirm } from '../pod-details-page/place-charges';
 
 export default function PodDetailsPage() {
   const { clubSlug = '', podSlug = '' } = useParams();
@@ -44,6 +45,7 @@ export default function PodDetailsPage() {
   // Held here (not in the shop card) because Book reads them: a free pod with picks goes through checkout.
   const rentalPicks = usePodRentalPicks(id);
   const hasRentalPicks = Object.keys(rentalPicks.picks).length > 0;
+  const placeCharges = usePlaceChargesConfirm(pod, priceCurrency); // Join / Book ask first when the venue bills its own charges.
 
   // The skeleton is for a page with nothing to show yet, so both halves wait on
   // DATA, never on `loading`. `cache-and-network` answers a revisit from the
@@ -166,11 +168,11 @@ export default function PodDetailsPage() {
         seats={actions.seats}
         onSeatsChange={actions.setSeats}
         // A free pod with items to rent is paid for: the rentals go through checkout.
-        onJoinFree={hasRentalPicks ? actions.onPaidCheckout : actions.onJoinFree}
+        onJoinFree={placeCharges.confirmFirst(hasRentalPicks ? actions.onPaidCheckout : actions.onJoinFree)}
         onBackout={() => actions.setBackoutOpen(true)}
         onKeepSpot={actions.openKeepSpot}
         onCancelSpot={() => actions.setCancelSpotOpen(true)}
-        onPaidCheckout={actions.onPaidCheckout}
+        onPaidCheckout={placeCharges.confirmFirst(actions.onPaidCheckout)}
         onCopyReferral={actions.onCopyReferral}
         onGoToDashboard={() => {
           setMode('HOST');
@@ -188,7 +190,8 @@ export default function PodDetailsPage() {
         currency={priceCurrency}
         backoutAttemptsLeft={backoutAttemptsLeft}
       />
-      <SmartIncentiveOfferDialog incentive={smartIncentive} unitPrice={Number(pod.pod_amount) || 0} onBook={actions.onPaidCheckout} />
+      <SmartIncentiveOfferDialog incentive={smartIncentive} unitPrice={Number(pod.pod_amount) || 0} onBook={placeCharges.confirmFirst(actions.onPaidCheckout)} />
+      <PlaceChargesConfirmDialog {...placeCharges.dialog} />
       <LocationMismatchDialog kind="POD" {...locationPrompt} />
     </Stack>
   );

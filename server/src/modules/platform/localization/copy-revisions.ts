@@ -478,4 +478,11 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   // Duncit ref, so the placeholder and the IDs column header say so.
   "ecommPortal.paymentLogs.search": ["Search payment ID, invoice, buyer or email"],
   "ecommPortal.paymentLogs.ids": ["Payment / invoice"],
+  // Send Money can pay a bank account or UPI ID typed in, not only a verified one.
+  "finance.payouts.sendMoneySubtitle": [
+    "Pay a person by hand — salary, a manual refund, a reimbursement or an adjustment — to one of their verified bank accounts.",
+  ],
+  "finance.payouts.noVerifiedAccount": [
+    "This person has no verified bank account, so money cannot be sent to them from here.",
+  ],
 };

@@ -133,6 +133,7 @@ export const transferPub = (t: ISendMoneyTransfer) => ({
   account_number: t.account_number,
   ifsc_code: t.ifsc_code,
   upi_id: t.upi_id,
+  account_source: t.account_source,
   initiated_by_name: t.initiated_by_name,
   approved_by_name: t.approved_by_name,
   status: displayStatusOf('APPROVED', t.payout.status),

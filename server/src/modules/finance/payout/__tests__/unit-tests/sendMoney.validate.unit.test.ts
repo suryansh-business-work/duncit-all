@@ -56,6 +56,22 @@ describe('validateSendMoney', () => {
     expect(fieldOf(patch)).toBe(field);
   });
 
+  it('accepts an account typed in instead of a verified one once the sender confirms they checked it', () => {
+    const custom = { payout_method: 'UPI', upi_id: 'meera@okhdfc' };
+    expect(() =>
+      validateSendMoney({ ...valid, accountId: null, customAccount: custom, acknowledgeCustomAccount: true })
+    ).not.toThrow();
+  });
+
+  it.each([
+    ['a typed account without the sender confirming it', { accountId: null, customAccount: { payout_method: 'UPI', upi_id: 'a@ok' } }, 'acknowledge_custom_account'],
+    ['a typed account the sender explicitly did not confirm', { accountId: null, customAccount: { payout_method: 'UPI', upi_id: 'a@ok' }, acknowledgeCustomAccount: false }, 'acknowledge_custom_account'],
+    ['both a verified account and a typed one', { customAccount: { payout_method: 'UPI', upi_id: 'a@ok' }, acknowledgeCustomAccount: true }, 'account_id'],
+    ['neither a verified account nor a typed one', { accountId: null, customAccount: null }, 'account_id'],
+  ])('refuses %s, naming the field', (_label, patch, field) => {
+    expect(fieldOf(patch)).toBe(field);
+  });
+
   it('truncates an over-long note rather than refusing the payment', () => {
     expect(validateSendMoney({ ...valid, notes: 'n'.repeat(5000) }).notes).toHaveLength(1000);
   });

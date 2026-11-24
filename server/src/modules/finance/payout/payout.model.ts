@@ -145,8 +145,12 @@ export const PayoutEventModel = model<IPayoutEvent>('PayoutEvent', payoutEventSc
 export const SEND_MONEY_CATEGORIES = ['SALARY', 'REFUND', 'REIMBURSEMENT', 'ADJUSTMENT', 'OTHER'] as const;
 export type SendMoneyCategory = (typeof SEND_MONEY_CATEGORIES)[number];
 
-/** Whose verified record the destination account came from. */
-export type AccountSource = 'HOST' | 'VENUE' | 'ECOMM_BRAND';
+/**
+ * Whose verified record the destination account came from, or CUSTOM when Finance
+ * typed the account in for this one transfer (and confirmed they checked it).
+ */
+export const ACCOUNT_SOURCES = ['HOST', 'VENUE', 'ECOMM_BRAND', 'CUSTOM'] as const;
+export type AccountSource = (typeof ACCOUNT_SOURCES)[number];
 
 export interface ISendMoneyTransfer extends Document {
   transfer_id: string;
@@ -196,7 +200,7 @@ const sendMoneySchema = new Schema<ISendMoneyTransfer>(
     account_number: { type: String, default: '', trim: true, maxlength: 40 },
     ifsc_code: { type: String, default: '', trim: true, maxlength: 20 },
     upi_id: { type: String, default: '', trim: true, maxlength: 120 },
-    account_source: { type: String, enum: ['HOST', 'VENUE', 'ECOMM_BRAND'], required: true },
+    account_source: { type: String, enum: ACCOUNT_SOURCES, required: true },
     initiated_by: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     initiated_by_name: { type: String, default: '', maxlength: 160 },
     approved_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },

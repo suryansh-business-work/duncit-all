@@ -139,6 +139,8 @@ export const payoutTypeDefs = /* GraphQL */ `
     account_number: String!
     ifsc_code: String!
     upi_id: String!
+    "HOST, VENUE or ECOMM_BRAND for a verified account; CUSTOM for one typed into Send Money."
+    account_source: String!
     initiated_by_name: String!
     approved_by_name: String!
     status: MoneyOutStatus!
@@ -158,13 +160,26 @@ export const payoutTypeDefs = /* GraphQL */ `
     page_size: Int!
   }
 
+  "An account typed into Send Money for one transfer. UPI needs upi_id; IMPS and NEFT need the holder, number and IFSC."
+  input SendMoneyCustomAccountInput {
+    payout_method: WithdrawalMethod!
+    account_holder_name: String
+    account_number: String
+    ifsc_code: String
+    upi_id: String
+  }
+
   input SendMoneyInput {
     "Minted by the form when it opens. A repeat of the same id returns the transfer already made."
     request_id: String!
     recipient_user_id: ID!
-    "One of the recipient's verified_accounts."
-    account_id: ID!
-    "IMPS or NEFT for a bank account. Ignored for UPI."
+    "One of the recipient's verified_accounts. Leave empty when paying a custom_account."
+    account_id: ID
+    "An account typed in for this transfer instead of a verified one. Needs acknowledge_custom_account."
+    custom_account: SendMoneyCustomAccountInput
+    "True once the sender has checked the typed account. Required with custom_account."
+    acknowledge_custom_account: Boolean
+    "IMPS or NEFT for a verified bank account. Ignored for UPI and for a custom_account (it names its own)."
     payout_method: WithdrawalMethod
     amount: Float!
     category: SendMoneyCategory!
@@ -193,7 +208,7 @@ export const payoutTypeDefs = /* GraphQL */ `
     decideWithdrawal(withdrawal_id: ID!, input: DecideWithdrawalInput!): WalletWithdrawal!
     "Start a failed or stalled payout again (a failed one is a new, deliberate attempt)."
     retryWithdrawalPayout(withdrawal_id: ID!): WalletWithdrawal!
-    "Pay a person from the Finance Portal, to one of their verified accounts."
+    "Pay a person from the Finance Portal, to one of their verified accounts or to an account typed in and acknowledged."
     sendMoney(input: SendMoneyInput!): SendMoneyTransfer!
     retrySendMoneyTransfer(transfer_id: ID!): SendMoneyTransfer!
   }

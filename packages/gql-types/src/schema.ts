@@ -21000,7 +21000,7 @@ export type Mutation = {
   /** Admin. Sends the WhatsApp launch message to the city's subscribers who are not SENT yet. The city must be launched. */
   sendLocationLaunchMessage: LocationLaunchSendResult;
   sendMarketingCampaign: MarketingCampaign;
-  /** Pay a person from the Finance Portal, to one of their verified accounts. */
+  /** Pay a person from the Finance Portal, to one of their verified accounts or to an account typed in and acknowledged. */
   sendMoney: SendMoneyTransfer;
   /**
    * Send the LIVE link or the RESULT link to confirmed attendees who have not
@@ -45965,13 +45965,26 @@ export type SendMoneyCategory =
   | 'REIMBURSEMENT'
   | 'SALARY';
 
+/** An account typed into Send Money for one transfer. UPI needs upi_id; IMPS and NEFT need the holder, number and IFSC. */
+export type SendMoneyCustomAccountInput = {
+  account_holder_name?: InputMaybe<Scalars['String']['input']>;
+  account_number?: InputMaybe<Scalars['String']['input']>;
+  ifsc_code?: InputMaybe<Scalars['String']['input']>;
+  payout_method: WithdrawalMethod;
+  upi_id?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type SendMoneyInput = {
-  /** One of the recipient's verified_accounts. */
-  account_id: Scalars['ID']['input'];
+  /** One of the recipient's verified_accounts. Leave empty when paying a custom_account. */
+  account_id?: InputMaybe<Scalars['ID']['input']>;
+  /** True once the sender has checked the typed account. Required with custom_account. */
+  acknowledge_custom_account?: InputMaybe<Scalars['Boolean']['input']>;
   amount: Scalars['Float']['input'];
   category: SendMoneyCategory;
+  /** An account typed in for this transfer instead of a verified one. Needs acknowledge_custom_account. */
+  custom_account?: InputMaybe<SendMoneyCustomAccountInput>;
   notes?: InputMaybe<Scalars['String']['input']>;
-  /** IMPS or NEFT for a bank account. Ignored for UPI. */
+  /** IMPS or NEFT for a verified bank account. Ignored for UPI and for a custom_account (it names its own). */
   payout_method?: InputMaybe<WithdrawalMethod>;
   reason: Scalars['String']['input'];
   recipient_user_id: Scalars['ID']['input'];
@@ -46001,6 +46014,8 @@ export type SendMoneyTransfer = {
   __typename?: 'SendMoneyTransfer';
   account_holder_name: Scalars['String']['output'];
   account_number: Scalars['String']['output'];
+  /** HOST, VENUE or ECOMM_BRAND for a verified account; CUSTOM for one typed into Send Money. */
+  account_source: Scalars['String']['output'];
   amount: Scalars['Float']['output'];
   approved_by_name: Scalars['String']['output'];
   attempt: Scalars['Int']['output'];

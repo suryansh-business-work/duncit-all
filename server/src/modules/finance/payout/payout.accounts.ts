@@ -1,3 +1,4 @@
+import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { HostModel } from '@modules/venues/host/host.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
@@ -13,8 +14,9 @@ import type { AccountSource } from './payout.model';
  * details were checked. A withdrawal request or a Send Money form never makes
  * an account verified by being typed into it.
  *
- * Money only ever goes to one of these, or (for a withdrawal) to the account
- * the person asked for after Finance explicitly acknowledged it is not on file.
+ * Money only ever goes to one of these, or to an account Finance explicitly
+ * acknowledged is not on file: the one a withdrawal asked for, or one typed into
+ * Send Money ({@link customAccount}).
  */
 export interface VerifiedAccount {
   /** `<source>:<record id>` — what a form sends back to pick this account. */
@@ -77,6 +79,52 @@ export async function verifiedAccountsFor(userId: string): Promise<VerifiedAccou
       })
     ),
   ].filter((account): account is VerifiedAccount => account !== null);
+}
+
+/** Bank details Finance typed into Send Money for one transfer. */
+export interface CustomAccountInput {
+  payout_method?: string | null;
+  account_holder_name?: string | null;
+  account_number?: string | null;
+  ifsc_code?: string | null;
+  upi_id?: string | null;
+}
+
+/** Longest holder name the venue and host editors accept, and so the longest Razorpay is sent. */
+const HOLDER_NAME_MAX = 120;
+
+const customAccountError = (message: string, field: string) =>
+  new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT', field: `custom_account.${field}` } });
+
+/**
+ * An account Finance typed in for ONE transfer, as a destination. Pure.
+ *
+ * It is never saved as verified anywhere: it lives only on the transfer it pays,
+ * marked CUSTOM. A UPI destination keeps only the UPI ID and a bank one only the
+ * holder, number and IFSC, so a stray value in the other half cannot ride along.
+ * The formats themselves are checked by `destinationOf` when the payee is built,
+ * which is the same check every other payout passes.
+ */
+export function customAccount(raw: CustomAccountInput): VerifiedAccount {
+  const bank = normalizeBankAccountInput(raw);
+  if (!bank.payout_method) throw customAccountError('Choose UPI, IMPS or NEFT for the account.', 'payout_method');
+  if (bank.account_holder_name.length > HOLDER_NAME_MAX) {
+    throw customAccountError(`Keep the account holder name under ${HOLDER_NAME_MAX} characters.`, 'account_holder_name');
+  }
+  const isUpi = bank.payout_method === 'UPI';
+  if (!isUpi && !bank.account_holder_name) {
+    throw customAccountError('Enter the account holder name as the bank has it.', 'account_holder_name');
+  }
+  return {
+    id: 'CUSTOM',
+    source: 'CUSTOM',
+    label: '',
+    payout_method: bank.payout_method,
+    account_holder_name: bank.account_holder_name,
+    account_number: isUpi ? '' : bank.account_number,
+    ifsc_code: isUpi ? '' : bank.ifsc_code,
+    upi_id: isUpi ? bank.upi_id : '',
+  };
 }
 
 /** The destination as one comparable string — number+IFSC for a bank, the address for UPI. Pure. */

@@ -11,11 +11,14 @@ import {
   SEND_MONEY_RECIPIENT,
   type Recipient,
   type SendMoneyOptionsData,
+  type VerifiedAccount,
 } from './queries';
 import type { RecipientOption } from './RecipientPicker';
 import {
+  CUSTOM_ACCOUNT_ID,
   EMPTY_SEND_MONEY_VALUES,
   buildSendMoneySchema,
+  toCustomAccountInput,
   toSendMoneyInput,
   type SendMoneyFormValues,
 } from './send-money.schema';
@@ -24,6 +27,31 @@ import {
 export function mintRequestId(): string {
   return globalThis.crypto.randomUUID();
 }
+
+/** A typed account in the shape the confirmation reads, so it shows exactly what will be sent. Pure. */
+export function customAsAccount(values: SendMoneyFormValues): VerifiedAccount {
+  const typed: Partial<Record<'account_holder_name' | 'account_number' | 'ifsc_code' | 'upi_id', string>> =
+    toCustomAccountInput(values);
+  return {
+    id: CUSTOM_ACCOUNT_ID,
+    source: CUSTOM_ACCOUNT_ID,
+    label: '',
+    payout_method: values.custom_method,
+    account_holder_name: typed.account_holder_name ?? '',
+    account_number: typed.account_number ?? '',
+    ifsc_code: typed.ifsc_code ?? '',
+    upi_id: typed.upi_id ?? '',
+  };
+}
+
+/** The typed-account fields, cleared whenever the person changes so one person's details never reach another. */
+const CUSTOM_FIELDS = [
+  'custom_holder',
+  'custom_account_number',
+  'custom_account_number_confirm',
+  'custom_ifsc',
+  'custom_upi_id',
+] as const;
 
 /**
  * Everything the Send Money page does, apart from drawing it: the recipient and
@@ -64,6 +92,13 @@ export function useSendMoneyForm() {
         notesTooLong: t('finance.payouts.notesTooLong'),
         referenceTooLong: t('finance.payouts.referenceTooLong'),
         urlInvalid: t('finance.payouts.urlInvalid'),
+        upiInvalid: t('finance.payouts.customUpiInvalid'),
+        holderRequired: t('finance.payouts.customHolderRequired'),
+        holderTooLong: t('finance.payouts.customHolderTooLong'),
+        accountNumberInvalid: t('finance.payouts.customAccountNumberInvalid'),
+        accountNumberMismatch: t('finance.payouts.customAccountNumberMismatch'),
+        ifscInvalid: t('finance.payouts.customIfscInvalid'),
+        acknowledgeRequired: t('finance.payouts.acknowledgeRequired'),
       }),
     [t],
   );
@@ -76,14 +111,19 @@ export function useSendMoneyForm() {
 
   const recipient = recipientOption ? (recipientData?.sendMoneyRecipient ?? null) : null;
   const accountId = watch('account_id');
-  const account = recipient?.verified_accounts.find((a) => a.id === accountId) ?? null;
+  const isCustom = accountId === CUSTOM_ACCOUNT_ID;
+  const verifiedAccount = recipient?.verified_accounts.find((a) => a.id === accountId) ?? null;
+  // A typed account is only read back at the confirmation, where it must match what is sent.
+  const account = isCustom && confirming ? customAsAccount(getValues()) : verifiedAccount;
 
   const chooseRecipient = useCallback(
     (next: RecipientOption | null) => {
       setRecipientOption(next);
       setValue('recipient_user_id', next?.id ?? '', { shouldValidate: false });
-      // Another person's account must never stay selected.
+      // Another person's account must never stay selected, verified or typed.
       setValue('account_id', '', { shouldValidate: false });
+      for (const field of CUSTOM_FIELDS) setValue(field, '', { shouldValidate: false });
+      setValue('acknowledge_custom', false, { shouldValidate: false });
     },
     [setValue],
   );
@@ -130,6 +170,10 @@ export function useSendMoneyForm() {
     review,
     confirm,
     cancelConfirm: () => setConfirming(false),
-    canSend: !!options?.payouts_configured && !!recipient && recipient.verified_accounts.length > 0,
+    isCustom,
+    /** IMPS or NEFT is chosen here only for a verified bank account; a typed account names its own method. */
+    chooseMethod: !isCustom && verifiedAccount?.payout_method !== 'UPI',
+    // A person with no verified account can still be paid, to an account typed in.
+    canSend: !!options?.payouts_configured && !!recipient,
   };
 }

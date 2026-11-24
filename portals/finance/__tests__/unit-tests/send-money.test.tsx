@@ -1,8 +1,9 @@
 /**
  * Finance > Send Money: pay a person by hand, to one of their VERIFIED accounts.
  *
- * What is asserted is the safety of the flow, not just that it renders: the
- * destination is never typed, a person with no verified account cannot be paid,
+ * What is asserted is the safety of the flow, not just that it renders: a
+ * verified destination is sent by id only, a typed account or UPI ID is
+ * validated, typed twice and must be acknowledged,
  * nothing is sent until the confirmation is accepted, a failed attempt retried
  * carries the SAME request id (so it cannot pay twice), and a successful one
  * starts a fresh id.
@@ -141,16 +142,18 @@ describe('Send Money — choosing who to pay', () => {
     expect(screen.getByText('cafe@okhdfc')).toBeInTheDocument();
   });
 
-  it('cannot pay a person who has no verified account', async () => {
+  it('offers a typed account, not a dead end, when the person has no verified account', async () => {
     mount([optionsMock(), searchMock, recipientMock([])]);
     await pickMeera();
     expect(await screen.findByText(/has no verified bank account/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Send Money' })).toBeDisabled();
+    expect(screen.getByRole('radio', { name: /Pay to a different bank account or UPI ID/ })).toBeInTheDocument();
+    expect(screen.queryByText('Verified bank accounts')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Send Money' })).toBeEnabled();
   });
 
   it('cannot send at all while payouts are not set up', async () => {
     mount([optionsMock(false), searchMock, recipientMock([bank])]);
-    expect(await screen.findByText(/Payouts are not set up/)).toBeInTheDocument();
+    expect(await screen.findByText(/payouts are not set up.*RazorpayX Account Number/)).toBeInTheDocument();
     await pickMeera();
     await screen.findByText('Verified bank accounts');
     expect(screen.getByRole('button', { name: 'Send Money' })).toBeDisabled();
@@ -339,5 +342,106 @@ describe('Send Money — confirming and sending', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Send Money' }));
     await waitFor(() => expect(notifyError).toHaveBeenCalledWith('Insufficient RazorpayX balance'));
     expect(notifySuccess).not.toHaveBeenCalled();
+  });
+});
+
+describe('Send Money — paying an account typed in', () => {
+  const chooseCustom = async (accounts: VerifiedAccount[] = []) => {
+    await pickMeera();
+    fireEvent.click(await screen.findByRole('radio', { name: /Pay to a different bank account or UPI ID/ }));
+    expect(await screen.findByText(/not on a verified Duncit record/)).toBeInTheDocument();
+    return accounts;
+  };
+  const pickMethod = async (method: 'UPI' | 'IMPS' | 'NEFT') => {
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /Pay by/ }));
+    fireEvent.click(await screen.findByRole('option', { name: method }));
+  };
+  const type = (label: RegExp, value: string) => fireEvent.change(screen.getByLabelText(label), { target: { value } });
+
+  it('refuses a malformed UPI ID and an unticked acknowledgement, and sends nothing', async () => {
+    const sent: Array<Record<string, unknown>> = [];
+    mount([optionsMock(), searchMock, recipientMock([]), sendMock(sent)]);
+    await chooseCustom();
+    type(/^UPI ID/, 'not-a-upi');
+    fillPayment();
+    fireEvent.click(screen.getByRole('button', { name: 'Send Money' }));
+
+    expect(await screen.findByText('Enter a UPI ID such as name@okhdfcbank.')).toBeInTheDocument();
+    expect(screen.getByText('Confirm you have checked the account to continue.')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(sent).toHaveLength(0);
+  });
+
+  it('sends a typed UPI ID as a custom account with the acknowledgement, never a verified account id', async () => {
+    const sent: Array<Record<string, unknown>> = [];
+    mount([optionsMock(), searchMock, recipientMock([bank]), sendMock(sent)]);
+    await chooseCustom([bank]);
+    // The IMPS/NEFT choice belongs to verified bank accounts; a typed one picks its own method.
+    expect(screen.queryByLabelText('Withdrawal Method')).not.toBeInTheDocument();
+    type(/^UPI ID/, 'asha@okicici');
+    fireEvent.click(screen.getByRole('checkbox', { name: /checked these account details/ }));
+    fillPayment('2500', 'Event reimbursement');
+    fireEvent.click(screen.getByRole('button', { name: 'Send Money' }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Send this payment?' });
+    expect(within(dialog).getByText('UPI · asha@okicici')).toBeInTheDocument();
+    expect(within(dialog).getByText(/You entered this account yourself/)).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Send Money' }));
+
+    await waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0]).toMatchObject({
+      recipient_user_id: 'u1',
+      account_id: null,
+      custom_account: { payout_method: 'UPI', upi_id: 'asha@okicici' },
+      acknowledge_custom_account: true,
+      amount: 2500,
+    });
+    expect(sent[0]).not.toHaveProperty('payout_method');
+    expect(JSON.stringify(sent[0])).not.toContain('HOST:1');
+  });
+
+  it('makes the account number be typed twice and checks the IFSC before a bank transfer', async () => {
+    const sent: Array<Record<string, unknown>> = [];
+    mount([optionsMock(), searchMock, recipientMock([]), sendMock(sent)]);
+    await chooseCustom();
+    await pickMethod('NEFT');
+    type(/^Account holder name/, 'Meera N');
+    type(/^Account number/, '999988887777');
+    type(/^Re-enter account number/, '999988887778');
+    type(/^IFSC/, 'SBIN123');
+    fireEvent.click(screen.getByRole('checkbox', { name: /checked these account details/ }));
+    fillPayment();
+    fireEvent.click(screen.getByRole('button', { name: 'Send Money' }));
+
+    expect(await screen.findByText('The account numbers do not match.')).toBeInTheDocument();
+    expect(screen.getByText('Enter an IFSC such as HDFC0001234.')).toBeInTheDocument();
+    expect(sent).toHaveLength(0);
+
+    type(/^Re-enter account number/, '999988887777');
+    type(/^IFSC/, 'sbin0000123');
+    fireEvent.click(screen.getByRole('button', { name: 'Send Money' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Send this payment?' });
+    expect(within(dialog).getByText('NEFT · Meera N · 999988887777 · SBIN0000123')).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Send Money' }));
+
+    await waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0].custom_account).toEqual({
+      payout_method: 'NEFT',
+      account_holder_name: 'Meera N',
+      account_number: '999988887777',
+      ifsc_code: 'SBIN0000123',
+    });
+  });
+
+  it('asks for the holder name and a 6–18 digit account number for a bank transfer', async () => {
+    mount([optionsMock(), searchMock, recipientMock([])]);
+    await chooseCustom();
+    await pickMethod('IMPS');
+    type(/^Account number/, '12');
+    fillPayment();
+    fireEvent.click(screen.getByRole('button', { name: 'Send Money' }));
+    expect(await screen.findByText('Enter the account holder name.')).toBeInTheDocument();
+    expect(screen.getByText('Enter an account number of 6 to 18 digits.')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

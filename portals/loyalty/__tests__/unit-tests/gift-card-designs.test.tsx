@@ -95,15 +95,17 @@ describe('DesignEditorPage — a new design', () => {
     fireEvent.click(screen.getByTestId('design-save'));
   };
 
+  // The test gets its own 20 s: the 5 s heading wait below used to equal vitest's default 5 s test
+  // timeout, so under coverage on CI the test was killed before the wait could finish.
   it('adds the design and opens it', async () => {
     asWriter();
     editor('new', [createDesignMock(input), designMock(makeDesign({ id: 'des-new', name: 'Festive', is_default: false }))]);
     expect(screen.getByText('New gift card design')).toBeInTheDocument();
     fill();
-    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Design added'));
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Design added'), { timeout: 5000 });
     // After the save the page navigates and loads the new design: slower than a second on a busy CI box.
-    expect(await screen.findByRole('heading', { name: 'Festive' }, { timeout: 5000 })).toBeInTheDocument();
-  });
+    expect(await screen.findByRole('heading', { name: 'Festive' }, { timeout: 10_000 })).toBeInTheDocument();
+  }, 20_000);
 
   it('stays on the form with the server’s reason when the design is refused', async () => {
     asWriter();

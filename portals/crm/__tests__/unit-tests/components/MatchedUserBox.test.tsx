@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import type { ReactElement } from 'react';
+import { screen, within } from '@testing-library/react';
+import { renderWithApollo } from '../helpers/renderWithApollo';
 import MatchedUserBox, { MatchedUserChip } from '@/components/MatchedUserBox';
 import type { CrmMatchedUser } from '@/api/crm.types';
 import { createDateFormatter } from '@duncit/app-settings';
+
+// The box reads the admin-configured date settings through Apollo (useDateFormat), as it does in the app;
+// with no settings answered, the shared defaults apply.
+const render = (ui: ReactElement) => renderWithApollo(ui);
 
 const matched = (overrides: Partial<CrmMatchedUser> = {}): CrmMatchedUser => ({
   user_id: 'user-1',

@@ -16,6 +16,9 @@
  * Env: DUNCIT_GRAPHQL_URL (the server the build reports to — each server keeps
  * its own identity, as it signs its own tokens), DUNCIT_RELEASE_TOKEN or
  * DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD, RUNNER_TEMP, GITHUB_ENV.
+ * APP=CRM (crm-ios-build) asks for the Duncit CRM app's identity instead: the
+ * same certificate with the CRM bundle ID's own App Store profile, which the
+ * server makes on first use — so that one is a mutation.
  */
 import fs from 'node:fs';
 import os from 'node:os';
@@ -24,9 +27,9 @@ import process from 'node:process';
 import { createCiClient, describeError, MISSING_CREDENTIALS } from './lib/ci-report.mjs';
 
 const GRAPHQL_URL = process.env.DUNCIT_GRAPHQL_URL || 'https://server.duncit.com/graphql';
+const CRM = (process.env.APP || '').trim().toUpperCase() === 'CRM';
 
-const QUERY = `query IosSigningBundle {
-  iosSigningBundle {
+const BUNDLE_FIELDS = `
     team_id
     bundle_id
     profile_uuid
@@ -37,7 +40,14 @@ const QUERY = `query IosSigningBundle {
     asc_key_id
     asc_issuer_id
     asc_private_key
-  }
+`;
+
+const QUERY = CRM
+  ? `mutation CrmIosSigningBundle {
+  crmIosSigningBundle {${BUNDLE_FIELDS}  }
+}`
+  : `query IosSigningBundle {
+  iosSigningBundle {${BUNDLE_FIELDS}  }
 }`;
 
 try {
@@ -48,7 +58,8 @@ try {
     console.error(`✗ fetch-ios-signing: ${MISSING_CREDENTIALS}`);
     process.exit(1);
   }
-  const { iosSigningBundle: bundle } = await client.gql(QUERY, {}, token);
+  const data = await client.gql(QUERY, {}, token);
+  const bundle = CRM ? data.crmIosSigningBundle : data.iosSigningBundle;
   // Masked before anything else could print it.
   console.log(`::add-mask::${bundle.p12_password}`);
 

@@ -36,6 +36,7 @@ const APP_BUILDS = [
   call('deleteAppBuild', `mutation E2eDeleteBuild($id: ID!) { deleteAppBuild(id: $id) }`, byId),
   call('pushAppBuildToPlayStore', `mutation E2ePushPlay($id: ID!) { pushAppBuildToPlayStore(id: $id, track: INTERNAL) { __typename } }`, byId),
   call('generateIosSigning', `mutation E2eIosSigning { generateIosSigning { __typename } }`),
+  call('crmIosSigningBundle', `mutation E2eCrmIosBundle { crmIosSigningBundle { __typename } }`),
   call('storeListing', `query E2eStoreListing { storeListing { __typename } }`),
   call('updateStoreListing', `mutation E2eUpdateListing { updateStoreListing(input: { support_url: "http://x" }) { __typename } }`),
   call('storeReleases', `query E2eStoreReleases { storeReleases(store: GOOGLE_PLAY) { __typename } }`),

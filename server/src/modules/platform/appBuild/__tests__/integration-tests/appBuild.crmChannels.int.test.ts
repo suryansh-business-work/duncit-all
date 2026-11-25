@@ -155,22 +155,54 @@ describe('Tech → App Builds → Duncit CRM', () => {
     mockEnv.SERVER_URL = 'https://api.example.test/';
   };
 
-  it('dispatches the CRM workflow with only the inputs it declares, and queues a CRM row', async () => {
+  it('dispatches the CRM Android workflow with the artifacts asked for and no Play submission', async () => {
     configureGithub();
     const result = await appBuildService.trigger(
-      { platform: 'ANDROID', app: 'CRM', app_env: 'STAGING', artifacts: ['AAB'], submit_to_play_store: true },
+      { platform: 'ANDROID', app: 'CRM', app_env: 'STAGING', artifacts: ['AAB', 'APK'], submit_to_play_store: true },
       tech
     );
     const [, workflow, ref, inputs] = dispatch.mock.calls[0];
     expect(workflow).toBe('crm-android-build.yml');
     expect(ref).toBe('staging');
-    expect(Object.keys(inputs).sort()).toEqual(['app_env', 'dispatch_id', 'report_url']);
-    expect(result.build).toMatchObject({ app: 'CRM', status: 'QUEUED', requested_artifacts: ['APK'], submit_to_play_store: false });
+    expect(Object.keys(inputs).sort()).toEqual(['app_env', 'artifacts', 'dispatch_id', 'report_url']);
+    // Platform order, so the APK (the file a phone installs) stays the primary artifact.
+    expect(inputs.artifacts).toBe('APK,AAB');
+    expect(result.build).toMatchObject({
+      app: 'CRM',
+      status: 'QUEUED',
+      requested_artifacts: ['APK', 'AAB'],
+      submit_to_play_store: false,
+    });
   });
 
-  it('refuses an iOS CRM build', async () => {
+  it('still builds the APK alone when an older portal asks for just that', async () => {
     configureGithub();
-    await expect(appBuildService.trigger({ platform: 'IOS', app: 'CRM', app_env: 'PRODUCTION', artifacts: ['IPA'] }, tech)).rejects.toThrow('Android only');
+    const result = await appBuildService.trigger(
+      { platform: 'ANDROID', app: 'CRM', app_env: 'PRODUCTION', artifacts: ['APK'], submit_to_play_store: false },
+      tech
+    );
+    expect(dispatch.mock.calls[0][3].artifacts).toBe('APK');
+    expect(result.build.requested_artifacts).toEqual(['APK']);
+  });
+
+  it('dispatches the CRM iOS workflow with only the inputs it declares', async () => {
+    configureGithub();
+    const result = await appBuildService.trigger(
+      { platform: 'IOS', app: 'CRM', app_env: 'PRODUCTION', artifacts: ['IPA'] },
+      tech
+    );
+    const [, workflow, ref, inputs] = dispatch.mock.calls[0];
+    expect(workflow).toBe('crm-ios-build.yml');
+    expect(ref).toBe('main');
+    expect(Object.keys(inputs).sort()).toEqual(['app_env', 'dispatch_id', 'report_url']);
+    expect(result.build).toMatchObject({ app: 'CRM', platform: 'IOS', status: 'QUEUED', requested_artifacts: ['IPA'] });
+  });
+
+  it('refuses an artifact the platform cannot make, dispatching nothing', async () => {
+    configureGithub();
+    await expect(
+      appBuildService.trigger({ platform: 'IOS', app: 'CRM', app_env: 'PRODUCTION', artifacts: ['APK'] }, tech)
+    ).rejects.toThrow('cannot build APK');
     expect(dispatch).not.toHaveBeenCalled();
   });
 

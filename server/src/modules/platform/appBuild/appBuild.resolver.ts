@@ -11,6 +11,7 @@ import {
   iosSigningForBuild,
   type IosSigningFileKind,
 } from './iosSigning.service';
+import { crmIosSigningBundle } from './iosSigning.crm';
 import type { TableQueryInput } from '@utils/table-query';
 
 // App builds are a Tech-portal capability. The CI workflows authenticate with
@@ -112,6 +113,10 @@ export const appBuildResolvers = {
     generateIosSigning: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const user = requireRole(ctx, BUILDS_MANAGE);
       return generateIosSigning(user.email ?? user.id);
+    },
+    crmIosSigningBundle: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, BUILDS_MANAGE);
+      return crmIosSigningBundle(user.email ?? user.id);
     },
     downloadIosSigningFile: (
       _p: unknown,

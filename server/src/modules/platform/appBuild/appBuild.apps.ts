@@ -1,9 +1,10 @@
 import type { AppBuildApp, AppBuildEnv, AppBuildPlatform } from './appBuild.model';
 
 /**
- * The app dimension of a build. One repository builds two Android apps — the
- * member app (app/mobile-app) and the internal Duncit CRM app (app/crm-app) —
- * and every list, changelog base and Slack post has to keep them apart.
+ * The app dimension of a build. One repository builds two apps, each for
+ * Android and iOS — the member app (app/mobile-app) and the internal Duncit CRM
+ * app (app/crm-app) — and every list, changelog base and Slack post has to keep
+ * them apart.
  *
  * Rows written before the field existed carry no `app`, and every one of them
  * is the member app, so "the member app" is matched as "anything that is not
@@ -28,7 +29,8 @@ export function appLabel(app?: AppBuildApp | null): string {
 /**
  * Where CRM builds are announced, one channel per environment (chosen in the
  * CRM portal's Download CRM App → Settings, or Tech → App Builds → Settings).
- * The CRM app is Android only: iOS does not let it read the call log.
+ * The channel carries both platforms' CRM builds; the keys keep their original
+ * ANDROID names because deployed env entries are stored under them.
  */
 export const CRM_CHANNEL_ENV_KEYS: Record<AppBuildEnv, string> = {
   PRODUCTION: 'SLACK_CRM_ANDROID_BUILDS_CHANNEL',
@@ -41,8 +43,11 @@ export const CRM_CHANNEL_CONFIG_FIELDS: Record<AppBuildEnv, string> = {
   STAGING: 'config.crm_android_staging_builds_channel',
 };
 
-/** The workflow that builds the CRM app (Android only). */
-export const CRM_WORKFLOW_FILE = 'crm-android-build.yml';
+/** The workflow that builds the CRM app, per platform. */
+export const CRM_WORKFLOW_FILES: Record<AppBuildPlatform, string> = {
+  ANDROID: 'crm-android-build.yml',
+  IOS: 'crm-ios-build.yml',
+};
 
 /**
  * The runtime env keys a build's announcement may go to, best first. Each
@@ -55,7 +60,7 @@ export function channelKeysFor(
 ): string[] {
   const staging = build.app_env === 'STAGING';
   const keys: string[] = [];
-  if (build.app === 'CRM' && build.platform === 'ANDROID') {
+  if (build.app === 'CRM') {
     if (staging) keys.push(CRM_CHANNEL_ENV_KEYS.STAGING);
     keys.push(CRM_CHANNEL_ENV_KEYS.PRODUCTION);
   }

@@ -1,4 +1,5 @@
-# Duncit CRM Android APK (app/crm-app) on every push to staging and main.
+# Duncit CRM Android APK + AAB (app/crm-app) on every push to staging and main.
+# The iPhone app is crm-ios-build.yml.
 #
 # Built on the runner, uploaded through the server and recorded with
 # reportAppBuild — which lists it under app CRM (its own rows, never mixed with
@@ -7,8 +8,9 @@
 # CRM staff download it from the CRM portal: sidebar → Download CRM App.
 #
 # The recipe is android-build.yml's, minus what only the member app needs
-# (AAB, Play submission, Truecaller): npm ci → codegen → expo prebuild →
-# SDK 35 + NDK 27 → gradlew assembleRelease, signed with the same upload key.
+# (Play submission, Truecaller): npm ci → codegen → expo prebuild →
+# SDK 35 + NDK 27 → gradlew assembleRelease bundleRelease, signed with the same
+# upload key. The APK is what staff sideload; the AAB is there for a Play upload.
 #
 # Where it records itself: a staging push reports to the STAGING server (so the
 # staging CRM portal offers the staging app) when DUNCIT_RELEASE_TOKEN_STAGING
@@ -26,6 +28,10 @@ on:
         type: choice
         options: [production, staging]
         default: production
+      artifacts:
+        description: What to build — APK, AAB, or APK,AAB for both
+        type: string
+        default: APK,AAB
       dispatch_id:
         description: Set by the Tech portal to claim the row it already created. Leave empty by hand.
         type: string
@@ -76,10 +82,12 @@ jobs:
   build:
     needs: plan
     if: always() && (github.event_name == 'workflow_dispatch' || needs.plan.outputs.any == 'true')
-    name: Build & publish Duncit CRM APK
+    name: Build & publish Duncit CRM APK + AAB
     runs-on: ubuntu-latest
     timeout-minutes: 75
     env:
+      # A push builds both; a portal dispatch says which it wants.
+      WANTED_ARTIFACTS: ${{ inputs.artifacts || 'APK,AAB' }}
       # A staging push reports to staging when that server's CI token exists;
       # each server signs its own tokens, so the token follows the URL.
       # A portal-started build reports to the portal that started it; a push
@@ -103,10 +111,13 @@ jobs:
       - name: Record build start
         # versionCode = commits on this branch: it only ever grows, so every new
         # APK installs over the last one without uninstalling.
+        # The artifact list is matched on exact commas below (",APK,"), so
+        # "apk, aab" typed by hand is normalised once here.
         run: |
           {
             echo "BUILD_STARTED_AT=$(date +%s)"
             echo "ANDROID_VERSION_CODE=$(git rev-list --count HEAD)"
+            echo "WANTED_ARTIFACTS=$(echo "$WANTED_ARTIFACTS" | tr -d '[:space:]' | tr '[:lower:]' '[:upper:]')"
           } >> "$GITHUB_ENV"
 
       - uses: actions/setup-node@v5
@@ -248,21 +259,52 @@ jobs:
           release_password: ${{ env.REPORT_PASSWORD }}
           run_url: ${{ env.RUN_URL }}
 
-      - name: Build the release APK
+      - name: Build the release artifacts
+        # One gradle invocation for whatever was asked for: the APK and the AAB
+        # share the compile, so building them apart would pay for it twice.
         env:
           ANDROID_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
           ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
           ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
         working-directory: app/crm-app/android
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
+        run: |
+          TASKS=""
+          case ",$WANTED_ARTIFACTS," in *,APK,*) TASKS="$TASKS assembleRelease" ;; esac
+          case ",$WANTED_ARTIFACTS," in *,AAB,*) TASKS="$TASKS bundleRelease" ;; esac
+          if [ -z "$TASKS" ]; then
+            echo "::error::No buildable artifact in '$WANTED_ARTIFACTS' — expected APK, AAB or both"
+            exit 1
+          fi
+          echo "Building:$TASKS"
+          # Unquoted on purpose: $TASKS is a list of gradle tasks, not one word.
+          # shellcheck disable=SC2086
+          ./gradlew $TASKS --no-daemon --stacktrace
 
-      - name: Name the APK
+      - name: Name the artifacts
         run: |
           APP_VERSION=$(node -p "require('./app.json').expo.version")
           SHORT_SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
-          TARGET="$RUNNER_TEMP/duncit-crm-android-v${APP_VERSION}-${SHORT_SHA}.apk"
-          cp android/app/build/outputs/apk/release/app-release.apk "$TARGET"
-          echo "ARTIFACT_PATHS=$TARGET" >> "$GITHUB_ENV"
+          BASE="duncit-crm-android-v${APP_VERSION}-${SHORT_SHA}"
+          # Copy first, write the env file second: a failing cp inside the
+          # heredoc block would leave its delimiter unclosed and hide the error.
+          PATHS=""
+          case ",$WANTED_ARTIFACTS," in *,APK,*)
+            cp android/app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/$BASE.apk"
+            PATHS="$RUNNER_TEMP/$BASE.apk"
+            ;;
+          esac
+          case ",$WANTED_ARTIFACTS," in *,AAB,*)
+            cp android/app/build/outputs/bundle/release/app-release.aab "$RUNNER_TEMP/$BASE.aab"
+            PATHS="${PATHS:+$PATHS$'\n'}$RUNNER_TEMP/$BASE.aab"
+            ;;
+          esac
+          # Newline-separated, APK first: the reporter treats the first path as
+          # the build's primary artifact.
+          {
+            echo "ARTIFACT_PATHS<<ARTIFACTS_EOF"
+            echo "$PATHS"
+            echo "ARTIFACTS_EOF"
+          } >> "$GITHUB_ENV"
 
       - name: Keep a copy on the run
         uses: actions/upload-artifact@v6
@@ -272,7 +314,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Upload the APK, record the build and announce it on Slack
+      - name: Upload the APK and AAB, record the build and announce it on Slack
         working-directory: .
         env:
           PLATFORM: ANDROID

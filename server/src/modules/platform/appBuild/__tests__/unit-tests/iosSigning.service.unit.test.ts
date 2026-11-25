@@ -182,12 +182,22 @@ describe('generateIosSigning', () => {
 describe('iosSigningForBuild', () => {
   const buildLean = (value: unknown) => (AppBuildModel.findById as jest.Mock).mockReturnValue({ lean: () => Promise.resolve(value) });
 
-  it('finds the identity that was newest when an iOS build ran', async () => {
+  it('finds the member identity that was newest when a member iOS build ran', async () => {
     const created = new Date('2026-03-03T00:00:00Z');
     buildLean({ platform: 'IOS', created_at: created });
     (IosSigningModel.findOne as jest.Mock).mockReturnValue(sorted(doc()));
     await expect(iosSigningForBuild('b1')).resolves.toMatchObject({ id: 'sig1' });
-    expect(IosSigningModel.findOne).toHaveBeenCalledWith({ created_at: { $lte: created } });
+    expect(AppBuildModel.findById).toHaveBeenCalledWith('b1', { platform: 1, created_at: 1, app: 1 });
+    // A Duncit CRM profile made later on the same certificate must not stand in for it.
+    expect(IosSigningModel.findOne).toHaveBeenCalledWith({ created_at: { $lte: created }, app: { $ne: 'CRM' } });
+  });
+
+  it('finds the Duncit CRM profile for a Duncit CRM iOS build', async () => {
+    const created = new Date('2026-04-04T00:00:00Z');
+    buildLean({ platform: 'IOS', created_at: created, app: 'CRM' });
+    (IosSigningModel.findOne as jest.Mock).mockReturnValue(sorted(doc({ _id: 'crm1', bundle_id: 'com.duncit.crm' })));
+    await expect(iosSigningForBuild('b2')).resolves.toMatchObject({ id: 'crm1', bundle_id: 'com.duncit.crm' });
+    expect(IosSigningModel.findOne).toHaveBeenCalledWith({ created_at: { $lte: created }, app: 'CRM' });
   });
 
   it('is null on Android, for a missing build and for a build from before any identity', async () => {
@@ -250,6 +260,8 @@ describe('iosSigningBundle', () => {
     expect(out.p12_password).toMatch(/^[0-9a-f]{32}$/);
     expect(out.asc_private_key).toBe('-----BEGIN PRIVATE KEY-----\nAAAABBBB\n-----END PRIVATE KEY-----');
     expect(logs.server.warn).toHaveBeenCalledWith('appBuild', 'iosSigningBundle', { by: 'ci', certificate_serial: 'S1' });
+    // The member app's newest identity: a Duncit CRM profile is never picked up here.
+    expect(IosSigningModel.findOne).toHaveBeenCalledWith({ app: { $ne: 'CRM' } });
   });
 
   it('accepts an identity that never expires', async () => {

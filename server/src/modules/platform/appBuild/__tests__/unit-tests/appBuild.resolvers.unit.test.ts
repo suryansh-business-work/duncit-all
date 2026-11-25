@@ -3,12 +3,14 @@ import { storeListingResolvers } from '../../storeListing.resolver';
 import { storeReleaseResolvers } from '../../storeRelease.resolver';
 import { appBuildService } from '../../appBuild.service';
 import { generateIosSigning, iosSigningBundle, iosSigningFile } from '../../iosSigning.service';
+import { crmIosSigningBundle } from '../../iosSigning.crm';
 import { updateStoreListing, pubStoreListing } from '../../storeListing.service';
 import { pubSettings, updateStoreReleaseSettings } from '../../storeRelease.service';
 import { makeContext } from '@test/harness';
 
 jest.mock('../../appBuild.service', () => ({ appBuildService: { report: jest.fn() } }));
 jest.mock('../../iosSigning.service', () => ({ generateIosSigning: jest.fn(), iosSigningBundle: jest.fn(), iosSigningFile: jest.fn(), iosSigningForBuild: jest.fn() }));
+jest.mock('../../iosSigning.crm', () => ({ crmIosSigningBundle: jest.fn() }));
 jest.mock('../../storeListing.service', () => ({ updateStoreListing: jest.fn(), pubStoreListing: jest.fn((doc) => ({ pub: doc })) }));
 jest.mock('../../storeRelease.service', () => ({ updateStoreReleaseSettings: jest.fn(), pubSettings: jest.fn((doc) => ({ pub: doc })) }));
 
@@ -49,6 +51,14 @@ describe('the actor recorded by the build resolvers is the email, else the id', 
     Q.iosSigningBundle({}, {}, withoutEmail);
     expect(iosSigningBundle).toHaveBeenLastCalledWith(withoutEmail.user?.id);
     expect(() => Q.iosSigningBundle({}, {}, outsider)).toThrow('Access Denied');
+  });
+
+  it('crmIosSigningBundle', () => {
+    M.crmIosSigningBundle({}, {}, withEmail);
+    expect(crmIosSigningBundle).toHaveBeenLastCalledWith('ops@duncit.com');
+    M.crmIosSigningBundle({}, {}, withoutEmail);
+    expect(crmIosSigningBundle).toHaveBeenLastCalledWith(withoutEmail.user?.id);
+    expect(() => M.crmIosSigningBundle({}, {}, outsider)).toThrow('Access Denied');
   });
 });
 

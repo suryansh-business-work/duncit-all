@@ -4,6 +4,8 @@ describe('deniedReason — fields named one by one', () => {
   it.each([
     ['staffCallIceServers', 'returns TURN relay credentials'],
     ['downloadIosSigningFile', 'returns an iOS signing certificate'],
+    ['iosSigningBundle', 'returns the iOS signing key and the App Store Connect key; CI only'],
+    ['crmIosSigningBundle', 'returns the iOS signing key and the App Store Connect key; CI only'],
     ['requestDbBackupDownload', 'returns a link to a full database archive'],
     ['startE2eRun', 'hands the E2E workflow its test credentials; CI only'],
     ['attachStaffCallRecording', 'called by the call recorder, not a person'],

@@ -24,6 +24,11 @@ const post = postMessage as jest.Mock;
 const crmStaff = { user: { id: 'crm-1', roles: ['CRM_MANAGER'] } } as unknown as GraphQLContext;
 const member = { user: { id: 'u-1', roles: ['USER'] } } as unknown as GraphQLContext;
 
+const APK_URL = 'https://server.duncit.com/app-builds/duncit-crm.apk';
+const APK = { kind: 'APK', name: 'duncit-crm.apk', url: APK_URL, size_mb: 40.5 };
+const AAB = { kind: 'AAB', name: 'duncit-crm.aab', url: 'https://server.duncit.com/app-builds/duncit-crm.aab', size_mb: 31.2 };
+const IPA = { kind: 'IPA', name: 'duncit-crm.ipa', url: 'https://server.duncit.com/app-builds/duncit-crm.ipa', size_mb: 22.4 };
+
 const report = (over: Record<string, unknown> = {}) =>
   appBuildService.report(
     {
@@ -32,7 +37,7 @@ const report = (over: Record<string, unknown> = {}) =>
       workflow_run_id: String(Math.random()).slice(2),
       branch: 'main',
       status: 'SUCCESS',
-      artifacts: [{ kind: 'APK', name: 'duncit-crm.apk', url: 'https://server.duncit.com/app-builds/duncit-crm.apk', size_mb: 40.5 }],
+      artifacts: [APK],
       ...over,
     },
     'ci'
@@ -97,6 +102,16 @@ describe('announcing a CRM build', () => {
     expect(post).toHaveBeenCalledWith(expect.objectContaining({ channel: 'C-ANDROID' }));
   });
 
+  it('posts CRM iOS builds to the same CRM channel, and to the iOS builds channel until one is chosen', async () => {
+    mockEnv.SLACK_IOS_BUILDS_CHANNEL = 'C-IOS';
+    await report({ app: 'CRM', platform: 'IOS', artifacts: [IPA] });
+    expect(post).toHaveBeenLastCalledWith(expect.objectContaining({ channel: 'C-IOS' }));
+    expect(post.mock.calls[0][0].text).toContain('New Duncit CRM iOS build v1.0.0');
+    mockEnv.SLACK_CRM_ANDROID_BUILDS_CHANNEL = 'C-CRM';
+    await report({ app: 'CRM', platform: 'IOS', artifacts: [IPA] });
+    expect(post).toHaveBeenLastCalledWith(expect.objectContaining({ channel: 'C-CRM' }));
+  });
+
   it('leaves the member app’s announcements exactly as they were', async () => {
     mockEnv.SLACK_CRM_ANDROID_BUILDS_CHANNEL = 'C-CRM';
     await report();
@@ -118,16 +133,55 @@ describe('crmAppDownload', () => {
     expect(download.production).toMatchObject({
       version: '1.0.1',
       build_number: '12',
-      apk_url: 'https://server.duncit.com/app-builds/duncit-crm.apk',
+      platform: 'ANDROID',
+      apk_url: APK_URL,
       size_mb: 40.5,
       app_env: 'PRODUCTION',
     });
     expect(download.staging).toMatchObject({ version: '0.9.0', app_env: 'STAGING' });
   });
 
+  it('lists the AAB beside the APK, and skips a build that stored no APK', async () => {
+    await report({ app: 'CRM', version: '2.0.0', artifacts: [APK, AAB] });
+    await report({ app: 'CRM', version: '2.0.1', artifacts: [{ ...APK, url: '', error: 'disk full' }, AAB] });
+
+    const { production } = await appBuildService.crmDownload();
+
+    expect(production).toMatchObject({ version: '2.0.0', apk_url: APK_URL, size_mb: 40.5 });
+    expect(production?.artifacts.map((a) => [a.kind, a.url, a.size_mb])).toEqual([
+      ['APK', APK_URL, 40.5],
+      ['AAB', AAB.url, 31.2],
+    ]);
+  });
+
+  it('offers the newest iOS IPA of each environment, apart from Android', async () => {
+    await report({ app: 'CRM', platform: 'IOS', version: '3.0.0', build_number: '700', artifacts: [IPA] });
+    await report({ app: 'CRM', platform: 'IOS', version: '2.9.0', app_env: 'STAGING', artifacts: [IPA] });
+    await report({ platform: 'IOS', version: '8.0.0', artifacts: [IPA] });
+
+    const download = await appBuildService.crmDownload();
+
+    expect(download.production).toBeNull();
+    expect(download.ios_production).toMatchObject({
+      version: '3.0.0',
+      build_number: '700',
+      platform: 'IOS',
+      apk_url: '',
+      size_mb: 22.4,
+      app_env: 'PRODUCTION',
+    });
+    expect(download.ios_production?.artifacts.map((a) => a.kind)).toEqual(['IPA']);
+    expect(download.ios_staging).toMatchObject({ version: '2.9.0', app_env: 'STAGING' });
+  });
+
   it('is null for an environment with no CRM build yet', async () => {
     await report({ version: '5.0.0' });
-    expect(await appBuildService.crmDownload()).toEqual({ production: null, staging: null });
+    expect(await appBuildService.crmDownload()).toEqual({
+      production: null,
+      staging: null,
+      ios_production: null,
+      ios_staging: null,
+    });
   });
 
   it('is CRM staff only', () => {

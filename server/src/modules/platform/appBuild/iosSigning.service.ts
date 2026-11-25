@@ -4,6 +4,7 @@ import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { applePrivateKeyPem } from '@modules/access/auth/auth.apple';
 import { AppBuildModel } from './appBuild.model';
+import { appFilter } from './appBuild.apps';
 import { IosSigningModel, type IIosSigning } from './iosSigning.model';
 import { buildP12, certificateTeamId, newSigningRequest } from './iosSigning.crypto';
 import {
@@ -28,15 +29,22 @@ import {
 
 export type IosSigningFileKind = 'CERTIFICATE' | 'PROFILE' | 'P12' | 'API_KEY';
 
-const badInput = (msg: string) => new GraphQLError(msg, { extensions: { code: 'BAD_USER_INPUT' } });
+export const badInput = (msg: string) => new GraphQLError(msg, { extensions: { code: 'BAD_USER_INPUT' } });
 
 const notConfigured = () =>
   badInput(
     'App Store Connect is not connected. Add the API key and bundle ID in Environment Variables → App Store Connect.'
   );
 
-const noSigning = () =>
+export const noSigning = () =>
   badInput('No iOS signing files yet — generate them in Tech → App Builds → Settings → App Store Connect.');
+
+export const expiredSigning = () =>
+  badInput('The iOS signing certificate has expired. Generate new signing files.');
+
+/** Whether an identity's certificate can no longer sign. One that never expires never is. */
+export const isExpired = (doc: Pick<IIosSigning, 'expires_at'>) =>
+  Boolean(doc.expires_at && doc.expires_at.getTime() <= Date.now());
 
 interface AscConfig {
   creds: AscCredentials;
@@ -77,7 +85,8 @@ function pubSigning(doc: IIosSigning) {
   };
 }
 
-const newest = () => IosSigningModel.findOne().sort({ created_at: -1 });
+/** The member app's newest identity. Duncit CRM profiles are kept beside it and never count here. */
+export const newest = () => IosSigningModel.findOne(appFilter('DUNCIT')).sort({ created_at: -1 });
 
 /** The settings card: whether the key is there, for which app, and the current identity. */
 export async function appStoreSettings() {
@@ -92,6 +101,15 @@ export async function appStoreSettings() {
 /** A password for one .p12. Made per download, so none is ever stored. */
 const p12Password = () => randomBytes(16).toString('hex');
 
+/** An App Store Connect API token, or the error that says the pasted key is broken. */
+export function ascTokenOrThrow(creds: AscCredentials): string {
+  try {
+    return ascToken(creds);
+  } catch {
+    throw badInput('The App Store Connect key cannot sign. Paste the whole .p8 file, BEGIN and END lines included.');
+  }
+}
+
 /**
  * Make a new identity at Apple and keep it. The App ID and its capabilities
  * are brought in line first, because a profile only carries the entitlements
@@ -100,12 +118,7 @@ const p12Password = () => randomBytes(16).toString('hex');
  */
 export async function generateIosSigning(by: string) {
   const { creds, bundleId } = await requireAscConfig();
-  let token: string;
-  try {
-    token = ascToken(creds);
-  } catch {
-    throw badInput('The App Store Connect key cannot sign. Paste the whole .p8 file, BEGIN and END lines included.');
-  }
+  const token = ascTokenOrThrow(creds);
   try {
     const bundleIdId = await ensureBundleId(token, bundleId);
     await ensureCapabilities(token, bundleIdId);
@@ -147,9 +160,11 @@ export async function generateIosSigning(by: string) {
 
 /** The identity that was newest when this build ran. Null on Android and on builds from before. */
 export async function iosSigningForBuild(buildId: string) {
-  const build = await AppBuildModel.findById(buildId, { platform: 1, created_at: 1 }).lean();
+  const build = await AppBuildModel.findById(buildId, { platform: 1, created_at: 1, app: 1 }).lean();
   if (build?.platform !== 'IOS') return null;
-  const doc = await IosSigningModel.findOne({ created_at: { $lte: build.created_at } }).sort({ created_at: -1 });
+  const doc = await IosSigningModel.findOne({ created_at: { $lte: build.created_at }, ...appFilter(build.app) }).sort({
+    created_at: -1,
+  });
   return doc ? pubSigning(doc) : null;
 }
 
@@ -199,11 +214,17 @@ export async function iosSigningBundle(by: string) {
       `The newest signing files are for ${doc.bundle_id}, but App Store Connect is set to ${bundleId}. Generate new ones.`
     );
   }
-  if (doc.expires_at && doc.expires_at.getTime() <= Date.now()) {
-    throw badInput('The iOS signing certificate has expired. Generate new signing files.');
-  }
-  const password = p12Password();
+  if (isExpired(doc)) throw expiredSigning();
   logs.server.warn('appBuild', 'iosSigningBundle', { by, certificate_serial: doc.certificate_serial });
+  return signingBundle(doc, creds);
+}
+
+/**
+ * One identity as the workflows take it: the .p12 under a fresh password, the
+ * profile, and the API key altool uploads with. `doc` must carry its private key.
+ */
+export function signingBundle(doc: IIosSigning, creds: AscCredentials) {
+  const password = p12Password();
   return {
     team_id: doc.team_id,
     bundle_id: doc.bundle_id,

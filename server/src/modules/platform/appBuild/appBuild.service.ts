@@ -36,7 +36,7 @@ import {
   channelKeysFor,
   CRM_CHANNEL_CONFIG_FIELDS,
   CRM_CHANNEL_ENV_KEYS,
-  CRM_WORKFLOW_FILE,
+  CRM_WORKFLOW_FILES,
 } from './appBuild.apps';
 import {
   dispatchWorkflow,
@@ -198,6 +198,15 @@ function artifactsOf(doc: IAppBuild): IAppBuildArtifact[] {
   ];
 }
 
+const pubArtifact = (a: IAppBuildArtifact) => ({
+  kind: a.kind,
+  name: a.name,
+  url: a.url,
+  file_id: a.file_id,
+  size_mb: a.size_mb,
+  error: a.error,
+});
+
 const pub = (doc: IAppBuild) => ({
   id: doc.id,
   build_no: doc.build_no,
@@ -206,14 +215,7 @@ const pub = (doc: IAppBuild) => ({
   version: doc.version,
   build_number: doc.build_number,
   bundle_id: doc.bundle_id,
-  artifacts: artifactsOf(doc).map((a) => ({
-    kind: a.kind,
-    name: a.name,
-    url: a.url,
-    file_id: a.file_id,
-    size_mb: a.size_mb,
-    error: a.error,
-  })),
+  artifacts: artifactsOf(doc).map(pubArtifact),
   build_name: doc.build_name,
   artifact_url: doc.artifact_url,
   artifact_file_id: doc.artifact_file_id,
@@ -705,30 +707,46 @@ export const appBuildService = {
     return { rows: docs.map(pub), total, page, page_size };
   },
 
-  /** The newest successful CRM APK per environment, for the CRM portal's Download app page. */
+  /**
+   * The newest successful CRM build per platform and environment, for the CRM
+   * portal's Download app page. Android needs a stored APK (the file a phone
+   * installs; the AAB comes with it), iOS a stored IPA.
+   */
   async crmDownload() {
-    const newest = async (app_env: AppBuildEnv) => {
+    const newest = async (platform: AppBuildPlatform, app_env: AppBuildEnv) => {
+      const primary: AppBuildArtifactKind = platform === 'ANDROID' ? 'APK' : 'IPA';
       const doc = await AppBuildModel.findOne({
         app: 'CRM',
-        platform: 'ANDROID',
+        platform,
         app_env,
         status: 'SUCCESS',
-        $or: [{ 'artifacts.kind': 'APK', 'artifacts.url': { $nin: ['', null] } }, { artifact_url: { $nin: ['', null] } }],
+        $or: [
+          { artifacts: { $elemMatch: { kind: primary, url: { $nin: ['', null] } } } },
+          { artifact_url: { $nin: ['', null] } },
+        ],
       }).sort({ created_at: -1 });
-      const apk = doc ? artifactsOf(doc).find((a) => a.kind === 'APK' && a.url) : undefined;
-      if (!doc || !apk) return null;
+      const stored = doc ? artifactsOf(doc).filter((a) => a.url) : [];
+      const main = stored.find((a) => a.kind === primary);
+      if (!doc || !main) return null;
       return {
         build_no: doc.build_no,
         version: doc.version,
         build_number: doc.build_number || null,
-        apk_url: apk.url,
-        size_mb: apk.size_mb ?? null,
+        platform,
+        apk_url: platform === 'ANDROID' ? main.url : '',
+        size_mb: main.size_mb ?? null,
+        artifacts: stored.map(pubArtifact),
         app_env: doc.app_env,
         created_at: doc.created_at.toISOString(),
       };
     };
-    const [production, staging] = await Promise.all([newest('PRODUCTION'), newest('STAGING')]);
-    return { production, staging };
+    const [production, staging, ios_production, ios_staging] = await Promise.all([
+      newest('ANDROID', 'PRODUCTION'),
+      newest('ANDROID', 'STAGING'),
+      newest('IOS', 'PRODUCTION'),
+      newest('IOS', 'STAGING'),
+    ]);
+    return { production, staging, ios_production, ios_staging };
   },
 
   /**
@@ -798,13 +816,13 @@ export const appBuildService = {
     const platform: AppBuildPlatform = input.platform;
     const appEnv: AppBuildEnv = input.app_env;
     const app = appOf(input.app);
-    // The CRM app is an Android APK installed by hand: no iOS build, no bundle,
-    // no store submission — its workflow declares none of those inputs.
-    if (app === 'CRM' && platform !== 'ANDROID') throw badInput('Duncit CRM is built for Android only.');
-    const artifacts: AppBuildArtifactKind[] = app === 'CRM' ? ['APK'] : requestedArtifacts(platform, input.artifacts);
+    // The CRM app builds for both platforms (APK and AAB, or an IPA) but is
+    // never submitted to Google Play from here: its workflows declare no
+    // submission input.
+    const artifacts = requestedArtifacts(platform, input.artifacts);
     const submitToPlayStore =
       app === 'CRM' ? false : playStoreSubmission(input.submit_to_play_store, platform, appEnv, artifacts);
-    const workflow = app === 'CRM' ? CRM_WORKFLOW_FILE : WORKFLOW_FILE[platform];
+    const workflow = app === 'CRM' ? CRM_WORKFLOW_FILES[platform] : WORKFLOW_FILE[platform];
     const ref = optionalStr(input.ref) || DEFAULT_REF[appEnv];
     const cfg = await requireGithubRepoConfig();
 
@@ -840,10 +858,11 @@ export const appBuildService = {
       // Only Android declares an artifacts input, because only Android has a
       // choice to make. The dispatch API refuses any input a workflow does not
       // declare — 422 "Unexpected inputs provided" — so sending it to iOS
-      // anyway would fail every iOS build before it started.
-      if (platform === 'ANDROID' && app !== 'CRM') {
+      // anyway would fail every iOS build before it started. The CRM Android
+      // workflow takes the artifact list but has no Play submission input.
+      if (platform === 'ANDROID') {
         inputs.artifacts = artifacts.join(',');
-        inputs.submit_to_play_store = String(submitToPlayStore);
+        if (app !== 'CRM') inputs.submit_to_play_store = String(submitToPlayStore);
       }
       await dispatchWorkflow(cfg, workflow, ref, inputs);
     } catch (err) {

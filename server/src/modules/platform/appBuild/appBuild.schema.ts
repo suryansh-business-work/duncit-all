@@ -491,7 +491,7 @@ export const appBuildTypeDefs = gql`
   """
   input TriggerAppBuildInput {
     platform: AppBuildPlatform!
-    "Which app to build. Left out, the member app. CRM builds an Android APK only (artifacts and Play submission are ignored)."
+    "Which app to build. Left out, the member app. CRM builds an APK and/or AAB on Android and an IPA on iOS; Play submission is ignored for it."
     app: AppBuildApp
     """
     Which server and database the built app talks to. This is baked into the
@@ -558,13 +558,18 @@ export const appBuildTypeDefs = gql`
     reports_to: String!
   }
 
-  "One downloadable Duncit CRM APK."
+  "One downloadable Duncit CRM build: an APK and an AAB on Android, an IPA on iOS."
   type CrmAppDownloadBuild {
     build_no: String!
     version: String!
     build_number: String
-    apk_url: String!
+    "Which platform this build is for."
+    platform: AppBuildPlatform!
+    apk_url: String! @deprecated(reason: "Read artifacts: it lists the APK, the AAB and the IPA. Empty on iOS.")
+    "The size of the file a phone installs: the APK on Android, the IPA on iOS."
     size_mb: Float
+    "Every file this build stored, each with its own download link."
+    artifacts: [AppBuildArtifact!]!
     app_env: AppBuildEnv!
     created_at: String
   }
@@ -595,16 +600,22 @@ export const appBuildTypeDefs = gql`
     staging_channel: String
   }
 
-  "The newest successful Duncit CRM APK of each environment; null where none has been built yet."
+  "The newest successful Duncit CRM build of each platform and environment; null where none has been built yet."
   type CrmAppDownload {
+    "The newest production Android build (APK and AAB)."
     production: CrmAppDownloadBuild
+    "The newest staging Android build (APK and AAB)."
     staging: CrmAppDownloadBuild
+    "The newest production iOS build (IPA)."
+    ios_production: CrmAppDownloadBuild
+    "The newest staging iOS build (IPA)."
+    ios_staging: CrmAppDownloadBuild
   }
 
   extend type Query {
     "CI builds of one platform, newest first (Tech portal App Builds tables). app_env narrows them to one environment; left out lists both. app picks which app; left out, the member app."
     appBuildsTable(platform: AppBuildPlatform!, query: TableQueryInput, app_env: AppBuildEnv, app: AppBuildApp): AppBuildTablePage!
-    "The newest downloadable Duncit CRM Android build per environment, for the CRM portal's Download app page. CRM staff only."
+    "The newest downloadable Duncit CRM Android and iOS builds per environment, for the CRM portal's Download app page. CRM staff only."
     crmAppDownload: CrmAppDownload!
     "Which Slack channels Duncit CRM builds announce to, with the channels the bot can see. CRM staff only."
     crmAppBuildSettings: CrmAppBuildSettings!
@@ -691,6 +702,15 @@ export const appBuildTypeDefs = gql`
     identity is kept and not revoked. Tech/Super admin only.
     """
     generateIosSigning: IosSigning!
+    """
+    Everything the crm-ios-build workflow signs and uploads with, for the
+    Duncit CRM bundle ID on the APP_STORE_CONNECT env entry. The CRM app signs
+    with the member app's current Apple Distribution certificate; the first call
+    after that certificate changes registers the CRM bundle ID if Apple has not
+    seen it and makes an App Store profile for it, which is why this is a
+    mutation. Tech/Super admin only.
+    """
+    crmIosSigningBundle: IosSigningBundle!
     """
     One file of an iOS signing identity, for download. A mutation rather than a
     query so private keys never sit in a client cache; every call is logged.

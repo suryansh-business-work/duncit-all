@@ -66,9 +66,10 @@ describe('activeNavKey — "you are here"', () => {
   });
 
   it('marks a portal page by its path, a lead page by its kind, and Reminders', () => {
-    expect(activeNavKey({ name: 'PortalPage', params: { path: '/call-prompts' } })).toBe(
-      'staticContent',
+    expect(activeNavKey({ name: 'PortalPage', params: { path: '/settings/dynamic-fields' } })).toBe(
+      'dynamicFields',
     );
+    expect(activeNavKey({ name: 'CallPrompts' })).toBe('staticContent');
     expect(activeNavKey(tabs('Leads', { kind: 'HOST_LEAD' }))).toBe('hostLeads');
     expect(activeNavKey(tabs('Reminders'))).toBe('reminders');
     expect(activeNavKey({ name: 'Dashboard' })).toBe('dashboard');

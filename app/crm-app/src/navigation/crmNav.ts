@@ -20,7 +20,13 @@ export type NavTarget =
   | { type: 'tab'; tab: 'Home' | 'Reminders' }
   | {
       type: 'screen';
-      screen: 'Dashboard' | 'UserLeads' | 'EmailVerifier' | 'QualityAnalytics' | 'LeadResearch';
+      screen:
+        | 'Dashboard'
+        | 'UserLeads'
+        | 'EmailVerifier'
+        | 'QualityAnalytics'
+        | 'LeadResearch'
+        | 'CallPrompts';
     }
   | { type: 'leads'; kind: LeadKind }
   | { type: 'options'; group: ManagedOptionGroup }
@@ -215,7 +221,7 @@ export const CRM_NAV: readonly NavItem[] = [
         key: 'staticContent',
         labelKey: 'shell.nav.staticContent',
         icon: m('phone-in-talk'),
-        target: portal('/call-prompts'),
+        target: { type: 'screen', screen: 'CallPrompts' },
       },
     ],
   },

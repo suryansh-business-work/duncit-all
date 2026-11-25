@@ -41,6 +41,9 @@ export type AppStackParamList = {
   LeadResearch: undefined;
   Candidate: { id: string };
   LeadDiscovery: undefined;
+  /** CRM › AI Call Prompts › Static Content, and adding or editing one prompt. */
+  CallPrompts: undefined;
+  CallPromptEditor: { id?: string };
   /** CRM › Data › Venues › Amenities or Event Suitability. */
   ManagedOptions: { group: ManagedOptionGroup };
   /** A portal page the app does not have yet: what it is, and a way to open it in the portal. */

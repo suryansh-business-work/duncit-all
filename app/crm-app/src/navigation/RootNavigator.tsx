@@ -13,6 +13,8 @@ import { AddReminderScreen } from '@/screens/reminders/AddReminderScreen';
 import { PostCallScreen } from '@/screens/post-call/PostCallScreen';
 import { CallScreen } from '@/screens/call/CallScreen';
 import { ManagedOptionsScreen } from '@/screens/data/ManagedOptionsScreen';
+import { CallPromptsScreen } from '@/screens/call-prompts/CallPromptsScreen';
+import { CallPromptEditorScreen } from '@/screens/call-prompts/CallPromptEditorScreen';
 import { MenuScreen } from '@/screens/menu/MenuScreen';
 import { PortalPageScreen } from '@/screens/portal/PortalPageScreen';
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
@@ -129,6 +131,8 @@ export function RootNavigator() {
         options={{ title: '' }}
       />
       <Stack.Screen name="ManagedOptions" component={ManagedOptionsScreen} />
+      <Stack.Screen name="CallPrompts" component={CallPromptsScreen} />
+      <Stack.Screen name="CallPromptEditor" component={CallPromptEditorScreen} />
       <Stack.Screen
         name="Call"
         component={CallScreen}

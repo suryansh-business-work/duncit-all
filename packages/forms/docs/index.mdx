@@ -1293,6 +1293,13 @@ makeManagedOptionSchema(t).safeParse({ name: '  ', sort_order: null, is_active: 
 toManagedOptionInput({ name: ' AC ', sort_order: null, is_active: true }); // { name: 'AC', sort_order: 0, is_active: true }
 ```
 
+### CRM Static Content — `call-prompt`
+
+CRM › AI Call Prompts › Static Content, in the CRM portal and the Duncit CRM app:
+`makeCallPromptSchema(t)` with `CALL_PROMPT_LIMITS` (name 2–80, description up to 200, context
+10–5000 characters, all trimmed; a language is required) and `CALL_PROMPT_LANGUAGES` (`auto` first, then
+the Indian languages the AI agent speaks, each with its label key). Messages are `crm.callPrompts.*`.
+
 ### Console sign-in — `makeConsoleLoginSchema`
 
 The portal login card's rules, shared with the Duncit CRM app's sign-in: an e-mail address

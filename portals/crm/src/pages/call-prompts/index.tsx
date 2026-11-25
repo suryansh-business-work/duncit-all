@@ -56,13 +56,13 @@ export default function CallPromptsPage() {
           <Typography component="h1" variant="h5" sx={{
             fontWeight: 800
           }}>
-            Static Content
+            {t('shell.nav.staticContent')}
           </Typography>
         </Stack>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
-          Reusable context blocks the AI agent speaks in during an AI Call.
+          {t('crm.callPrompts.intro')}
         </Typography>
       </Box>
 
@@ -71,7 +71,7 @@ export default function CallPromptsPage() {
         refetchRef={refetchRef}
         toolbarActions={
           <DuncitButton size="small" startIcon={<AddIcon />} variant="contained" onClick={openCreate}>
-            Add Static Content
+            {t('crm.callPrompts.add')}
           </DuncitButton>
         }
         onEdit={openEdit}
@@ -87,10 +87,10 @@ export default function CallPromptsPage() {
       <ConfirmDialog
         open={!!toDelete}
         title={t('crm.callPrompts.deleteStaticContent')}
-        message={`Delete "${toDelete?.name ?? ''}"? This cannot be undone.`}
+        message={t('crm.callPrompts.deleteMessage', { vars: { name: toDelete?.name ?? '' } })}
         confirmLabel={t('shell.common.delete')}
         destructive
-        busyLabel="Working…"
+        busyLabel={t('crm.common.working')}
         loading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setToDelete(null)}

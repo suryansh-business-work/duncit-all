@@ -420,3 +420,11 @@ export {
   toManagedOptionInput,
   type ManagedOptionValues,
 } from './managed-option';
+// CRM › AI Call Prompts › Static Content (CRM portal + Duncit CRM app).
+export {
+  CALL_PROMPT_LANGUAGES,
+  CALL_PROMPT_LIMITS,
+  callPromptDefaults,
+  makeCallPromptSchema,
+  type CallPromptValues,
+} from './call-prompt';

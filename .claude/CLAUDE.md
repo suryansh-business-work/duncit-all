@@ -1,5 +1,7 @@
 mWeb and Native apps should have absolutely consistent functionality, UI, and user experience, ensuring that all features, validations, navigation flows, and behaviours work identically across both platforms.
 
+Duncit CRM Web Portal and Duncit CRM Mobile app should be identical in all feature jo kaam web se ho sakata hai wo kaam app se bhi ho jaaye 
+
 ## Backword Compatibility
 Ensure complete backward compatibility across mWeb, Native Android, and iOS applications. Users may still be running older app versions even after new releases are deployed. Do not introduce breaking changes that could cause existing app versions to fail. For GraphQL, use the @deprecated directive for outdated fields instead of immediately removing or disabling them. Deprecated fields must remain fully functional and continue supporting older app versions while newer versions migrate to updated fields or APIs. Ensure backward compatibility across backend APIs, GraphQL schemas, response structures, and UI flows. No existing app version should encounter errors or functionality issues due to new releases.
 

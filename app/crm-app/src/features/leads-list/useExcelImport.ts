@@ -71,7 +71,8 @@ export function useExcelImport(entity: CrmAiLeadEntity, t: Translate) {
   };
 
   const runImport = async (): Promise<ImportResult | null> => {
-    if (!file) return null;
+    // Every required field needs its column first (the Import button is off until then).
+    if (!file || !crmImportReady(fields, mapping)) return null;
     setError(null);
     setBusy('importing');
     try {

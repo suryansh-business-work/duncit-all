@@ -19,15 +19,15 @@ export default function EventSuitabilityPage() {
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
-            Event types a venue is suitable for (e.g. Birthday Party, Workshop). Drives the suitability picker on the Venue Lead form. Not tied to any Super, Category or Sub Category.
+            {t('crm.data.eventSuitabilityIntro')}
           </Typography>
         </Box>
       </Stack>
       <ManagedOptionList
         group="EVENT_SUITABILITY"
-        addLabel="Add event type"
+        addLabel={t('crm.data.addEventType')}
         placeholder={t('crm.data.eGCorporateMeetup')}
-        searchPlaceholder="Search event types…"
+        searchPlaceholder={t('crm.data.searchEventTypes')}
       />
     </Stack>
   );

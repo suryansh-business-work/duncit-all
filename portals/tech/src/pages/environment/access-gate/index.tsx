@@ -55,7 +55,7 @@ export default function EnvAccessGate({ children }: Readonly<{ children: ReactNo
           }
           sx={{ alignItems: 'center', '& .MuiAlert-action': { pt: 0 } }}
         >
-          {t('tech.environment.accessUnlocked', {
+          {t('tech.environment.accessUnlockedAcross', {
             vars: { time: gate.access.expires_at ? formatTime(gate.access.expires_at) : '' },
           })}
         </Alert>

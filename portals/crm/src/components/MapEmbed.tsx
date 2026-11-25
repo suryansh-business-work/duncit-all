@@ -1,4 +1,6 @@
 import { Box, Stack, Typography } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
+import { crmMapsUrl } from '@duncit/utils';
 import ExternalLink from './ExternalLink';
 
 interface Props {
@@ -20,17 +22,17 @@ interface Props {
  * deeplink so the user can jump to a curated pin.
  */
 export default function MapEmbed({ address, mapLink, height = 220 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const q = (address || '').trim();
   if (!q) {
     return (
       <Typography variant="body2" sx={{
         color: "text.secondary"
-      }}>Add an address to preview the map.
-              </Typography>
+      }}>{t('crm.leadDetail.mapEmpty')}</Typography>
     );
   }
   const src = `https://www.google.com/maps?q=${encodeURIComponent(q)}&output=embed`;
-  const fallbackLink = mapLink || `https://www.google.com/maps?q=${encodeURIComponent(q)}`;
+  const fallbackLink = crmMapsUrl(q, mapLink) ?? '';
   return (
     <Stack spacing={1}>
       <Box
@@ -43,7 +45,7 @@ export default function MapEmbed({ address, mapLink, height = 220 }: Readonly<Pr
         })}
       >
         <iframe
-          title={`Map of ${q}`}
+          title={t('crm.leadDetail.mapOf', { vars: { address: q } })}
           src={src}
           width="100%"
           height={height}
@@ -53,7 +55,7 @@ export default function MapEmbed({ address, mapLink, height = 220 }: Readonly<Pr
         />
       </Box>
       <ExternalLink href={fallbackLink} variant="caption">
-        Open in Google Maps
+        {t('crm.leadDetail.openInMaps')}
       </ExternalLink>
     </Stack>
   );

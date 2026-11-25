@@ -13,6 +13,7 @@ import {
 import { DuncitButton } from '@duncit/buttons';
 import { SEND_TEST } from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
+import { makeEmailTestSendSchema } from '@duncit/forms/schemas';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -23,14 +24,13 @@ interface Props {
   onResult: (kind: 'success' | 'error', msg: string) => void;
 }
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 export default function SendTestDialog({ open, templateId, varsJson, onClose, onResult }: Readonly<Props>) {
   const { t } = useTranslation();
   const [to, setTo] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [sendTest, { loading }] = useMutation<any>(SEND_TEST);
-  const valid = EMAIL_RE.test(to.trim());
+  // The shared rule (@duncit/forms/schemas, the EMAIL pattern), as the Duncit CRM app checks it.
+  const valid = makeEmailTestSendSchema(t).safeParse({ to }).success;
 
   useEffect(() => {
     if (open) { setTo(''); setError(null); }

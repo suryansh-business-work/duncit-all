@@ -158,6 +158,8 @@ describe('saving', () => {
     fireEvent.click(screen.getByTestId('save-calculation-submit'));
     await waitFor(() => expect(notifyError).toHaveBeenCalledWith('The calculation could not be saved. Try again.'));
     expect(titleBox().value).toBe('Retry');
+    // The error toast fires inside the submit handler, before the form leaves its submitting state.
+    await waitFor(() => expect(screen.getByTestId('save-calculation-submit')).toBeEnabled());
     fireEvent.click(screen.getByTestId('save-calculation-submit'));
     await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Calculation saved'));
     expect(notifyError).toHaveBeenCalledTimes(1);
@@ -258,7 +260,7 @@ describe('the saved list', () => {
         'Someone else changed this calculation since you opened it. Open it again to see their changes.'
       )
     );
-    expect(screen.getByTestId('save-calculation-cancel')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId('save-calculation-cancel')).toBeEnabled());
     fireEvent.click(screen.getByTestId('save-calculation-cancel'));
     await waitFor(() => expect(titleBox().value).toBe(''));
   });

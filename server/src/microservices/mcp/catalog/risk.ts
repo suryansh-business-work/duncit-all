@@ -110,6 +110,14 @@ const CONFIRM_FIELDS = new Set([
   'generateReelVoiceover',
   'generateReelSubtitles',
   'recommendNextReel',
+  // The social Inbox writing to a real person as the brand: a direct message,
+  // and a public reply under their comment. An agent drafts; a person agrees.
+  'sendSocialMessage',
+  'replyToSocialComment',
+  // An auto-reply rule then writes to real people with no one pressing Send
+  // (a trusted rule skips Approvals), so making or changing one is agreed first.
+  'createSocialAutoReplyRule',
+  'updateSocialAutoReplyRule',
 ]);
 
 /** Words that mean a mutation reaches people or systems outside Duncit. */

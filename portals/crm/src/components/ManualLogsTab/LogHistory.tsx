@@ -2,15 +2,10 @@ import { Card, Chip, Stack, Typography } from '@mui/material';
 import HistoryIcon from '@mui/icons-material/History';
 import { useTranslation } from '@duncit/shell';
 import type { CrmActivity } from '../../api/crm.types';
-import { formatLogTimestamp, type LogHistoryType } from './logUtils';
+import { CRM_LOG_HISTORY_VIEW } from '@duncit/utils';
+import { formatLogTimestamp } from './logUtils';
 import { PersonLink } from './PersonLink';
 import type { LogPeople } from './types';
-
-const KIND: Record<LogHistoryType, { labelKey: string; color: 'success' | 'info' | 'error' }> = {
-  NOTE_CREATED: { labelKey: 'crm.manualLogs.historyCreated', color: 'success' },
-  NOTE_UPDATED: { labelKey: 'crm.manualLogs.historyUpdated', color: 'info' },
-  NOTE_DELETED: { labelKey: 'crm.manualLogs.historyDeleted', color: 'error' },
-};
 
 interface Props {
   entries: CrmActivity[];
@@ -31,7 +26,8 @@ export function LogHistory({ entries, people }: Readonly<Props>) {
       </Stack>
       <Stack component="ul" spacing={0.75} sx={{ listStyle: 'none', m: 0, p: 0 }}>
         {entries.map((entry, index) => {
-          const kind = KIND[entry.type as LogHistoryType];
+          const kind = CRM_LOG_HISTORY_VIEW[entry.type];
+          if (!kind) return null;
           return (
             <Stack
               component="li"
@@ -40,7 +36,7 @@ export function LogHistory({ entries, people }: Readonly<Props>) {
               spacing={1}
               sx={{ alignItems: 'center', flexWrap: 'wrap', rowGap: 0.5 }}
             >
-              <Chip size="small" variant="outlined" color={kind.color} label={t(kind.labelKey)} />
+              <Chip size="small" variant="outlined" color={kind.tone} label={t(kind.labelKey)} />
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                 {entry.created_by ? <PersonLink userId={entry.created_by} people={people} /> : t('crm.people.unknown')}
                 {' · '}

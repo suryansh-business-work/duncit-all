@@ -2,19 +2,13 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { Box, MenuItem, Stack } from '@mui/material';
 import { FormField } from '@duncit/forms';
 import { useTranslation } from '@duncit/shell';
-import { AUTO_CHECKS, THRESHOLD_CHECKS, type AutoCheck } from '../../../lib/generated/lead-quality-rules';
+import { CRM_QUALITY_THRESHOLD_HINT_KEY } from '@duncit/utils';
+import { AUTO_CHECKS, THRESHOLD_CHECKS } from '../../../lib/generated/lead-quality-rules';
 import { AUTO_CHECK_KEY, keyOr } from '../../../components/lead-quality/qualityLabels';
 import type { LeadQualityConfigFormValues } from '../lead-quality-config.schema';
 
 /** A criterion, or one of its sub-criteria — the two places a check can be set. */
 export type ItemBase = `criteria.${number}` | `criteria.${number}.sub_criteria.${number}`;
-
-/** What the threshold means for each check that takes one. */
-const THRESHOLD_HINT_KEY: Partial<Record<AutoCheck, string>> = {
-  INSTAGRAM_FOLLOWERS_MIN: 'crm.leadQualitySettings.thresholdFollowers',
-  INSTAGRAM_RECENT_POST_DAYS: 'crm.leadQualitySettings.thresholdRecentDays',
-  GOOGLE_REVIEWS_MIN: 'crm.leadQualitySettings.thresholdReviews',
-};
 
 /**
  * The automatic check of one item and, only for the follower, recent-post and
@@ -25,7 +19,7 @@ export default function CheckFields({ base, testId }: Readonly<{ base: ItemBase;
   const { t } = useTranslation();
   const { control } = useFormContext<LeadQualityConfigFormValues>();
   const check = useWatch({ control, name: `${base}.auto_check` });
-  const hintKey = THRESHOLD_HINT_KEY[check];
+  const hintKey = CRM_QUALITY_THRESHOLD_HINT_KEY[check];
 
   return (
     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>

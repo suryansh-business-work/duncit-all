@@ -8,6 +8,7 @@ import {
 } from '../../api/call.gql';
 import { CallPromptForm, type CallPromptFormValues } from '../../forms/call-prompt';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/shell';
 
 interface Props {
   open: boolean;
@@ -18,6 +19,7 @@ interface Props {
 
 /** Create / edit a Static Content prompt, wrapping the RHF+Zod form with GraphQL. */
 export default function CallPromptDialog({ open, prompt, onClose, onSaved }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const [createPrompt, { loading: creating }] = useMutation<any>(CREATE_CRM_CALL_PROMPT);
   const [updatePrompt, { loading: updating }] = useMutation<any>(UPDATE_CRM_CALL_PROMPT);
@@ -43,13 +45,13 @@ export default function CallPromptDialog({ open, prompt, onClose, onSaved }: Rea
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{prompt ? 'Edit Static Content' : 'Add Static Content'}</DialogTitle>
+      <DialogTitle>{prompt ? t('crm.callPrompts.edit') : t('crm.callPrompts.add')}</DialogTitle>
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert>}
         <CallPromptForm
           defaultValues={prompt ?? undefined}
           submitting={creating || updating}
-          submitLabel={prompt ? 'Save changes' : 'Add'}
+          submitLabel={prompt ? t('crm.callPrompts.saveChanges') : t('crm.common.add')}
           onSubmit={submit}
           onCancel={onClose}
         />

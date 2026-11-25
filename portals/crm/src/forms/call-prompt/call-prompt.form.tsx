@@ -1,8 +1,9 @@
+import { useMemo } from 'react';
 import { useForm, Controller, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FormControlLabel, MenuItem, Stack, Switch, TextField } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { callPromptSchema, callPromptDefaults } from './call-prompt.schema';
+import { makeCallPromptSchema, callPromptDefaults } from './call-prompt.schema';
 import {
   languageOptions,
   type CallPromptFormProps,
@@ -18,13 +19,14 @@ import { useTranslation } from '@duncit/shell';
 export default function CallPromptForm({ defaultValues, submitting, submitLabel, onSubmit, onCancel }: Readonly<CallPromptFormProps>) {
   const { t } = useTranslation();
   const submitLabelText = submitLabel ?? t('shell.common.save');
+  const schema = useMemo(() => makeCallPromptSchema(t), [t]);
 
   const {
     control,
     handleSubmit,
     formState: { errors, isValid },
   } = useForm<CallPromptFormValues, any, CallPromptFormValues>({
-    resolver: zodResolver(callPromptSchema) as unknown as Resolver<CallPromptFormValues, any, CallPromptFormValues>,
+    resolver: zodResolver(schema) as unknown as Resolver<CallPromptFormValues, any, CallPromptFormValues>,
     mode: 'onChange',
     defaultValues: { ...callPromptDefaults, ...defaultValues },
   });
@@ -43,7 +45,7 @@ export default function CallPromptForm({ defaultValues, submitting, submitLabel,
               required
               fullWidth
               error={!!errors.name}
-              helperText={errors.name?.message ?? 'A short label, e.g. "Venue onboarding pitch"'}
+              helperText={errors.name?.message ?? t('crm.callPrompts.nameHint')}
             />
           )}
         />
@@ -57,7 +59,7 @@ export default function CallPromptForm({ defaultValues, submitting, submitLabel,
               label={t('shell.common.description')}
               fullWidth
               error={!!errors.description}
-              helperText={errors.description?.message ?? 'Optional — what this prompt is for'}
+              helperText={errors.description?.message ?? t('crm.callPrompts.descriptionHint')}
             />
           )}
         />
@@ -72,7 +74,7 @@ export default function CallPromptForm({ defaultValues, submitting, submitLabel,
               label={t('crm.common.language')}
               fullWidth
               error={!!errors.language}
-              helperText={errors.language?.message ?? 'Language the AI agent speaks'}
+              helperText={errors.language?.message ?? t('crm.callPrompts.languageHint')}
             >
               {languageOptions(t).map((opt) => (
                 <MenuItem key={opt.value} value={opt.value}>
@@ -94,7 +96,7 @@ export default function CallPromptForm({ defaultValues, submitting, submitLabel,
               multiline
               minRows={6}
               error={!!errors.context}
-              helperText={errors.context?.message ?? 'The context/script the AI agent uses on the call'}
+              helperText={errors.context?.message ?? t('crm.callPrompts.contextHint')}
             />
           )}
         />
@@ -117,7 +119,7 @@ export default function CallPromptForm({ defaultValues, submitting, submitLabel,
             </DuncitButton>
           )}
           <DuncitButton type="submit" variant="contained" loading={submitting} disabled={!isValid}>
-            {submitting ? 'Saving…' : submitLabelText}
+            {submitting ? t('shell.common.saving') : submitLabelText}
           </DuncitButton>
         </Stack>
       </Stack>

@@ -10,3 +10,14 @@ export const SOCIAL_REDIRECT_URI = gql`
 export interface SocialRedirectUriData {
   socialRedirectUri: string;
 }
+
+/** Where Meta delivers Instagram and Messenger webhooks — pasted into the app's Webhooks setup. */
+export const SOCIAL_WEBHOOK_URL = gql`
+  query SocialWebhookUrl {
+    socialWebhookUrl
+  }
+`;
+
+export interface SocialWebhookUrlData {
+  socialWebhookUrl: string;
+}

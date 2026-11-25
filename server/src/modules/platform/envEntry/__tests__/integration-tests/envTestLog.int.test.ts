@@ -87,6 +87,15 @@ describe('history', () => {
     expect(await envTestLogService.history('not-an-id', 10)).toHaveLength(0);
   });
 
+  it('leaves out a line from a retired category, which the API could not name', async () => {
+    const e = await entry('A');
+    await log(e, { message: 'kept' });
+    await EnvTestLogModel.collection.insertOne({ entry_id: e._id, category: 'SOCIAL_APPS', entry_name: 'A', kind: 'CONNECTION', ok: false, message: 'old' });
+    expect((await envTestLogService.history(null, 10)).map((r) => r.message)).toEqual(['kept']);
+    expect((await envTestLogService.history(null, 10, '')).map((r) => r.message)).toEqual(['kept']);
+    expect((await envTestLogService.history(null, 10, ['EMAIL', 'PEXELS'])).map((r) => r.message)).toEqual(['kept']);
+  });
+
   it('keeps the page between 1 and 100, defaulting to 20', async () => {
     const e = await entry('A');
     await EnvTestLogModel.insertMany(Array.from({ length: 120 }, () => ({ entry_id: e._id, category: 'EMAIL', entry_name: 'A', kind: 'QUICK', ok: true, message: '' })));

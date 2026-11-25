@@ -541,6 +541,9 @@ describe('ComposerDialog', () => {
     needs_approval: false,
     reel_project_id: null,
     collaborators: [],
+    post_type: 'FEED',
+    captions: [],
+    first_comment: '',
     ...over,
   });
   const mediaBox = (dialog: HTMLElement) => within(dialog).getByRole('textbox', { name: t('marketing.social.postMedia') });
@@ -606,7 +609,7 @@ describe('ComposerDialog', () => {
     const post = makeSocialScheduledPost({ idea_id: 'i3', text: 'Edited copy', scheduled_at: null });
     const update = updateMock(
       'sp1',
-      { text: 'Edited copy', media: [], account_ids: ['sa1'], mode: 'NOW', scheduled_at: null, idea_id: 'i3', needs_approval: false, reel_project_id: null, collaborators: [] },
+      { text: 'Edited copy', media: [], account_ids: ['sa1'], mode: 'NOW', scheduled_at: null, idea_id: 'i3', needs_approval: false, reel_project_id: null, collaborators: [], post_type: 'FEED', captions: [], first_comment: '' },
       { ...post, status: 'PUBLISHING' },
     );
     renderWithProviders(<ComposerDialog request={{ post, idea_id: 'ignored' }} accounts={accounts} onClose={onClose} />, { mocks: [update.mock] });
@@ -633,6 +636,9 @@ describe('ComposerDialog', () => {
       needs_approval: false,
       reel_project_id: null,
       collaborators: [],
+      post_type: 'FEED',
+      captions: [],
+      first_comment: '',
     });
     renderWithProviders(<ComposerDialog request={{ post, idea_id: 'i5' }} accounts={accounts} onClose={onClose} />, { mocks: [update.mock] });
     const dialog = screen.getByRole('dialog', { name: t('marketing.social.editPost') });
@@ -650,7 +656,7 @@ describe('ComposerDialog', () => {
     const post = makeSocialScheduledPost();
     const update = updateMock(
       'sp1',
-      { text: 'Run club this Sunday', media: [], account_ids: ['sa1'], mode: 'SCHEDULE', scheduled_at: '2026-09-20T10:00:00.000Z', idea_id: null, needs_approval: true, reel_project_id: null, collaborators: [] },
+      { text: 'Run club this Sunday', media: [], account_ids: ['sa1'], mode: 'SCHEDULE', scheduled_at: '2026-09-20T10:00:00.000Z', idea_id: null, needs_approval: true, reel_project_id: null, collaborators: [], post_type: 'FEED', captions: [], first_comment: '' },
       { ...post, status: 'PENDING_APPROVAL', needs_approval: true, approval_run_id: 'run1' },
     );
     renderWithProviders(<ComposerDialog request={{ post }} accounts={accounts} onClose={onClose} />, { mocks: [update.mock] });
@@ -670,7 +676,7 @@ describe('ComposerDialog', () => {
     const post = makeSocialScheduledPost({ status: 'PENDING_APPROVAL', needs_approval: true, media: CAROUSEL, media_url: IMAGE_URL, media_type: 'IMAGE' });
     const update = updateMock(
       'sp1',
-      { text: 'Run club this Sunday', media: CAROUSEL, account_ids: ['sa1'], mode: 'DRAFT', scheduled_at: '2026-09-20T10:00:00.000Z', idea_id: null, needs_approval: true, reel_project_id: null, collaborators: [] },
+      { text: 'Run club this Sunday', media: CAROUSEL, account_ids: ['sa1'], mode: 'DRAFT', scheduled_at: '2026-09-20T10:00:00.000Z', idea_id: null, needs_approval: true, reel_project_id: null, collaborators: [], post_type: 'FEED', captions: [], first_comment: '' },
       { ...post, status: 'DRAFT' },
     );
     renderWithProviders(<ComposerDialog request={{ post }} accounts={accounts} onClose={onClose} />, { mocks: [update.mock] });

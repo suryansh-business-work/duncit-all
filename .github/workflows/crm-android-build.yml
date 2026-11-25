@@ -1,0 +1,304 @@
+# Duncit CRM Android APK (app/crm-app) on every push to staging and main.
+#
+# Built on the runner, uploaded through the server and recorded with
+# reportAppBuild — which lists it under app CRM (its own rows, never mixed with
+# the member app's) and announces it on Slack (Tech → Environment → Slack →
+# "Duncit CRM App Builds Channel", falling back to the Android builds channel).
+# CRM staff download it from the CRM portal: sidebar → Download CRM App.
+#
+# The recipe is android-build.yml's, minus what only the member app needs
+# (AAB, Play submission, Truecaller): npm ci → codegen → expo prebuild →
+# SDK 35 + NDK 27 → gradlew assembleRelease, signed with the same upload key.
+#
+# Where it records itself: a staging push reports to the STAGING server (so the
+# staging CRM portal offers the staging app) when DUNCIT_RELEASE_TOKEN_STAGING
+# is set; everything else reports to production. The app inside talks to the
+# server of its branch either way.
+name: CRM Android Build
+
+on:
+  push:
+    branches: [main, staging]
+  workflow_dispatch:
+    inputs:
+      app_env:
+        description: Which server and database the built app talks to
+        type: choice
+        options: [production, staging]
+        default: production
+      dispatch_id:
+        description: Set by the Tech portal to claim the row it already created. Leave empty by hand.
+        type: string
+        default: ''
+      report_url:
+        description: GraphQL endpoint to record the build in. Empty picks by branch.
+        type: string
+        default: ''
+
+concurrency:
+  group: crm-android-build-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  APP: CRM
+  APP_ENV: ${{ inputs.app_env || (github.ref_name == 'staging' && 'staging' || 'production') }}
+  EXPO_PUBLIC_API_URL: >-
+    ${{ (inputs.app_env || (github.ref_name == 'staging' && 'staging' || 'production')) == 'staging' && 'https://staging.server.duncit.com' || 'https://server.duncit.com' }}
+  CI: 1
+  EXPO_NO_TELEMETRY: 1
+  ARTIFACT_PATHS: ''
+  BUILD_STAGE: ''
+
+jobs:
+  plan:
+    name: Did the CRM app change?
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      any: ${{ steps.plan.outputs.any }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Affected app
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          node scripts/ci-affected.mjs plan --under app/crm-app --extra app/crm-app
+          --global .github/workflows/crm-android-build.yml --global 'server/src/modules/**/*.schema.ts' --global 'server/src/microservices/**/*.schema.ts'
+
+  build:
+    needs: plan
+    if: always() && (github.event_name == 'workflow_dispatch' || needs.plan.outputs.any == 'true')
+    name: Build & publish Duncit CRM APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      # A staging push reports to staging when that server's CI token exists;
+      # each server signs its own tokens, so the token follows the URL.
+      # A portal-started build reports to the portal that started it; a push
+      # picks by branch as described above.
+      REPORT_GRAPHQL_URL: >-
+        ${{ inputs.report_url || (github.ref_name == 'staging' && secrets.DUNCIT_RELEASE_TOKEN_STAGING != '' && 'https://staging.server.duncit.com/graphql' || 'https://server.duncit.com/graphql') }}
+      REPORT_TOKEN: >-
+        ${{ (contains(inputs.report_url, 'staging.') || (inputs.report_url == '' && github.ref_name == 'staging' && secrets.DUNCIT_RELEASE_TOKEN_STAGING != '')) && secrets.DUNCIT_RELEASE_TOKEN_STAGING || secrets.DUNCIT_RELEASE_TOKEN }}
+      DISPATCH_ID: ${{ inputs.dispatch_id }}
+      REPORT_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+      REPORT_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    defaults:
+      run:
+        working-directory: app/crm-app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Record build start
+        # versionCode = commits on this branch: it only ever grows, so every new
+        # APK installs over the last one without uninstalling.
+        run: |
+          {
+            echo "BUILD_STARTED_AT=$(date +%s)"
+            echo "ANDROID_VERSION_CODE=$(git rev-list --count HEAD)"
+          } >> "$GITHUB_ENV"
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/crm-app/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Report the build as started
+        continue-on-error: true
+        working-directory: .
+        env:
+          PLATFORM: ANDROID
+          STATUS: RUNNING
+          BUILD_STAGE: Starting up
+          DISPATCH_ID: ${{ env.DISPATCH_ID }}
+          DUNCIT_GRAPHQL_URL: ${{ env.REPORT_GRAPHQL_URL }}
+          DUNCIT_RELEASE_TOKEN: ${{ env.REPORT_TOKEN }}
+          DUNCIT_RELEASE_EMAIL: ${{ env.REPORT_EMAIL }}
+          DUNCIT_RELEASE_PASSWORD: ${{ env.REPORT_PASSWORD }}
+          GIT_BEFORE: ${{ github.event.before }}
+        run: node scripts/report-app-build.mjs
+
+      - name: Install JS dependencies
+        run: npm ci --no-audit --no-fund --prefer-offline
+
+      - name: Generate GraphQL types
+        run: npm run codegen
+
+      - name: 'Stage: prebuild'
+        uses: ./.github/actions/build-stage
+        with:
+          stage: Generating the native Android project
+          platform: ANDROID
+          app: CRM
+          dispatch_id: ${{ env.DISPATCH_ID }}
+          graphql_url: ${{ env.REPORT_GRAPHQL_URL }}
+          release_token: ${{ env.REPORT_TOKEN }}
+          release_email: ${{ env.REPORT_EMAIL }}
+          release_password: ${{ env.REPORT_PASSWORD }}
+          run_url: ${{ env.RUN_URL }}
+
+      - name: Generate the native android project
+        run: npx expo prebuild --platform android --no-install --clean
+
+      - name: Configure upload signing
+        env:
+          ANDROID_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
+          ANDROID_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
+          ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+        run: |
+          for name in ANDROID_UPLOAD_KEYSTORE_BASE64 ANDROID_UPLOAD_STORE_PASSWORD ANDROID_UPLOAD_KEY_ALIAS ANDROID_UPLOAD_KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Required Android signing secret $name is missing"
+              exit 1
+            fi
+          done
+          printf '%s' "$ANDROID_UPLOAD_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+          cat <<'GRADLE' >> android/app/build.gradle
+
+          android {
+              defaultConfig {
+                  versionCode System.getenv('ANDROID_VERSION_CODE').toInteger()
+              }
+              signingConfigs {
+                  upload {
+                      storeFile file('upload-keystore.jks')
+                      storePassword System.getenv('ANDROID_UPLOAD_STORE_PASSWORD')
+                      keyAlias System.getenv('ANDROID_UPLOAD_KEY_ALIAS')
+                      keyPassword System.getenv('ANDROID_UPLOAD_KEY_PASSWORD')
+                  }
+              }
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.upload
+                  }
+              }
+          }
+          GRADLE
+
+      - name: Install Android SDK 35 + NDK 27
+        run: |
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          for attempt in 1 2 3 4 5; do
+            if "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0" "ndk;27.1.12297006"; then
+              exit 0
+            fi
+            echo "::warning::Android SDK/NDK install failed (attempt $attempt/5)"
+            rm -rf "$ANDROID_HOME/.temp" "$ANDROID_HOME/.downloadIntermediates"
+            sleep $((attempt * 20))
+          done
+          echo "::error::Could not install the Android SDK/NDK after 5 attempts"
+          exit 1
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/caches
+          key: gradle-crm-${{ runner.os }}-${{ hashFiles('app/crm-app/package-lock.json') }}
+          restore-keys: gradle-crm-${{ runner.os }}-
+
+      - name: Tune Gradle for the runner
+        run: |
+          {
+            echo ''
+            echo 'org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m -XX:+UseG1GC'
+            echo 'org.gradle.daemon=false'
+          } >> android/gradle.properties
+
+      - name: Fetch the Gradle distribution
+        working-directory: app/crm-app/android
+        run: |
+          for attempt in 1 2 3 4 5; do
+            if ./gradlew --version; then exit 0; fi
+            echo "::warning::Gradle distribution fetch failed (attempt $attempt/5)"
+            sleep $((attempt * 20))
+          done
+          exit 1
+
+      - name: 'Stage: gradle build'
+        uses: ./.github/actions/build-stage
+        with:
+          stage: Compiling with Gradle
+          platform: ANDROID
+          app: CRM
+          dispatch_id: ${{ env.DISPATCH_ID }}
+          graphql_url: ${{ env.REPORT_GRAPHQL_URL }}
+          release_token: ${{ env.REPORT_TOKEN }}
+          release_email: ${{ env.REPORT_EMAIL }}
+          release_password: ${{ env.REPORT_PASSWORD }}
+          run_url: ${{ env.RUN_URL }}
+
+      - name: Build the release APK
+        env:
+          ANDROID_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
+          ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+        working-directory: app/crm-app/android
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Name the APK
+        run: |
+          APP_VERSION=$(node -p "require('./app.json').expo.version")
+          SHORT_SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
+          TARGET="$RUNNER_TEMP/duncit-crm-android-v${APP_VERSION}-${SHORT_SHA}.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "$TARGET"
+          echo "ARTIFACT_PATHS=$TARGET" >> "$GITHUB_ENV"
+
+      - name: Keep a copy on the run
+        uses: actions/upload-artifact@v6
+        with:
+          name: crm-android-release-${{ github.run_id }}
+          path: ${{ runner.temp }}/duncit-crm-android-*
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload the APK, record the build and announce it on Slack
+        working-directory: .
+        env:
+          PLATFORM: ANDROID
+          DISPATCH_ID: ${{ env.DISPATCH_ID }}
+          DUNCIT_GRAPHQL_URL: ${{ env.REPORT_GRAPHQL_URL }}
+          DUNCIT_RELEASE_TOKEN: ${{ env.REPORT_TOKEN }}
+          DUNCIT_RELEASE_EMAIL: ${{ env.REPORT_EMAIL }}
+          DUNCIT_RELEASE_PASSWORD: ${{ env.REPORT_PASSWORD }}
+          GIT_BEFORE: ${{ github.event.before }}
+        run: node scripts/report-app-build.mjs
+
+      - name: Remove the upload keystore from the runner
+        if: always()
+        run: rm -f android/app/upload-keystore.jks
+
+      - name: Record the failure
+        if: failure() && env.ARTIFACT_PATHS == ''
+        continue-on-error: true
+        working-directory: .
+        env:
+          PLATFORM: ANDROID
+          STATUS: FAILED
+          DISPATCH_ID: ${{ env.DISPATCH_ID }}
+          DUNCIT_GRAPHQL_URL: ${{ env.REPORT_GRAPHQL_URL }}
+          DUNCIT_RELEASE_TOKEN: ${{ env.REPORT_TOKEN }}
+          DUNCIT_RELEASE_EMAIL: ${{ env.REPORT_EMAIL }}
+          DUNCIT_RELEASE_PASSWORD: ${{ env.REPORT_PASSWORD }}
+          GIT_BEFORE: ${{ github.event.before }}
+        run: node scripts/report-app-build.mjs

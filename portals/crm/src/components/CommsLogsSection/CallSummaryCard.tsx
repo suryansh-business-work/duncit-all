@@ -4,14 +4,9 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
+import { CRM_CALL_SENTIMENT } from '@duncit/utils';
 import type { CallLogSummary } from '../../api/comms.gql';
 
-const SENTIMENT: Record<string, { key: string; color: 'success' | 'default' | 'error' | 'warning' }> = {
-  POSITIVE: { key: 'crm.call.sentimentPOSITIVE', color: 'success' },
-  NEUTRAL: { key: 'crm.call.sentimentNEUTRAL', color: 'default' },
-  NEGATIVE: { key: 'crm.call.sentimentNEGATIVE', color: 'error' },
-  MIXED: { key: 'crm.call.sentimentMIXED', color: 'warning' },
-};
 
 interface Props {
   summary: CallLogSummary | null | undefined;
@@ -77,7 +72,7 @@ export default function CallSummaryCard({ summary, canSummarize, busy, onSummari
     );
   }
 
-  const sentiment = summary.sentiment ? SENTIMENT[summary.sentiment] : null;
+  const sentiment = summary.sentiment ? CRM_CALL_SENTIMENT[summary.sentiment] : null;
   return (
     <Stack spacing={1} data-testid="call-summary" sx={{ p: 1.25, borderRadius: 1, bgcolor: 'action.hover' }}>
       <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
@@ -85,7 +80,7 @@ export default function CallSummaryCard({ summary, canSummarize, busy, onSummari
         <Typography variant="subtitle2" sx={{ fontWeight: 700, flex: 1 }}>
           {t('crm.call.summaryTitle')}
         </Typography>
-        {sentiment && <Chip size="small" color={sentiment.color} label={t(sentiment.key)} />}
+        {sentiment && <Chip size="small" color={sentiment.tone} label={t(sentiment.labelKey)} />}
         {summary.reminder_id && <Chip size="small" variant="outlined" icon={<EventAvailableIcon />} label={t('crm.call.reminderCreated')} />}
       </Stack>
       <Typography variant="body2">{summary.text}</Typography>

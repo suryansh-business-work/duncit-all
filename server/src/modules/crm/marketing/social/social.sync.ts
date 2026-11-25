@@ -9,9 +9,12 @@ import {
 } from './social.model';
 import { READERS } from './providers';
 import { SocialApiError } from './providers/http';
+import { isFacebookLogin } from './providers/meta';
 import { socialCredentials } from './social.credentials';
 import { openToken, sealToken } from './social.tokens';
 import { analyzePendingComments } from './social.ai';
+import { syncConversations } from './social.dm.sync';
+import { loadSocialSettings } from './social.settings';
 import type {
   FetchedComment,
   FetchedPost,
@@ -41,7 +44,7 @@ const REFRESH_MARGIN_MS = 5 * 60_000;
  */
 const LONG_LIVED_MARGIN_MS = 7 * DAY_MS;
 const RENEWS_FROM_ACCESS_TOKEN = new Set<string>(['INSTAGRAM', 'THREADS']);
-/** How long an account waits between scheduled syncs. */
+/** How long an account waits between scheduled syncs when Settings has not said (Marketing › Social › Settings). */
 export const SYNC_EVERY_MS = 3 * 60 * 60_000;
 
 export type AccountWithTokens = SocialAccountDoc & { access_token: string; refresh_token: string };
@@ -61,7 +64,8 @@ export const handleOf = (doc: AccountWithTokens): SocialAccountHandle => ({
 export async function freshHandle(doc: AccountWithTokens, reader: SocialReader, creds: SocialAppCredentials) {
   const handle = handleOf(doc);
   const expires = doc.token_expires_at ? new Date(doc.token_expires_at).getTime() : 0;
-  const renewsFromAccessToken = RENEWS_FROM_ACCESS_TOKEN.has(doc.provider);
+  // A Facebook Login token (Unified login) is not one of them: it cannot be renewed without a person.
+  const renewsFromAccessToken = RENEWS_FROM_ACCESS_TOKEN.has(doc.provider) && !isFacebookLogin(handle.meta);
   const margin = renewsFromAccessToken ? LONG_LIVED_MARGIN_MS : REFRESH_MARGIN_MS;
   if (!expires || expires - margin > Date.now()) return handle;
   if (!reader.refresh || (!handle.refresh_token && !renewsFromAccessToken)) {
@@ -138,6 +142,19 @@ async function syncComments(
   }
 }
 
+/** DMs are read on their own: a missing messaging permission or a Meta refusal is noted on the account, never a failed sync. */
+async function syncDms(doc: AccountWithTokens, handle: SocialAccountHandle, creds: SocialAppCredentials): Promise<void> {
+  if (doc.platform !== 'INSTAGRAM' && doc.platform !== 'FACEBOOK') return;
+  try {
+    await syncConversations(doc, handle, creds);
+    await SocialAccountModel.updateOne({ _id: doc._id, dm_error: { $ne: '' } }, { $set: { dm_error: '' } });
+  } catch (error) {
+    const message = (error instanceof Error ? error.message : String(error)).slice(0, 500);
+    await SocialAccountModel.updateOne({ _id: doc._id }, { $set: { dm_error: message } });
+    logs.server.warn('social-accounts', 'syncDms', { error, account_id: String(doc._id), msg: 'direct message sync failed' });
+  }
+}
+
 async function recordFailure(accountId: string, error: unknown) {
   const expired = error instanceof SocialApiError && error.expired;
   const message = error instanceof Error ? error.message : String(error);
@@ -163,6 +180,7 @@ export async function syncSocialAccount(accountId: string): Promise<void> {
     const posts = await reader.posts(handle, creds);
     const postIds = await savePosts(accountId, doc.platform, posts);
     await syncComments(reader, handle, creds, accountId, posts, postIds);
+    await syncDms(doc, handle, creds);
     await Promise.all([
       SocialAccountModel.updateOne(
         { _id: accountId },
@@ -189,9 +207,10 @@ export async function syncSocialAccount(accountId: string): Promise<void> {
 
 /** The scheduler's pass: every account not synced for a while, one at a time. */
 export async function syncDueAccounts(): Promise<void> {
+  const everyMs = (await loadSocialSettings()).sync_every_hours * 60 * 60_000 || SYNC_EVERY_MS;
   const due = await SocialAccountModel.find({
     status: { $ne: 'EXPIRED' },
-    $or: [{ last_synced_at: null }, { last_synced_at: { $lt: new Date(Date.now() - SYNC_EVERY_MS) } }],
+    $or: [{ last_synced_at: null }, { last_synced_at: { $lt: new Date(Date.now() - everyMs) } }],
   })
     .select('_id')
     .limit(20)

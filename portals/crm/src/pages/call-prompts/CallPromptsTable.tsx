@@ -64,11 +64,11 @@ export default function CallPromptsTable({
       actionsColumn<CrmCallPrompt>({
         onEdit,
         onDelete,
-        edit: { ariaLabel: (p) => `Edit ${p.name}` },
-        delete: { ariaLabel: (p) => `Delete ${p.name}` },
+        edit: { ariaLabel: (p) => t('crm.common.editNamed', { vars: { name: p.name } }) },
+        delete: { ariaLabel: (p) => t('crm.common.deleteNamed', { vars: { name: p.name } }) },
       }),
     ],
-    [onEdit, onDelete],
+    [onEdit, onDelete, t],
   );
 
   return (

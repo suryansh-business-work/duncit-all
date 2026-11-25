@@ -288,13 +288,13 @@ describe('ManagedOptionList', () => {
 
   it('starts the first option at order 0 on an empty list', async () => {
     renderList([listMock([])]);
-    expect(await screen.findByText('Nothing here yet. Click "Add amenity".')).toBeInTheDocument();
+    expect(await screen.findByText('Nothing here yet. Add the first one with "Add amenity".')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Add amenity' }));
     expect(screen.getByTestId('crm-managed-option-order-input').querySelector('input')).toHaveValue('0');
 
     fireEvent.click(screen.getByTestId('crm-managed-option-cancel'));
-    expect(await screen.findByText('Nothing here yet. Click "Add amenity".')).toBeInTheDocument();
+    expect(await screen.findByText('Nothing here yet. Add the first one with "Add amenity".')).toBeInTheDocument();
   });
 });
 

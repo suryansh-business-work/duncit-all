@@ -16,6 +16,7 @@ import { notifyError, notifySuccess } from '@duncit/dialogs';
 import {
   APP_BUILD_TRIGGER_CONFIG,
   TRIGGER_APP_BUILD,
+  type AppBuildApp,
   type AppBuildPlatform,
   type AppBuildTriggerConfig,
 } from '../queries';
@@ -25,6 +26,8 @@ import type { CreateBuildValues } from './create-build.types';
 interface Props {
   open: boolean;
   platform: AppBuildPlatform;
+  /** The Duncit CRM app builds an APK only, never for a store. */
+  app?: AppBuildApp;
   onClose: () => void;
   /** Called after a build is queued, so the table shows it without a reload. */
   onQueued: () => void;
@@ -37,7 +40,8 @@ interface Props {
  * opens it stays enabled and the reason appears HERE. A disabled button with no
  * explanation is the same dead end as a missing feature.
  */
-export default function CreateBuildDialog({ open, platform, onClose, onQueued }: Readonly<Props>) {
+export default function CreateBuildDialog({ open, platform, app = 'DUNCIT', onClose, onQueued }: Readonly<Props>) {
+  const crm = app === 'CRM';
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const { data, loading } = useQuery<{ appBuildTriggerConfig: AppBuildTriggerConfig }>(
@@ -50,7 +54,10 @@ export default function CreateBuildDialog({ open, platform, onClose, onQueued }:
   const submit = async (values: CreateBuildValues) => {
     setBusy(true);
     try {
-      const res = await triggerBuild({ variables: { input: { platform, ...values } } });
+      const input = crm
+        ? { platform, ...values, app, artifacts: ['APK'], submit_to_play_store: false }
+        : { platform, ...values };
+      const res = await triggerBuild({ variables: { input } });
       const queued = res.data?.triggerAppBuild;
       notifySuccess(
         t('tech.appBuilds.triggered', { vars: { build: queued?.build?.build_no ?? '' } })
@@ -86,7 +93,7 @@ export default function CreateBuildDialog({ open, platform, onClose, onQueued }:
         )}
         {config?.configured && (
           <Stack spacing={2}>
-            <CreateBuildForm platform={platform} config={config} onSubmit={submit} />
+            <CreateBuildForm platform={platform} crm={crm} config={config} onSubmit={submit} />
             {/* Which repo this dispatches against and where the row will land.
                 Both are surprising often enough to be worth stating: a staging
                 build still records itself in the portal it was started from. */}

@@ -1,12 +1,13 @@
 import { Box, ButtonBase, CircularProgress, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useTranslation } from '@duncit/shell';
+import { crmQualityTone, type CrmQualityTone } from '@duncit/utils';
 
 /** The score band colours the server assigns (red 0-39, yellow 40-79, green 80-100 by default). */
-export type QualityTone = 'success' | 'warning' | 'error';
+export type QualityTone = CrmQualityTone;
 
-const TONES: readonly QualityTone[] = ['success', 'warning', 'error'];
-export const toneOf = (value: string | null | undefined): QualityTone => (TONES.includes(value as QualityTone) ? (value as QualityTone) : 'error');
+/** The band tone's colour, an unknown one as the lowest band (shared with the Duncit CRM app). */
+export const toneOf = crmQualityTone;
 
 /** Ring sizes in theme spacing units: the compact listing ring and the detail-page ring. */
 const SIZE_UNITS = { small: 5, large: 12 } as const;

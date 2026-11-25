@@ -2,6 +2,7 @@ import { useId } from 'react';
 import { ButtonBase, Tooltip } from '@mui/material';
 import { format } from 'date-fns';
 import { useTranslation } from '@duncit/shell';
+import { crmDueUrgency, type CrmDueUrgency } from '@duncit/utils';
 import type { CalEvent } from './useCalendarEvents';
 
 interface Props {
@@ -9,8 +10,6 @@ interface Props {
   onClick: (e: CalEvent) => void;
   showTime?: boolean;
 }
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** Read by screen readers, never painted. */
 const SR_ONLY = {
@@ -27,14 +26,24 @@ const SR_ONLY = {
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
-/** Colour by urgency: overdue/now = red, within 24h = yellow, later = green.
- * `label` says the same thing in words, so urgency is never colour alone (1.4.1). */
+/** Colour per urgency (@duncit/utils crmDueUrgency, shared with the Duncit CRM app): overdue/now = red,
+ * within 24h = yellow, later = green. `label` says the same thing in words, so urgency is never colour alone (1.4.1). */
+const URGENCY_TONE: Record<CrmDueUrgency, { bg: string; fg: string }> = {
+  done: { bg: 'action.disabledBackground', fg: 'text.secondary' },
+  overdue: { bg: 'error.main', fg: 'error.contrastText' },
+  soon: { bg: 'warning.main', fg: 'warning.contrastText' },
+  later: { bg: 'success.main', fg: 'success.contrastText' },
+};
+
 function urgencyTone(date: Date, done: boolean, t: Translate): { bg: string; fg: string; label: string } {
-  if (done) return { bg: 'action.disabledBackground', fg: 'text.secondary', label: t('crm.components.done') };
-  const diff = date.getTime() - Date.now();
-  if (diff <= 0) return { bg: 'error.main', fg: 'error.contrastText', label: t('crm.a11y.overdue') };
-  if (diff <= DAY_MS) return { bg: 'warning.main', fg: 'warning.contrastText', label: t('crm.a11y.dueSoon') };
-  return { bg: 'success.main', fg: 'success.contrastText', label: t('crm.components.upcoming') };
+  const urgency = crmDueUrgency(date, done);
+  const labels: Record<CrmDueUrgency, string> = {
+    done: t('crm.components.done'),
+    overdue: t('crm.a11y.overdue'),
+    soon: t('crm.a11y.dueSoon'),
+    later: t('crm.components.upcoming'),
+  };
+  return { ...URGENCY_TONE[urgency], label: labels[urgency] };
 }
 
 /** Compact clickable event chip; colour encodes urgency (and done state). */

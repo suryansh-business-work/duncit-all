@@ -52,7 +52,7 @@ function OverviewTab({ lead }: Readonly<{ lead: EcommLead }>) {
 
         <LeadDetailCard title={t('crm.ecommLeads.taxAndOnlinePresence')} icon={<LanguageIcon color="primary" />}>
           <LeadDetailRow label={t('crm.ecommLeads.gstNumber')} value={lead.gst_number || '—'} />
-          <LeadDetailRow label={t('crm.common.gstApplicable')} value={lead.gst_applicable ? 'Yes' : 'No'} />
+          <LeadDetailRow label={t('crm.common.gstApplicable')} value={lead.gst_applicable ? t('shell.common.yes') : t('shell.common.no')} />
           <LeadDetailRow
             label={t('crm.common.website')}
             value={lead.website ? <ExternalLink variant="body2" href={lead.website} /> : '—'}
@@ -80,12 +80,12 @@ function OverviewTab({ lead }: Readonly<{ lead: EcommLead }>) {
               <Typography component="h2" variant="subtitle1" sx={{
                 fontWeight: 800
               }}>
-                Lead tracking
+                {t('crm.prospectLeads.leadTracking')}
               </Typography>
             </Stack>
             <LeadDetailRow label={t('crm.common.source')} value={lead.lead_source || '—'} />
             <LeadDetailRow label={t('crm.common.assignedTo')} value={lead.assigned_to || '—'} />
-            <LeadDetailRow label="Follow-up" value={followUpLabel} />
+            <LeadDetailRow label={t('crm.leadDetail.followUp')} value={followUpLabel} />
             <Divider sx={{ my: 1 }} />
             <LeadDetailRow label={t('shell.common.created')} value={lead.created_at ? formatDateTime(lead.created_at) : '—'} />
             <LeadDetailRow label={t('shell.common.updated')} value={lead.updated_at ? formatDateTime(lead.updated_at) : '—'} />
@@ -99,7 +99,7 @@ function OverviewTab({ lead }: Readonly<{ lead: EcommLead }>) {
                     fontWeight: 700,
                     letterSpacing: 0.4
                   }}>
-                  NOTES
+                  {t('crm.leadDetail.notesCaption')}
                 </Typography>
                 <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5 }}>
                   {lead.notes}
@@ -127,7 +127,7 @@ export function buildEcommLeadTabs(lead: EcommLead, t: Translate): LeadTab[] {
     leadQualityTab('ECOMM_LEAD', lead.id, t),
     {
       value: 'contacts',
-      label: `Contacts (${lead.contacts.length})`,
+      label: t('crm.prospectLeads.contactsCount', { count: lead.contacts.length }),
       icon: <ContactsIcon fontSize="small" />,
       render: () => (
         <ContactsTab entity="ECOMM_LEAD" leadId={lead.id} leadName={lead.seller_name} contacts={lead.contacts} />

@@ -18,6 +18,8 @@ interface AppFields {
   id: string;
   secret: string;
   version?: { field: string; fallback: string };
+  /** The Login for Business configuration ID field, on the apps that connect through Facebook Login. */
+  config?: string;
 }
 
 /**
@@ -32,6 +34,7 @@ export const APP_FIELDS: Record<SocialProvider, AppFields> = {
     id: 'app_id',
     secret: 'app_secret',
     version: { field: 'graph_version', fallback: 'v23.0' },
+    config: 'login_config_id',
   },
   FACEBOOK: {
     label: 'Facebook',
@@ -39,6 +42,7 @@ export const APP_FIELDS: Record<SocialProvider, AppFields> = {
     id: 'app_id',
     secret: 'app_secret',
     version: { field: 'graph_version', fallback: 'v23.0' },
+    config: 'login_config_id',
   },
   THREADS: {
     label: 'Threads',
@@ -90,13 +94,15 @@ export async function credentialsFrom(
   redirectUri: string
 ): Promise<SocialAppCredentials | null> {
   const fields = APP_FIELDS[provider];
-  const [clientId, clientSecret, version] = await Promise.all([
+  const [clientId, clientSecret, version, configId] = await Promise.all([
     read(fields.id),
     read(fields.secret),
     fields.version ? read(fields.version.field) : '',
+    fields.config ? read(fields.config) : '',
   ]);
   if (!clientId || !clientSecret) return null;
-  return { clientId, clientSecret, redirectUri, version: version || fields.version?.fallback || '' };
+  const creds: SocialAppCredentials = { clientId, clientSecret, redirectUri, version: version || fields.version?.fallback || '' };
+  return fields.config ? { ...creds, configId: configId.trim() } : creds;
 }
 
 /** A provider's app as the running server uses it — the active default entry of its category. */

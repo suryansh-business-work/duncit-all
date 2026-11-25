@@ -83,7 +83,7 @@ export default function VenueHeroCard({ lead, t, onAskAi, onEdit }: Readonly<Pro
                 <Chip key={tag} size="small" label={tag} variant="outlined" />
               ))}
               {venueTypes.length > 2 && (
-                <Chip size="small" label={`+${venueTypes.length - 2} more`} variant="outlined" />
+                <Chip size="small" label={t('crm.leadDetail.moreCount', { vars: { count: venueTypes.length - 2 } })} variant="outlined" />
               )}
             </Stack>
             {lead.tags.length > 0 && (

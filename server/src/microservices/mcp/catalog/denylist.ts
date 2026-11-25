@@ -21,6 +21,13 @@ const DENIED_FIELDS: ReadonlyMap<string, string> = new Map([
   ['reportUnitTestCases', 'called by CI, not a person'],
   ['finishUnitTestRun', 'called by CI, not a person'],
   ['attachStaffCallRecording', 'called by the call recorder, not a person'],
+  // The Duncit CRM app reports calls its phone actually made, and keeps its
+  // offline caller ID copy. An agent can neither have made a phone call nor
+  // needs every lead's number in its context window — crmPhoneLookup answers
+  // one number at a time.
+  ['logCrmDeviceCall', 'reported by the Duncit CRM app for a call its phone made'],
+  ['attachCrmDeviceCallRecording', 'uploaded by the Duncit CRM app from its phone'],
+  ['crmPhoneDirectory', 'returns every lead phone number at once, for the offline caller ID of the app'],
   // The AI portal reports these as people use a prompt; an agent calling it
   // would only inflate that prompt's analytics.
   ['recordAiPromptEvent', 'reported by the AI portal as people use a prompt'],

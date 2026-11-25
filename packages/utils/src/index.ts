@@ -2474,3 +2474,267 @@ export {
   type SolutionCategoryGroup,
   type SolutionItem,
 } from './solutions';
+// CRM dashboard numbers (CRM portal Dashboard + Duncit CRM app).
+export {
+  CRM_DASHBOARD_RANGES,
+  crmAggregatePriorities,
+  crmAggregateServices,
+  crmAggregateStages,
+  crmAggregateSuperCategories,
+  crmAggregateTotals,
+  crmIsInWindow,
+  crmLeadsInWindow,
+  crmRangeToWindow,
+  crmServiceLabel,
+  type CrmDashboardLead,
+  type CrmDashboardRange,
+  type CrmDateWindow,
+  type CrmServiceCount,
+  type CrmStageCount,
+  type CrmSuperCategoryCount,
+} from './crm-dashboard';
+// CRM Quality Analytics helpers (CRM portal + Duncit CRM app).
+export {
+  crmFormatScore,
+  crmIsEmptyAnalytics,
+  crmIsoWeekMonday,
+  crmShareOf,
+  crmSumCounts,
+  type CrmCountRow,
+} from './crm-quality-analytics';
+// CRM Lead Quality / Lead Research labels (CRM portal + Duncit CRM app).
+export {
+  CRM_CANDIDATE_STATUS_KEY,
+  CRM_CANDIDATE_STATUS_TONE,
+  CRM_QUALIFICATION_KEY,
+  CRM_QUALIFICATION_TONE,
+  type CrmTone,
+} from './crm-quality-labels';
+// CRM call line: statuses, transcript and clock (CRM portal call window + Duncit CRM app).
+export {
+  CRM_CALL_STATUSES,
+  crmCallStatusView,
+  crmCanStartCall,
+  crmElapsedSeconds,
+  crmFilterSegments,
+  crmFormatDuration,
+  crmIsTerminalCallStatus,
+  crmMergeSegment,
+  crmToCallStatus,
+  type CrmCallStatus,
+  type CrmCallStatusView,
+} from './crm-call';
+// CRM managed lists (Amenities, Event Suitability) — CRM portal + Duncit CRM app.
+export {
+  crmFilterManagedOptions,
+  crmNextManagedOrder,
+  crmSortManagedOptions,
+  type CrmManagedOptionLike,
+} from './crm-managed-options';
+// CRM Services Offered: lead-type targets and titles (CRM portal + Duncit CRM app).
+export {
+  CRM_SERVICE_TARGETS,
+  crmAllServiceTargets,
+  crmDefaultServiceTargets,
+  crmHasAnyServiceTarget,
+  crmNormalizeServiceTitles,
+  crmPickServiceTargets,
+  crmServiceTargetFlag,
+  crmServiceTargetLabelKeys,
+  type CrmServiceTarget,
+  type CrmServiceTargetFlag,
+  type CrmServiceTargetKind,
+  type CrmServiceTargets,
+} from './crm-service-targets';
+// CRM lead lists and the reminders calendar (CRM portal lead pages + Duncit CRM app).
+export {
+  CRM_GEO_PRECISION_KEY,
+  CRM_HOST_IMPORT_FIELDS,
+  CRM_VENUE_IMPORT_FIELDS,
+  crmAiParseRecords,
+  crmAiRecordToRow,
+  crmAiRowError,
+  crmAiRowToInput,
+  crmCalendarEvents,
+  crmDueUrgency,
+  crmFormatKm,
+  crmImportAutoMatch,
+  crmImportFieldsFor,
+  crmImportMappingInput,
+  crmImportReady,
+  type CrmAiLeadEntity,
+  type CrmAiRow,
+  type CrmCalendarEntityFilter,
+  type CrmCalendarEvent,
+  type CrmCalendarLead,
+  type CrmCalendarReminder,
+  type CrmCalendarStatusFilter,
+  type CrmDueUrgency,
+  type CrmImportField,
+  type CrmLeadListTranslate,
+} from './crm-lead-lists';
+// CRM lead detail values (CRM portal lead pages + Duncit CRM app lead tabs).
+export {
+  CRM_DASH,
+  CRM_LEAD_PRIORITY_TONE,
+  CRM_LEAD_STATUS_TONE,
+  crmDynamicValueText,
+  crmFormatCapacity,
+  crmFormatCount,
+  crmJoinList,
+  crmMapsUrl,
+  crmParseDynamicValues,
+  crmSafeHref,
+  crmServicesHint,
+  crmSocialCount,
+  crmToneOf,
+  crmWhatsappDigits,
+  type CrmDynamicFieldLike,
+  type CrmDynamicValueWords,
+} from './crm-lead-detail';
+// CRM lead Quality Score tab (CRM portal + Duncit CRM app).
+export {
+  CRM_AUTO_CHECK_KEY,
+  CRM_GATE_KEY,
+  CRM_GATE_TONE,
+  CRM_QUALITY_STATUS_KEY,
+  CRM_QUALITY_STATUS_TONE,
+  CRM_QUALITY_TRIGGER_KEY,
+  CRM_VERIFICATION_KEY,
+  CRM_VIA_KEY,
+  crmEvidenceByKey,
+  crmFormatPoints,
+  crmItemNamesOf,
+  crmKeyOr,
+  crmListedRefusals,
+  crmQualityTone,
+  crmRingValue,
+  type CrmQualityTone,
+} from './crm-quality-detail';
+// CRM lead email composer (CRM portal compose window + Duncit CRM app).
+export {
+  CRM_TEMPLATE_TARGET,
+  crmHostTemplateValues,
+  crmInterpolateTemplate,
+  crmProviderToSelect,
+  crmSeedTemplateValue,
+  crmStripPlaceholders,
+  crmTemplatePlaceholders,
+  crmTemplatesFor,
+  crmTextToHtml,
+  crmVenueTemplateValues,
+  type CrmComposeEntity,
+} from './crm-email-compose';
+// CRM › Settings › Lead Quality Score: status, change and band labels (CRM portal + Duncit CRM app).
+export {
+  CRM_QUALITY_BAND_TONE_KEY,
+  CRM_QUALITY_CHANGE_KIND_KEY,
+  CRM_QUALITY_CONFIG_STATUS_KEY,
+  CRM_QUALITY_CONFIG_STATUS_TONE,
+  CRM_QUALITY_THRESHOLD_HINT_KEY,
+  type CrmQualityConfigStatus,
+} from './crm-lead-quality-settings';
+// CRM › Tools › WhatsApp Lead Generator: connection and extraction (CRM portal + Duncit CRM app).
+export {
+  WA_EXTRACTION_POLL_MS,
+  WA_MAX_ERROR_RESTARTS,
+  WA_POLL_MS,
+  WA_STUCK_RESTART_MS,
+  waConnectionStatusView,
+  waExtractionPercent,
+  waExtractionView,
+  waFirstStatusAction,
+  waInitialConnectStep,
+  waShouldRetryError,
+  type WaFirstStatusAction,
+  type WaStatusView,
+} from './crm-whatsapp';
+// CRM lead page tabs: Logos & Images, Survey, Manual Logs, Communications, Website, Ask AI
+// (CRM portal + Duncit CRM app).
+export {
+  CRM_LEAD_MEDIA_GROUPS,
+  CRM_LEAD_MEDIA_LIMITS,
+  CRM_LEAD_MEDIA_TYPES,
+  crmImageMeta,
+  crmMediaBytes,
+  crmOtherMediaKind,
+  type CrmImageMetaInput,
+  type CrmLeadMediaGroup,
+  type CrmLeadMediaKind,
+} from './crm-lead-media';
+export {
+  crmFirstUnanswered,
+  crmSeedSurveyAnswers,
+  crmSplitSurveySections,
+  crmSurveyAnswer,
+  crmSurveyAnswerInput,
+  crmSurveyEntryStatus,
+  crmSurveyLinkLive,
+  crmSurveyLinkUrl,
+  crmToggleSurveyOption,
+  type CrmSurveyAnswerInput,
+  type CrmSurveyAnswers,
+  type CrmSurveyEntryLike,
+  type CrmSurveyFieldAnswer,
+  type CrmSurveyQuestionLike,
+  type CrmSurveySection,
+} from './crm-lead-survey';
+export {
+  CRM_LOG_GRANULARITIES,
+  CRM_LOG_GRANULARITY_LABEL,
+  CRM_LOG_HISTORY_TYPES,
+  CRM_LOG_HISTORY_VIEW,
+  crmGroupLogs,
+  crmLogHistory,
+  crmLogKey,
+  crmLogPeopleIds,
+  type CrmLogActivity,
+  type CrmLogGranularity,
+  type CrmLogHistoryType,
+} from './crm-manual-logs';
+export {
+  CRM_CALL_SENTIMENT,
+  CRM_COMMS_FILTERS,
+  CRM_COMMS_STATUS_TONE,
+  crmCallHasTranscript,
+  crmCommsStatusTone,
+  crmCommsTypeCounts,
+  crmTranscriptLabelKey,
+  type CrmCallTranscriptLike,
+  type CrmCommsFilter,
+} from './crm-comms-logs';
+export {
+  CRM_WEBSITE_PAGE_STATUS_TONE,
+  CRM_WEBSITE_SCRAPE_LIMIT,
+  crmUnfetchedPages,
+} from './crm-website-pages';
+export {
+  CRM_LEAD_AI_ACTION_HEADING,
+  CRM_LEAD_AI_SOURCE_LABEL,
+  CRM_LEAD_AI_SUGGESTIONS,
+  crmLeadAiKb,
+  crmLeadAiReminderUpdate,
+  crmTextPreview,
+  type CrmLeadAiActionType,
+  type CrmLeadAiReminderChange,
+  type CrmLeadAiReminderProposal,
+} from './crm-lead-ai';
+// CRM › Email Templates: the variable catalogue, slugs, MJML image insert, brand shelves
+// (CRM portal + Duncit CRM app).
+export {
+  CRM_EMAIL_BRAND_GROUPS,
+  CRM_EMAIL_HOST_VARIABLES,
+  CRM_EMAIL_IMAGE_TYPES,
+  CRM_EMAIL_VENUE_VARIABLES,
+  crmEmailTemplateSlug,
+  crmEmailVariablesFor,
+  crmEmailVarsJson,
+  crmForeignEmailVariables,
+  crmInsertMjmlImage,
+  crmMergeDetectedVariables,
+  type CrmEmailAssetKind,
+  type CrmEmailBrandGroup,
+  type CrmEmailTemplateTarget,
+  type CrmEmailTemplateVariable,
+  type CrmEmailVariableOption,
+} from './crm-email-templates';

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Autocomplete, Chip, Divider, MenuItem, Stack, TextField } from '@mui/material';
 import { useCategoriesByParent } from '../../../api/useCategoryTree';
 import ServiceTargetSwitches from './ServiceTargetSwitches';
-import { pickServiceTargets, type ServiceTargets } from '../../../config/serviceTargets';
+import { normalizeServiceTitles, pickServiceTargets, type ServiceTargets } from '../../../config/serviceTargets';
 import { useTranslation } from '@duncit/shell';
 
 export interface ServiceOfferedDraft extends ServiceTargets {
@@ -87,7 +87,7 @@ export default function ServiceOfferedForm({ value, onChange }: Readonly<Props>)
         inputValue={titleInput}
         onInputChange={(_, v) => setTitleInput(v)}
         onChange={(_, v) => {
-          set({ titles: Array.from(new Set((v as string[]).map((t) => t.trim()).filter(Boolean))) });
+          set({ titles: normalizeServiceTitles(v as string[]) });
           setTitleInput('');
         }}
         renderValue={(tags, getItemProps) =>

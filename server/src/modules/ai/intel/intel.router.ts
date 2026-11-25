@@ -1,9 +1,9 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
 import busboy from 'busboy';
 import express, { Router, type Request, type Response } from 'express';
 import { Types } from 'mongoose';
 import { resolveAuthUser } from '@context';
 import { logs } from '@observability/log';
+import { validHubSignature } from '@utils/hubSignature';
 import { transcribe, isAcceptedAudio } from '@modules/ai/askDuncit/voice/askDuncit.voice';
 import { actorFromUser, type IntelActor } from './access/intel.access';
 import { writeAudit } from './audit/intelAudit.service';
@@ -116,12 +116,8 @@ async function voice(req: Request, res: Response) {
   return out.ok ? res.json({ text: out.value }) : res.status(out.code === 'TOO_LARGE' ? 413 : 422).json({ error: out.code, message: out.message });
 }
 
-export function validSignature(secret: string, body: Buffer, header: string): boolean {
-  if (!secret || !header.startsWith('sha256=')) return false;
-  const expected = Buffer.from(`sha256=${createHmac('sha256', secret).update(body).digest('hex')}`);
-  const given = Buffer.from(header);
-  return expected.length === given.length && timingSafeEqual(expected, given);
-}
+/** GitHub signs its webhook the same way Meta does; the check is shared. */
+export const validSignature = validHubSignature;
 
 async function githubHook(req: Request, res: Response) {
   const id = String(req.params.id);

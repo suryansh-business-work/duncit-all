@@ -19,15 +19,15 @@ export default function AmenitiesPage() {
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
-            Facilities a venue can offer (e.g. Parking, AC, Stage). Shown as checkboxes on the Venue Lead form. Not tied to any Super, Category or Sub Category.
+            {t('crm.data.amenitiesIntro')}
           </Typography>
         </Box>
       </Stack>
       <ManagedOptionList
         group="AMENITY"
-        addLabel="Add amenity"
+        addLabel={t('crm.data.addAmenity')}
         placeholder={t('crm.data.eGPowerBackup')}
-        searchPlaceholder="Search amenities…"
+        searchPlaceholder={t('crm.data.searchAmenities')}
       />
     </Stack>
   );

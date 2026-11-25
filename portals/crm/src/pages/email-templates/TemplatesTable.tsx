@@ -23,7 +23,12 @@ const getTemplateRowId = (t: EmailTemplateRow) => t.template_id;
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
-const targetLabel = (t: Translate): Record<string, string> => ({ VENUE: t('crm.common.venue'), HOST: 'Host', ECOMM: 'Ecomm', STATIC: 'Static' });
+const targetLabel = (t: Translate): Record<string, string> => ({
+  VENUE: t('crm.common.venue'),
+  HOST: t('crm.common.host'),
+  ECOMM: t('crm.common.ecomm'),
+  STATIC: t('crm.emailTemplates.static'),
+});
 
 const targetOptions = (t: Translate) => [
   { value: 'VENUE', label: t('crm.common.venue') },

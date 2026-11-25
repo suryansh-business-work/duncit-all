@@ -5,6 +5,7 @@ import HandymanIcon from '@mui/icons-material/Handyman';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import type { HostLead } from '../../../api/crm.types';
 import LeadStatTile from '../../../components/LeadStatTile';
+import { crmServicesHint } from '@duncit/utils';
 import type { TranslateFn } from './helpers';
 
 interface Props {
@@ -19,21 +20,14 @@ export default function HostStatTiles({ lead, t, followUpLabel }: Readonly<Props
       <LeadStatTile
         label={t('crm.hostLeads.audience')}
         value={lead.expected_audience_size || '—'}
-        hint={lead.frequency ? lead.frequency : 'Frequency not set'}
+        hint={lead.frequency || t('crm.leadDetail.frequencyNotSet')}
         icon={<GroupsIcon fontSize="small" />}
         accent="info"
       />
       <LeadStatTile
         label={t('crm.common.services')}
         value={lead.services_offered.length}
-        hint={
-          lead.services_offered.length
-            ? lead.services_offered
-                .slice(0, 2)
-                .map((s) => (s.service === 'Other' ? s.custom_name || 'Other' : s.service))
-                .join(', ')
-            : 'None tagged'
-        }
+        hint={crmServicesHint(lead.services_offered) || t('crm.leadDetail.noneTagged')}
         icon={<HandymanIcon fontSize="small" />}
         accent="secondary"
       />
@@ -42,8 +36,8 @@ export default function HostStatTiles({ lead, t, followUpLabel }: Readonly<Props
         value={lead.community_size ?? '—'}
         hint={
           lead.previous_events_hosted
-            ? `Past events: ${lead.past_attendees ?? '—'} attendees`
-            : 'No past events recorded'
+            ? t('crm.leadDetail.pastEvents', { vars: { attendees: lead.past_attendees ?? '—' } })
+            : t('crm.leadDetail.noPastEvents')
         }
         icon={<EventIcon fontSize="small" />}
         accent="primary"
@@ -51,7 +45,7 @@ export default function HostStatTiles({ lead, t, followUpLabel }: Readonly<Props
       <LeadStatTile
         label={t('crm.common.nextFollowUp')}
         value={followUpLabel}
-        hint={lead.assigned_to ? `Assigned to ${lead.assigned_to}` : 'Unassigned'}
+        hint={lead.assigned_to ? t('crm.prospectLeads.assignedTo', { vars: { name: lead.assigned_to } }) : t('crm.prospectLeads.unassigned')}
         icon={<EventAvailableIcon fontSize="small" />}
         accent="warning"
       />

@@ -55,7 +55,7 @@ export default function ManageDynamicFieldsPage() {
 
   const persist = async (current: DraftState) => {
     const sortOrder = current.id ? rows.find((r) => r.id === current.id)?.sort_order ?? 0 : rows.length;
-    const result = buildDynamicFieldInput(current, sortOrder);
+    const result = buildDynamicFieldInput(current, sortOrder, t);
     if (!result.ok) {
       setFormError(result.error);
       return;
@@ -75,7 +75,7 @@ export default function ManageDynamicFieldsPage() {
   };
 
   const toggleActive = async (row: CrmDynamicField) => {
-    const result = buildDynamicFieldInput({ ...draftFromRow(row), is_active: !row.is_active }, row.sort_order);
+    const result = buildDynamicFieldInput({ ...draftFromRow(row), is_active: !row.is_active }, row.sort_order, t);
     // A stored row the form rules now refuse (e.g. a select with no options):
     // say why the switch did not move instead of ignoring the press.
     if (!result.ok) {
@@ -109,19 +109,14 @@ export default function ManageDynamicFieldsPage() {
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" spacing={1} sx={{
-        alignItems: "center"
-      }}>
+      <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
         <TuneIcon color="primary" />
         <Box sx={{ flex: 1 }}>
           <Typography component="h1" variant="h6" sx={{ fontWeight: 800 }}>
-            Dynamic Fields
+            {t('shell.nav.dynamicFields')}
           </Typography>
-          <Typography variant="caption" sx={{
-            color: "text.secondary"
-          }}>
-            Define custom fields shown on venue & host forms. Drag rows to reorder — order is saved
-            automatically.
+          <Typography variant="caption" sx={{ color: "text.secondary" }}>
+            {t('crm.managedynamicfieldspage.subtitle')}
           </Typography>
         </Box>
         <DuncitButton
@@ -133,7 +128,7 @@ export default function ManageDynamicFieldsPage() {
           }}
           disabled={busy || !!draft}
         >
-          New field
+          {t('crm.managedynamicfieldspage.newField')}
         </DuncitButton>
       </Stack>
 
@@ -189,12 +184,12 @@ export default function ManageDynamicFieldsPage() {
         title={t('crm.managedynamicfieldspage.deleteDynamicField')}
         message={
           removing
-            ? `Delete "${removing.label}"? Existing values on leads stay in the database but are no longer rendered.`
+            ? t('crm.managedynamicfieldspage.deleteMessage', { vars: { name: removing.label } })
             : ''
         }
         confirmLabel={t('shell.common.delete')}
         destructive
-        busyLabel="Working…"
+        busyLabel={t('crm.managedynamicfieldspage.working')}
         loading={deleteState.loading}
         onConfirm={confirmDelete}
         onClose={() => setRemoving(null)}

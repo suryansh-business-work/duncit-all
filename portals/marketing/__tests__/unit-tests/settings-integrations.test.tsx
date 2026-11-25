@@ -15,13 +15,17 @@ vi.mock('../../../tech/src/pages/environment/EnvVariablesTab', () => ({
 
 import IntegrationsPage from '../../src/pages/settings-page/IntegrationsPage';
 import RedirectUrlCard from '../../src/pages/settings-page/RedirectUrlCard';
+import WebhookUrlCard from '../../src/pages/settings-page/WebhookUrlCard';
 import { INTEGRATION_TABS, integrationTabFor } from '../../src/pages/settings-page/integrations-tabs';
-import { SOCIAL_REDIRECT_URI } from '../../src/pages/settings-page/queries';
+import { SOCIAL_REDIRECT_URI, SOCIAL_WEBHOOK_URL } from '../../src/pages/settings-page/queries';
 import { INTEGRATIONS_PATH, integrationsPath } from '../../src/lib/routes';
 
 const CALLBACK = 'https://api.duncit.test/social/callback';
 const redirectMock = { request: { query: SOCIAL_REDIRECT_URI }, result: { data: { socialRedirectUri: CALLBACK } } };
 const redirectErrorMock = { request: { query: SOCIAL_REDIRECT_URI }, result: { errors: [new GraphQLError('no server url')] } };
+const WEBHOOK = 'https://api.duncit.test/social/webhooks/meta';
+const webhookMock = { request: { query: SOCIAL_WEBHOOK_URL }, result: { data: { socialWebhookUrl: WEBHOOK } } };
+const webhookErrorMock = { request: { query: SOCIAL_WEBHOOK_URL }, result: { errors: [new GraphQLError('no server url')] } };
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -57,14 +61,15 @@ describe('integrations tabs', () => {
 });
 
 describe('IntegrationsPage', () => {
-  it('opens on Instagram with its hint, the redirect URL and the Instagram entries behind the gate', async () => {
-    renderWithProviders(<IntegrationsPage />, { mocks: [redirectMock] });
+  it('opens on Instagram with its Unified-login hint, the redirect and webhook URLs and the Instagram entries behind the gate', async () => {
+    renderWithProviders(<IntegrationsPage />, { mocks: [redirectMock, webhookMock] });
     expect(screen.getByRole('heading', { level: 1, name: 'Integrations' })).toBeInTheDocument();
     expect(screen.getAllByRole('tab')).toHaveLength(8);
-    expect(screen.getByTestId('integration-hint')).toHaveTextContent(/Instagram API with Instagram Login/);
+    expect(screen.getByTestId('integration-hint')).toHaveTextContent(/Unified login/);
     expect(screen.getByTestId('env-gate')).toBeInTheDocument();
     expect(screen.getByTestId('env-tab')).toHaveTextContent('SOCIAL_INSTAGRAM');
     await waitFor(() => expect(screen.getByTestId('redirect-url-field')).toHaveValue(CALLBACK));
+    await waitFor(() => expect(screen.getByTestId('webhook-url-field')).toHaveValue(WEBHOOK));
   });
 
   it('opens the tab the address names, and a non-social tab has no redirect card', () => {
@@ -73,6 +78,7 @@ describe('IntegrationsPage', () => {
     expect(screen.getByTestId('integration-hint')).toHaveTextContent(/claude-/);
     expect(screen.getByTestId('env-tab')).toHaveTextContent('ANTHROPIC');
     expect(screen.queryByTestId('redirect-url-field')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('webhook-url-field')).not.toBeInTheDocument();
   });
 
   it('switches the editor to the network whose tab is pressed', () => {
@@ -80,6 +86,8 @@ describe('IntegrationsPage', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Threads' }));
     expect(screen.getByTestId('env-tab')).toHaveTextContent('SOCIAL_THREADS');
     expect(screen.getByTestId('integration-hint')).toHaveTextContent(/threads_content_publish/);
+    // Threads has no Meta webhook here: its replies come in with the sync.
+    expect(screen.queryByTestId('webhook-url-field')).not.toBeInTheDocument();
   });
 });
 
@@ -110,5 +118,25 @@ describe('RedirectUrlCard', () => {
     renderWithProviders(<RedirectUrlCard />, { mocks: [redirectErrorMock] });
     await waitFor(() => expect(screen.getByTestId('redirect-url-error')).toBeInTheDocument());
     expect(screen.queryByTestId('redirect-url-field')).not.toBeInTheDocument();
+  });
+});
+
+describe('WebhookUrlCard', () => {
+  it('shows the webhook address to paste into Meta, and copies it', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+    renderWithProviders(<WebhookUrlCard />, { mocks: [webhookMock] });
+    expect(screen.getByText(/Subscribe to messages, messaging_postbacks/)).toBeInTheDocument();
+    const copy = screen.getByTestId('webhook-url-copy');
+    await waitFor(() => expect(copy).toBeEnabled());
+    fireEvent.click(copy);
+    await waitFor(() => expect(copy).toHaveTextContent('Copied'));
+    expect(writeText).toHaveBeenCalledWith(WEBHOOK);
+  });
+
+  it('says when the address could not be read', async () => {
+    renderWithProviders(<WebhookUrlCard />, { mocks: [webhookErrorMock] });
+    expect(await screen.findByTestId('webhook-url-error')).toHaveTextContent('The webhook URL could not be read.');
+    expect(screen.queryByTestId('webhook-url-field')).not.toBeInTheDocument();
   });
 });

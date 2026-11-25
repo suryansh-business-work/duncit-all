@@ -18,7 +18,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { DuncitIconButton } from '@duncit/buttons';
 import type { CrmDynamicField } from '../../api/crm.types';
-import { KIND_LABELS, moveItem } from './dynamicFieldDraft';
+import { KIND_LABEL_KEY, moveItem } from './dynamicFieldDraft';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -62,7 +62,7 @@ export default function DynamicFieldsTable({
         <TableRow>
           <TableCell sx={{ width: 110 }} />
           <TableCell>{t('crm.managedynamicfieldspage.label')}</TableCell>
-          <TableCell sx={{ width: 150 }}>Type</TableCell>
+          <TableCell sx={{ width: 150 }}>{t('shell.common.type')}</TableCell>
           <TableCell sx={{ width: 200 }}>{t('crm.common.appliesTo')}</TableCell>
           <TableCell sx={{ width: 100 }}>{t('crm.common.active')}</TableCell>
           <TableCell sx={{ width: 120 }} align="right">{t('shell.common.actions')}</TableCell>
@@ -78,8 +78,7 @@ export default function DynamicFieldsTable({
                   color: "text.secondary",
                   py: 3
                 }}>
-                No dynamic fields yet. Click "New field" to add one — it will appear on every lead
-                edit form.
+                {t('crm.managedynamicfieldspage.empty')}
               </Typography>
             </TableCell>
           </TableRow>
@@ -139,7 +138,7 @@ export default function DynamicFieldsTable({
                 </Typography>
               )}
             </TableCell>
-            <TableCell>{KIND_LABELS[row.kind]}</TableCell>
+            <TableCell>{t(KIND_LABEL_KEY[row.kind])}</TableCell>
             <TableCell>
               <Stack direction="row" spacing={0.5} useFlexGap sx={{ flexWrap: 'wrap' }}>
                 {row.applies_to_venue && <Chip size="small" label={t('crm.common.venue')} />}

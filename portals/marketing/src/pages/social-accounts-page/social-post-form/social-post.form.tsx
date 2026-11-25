@@ -14,6 +14,7 @@ import AccountPicker from './AccountPicker';
 import ApprovalSwitch from './ApprovalSwitch';
 import PlatformChecks from './PlatformChecks';
 import PostMediaField from './PostMediaField';
+import PostOptionsFields from './PostOptionsFields';
 import { socialPostSchema, type SocialPostFormProps, type SocialPostFormValues } from './social-post.types';
 
 /**
@@ -30,9 +31,9 @@ export default function SocialPostForm({ accounts, initial, errorMessage, review
     resolver: zodResolver(schema) as unknown as Resolver<SocialPostFormValues, any, SocialPostFormValues>,
     mode: 'onChange',
   });
-  const [chosen, text, media, needsApproval, collaborators] = useWatch({
+  const [chosen, text, media, needsApproval, collaborators, postType, captions] = useWatch({
     control,
-    name: ['account_ids', 'text', 'media', 'needs_approval', 'collaborators'],
+    name: ['account_ids', 'text', 'media', 'needs_approval', 'collaborators', 'post_type', 'captions'],
   });
   const platforms = useMemo(() => {
     const ids = new Set(chosen);
@@ -44,7 +45,10 @@ export default function SocialPostForm({ accounts, initial, errorMessage, review
 
   const submitAs = async (mode: SocialPublishMode) => {
     setValue('mode', mode);
-    if (!toInstagram) setValue('collaborators', []);
+    if (!toInstagram) {
+      setValue('collaborators', []);
+      setValue('first_comment', '');
+    }
     await handleSubmit(onSubmit)();
   };
 
@@ -66,8 +70,21 @@ export default function SocialPostForm({ accounts, initial, errorMessage, review
           minRows={5}
           maxRows={14}
         />
-        <PlatformChecks platforms={platforms} text={text} mediaCount={media.length} collaboratorCount={toInstagram ? collaborators.length : 0} />
+        <PlatformChecks
+          platforms={platforms}
+          text={text}
+          captions={captions}
+          mediaCount={media.length}
+          collaboratorCount={toInstagram ? collaborators.length : 0}
+        />
         <PostMediaField control={control} />
+        <PostOptionsFields
+          control={control}
+          platforms={platforms}
+          postType={postType}
+          hasCaptions={Object.values(initial.captions).some((caption) => caption?.trim())}
+          onClearCaptions={() => setValue('captions', {})}
+        />
         {toInstagram && (
           <Controller
             control={control}

@@ -21,6 +21,10 @@ export const appBuildSettingsSchema = (messages: AppBuildSettingsMessages) => {
     ios_channel: channel,
     android_staging_channel: channel,
     ios_staging_channel: channel,
+    // The Duncit CRM app (Android): an empty production channel falls back to the
+    // Android builds channel, an empty staging one to the CRM production channel.
+    crm_channel: channel,
+    crm_staging_channel: channel,
   });
 };
 
@@ -32,9 +36,13 @@ export const toAppBuildSettingsForm = (settings: {
   ios_channel: string | null;
   android_staging_channel: string | null;
   ios_staging_channel: string | null;
+  crm_channel: string | null;
+  crm_staging_channel: string | null;
 }): AppBuildSettingsValues => ({
   android_channel: settings.android_channel ?? '',
   ios_channel: settings.ios_channel ?? '',
   android_staging_channel: settings.android_staging_channel ?? '',
   ios_staging_channel: settings.ios_staging_channel ?? '',
+  crm_channel: settings.crm_channel ?? '',
+  crm_staging_channel: settings.crm_staging_channel ?? '',
 });

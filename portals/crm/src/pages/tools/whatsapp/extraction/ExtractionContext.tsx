@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
+import { WA_EXTRACTION_POLL_MS } from '@duncit/utils';
 import {
   WA_CANCEL_EXTRACTION,
   WA_EXTRACTION,
@@ -37,7 +38,7 @@ export function ExtractionProvider({ children }: Readonly<{ children: React.Reac
   const running = job?.status === 'RUNNING';
 
   useEffect(() => {
-    if (running) startPolling(2000);
+    if (running) startPolling(WA_EXTRACTION_POLL_MS);
     else stopPolling();
   }, [running, startPolling, stopPolling]);
 
@@ -54,7 +55,7 @@ export function ExtractionProvider({ children }: Readonly<{ children: React.Reac
     setOpen(true);
     await startMut().catch(() => undefined);
     await refetch();
-    startPolling(2000);
+    startPolling(WA_EXTRACTION_POLL_MS);
   }, [startMut, refetch, startPolling]);
 
   const cancel = useCallback(async () => {

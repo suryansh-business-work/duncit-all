@@ -105,6 +105,8 @@ const ROUTES = [
   '/settings/lead-quality',
   '/lead-research',
   '/lead-quality/analytics',
+  '/download-app',
+  '/download-app/settings',
 ];
 
 /** `link` swaps what answers the page: nothing, or the schema-shaped mock. */

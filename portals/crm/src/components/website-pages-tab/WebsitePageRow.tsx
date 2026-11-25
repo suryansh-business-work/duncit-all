@@ -12,12 +12,8 @@ import {
 } from '../../api/websitePages.gql';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
+import { CRM_WEBSITE_PAGE_STATUS_TONE } from '@duncit/utils';
 
-const STATUS_COLOR: Record<CrmWebsitePage['status'], 'default' | 'success' | 'error'> = {
-  DISCOVERED: 'default',
-  FETCHED: 'success',
-  ERROR: 'error',
-};
 
 interface Props {
   page: CrmWebsitePage;
@@ -67,7 +63,7 @@ export default function WebsitePageRow({ page, onView, onDelete, onError }: Read
         )}
       </TableCell>
       <TableCell>
-        <Chip size="small" color={STATUS_COLOR[page.status]} label={page.status} />
+        <Chip size="small" color={CRM_WEBSITE_PAGE_STATUS_TONE[page.status] ?? 'default'} label={page.status} />
         {page.error && (
           <Typography variant="caption" color="error" sx={{ display: 'block' }}>
             {page.error}
@@ -82,7 +78,7 @@ export default function WebsitePageRow({ page, onView, onDelete, onError }: Read
             justifyContent: "flex-end",
             alignItems: "center"
           }}>
-          <Tooltip title={fetched ? 'Re-fetch content' : 'Fetch content'}>
+          <Tooltip title={fetched ? t('crm.websitePages.refetchContent') : t('crm.components.fetchContent')}>
             <span>
               <DuncitIconButton size="small" color="primary" onClick={run} disabled={loading} aria-label={t('crm.components.fetchContent')}>
                 {loading ? <CircularProgress size={16} /> : fetchIcon}

@@ -38,6 +38,8 @@ module.exports = {
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
+    // Config plugin with pure, unit-tested transforms (plugins/__tests__).
+    'plugins/withIosSceneLifecycle.js',
     '!src/**/*.d.ts',
     '!src/**/index.{ts,tsx}',
     '!src/types/**',

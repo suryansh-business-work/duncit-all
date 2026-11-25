@@ -49,6 +49,15 @@ export function viewFilter(view: SocialInboxView | null | undefined, userId: str
   }
 }
 
+export type SocialInboxChannel = 'COMMENTS' | 'THREADS_REPLIES';
+
+/** The comment queue's own slice for a channel tab: Threads replies apart from every other network's comments. */
+export function channelFilter(channel: SocialInboxChannel | null | undefined): Record<string, unknown> {
+  if (channel === 'THREADS_REPLIES') return { platform: 'THREADS' };
+  if (channel === 'COMMENTS') return { platform: { $ne: 'THREADS' } };
+  return {};
+}
+
 function notFound(): never {
   throw new GraphQLError('Comment not found', { extensions: { code: 'NOT_FOUND' } });
 }
@@ -71,8 +80,9 @@ async function update(id: string, set: Record<string, unknown>) {
 }
 
 export const socialInbox = {
-  async table(input: TableQueryInput | null | undefined, view: SocialInboxView | null | undefined, userId: string) {
-    const { docs, total, page, page_size } = await runTableQuery<SocialCommentDoc>(SocialCommentModel, viewFilter(view, userId), input, INBOX_TABLE);
+  async table(input: TableQueryInput | null | undefined, view: SocialInboxView | null | undefined, userId: string, channel?: SocialInboxChannel | null) {
+    const base = { ...viewFilter(view, userId), ...channelFilter(channel) };
+    const { docs, total, page, page_size } = await runTableQuery<SocialCommentDoc>(SocialCommentModel, base, input, INBOX_TABLE);
     const { names, posts, people } = await commentContext(docs);
     return { rows: docs.map((doc) => pubComment(doc, names, posts, people)), total, page, page_size };
   },

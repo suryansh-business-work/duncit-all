@@ -161,8 +161,12 @@ const healthCheck = define({
     const results = await runHealthChecks();
     const needing = results.filter((r) => !r.ok);
     const detail = needing.length > 0 ? `: ${needing.map((r) => `${r.name} (${r.message})`).join('; ')}` : '';
+    // Healthy, but DMs and private replies cannot go until the account is reconnected with the permission.
+    const noMessaging = results.filter((r) => r.ok && r.messaging_missing_permission);
+    const messaging =
+      noMessaging.length > 0 ? `; ${noMessaging.length} cannot message: ${noMessaging.map((r) => `${r.name} (needs ${r.messaging_missing_permission})`).join('; ')}` : '';
     return {
-      summary: `${results.length} account(s) checked; ${needing.length} need a person${detail}`,
+      summary: `${results.length} account(s) checked; ${needing.length} need a person${detail}${messaging}`,
       data: results.map((r) => ({
         account_id: r.account_id,
         platform: r.platform,
@@ -171,6 +175,7 @@ const healthCheck = define({
         expired: r.expired,
         message: r.message,
         expires_in_days: r.expires_in_days,
+        messaging_missing_permission: r.messaging_missing_permission,
       })),
     };
   },

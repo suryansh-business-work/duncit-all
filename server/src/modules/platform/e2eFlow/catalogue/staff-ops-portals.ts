@@ -2663,7 +2663,7 @@ export const STAFF_OPS_PORTAL_FLOWS: readonly CatalogueFlow[] = [
         description: 'KPI tiles and breakdown cards.',
         steps: [
           ['Open /', 'Header "Dashboard" with subtitle "Marketing at a glance · last N days"'],
-          ['Look at the KPI tiles', 'Two rows of tiles: Link clicks, Revenue from links, Emails delivered and Live ads, then Connected accounts ("N need attention" or "Every account is healthy"), Engagement ("N posts · N views"), Posts published ("N scheduled · N failed") and Leads found ("N scored 70 or more")'],
+          ['Look at the KPI tiles', 'Two rows of tiles: Link clicks, Revenue from links, Emails delivered and Live ads, then Connected accounts ("No accounts connected yet", "N need attention" or "Every account is healthy"), Engagement ("N posts · N views"), Posts published ("N scheduled · N failed") and Leads found ("N scored 70 or more")'],
           ['Check "Where clicks came from" with no link traffic', 'Empty text "No clicks recorded yet."'],
           ['Read "What is set up"', 'Counts for Active short links, Short links in total, Saved audience lists, Campaigns scheduled and Campaigns failed'],
           ['Read "Engagement by network", "Leads by stage" and "Automation"', 'Engagement per connected network (empty text "No engagement recorded yet."), the lead pipeline by stage in pipeline order ("No leads found yet."), and the automation runs waiting, running, completed and failed in the window — the Automation title carries the AI spend in dollars, the unit of the AI rate card ("Automation · $N AI spend") when any was spent, and reads "Nothing has run yet." when none ran'],

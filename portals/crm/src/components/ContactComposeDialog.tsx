@@ -101,9 +101,9 @@ export default function ContactComposeDialog({ open, mode, entity, lead, variabl
     if (!open || !lead) return;
     setError(null);
     setTarget(mode === 'email' ? draft?.to || lead.primary_email || '' : lead.primary_mobile ?? '');
-    setDefaultSubject(draft?.subject || `Regarding ${lead.display_name}`);
+    setDefaultSubject(draft?.subject || t('crm.compose.regarding', { vars: { name: lead.display_name } }));
     setEmailPayload({ subject: '', body: '', valid: false, attachments: [] });
-  }, [open, mode, lead, draft]);
+  }, [open, mode, lead, draft, t]);
 
   const submit = async () => {
     if (!lead) return;
@@ -121,7 +121,7 @@ export default function ContactComposeDialog({ open, mode, entity, lead, variabl
       }
       const res = await runMutation({ variables });
       const payload = res.data?.[responseKey(entity, mode)];
-      onResult(payload?.message ?? 'Done', !!payload?.ok);
+      onResult(payload?.message ?? t('crm.compose.done'), !!payload?.ok);
       onClose();
     } catch (err) {
       setError(parseApiError(err));
@@ -130,19 +130,19 @@ export default function ContactComposeDialog({ open, mode, entity, lead, variabl
 
   const providerType: 'SMTP' | 'TWILIO_CALL' = mode === 'email' ? 'SMTP' : 'TWILIO_CALL';
   const disabled = loading || !target.trim() || (mode === 'email' && !emailPayload.valid);
-  const submitLabel = mode === 'email' ? 'Send email' : 'Start call';
+  const submitLabel = mode === 'email' ? t('crm.compose.sendEmail') : t('crm.compose.startCall');
 
   return (
     <ComposeWindow
       open={open}
-      title={mode === 'email' ? `Email · ${lead?.display_name ?? ''}` : `Call · ${lead?.display_name ?? ''}`}
+      title={t(mode === 'email' ? 'crm.compose.emailTitle' : 'crm.call.title', { vars: { name: lead?.display_name ?? '' } })}
       icon={mode === 'email' ? <EmailIcon fontSize="small" /> : <PhoneIcon fontSize="small" />}
       onClose={onClose}
       actions={
         <>
           <DuncitButton onClick={onClose} disabled={loading}>{t('shell.common.cancel')}</DuncitButton>
           <DuncitButton variant="contained" onClick={submit} disabled={disabled}>
-            {loading ? 'Sending…' : submitLabel}
+            {loading ? t('crm.compose.sending') : submitLabel}
           </DuncitButton>
         </>
       }
@@ -152,7 +152,7 @@ export default function ContactComposeDialog({ open, mode, entity, lead, variabl
         <CommsProviderSelect type={providerType} value={providerId} onChange={setProviderId} />
         <TextField
           size="small"
-          label={mode === 'email' ? 'To (email)' : 'To (number)'}
+          label={mode === 'email' ? t('crm.compose.toEmail') : t('crm.compose.toNumber')}
           value={target}
           onChange={(event) => setTarget(event.target.value)}
           fullWidth

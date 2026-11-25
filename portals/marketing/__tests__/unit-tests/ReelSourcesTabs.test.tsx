@@ -152,6 +152,8 @@ describe('DriveTab', () => {
     const onEditDetails = vi.fn();
     renderWithProviders(<DriveTab project={reelProject({ drive_folder_id: 'root', assets: [reelAsset()] })} actions={studio} onEditDetails={onEditDetails} />);
     expect(screen.queryByTestId('reel-drive-add-drive-a1')).not.toBeInTheDocument();
+    // The tick a screen reader hears, not just the missing button.
+    expect(within(screen.getByTestId('reel-drive-file-drive-a1')).getByRole('img', { name: 'Already in the reel' })).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('reel-drive-add-drive-new'));
     await waitFor(() => expect(studio.addDriveFiles).toHaveBeenCalledWith(['drive-new']));
     fireEvent.click(within(screen.getByTestId('reel-drive-share-hint')).getByRole('button'));
@@ -179,8 +181,9 @@ describe('StockTab', () => {
     // Each add button names its file: by its credit, or by its provider id when it has none.
     expect(screen.getByTestId('reel-stock-add-px-1')).toHaveAccessibleName('Add Ana Ruiz to the reel');
     expect(screen.getByTestId('reel-stock-add-px-3')).toHaveAccessibleName('Add pexels:3 to the reel');
-    // Already in the reel: a tick, not an add button.
+    // Already in the reel: a tick, not an add button, and announced as such.
     expect(screen.queryByTestId('reel-stock-add-px-2')).not.toBeInTheDocument();
+    expect(within(screen.getByTestId('reel-stock-item-px-2')).getByRole('img', { name: 'Already in the reel' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('reel-stock-add-px-1'));
     await waitFor(() => expect(studio.addStockItems).toHaveBeenCalledWith([toStockInput(reelStockItem())]));

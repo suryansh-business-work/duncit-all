@@ -1,17 +1,16 @@
-import { z } from 'zod';
-import { EMAIL } from '@duncit/regex';
+import {
+  emailVerifyDefaults as sharedDefaults,
+  makeEmailVerifySchema,
+  type EmailVerifyValues,
+} from '@duncit/forms/schemas';
 import type { Translate } from './email-verify.types';
 
-/** One address to check now — the shared EMAIL pattern, so it matches the server's. */
-export const emailVerifySchema = (t: Translate) =>
-  z.object({
-    email: z
-      .string()
-      .trim()
-      .min(1, t('crm.emailVerifier.emailRequired'))
-      .regex(EMAIL, t('crm.emailVerifier.emailInvalid')),
-  });
+/*
+  One address to check now. The rule lives in @duncit/forms/schemas
+  (email-verify), shared with the Duncit CRM app; these are the portal's names.
+*/
+export const emailVerifySchema = (t: Translate) => makeEmailVerifySchema(t);
 
-export type EmailVerifyFormValues = z.infer<ReturnType<typeof emailVerifySchema>>;
+export type EmailVerifyFormValues = EmailVerifyValues;
 
-export const emailVerifyDefaults: EmailVerifyFormValues = { email: '' };
+export const emailVerifyDefaults: EmailVerifyFormValues = sharedDefaults;

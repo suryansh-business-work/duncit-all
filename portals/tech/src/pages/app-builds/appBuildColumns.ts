@@ -31,8 +31,13 @@ export function makeAppBuildColumns(
   platform: AppBuildPlatform,
   onDelete: (row: AppBuildRow) => void,
   onPush: PushToPlay,
-  onPushAppStore: PushToAppStore
+  onPushAppStore: PushToAppStore,
+  /** False for the Duncit CRM table: its APK never goes to a store. */
+  withStore = true
 ): DuncitColumn<AppBuildRow>[] {
+  const storeColumns = withStore
+    ? [platform === 'ANDROID' ? makePlayStoreColumn(t, onPush) : makeAppStoreColumn(t, onPushAppStore)]
+    : [];
   const statusLabels = {
     QUEUED: t('tech.appBuilds.statusQueued'),
     RUNNING: t('tech.appBuilds.statusRunning'),
@@ -160,7 +165,7 @@ export function makeAppBuildColumns(
     },
     // Only an AAB can go to Google Play and only an IPA to App Store Connect,
     // so each table offers its own store.
-    platform === 'ANDROID' ? makePlayStoreColumn(t, onPush) : makeAppStoreColumn(t, onPushAppStore),
+    ...storeColumns,
     {
       field: 'artifact_url',
       headerName: t('tech.appBuilds.colLinks'),

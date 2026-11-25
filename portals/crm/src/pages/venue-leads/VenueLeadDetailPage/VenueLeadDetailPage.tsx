@@ -31,7 +31,7 @@ export default function VenueLeadDetailPage() {
 
   if ((loading && !lead) || error || !lead) {
     return (
-      <QueryGuard loading={loading && !lead} error={error} notFound={!lead} notFoundText="Venue lead not found." />
+      <QueryGuard loading={loading && !lead} error={error} notFound={!lead} notFoundText={t('crm.venueLeads.venueLeadNotFound')} />
     );
   }
 

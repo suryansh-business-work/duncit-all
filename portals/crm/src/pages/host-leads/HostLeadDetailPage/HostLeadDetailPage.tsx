@@ -31,7 +31,7 @@ export default function HostLeadDetailPage() {
 
   if ((loading && !lead) || error || !lead) {
     return (
-      <QueryGuard loading={loading && !lead} error={error} notFound={!lead} notFoundText="Host lead not found." />
+      <QueryGuard loading={loading && !lead} error={error} notFound={!lead} notFoundText={t('crm.hostLeads.hostLeadNotFound')} />
     );
   }
 

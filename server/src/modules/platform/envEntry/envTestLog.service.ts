@@ -94,10 +94,15 @@ export const envTestLogService = {
     const size = Math.min(Math.max(Number(limit) || 20, 1), HISTORY_MAX);
     const filter: Record<string, unknown> = {};
     if (entryId) filter.entry_id = toObjectId(entryId) ?? new Types.ObjectId();
+    // A line from a category since retired (SOCIAL_APPS) cannot be sent as an
+    // EnvCategory, and one such line would fail the whole list.
+    const known = { $in: ENV_CATEGORIES };
     if (typeof category === 'string') {
-      if (category) filter.category = category;
+      filter.category = category || known;
     } else if (category) {
       filter.category = { $in: category };
+    } else {
+      filter.category = known;
     }
     const rows = await EnvTestLogModel.find(filter).sort({ created_at: -1 }).limit(size).lean();
     const names = await testerNames(rows.map((r) => r.tested_by));

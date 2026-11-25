@@ -41,7 +41,7 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
     onClose();
   };
 
-  const generalLabel = event?.entity === 'GENERAL' ? 'General reminder (not linked to a lead)' : '—';
+  const generalLabel = event?.entity === 'GENERAL' ? t('crm.calendar.generalReminder') : '—';
   const fromLabel = event?.leadName ? event.leadName : generalLabel;
 
   return (
@@ -64,7 +64,7 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
                 fontWeight: 800,
                 flex: 1
               }}>
-              {isReminder ? 'Reminder' : 'Follow-up'}
+              {isReminder ? t('crm.calendar.reminder') : t('crm.calendar.followUp')}
             </Typography>
             <DuncitIconButton onClick={onClose} aria-label={t('shell.common.close')}><CloseIcon /></DuncitIconButton>
           </Stack>
@@ -78,7 +78,7 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
             }}>
               <Chip size="small" label={formatDateTime(event.date)} />
               <Chip size="small" variant="outlined" label={t(ENTITY_LABEL[event.entity])} />
-              {isReminder && <Chip size="small" color={done ? 'success' : 'default'} label={done ? 'Done' : t('crm.components.pending')} />}
+              {isReminder && <Chip size="small" color={done ? 'success' : 'default'} label={done ? t('crm.components.done') : t('crm.components.pending')} />}
             </Stack>
 
             <Divider />
@@ -89,7 +89,7 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
                   color: "text.secondary",
                   fontWeight: 700,
                   letterSpacing: 0.4
-                }}>FROM</Typography>
+                }}>{t('crm.calendar.from')}</Typography>
               <Typography variant="body2">
                 {fromLabel}
               </Typography>
@@ -103,7 +103,7 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
                     color: "text.secondary",
                     fontWeight: 700,
                     letterSpacing: 0.4
-                  }}>NOTES</Typography>
+                  }}>{t('crm.calendar.notes')}</Typography>
                 <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{event.notes}</Typography>
               </Box>
             )}
@@ -118,9 +118,9 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
             {isReminder && (
               <Stack direction="row" spacing={1}>
                 <DuncitButton size="small" startIcon={done ? <RadioButtonUncheckedIcon /> : <CheckCircleIcon />} onClick={() => onToggleDone(event)}>
-                  {done ? 'Mark pending' : 'Mark done'}
+                  {done ? t('crm.calendar.markPending') : t('crm.calendar.markDone')}
                 </DuncitButton>
-                <DuncitButton size="small" startIcon={<EditIcon />} onClick={() => onEdit(event)}>Edit</DuncitButton>
+                <DuncitButton size="small" startIcon={<EditIcon />} onClick={() => onEdit(event)}>{t('shell.common.edit')}</DuncitButton>
                 <DuncitButton size="small" color="error" startIcon={<DeleteIcon />} onClick={() => onDelete(event)}>{t('shell.common.delete')}</DuncitButton>
               </Stack>
             )}

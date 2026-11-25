@@ -41,6 +41,10 @@ export interface SocialAccount {
   health_checked_at: string | null;
   health_ok: boolean | null;
   health_message: string | null;
+  /** Direct messages: the permission a reconnect would grant (null when ready), and the last DM read or webhook subscription failure. */
+  messaging_missing_permission: string | null;
+  dm_error: string;
+  webhook_error: string;
 }
 
 export interface SocialPostRow {
@@ -168,6 +172,9 @@ const ACCOUNT_FIELDS = gql`
     health_checked_at
     health_ok
     health_message
+    messaging_missing_permission
+    dm_error
+    webhook_error
   }
 `;
 

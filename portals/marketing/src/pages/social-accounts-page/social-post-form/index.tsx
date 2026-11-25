@@ -2,7 +2,9 @@ export { default as SocialPostForm } from './social-post.form';
 export {
   blankSocialPostValues,
   mediaFromUrl,
+  keepMeasured,
   postMedia,
+  postOptionsOf,
   sentBackNote,
   socialPostSchema,
   toSocialPostInput,

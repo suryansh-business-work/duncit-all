@@ -90,18 +90,18 @@ export default function ComposeWindow({ open, title, icon, onClose, actions, chi
           }}>
           {title}
         </Typography>
-        <Tooltip title={minimized ? 'Expand' : 'Minimize'}>
-          <DuncitIconButton size="small" sx={{ color: 'inherit' }} onClick={() => setMinimized((m) => !m)} aria-label="minimize">
+        <Tooltip title={minimized ? t('crm.compose.expand') : t('crm.call.minimize')}>
+          <DuncitIconButton size="small" sx={{ color: 'inherit' }} onClick={() => setMinimized((m) => !m)} aria-label={t('crm.call.minimize')}>
             <MinimizeIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>
-        <Tooltip title={maximized ? 'Restore' : 'Maximize'}>
-          <DuncitIconButton size="small" sx={{ color: 'inherit' }} onClick={toggleMax} aria-label="maximize">
+        <Tooltip title={maximized ? t('crm.call.restore') : t('crm.call.maximize')}>
+          <DuncitIconButton size="small" sx={{ color: 'inherit' }} onClick={toggleMax} aria-label={t('crm.call.maximize')}>
             {maximized ? <FilterNoneIcon fontSize="small" /> : <CropSquareIcon fontSize="small" />}
           </DuncitIconButton>
         </Tooltip>
         <Tooltip title={t('shell.common.close')}>
-          <DuncitIconButton size="small" sx={{ color: 'inherit' }} onClick={onClose} aria-label="close">
+          <DuncitIconButton size="small" sx={{ color: 'inherit' }} onClick={onClose} aria-label={t('shell.common.close')}>
             <CloseIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>

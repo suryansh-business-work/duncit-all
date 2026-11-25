@@ -128,3 +128,17 @@ describe('Reel Studio AI calls', () => {
     expect(needsConfirmation('QUERY', 'reelMediaSearch')).toBe(false);
   });
 });
+
+describe('social Inbox replies', () => {
+  it.each(['sendSocialMessage', 'replyToSocialComment'])('%s writes to a real person as the brand, so the person must say yes first', (field) => {
+    expect(needsConfirmation('MUTATION', field)).toBe(true);
+  });
+
+  it('flags a direct message as reaching outside Duncit, and lets the queue be worked without asking', () => {
+    expect(reachesOutside('MUTATION', 'sendSocialMessage')).toBe(true);
+    for (const field of ['assignSocialConversation', 'setSocialConversationStatus', 'markSocialConversationRead']) {
+      expect(needsConfirmation('MUTATION', field)).toBe(false);
+    }
+    expect(needsConfirmation('QUERY', 'socialConversation')).toBe(false);
+  });
+});

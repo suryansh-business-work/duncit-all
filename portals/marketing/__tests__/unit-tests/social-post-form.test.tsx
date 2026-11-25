@@ -153,6 +153,9 @@ describe('blankSocialPostValues', () => {
       mode: 'SCHEDULE',
       needs_approval: false,
       collaborators: [],
+      post_type: 'FEED',
+      captions: {},
+      first_comment: '',
     });
   });
 
@@ -165,6 +168,9 @@ describe('blankSocialPostValues', () => {
       mode: 'DRAFT',
       needs_approval: true,
       collaborators: [],
+      post_type: 'FEED',
+      captions: {},
+      first_comment: '',
     });
   });
 });
@@ -341,6 +347,9 @@ describe('toSocialPostInput', () => {
       needs_approval: true,
       reel_project_id: 'reel1',
       collaborators: ['blue.cafe'],
+      post_type: 'FEED',
+      captions: [],
+      first_comment: '',
     });
   });
 
@@ -355,6 +364,9 @@ describe('toSocialPostInput', () => {
       needs_approval: false,
       reel_project_id: null,
       collaborators: [],
+      post_type: 'FEED',
+      captions: [],
+      first_comment: '',
     });
   });
 });
@@ -396,6 +408,9 @@ describe('SocialPostForm', () => {
       mode: 'DRAFT',
       needs_approval: false,
       collaborators: [],
+      post_type: 'FEED',
+      captions: {},
+      first_comment: '',
     });
   });
 
@@ -553,6 +568,9 @@ describe('SocialPostForm', () => {
       mode: 'NOW',
       needs_approval: false,
       collaborators: [],
+      post_type: 'FEED',
+      captions: {},
+      first_comment: '',
     });
   });
 

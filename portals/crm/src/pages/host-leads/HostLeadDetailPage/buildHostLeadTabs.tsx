@@ -44,7 +44,7 @@ export function buildHostLeadTabs({ lead, t, followUpLabel, preferredDate }: Bui
 
     {
       value: 'contacts',
-      label: `Contacts (${lead.contacts.length})`,
+      label: t('crm.prospectLeads.contactsCount', { count: lead.contacts.length }),
       icon: <ContactsIcon fontSize="small" />,
       render: () => (
         <ContactsTab entity="HOST_LEAD" leadId={lead.id} leadName={lead.host_name} contacts={lead.contacts} />
@@ -59,8 +59,8 @@ export function buildHostLeadTabs({ lead, t, followUpLabel, preferredDate }: Bui
         <LeadDetailCard title={t('crm.hostLeads.plansAndTimeline')} icon={<EventIcon color="primary" />}>
           <LeadDetailRow label={t('crm.hostLeads.budget')} value={lead.budget_range || '—'} />
           <LeadDetailRow label={t('crm.hostLeads.revenueModels')} value={joinList(lead.revenue_models)} />
-          <LeadDetailRow label={t('crm.hostLeads.needsVenue')} value={lead.need_venue ? 'Yes' : 'No'} />
-          <LeadDetailRow label={t('crm.hostLeads.needsVendor')} value={lead.need_vendor ? 'Yes' : 'No'} />
+          <LeadDetailRow label={t('crm.hostLeads.needsVenue')} value={lead.need_venue ? t('shell.common.yes') : t('shell.common.no')} />
+          <LeadDetailRow label={t('crm.hostLeads.needsVendor')} value={lead.need_vendor ? t('shell.common.yes') : t('shell.common.no')} />
           <LeadDetailRow label={t('crm.hostLeads.preferredDate')} value={preferredDate ?? '—'} />
           <LeadDetailRow label={t('crm.hostLeads.preferredDay')} value={lead.preferred_day || '—'} />
           <LeadDetailRow label={t('crm.hostLeads.preferredSlot')} value={lead.preferred_time_slot || '—'} />

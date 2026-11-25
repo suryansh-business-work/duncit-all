@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { REEL_MEDIA_SEARCH } from '../../src/pages/reels/queries';
 import MusicTab from '../../src/pages/reels/studio/sources/MusicTab';
 import MusicTrackRow from '../../src/pages/reels/studio/sources/MusicTrackRow';
@@ -72,8 +72,9 @@ describe('MusicTab', () => {
     searchFor(' upbeat ');
     expect(queryOptions.get(REEL_MEDIA_SEARCH)?.variables).toEqual({ query: 'upbeat', kind: 'AUDIO', orientation: 'PORTRAIT', page: 1, provider: 'JAMENDO' });
     expect(screen.getByTestId('reel-music-item-jamendo-9')).toHaveTextContent('1:01 · CC BY 3.0');
-    // Already in the reel: a tick instead of the add button.
+    // Already in the reel: a tick instead of the add button, announced to a screen reader.
     expect(screen.queryByTestId('reel-music-add-jamendo-10')).not.toBeInTheDocument();
+    expect(within(screen.getByTestId('reel-music-item-jamendo-10')).getByRole('img', { name: 'Already in the reel' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('reel-music-add-jamendo-9'));
     await waitFor(() => expect(studio.addStockItems).toHaveBeenCalledWith([toStockInput(track())]));
@@ -113,6 +114,24 @@ describe('MusicTrackRow', () => {
     expect(screen.getByTestId('reel-music-add-jamendo-9')).toBeDisabled();
     expect(screen.queryByTestId('reel-music-preview-jamendo-9')).not.toBeInTheDocument();
   });
+
+  it('names a track by its library id when it has no credit, and shows only the length without a licence', () => {
+    renderWithProviders(<MusicTrackRow track={track({ attribution: '', licence: '', preview_url: '' })} added={false} busy={false} onAdd={vi.fn()} />);
+    const row = screen.getByTestId('reel-music-item-jamendo-9');
+    expect(row).toHaveTextContent('9');
+    expect(row).not.toHaveTextContent('·');
+    expect(screen.getByTestId('reel-music-add-jamendo-9')).toHaveAccessibleName('Add 9 to the reel');
+    // No cover from the library: the note icon stands in, with no broken image.
+    expect(row.querySelector('img')).toBeNull();
+  });
+
+  it('marks a track the reel already holds instead of offering it again', () => {
+    const onAdd = vi.fn();
+    renderWithProviders(<MusicTrackRow track={track()} added busy={false} onAdd={onAdd} />);
+    expect(screen.getByRole('img', { name: 'Already in the reel' })).toBeInTheDocument();
+    expect(screen.queryByTestId('reel-music-add-jamendo-9')).not.toBeInTheDocument();
+    expect(onAdd).not.toHaveBeenCalled();
+  });
 });
 
 describe('the Pixabay shelf', () => {
@@ -139,5 +158,12 @@ describe('SourcesPanel shelves', () => {
     expect(screen.getByTestId('reel-sources-tab-pixabay')).toHaveTextContent('Pixabay');
     expect(screen.getByTestId('reel-sources-tab-music')).toHaveTextContent('Music');
     expect(screen.getByTestId('reel-music-tab')).toBeInTheDocument();
+  });
+
+  it('opens the Pixabay shelf from its tab in the URL, searching Pixabay rather than Pexels', () => {
+    answerQuery(REEL_MEDIA_SEARCH, { data: { reelMediaSearch: reelStockPage([]) } });
+    renderWithProviders(<SourcesPanel project={reelProject({ spec: reelSpec() })} actions={actions()} onEditDetails={vi.fn()} />, { initialEntries: ['/?sources=pixabay'] });
+    expect(screen.getByTestId('reel-stock-tab')).toHaveAttribute('data-provider', 'PIXABAY');
+    expect(screen.queryByTestId('reel-music-tab')).not.toBeInTheDocument();
   });
 });

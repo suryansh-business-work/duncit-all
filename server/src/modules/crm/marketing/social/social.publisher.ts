@@ -6,7 +6,9 @@ import { PUBLISHERS, READERS } from './providers';
 import { SocialApiError } from './providers/http';
 import { socialCredentials } from './social.credentials';
 import { freshHandle, syncSocialAccount, type AccountWithTokens } from './social.sync';
-import { publishContent, publishProblems } from './social.rules';
+import { GraphQLError } from 'graphql';
+import { contentFor, publishContent, publishProblems } from './social.rules';
+import { optionsOfDoc, type PostOptionsDoc } from './social.publish.options';
 import type { PublishContent, PublishMedia, SocialMediaType, SocialPublishStatus, SocialTargetStatus } from './social.types';
 import type { MarketingRunDecision, MarketingRunDoc } from '../runs/marketingRun.model';
 import { continueRun, finishRun, registerRunHandlers, userActor, withRun, type RunActor, type RunContext } from '../runs/marketingRun.service';
@@ -26,11 +28,20 @@ import { continueRun, finishRun, registerRunHandlers, userActor, withRun, type R
  * parked PENDING_APPROVAL by the composer under an approval run; the
  * reviewer's decision (handled here too) puts it in the queue, and its
  * publish run then hangs under that approval run.
+ *
+ * A passing failure (the network rate-limiting, answering 5xx, or not
+ * answering at all) is tried again on its own: that target goes back in the
+ * queue 5, then 15 minutes later, and fails for good only after MAX_ATTEMPTS.
+ * A refusal (bad media, a lapsed token, a rule) fails at once, since trying
+ * again would only be refused again.
  */
 const MAX_PER_TICK = 20;
 /** Longer than the slowest publish (an Instagram Reel waits up to five minutes). */
 const STUCK_AFTER_MS = 30 * 60_000;
 const INTERRUPTED = 'Interrupted — the server stopped while this was going out. Check the network before retrying.';
+export const MAX_ATTEMPTS = 3;
+/** How long a target waits before its next try, by how many it has had. */
+const RETRY_AFTER_MS = [5 * 60_000, 15 * 60_000];
 
 interface Target {
   account_id: string;
@@ -40,9 +51,12 @@ interface Target {
   permalink: string;
   error: string;
   published_at: Date | null;
+  /** Sends tried so far; absent before the first. */
+  attempts?: number;
+  first_comment_error?: string;
 }
 
-interface ClaimedPost {
+interface ClaimedPost extends PostOptionsDoc {
   _id: unknown;
   text: string;
   /** Absent on a post stored before carousels came; its one piece is in media_url then. */
@@ -65,9 +79,25 @@ interface WaitingPost {
   approval_run_id?: string;
 }
 
-type Outcome = Pick<Target, 'status' | 'external_id' | 'permalink' | 'error' | 'published_at'>;
+type Outcome = Pick<Target, 'status' | 'external_id' | 'permalink' | 'error' | 'published_at' | 'first_comment_error'> & {
+  /** A passing failure, worth another try; never stored. */
+  retryable?: boolean;
+};
 
-const failed = (error: string): Outcome => ({ status: 'FAILED', external_id: '', permalink: '', error, published_at: null });
+const failed = (error: string, retryable = false): Outcome => ({
+  status: 'FAILED',
+  external_id: '',
+  permalink: '',
+  error,
+  published_at: null,
+  ...(retryable ? { retryable } : {}),
+});
+
+/** Rate-limited, a 5xx, or no answer at all: the same send may well work in a few minutes. */
+export function isPassingFailure(error: unknown): boolean {
+  if (error instanceof SocialApiError) return !error.expired && (error.status === 429 || error.status >= 500);
+  return error instanceof GraphQLError && error.extensions?.code === 'BAD_GATEWAY';
+}
 
 /** The first sixty characters of a post on one line, as a run names it; a post of media alone is "Media post". */
 export const postTitle = (text: string) => text.replaceAll(/\s+/g, ' ').trim().slice(0, 60) || 'Media post';
@@ -89,13 +119,20 @@ async function publishTarget(target: Target, content: PublishContent): Promise<O
   if (!creds) return failed('This network’s app is not set up yet — add it under Marketing › Settings › Integrations.');
   try {
     const handle = await freshHandle(doc, READERS[doc.platform], creds);
-    const result = await PUBLISHERS[doc.platform].publish(handle, content, creds);
-    return { status: 'PUBLISHED', external_id: result.external_id, permalink: result.permalink, error: '', published_at: new Date() };
+    const result = await PUBLISHERS[doc.platform].publish(handle, contentFor(doc.platform, content), creds);
+    return {
+      status: 'PUBLISHED',
+      external_id: result.external_id,
+      permalink: result.permalink,
+      error: '',
+      published_at: new Date(),
+      ...(result.first_comment_error ? { first_comment_error: result.first_comment_error } : {}),
+    };
   } catch (error) {
     if (error instanceof SocialApiError && error.expired) {
       await SocialAccountModel.updateOne({ _id: doc._id }, { $set: { status: 'EXPIRED', last_error: error.message } });
     }
-    return failed((error instanceof Error ? error.message : String(error)).slice(0, 500));
+    return failed((error instanceof Error ? error.message : String(error)).slice(0, 500), isPassingFailure(error));
   }
 }
 
@@ -112,6 +149,33 @@ async function finish(post: ClaimedPost, targets: Target[]) {
   await SocialScheduledPostModel.updateOne({ _id: post._id }, { $set: { targets, status, published_at: firstOut } });
 }
 
+type Tried = Target & { retryable?: boolean };
+
+const triesAgain = (target: Tried) => target.status === 'FAILED' && target.retryable === true && (target.attempts ?? 0) < MAX_ATTEMPTS;
+
+/** The wait before a target's next try: 5 minutes after its first, 15 after its second. */
+const retryDelay = (target: Tried) => RETRY_AFTER_MS[Math.min((target.attempts ?? 1) - 1, RETRY_AFTER_MS.length - 1)];
+
+/**
+ * After a pass: a target that failed in passing and has tries left goes back
+ * in the queue, keeping its reason so the card says why it waits, and the
+ * post waits until the soonest retry. Otherwise the post ends as its targets did.
+ */
+async function finishOrRetry(post: ClaimedPost, tried: Tried[]) {
+  const waiting = tried.filter(triesAgain);
+  const targets: Target[] = tried.map((target) => {
+    const { retryable, ...stored } = target;
+    return retryable && triesAgain(target) ? { ...stored, status: 'PENDING' } : stored;
+  });
+  if (waiting.length === 0) return finish(post, targets);
+  const soonest = Math.min(...waiting.map(retryDelay));
+  const firstOut = targets.some((target) => target.status === 'PUBLISHED') ? post.published_at ?? new Date() : post.published_at;
+  await SocialScheduledPostModel.updateOne(
+    { _id: post._id },
+    { $set: { targets, status: 'SCHEDULED', scheduled_at: new Date(Date.now() + soonest), published_at: firstOut } }
+  );
+}
+
 /** The names the steps are labelled with; an account gone since the post was written keeps its id. */
 async function accountLabels(targets: readonly Target[]): Promise<Map<string, string>> {
   const ids = [...new Set(targets.map((t) => t.account_id))].filter((id) => isValidObjectId(id));
@@ -122,29 +186,32 @@ async function accountLabels(targets: readonly Target[]): Promise<Map<string, st
 /** One target as one recorded step. A refusal — or a crash — fails the step and the target, never the post. */
 function publishStep(run: RunContext, target: Target, content: PublishContent, name: string): Promise<Outcome> {
   const platform = target.platform.toLowerCase();
+  // The outcome itself, not just its message, so a passing failure keeps the mark that lets it be tried again.
+  let outcome: Outcome | null = null;
   return run
     .step(
       `${platform}:${target.account_id}`,
       `${target.platform} · ${name}`,
       async () => {
-        const outcome = await publishTarget(target, content);
+        outcome = await publishTarget(target, content);
         if (outcome.status === 'FAILED') throw new Error(outcome.error);
         return outcome;
       },
       { tool: `${platform}.publish`, input_summary: content.text.slice(0, 200), summarize: (o) => o.permalink || o.external_id }
     )
-    .catch((error: unknown) => failed((error instanceof Error ? error.message : String(error)).slice(0, 500)));
+    .catch((error: unknown) => outcome ?? failed((error instanceof Error ? error.message : String(error)).slice(0, 500)));
 }
 
 async function publishClaimed(post: ClaimedPost, run: RunContext): Promise<void> {
-  const content = { ...publishContent(post.text, mediaOf(post)), collaborators: post.collaborators ?? [] };
+  const content = { ...publishContent(post.text, mediaOf(post)), collaborators: post.collaborators ?? [], ...optionsOfDoc(post) };
   const names = await accountLabels(post.targets);
-  const targets: Target[] = [];
+  const targets: Tried[] = [];
   for (const target of post.targets) {
     const name = names.get(target.account_id) ?? target.account_id;
-    targets.push(target.status === 'PENDING' ? { ...target, ...(await publishStep(run, target, content, name)) } : target);
+    const attempts = (target.attempts ?? 0) + 1;
+    targets.push(target.status === 'PENDING' ? { ...target, attempts, ...(await publishStep(run, target, content, name)) } : target);
   }
-  await finish(post, targets);
+  await finishOrRetry(post, targets);
   // Pull the new posts into Posts and Analytics now, not at the next sync.
   const published = new Set(targets.filter((t) => t.status === 'PUBLISHED').map((t) => t.account_id));
   for (const accountId of published) {
@@ -217,7 +284,8 @@ export async function requeueFailed(id: string): Promise<boolean> {
   if (!isValidObjectId(id)) return false;
   const result = await SocialScheduledPostModel.updateOne(
     { _id: id, status: { $in: ['FAILED', 'PARTIAL'] } },
-    { $set: { status: 'SCHEDULED', scheduled_at: new Date(), 'targets.$[t].status': 'PENDING', 'targets.$[t].error': '' } },
+    // A person's retry starts a fresh round of tries.
+    { $set: { status: 'SCHEDULED', scheduled_at: new Date(), 'targets.$[t].status': 'PENDING', 'targets.$[t].error': '', 'targets.$[t].attempts': 0 } },
     { arrayFilters: [{ 't.status': 'FAILED' }] }
   );
   return result.matchedCount === 1;

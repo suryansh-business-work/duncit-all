@@ -47,7 +47,7 @@ export function buildVenueLeadTabs({ lead, t, navigate, followUpLabel }: BuildAr
 
     {
       value: 'contacts',
-      label: `Contacts (${lead.contacts.length})`,
+      label: t('crm.prospectLeads.contactsCount', { count: lead.contacts.length }),
       icon: <ContactsIcon fontSize="small" />,
       render: () => (
         <ContactsTab entity="VENUE_LEAD" leadId={lead.id} leadName={lead.venue_name} contacts={lead.contacts} />
@@ -61,10 +61,10 @@ export function buildVenueLeadTabs({ lead, t, navigate, followUpLabel }: BuildAr
       render: () => (
         <LeadDetailCard title={t('crm.venueLeads.commercial')} icon={<CurrencyRupeeIcon color="primary" />}>
           <LeadDetailRow label={t('crm.venueLeads.pricingModels')} value={joinList(lead.pricing_models)} />
-          <LeadDetailRow label={t('crm.venueLeads.expectedCharges')} value={lead.expected_charges ? `₹ ${lead.expected_charges}` : '—'} />
-          <LeadDetailRow label={t('crm.venueLeads.securityDeposit')} value={lead.security_deposit ? `₹ ${lead.security_deposit}` : '—'} />
-          <LeadDetailRow label="GST" value={lead.gst_applicable ? 'Applicable' : 'No'} />
-          <LeadDetailRow label={t('crm.venueLeads.invoice')} value={lead.invoice_available ? 'Available' : 'No'} />
+          <LeadDetailRow label={t('crm.venueLeads.expectedCharges')} value={lead.expected_charges ? t('crm.leadDetail.amountSpaced', { vars: { amount: lead.expected_charges } }) : '—'} />
+          <LeadDetailRow label={t('crm.venueLeads.securityDeposit')} value={lead.security_deposit ? t('crm.leadDetail.amountSpaced', { vars: { amount: lead.security_deposit } }) : '—'} />
+          <LeadDetailRow label={t('crm.leadDetail.gst')} value={lead.gst_applicable ? t('crm.leadDetail.applicable') : t('shell.common.no')} />
+          <LeadDetailRow label={t('crm.venueLeads.invoice')} value={lead.invoice_available ? t('crm.leadDetail.available') : t('shell.common.no')} />
         </LeadDetailCard>
       ),
     },
@@ -96,7 +96,7 @@ export function buildVenueLeadTabs({ lead, t, navigate, followUpLabel }: BuildAr
 
     {
       value: 'linked-hosts',
-      label: `Linked Hosts (${lead.linked_hosts.length})`,
+      label: t('crm.leadDetail.linkedHostsCount', { count: lead.linked_hosts.length }),
       icon: <LinkIcon sx={{
         fontSize: "small"
       }} />,

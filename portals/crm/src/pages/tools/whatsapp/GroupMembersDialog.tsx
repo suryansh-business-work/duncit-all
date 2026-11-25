@@ -27,7 +27,7 @@ export default function GroupMembersDialog({
   const members = data?.waGroupMembers ?? [];
   return (
     <Dialog open={!!group} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{group?.name || 'Members'}</DialogTitle>
+      <DialogTitle>{group?.name || t('crm.tools.members')}</DialogTitle>
       <DialogContent dividers>
         {loading ? (
           <Stack
@@ -43,7 +43,7 @@ export default function GroupMembersDialog({
               <ListItemText
                 key={m.jid}
                 primary={m.name || `+${m.phone}`}
-                secondary={`+${m.phone}${m.is_business ? ' · Business' : ''}`}
+                secondary={m.is_business ? t('crm.tools.businessNumber', { vars: { phone: `+${m.phone}` } }) : `+${m.phone}`}
               />
             ))}
             {members.length === 0 && <Typography sx={{

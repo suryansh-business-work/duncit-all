@@ -6,7 +6,7 @@
  * and when it is asked for outside a request.
  */
 import mongoose, { Schema, Types } from 'mongoose';
-import { buildSchema, type GraphQLSchema } from 'graphql';
+import { GraphQLError, buildSchema, type GraphQLSchema } from 'graphql';
 import type { AuthUser, GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { logs } from '@observability/log';
@@ -44,6 +44,8 @@ const GADGET_TABLE: TableEntityConfig = {
   defaultSort: { _id: -1 },
 };
 
+const UNLOCKED = 'Bearer unlocked-session';
+
 const SDL = /* GraphQL */ `
   input TableQueryInput {
     search: String
@@ -60,6 +62,7 @@ const SDL = /* GraphQL */ `
   type Query {
     cityGadgetsTable(city: String, query: TableQueryInput): GadgetPage!
     summaryGadgetsTable(query: TableQueryInput): GadgetPage!
+    sessionGadgetsTable(query: TableQueryInput): GadgetPage!
   }
 `;
 
@@ -75,6 +78,12 @@ function buildTestSchema(): GraphQLSchema {
   fields.summaryGadgetsTable.resolve = async (_p, _a, ctx: GraphQLContext) => {
     requireRole(ctx, ['FINANCE_MANAGER']);
     return { rows: [], total: 0 };
+  };
+  // A table behind an unlock bound to the caller's session (as Environment Variables is): it reads the request's bearer token.
+  fields.sessionGadgetsTable.resolve = async (_p, args: { query?: TableQueryInput }, ctx: GraphQLContext) => {
+    if (ctx.req?.headers?.authorization !== UNLOCKED) throw new GraphQLError('locked', { extensions: { code: 'ENV_LOCKED' } });
+    const page = await runTableQuery<IGadget>(GadgetModel, {}, args.query, GADGET_TABLE);
+    return { rows: page.docs, total: page.total };
   };
   return schema;
 }
@@ -191,5 +200,23 @@ describe('the history a table shows', () => {
       ctxFor(finance),
     );
     expect(page.rows.map((r) => r.doc_id)).toEqual([String(gadget._id)]);
+  });
+});
+
+describe('a table behind a session unlock', () => {
+  const call = (ctx: GraphQLContext) =>
+    asPerson(() => tableChangeLogResolvers.Query.tableChangeLogs(undefined, { table: 'sessionGadgetsTable', variables: '{}' }, ctx));
+
+  it("reads as unlocked when the page is: the caller's own request reaches the table's read", async () => {
+    const gadget = await asPerson(() => GadgetModel.create({ title: 'Key', city: 'Pune' }));
+    await logsFor(gadget._id, 1);
+    const ctx = { user: finance, req: { headers: { authorization: UNLOCKED } } } as unknown as GraphQLContext;
+    expect((await call(ctx)).rows.map((r) => r.doc_id)).toEqual([String(gadget._id)]);
+  });
+
+  it('still refuses a caller whose session is not unlocked, or a call with no request at all', async () => {
+    const other = { user: finance, req: { headers: { authorization: 'Bearer another-session' } } } as unknown as GraphQLContext;
+    await expect(call(other)).rejects.toMatchObject({ extensions: { code: 'ENV_LOCKED' } });
+    await expect(call(ctxFor(finance))).rejects.toMatchObject({ extensions: { code: 'ENV_LOCKED' } });
   });
 });

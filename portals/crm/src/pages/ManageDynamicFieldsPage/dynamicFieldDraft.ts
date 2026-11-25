@@ -1,152 +1,47 @@
-import type { CrmDynamicField, CrmDynamicFieldKind, CrmDynamicFieldOption } from '../../api/crm.types';
+import {
+  DYNAMIC_FIELD_KIND_KEY,
+  deriveDynamicFieldName,
+  dynamicFieldDefaults,
+  dynamicFieldValuesFromRow,
+  makeDynamicFieldSchema,
+  moveDynamicFieldRow,
+  toDynamicFieldInput,
+  type DynamicFieldInput as SharedDynamicFieldInput,
+  type DynamicFieldValues,
+} from '@duncit/forms/schemas';
+import type { useTranslation } from '@duncit/shell';
+import type { CrmDynamicField } from '../../api/crm.types';
 
-export interface DraftState {
-  id?: string;
-  name: string;
-  label: string;
-  kind: CrmDynamicFieldKind;
-  multi: boolean;
-  options: CrmDynamicFieldOption[];
-  placeholder: string;
-  default_value: string;
-  hint: string;
-  applies_to_venue: boolean;
-  applies_to_host: boolean;
-  applies_to_ecomm: boolean;
-  applies_to_creator: boolean;
-  applies_to_community: boolean;
-  required: boolean;
-  is_active: boolean;
-}
+/*
+ * The field's rules, key derivation and input live in @duncit/forms/schemas
+ * (dynamic-field), shared with the Duncit CRM app: both refuse the same field
+ * with the same sentence and save the same input.
+ */
 
-export const KIND_LABELS: Record<CrmDynamicFieldKind, string> = {
-  text: 'Text',
-  textarea: 'Long text',
-  number: 'Number',
-  boolean: 'Yes / No',
-  date: 'Date',
-  select: 'Select',
-};
+type Translate = ReturnType<typeof useTranslation>['t'];
 
-export const blankDraft: DraftState = {
-  name: '',
-  label: '',
-  kind: 'text',
-  multi: false,
-  options: [],
-  placeholder: '',
-  default_value: '',
-  hint: '',
-  applies_to_venue: true,
-  applies_to_host: true,
-  applies_to_ecomm: false,
-  applies_to_creator: false,
-  applies_to_community: false,
-  required: false,
-  is_active: true,
-};
+export type DraftState = DynamicFieldValues;
+
+/** Each kind's name key — literal keys in the shared module, for the localization gate. */
+export const KIND_LABEL_KEY = DYNAMIC_FIELD_KIND_KEY;
+
+export const blankDraft: DraftState = dynamicFieldDefaults;
 
 /** Derive the storage key from a human label: lowercase_with_underscores. */
-export function deriveName(label: string): string {
-  return label.trim().toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
-}
+export const deriveName = deriveDynamicFieldName;
 
-export function draftFromRow(row: CrmDynamicField): DraftState {
-  return {
-    id: row.id,
-    name: row.name,
-    label: row.label,
-    kind: row.kind,
-    multi: !!row.multi,
-    options: row.options.map((o) => ({ value: o.value, label: o.label })),
-    placeholder: row.placeholder ?? '',
-    default_value: row.default_value ?? '',
-    hint: row.hint ?? '',
-    applies_to_venue: row.applies_to_venue,
-    applies_to_host: row.applies_to_host,
-    applies_to_ecomm: row.applies_to_ecomm,
-    applies_to_creator: !!row.applies_to_creator,
-    applies_to_community: !!row.applies_to_community,
-    required: row.required,
-    is_active: row.is_active,
-  };
-}
+export const draftFromRow = (row: CrmDynamicField): DraftState => dynamicFieldValuesFromRow(row);
 
-export interface DynamicFieldInput {
-  name: string;
-  label: string;
-  kind: CrmDynamicFieldKind;
-  options: CrmDynamicFieldOption[];
-  multi: boolean;
-  placeholder: string;
-  default_value: string;
-  hint: string;
-  applies_to_venue: boolean;
-  applies_to_host: boolean;
-  applies_to_ecomm: boolean;
-  applies_to_creator: boolean;
-  applies_to_community: boolean;
-  required: boolean;
-  sort_order: number;
-  is_active: boolean;
-}
+export type DynamicFieldInput = SharedDynamicFieldInput;
 
 export type DraftValidation = { ok: true; input: DynamicFieldInput } | { ok: false; error: string };
 
-/** Validate a draft and build the GraphQL input. Pure — unit tested. */
-export function buildDynamicFieldInput(draft: DraftState, sortOrder: number): DraftValidation {
-  const label = draft.label.trim();
-  if (!label) return { ok: false, error: 'Label is required' };
-  const appliesSomewhere =
-    draft.applies_to_venue ||
-    draft.applies_to_host ||
-    draft.applies_to_ecomm ||
-    draft.applies_to_creator ||
-    draft.applies_to_community;
-  if (!appliesSomewhere) {
-    return { ok: false, error: 'Pick at least one of: applies to Venue / Host / Ecomm / Creator / Community.' };
-  }
-  const name = draft.id ? draft.name : deriveName(draft.label);
-  if (!name) return { ok: false, error: 'Label must contain letters or numbers.' };
-
-  const options =
-    draft.kind === 'select'
-      ? draft.options
-          .map((o) => ({ value: o.value.trim(), label: (o.label || o.value).trim() }))
-          .filter((o) => o.value)
-      : [];
-  if (draft.kind === 'select' && options.length === 0) {
-    return { ok: false, error: 'Add at least one option for a Select field.' };
-  }
-
-  return {
-    ok: true,
-    input: {
-      name,
-      label,
-      kind: draft.kind,
-      options,
-      multi: draft.kind === 'select' ? draft.multi : false,
-      placeholder: draft.placeholder.trim(),
-      default_value: draft.default_value.trim(),
-      hint: draft.hint.trim(),
-      applies_to_venue: draft.applies_to_venue,
-      applies_to_host: draft.applies_to_host,
-      applies_to_ecomm: draft.applies_to_ecomm,
-      applies_to_creator: draft.applies_to_creator,
-      applies_to_community: draft.applies_to_community,
-      required: draft.required,
-      sort_order: sortOrder,
-      is_active: draft.is_active,
-    },
-  };
+/** Validate a draft (the first problem, in the reader's language) and build the GraphQL input. */
+export function buildDynamicFieldInput(draft: DraftState, sortOrder: number, t: Translate): DraftValidation {
+  const result = makeDynamicFieldSchema(t).safeParse(draft);
+  if (!result.success) return { ok: false, error: result.error.issues[0]?.message ?? '' };
+  return { ok: true, input: toDynamicFieldInput(draft, sortOrder) };
 }
 
-/** Immutably move an array item from one index to another. Pure — unit tested. */
-export function moveItem<T>(items: readonly T[], from: number, to: number): T[] {
-  const next = items.slice();
-  if (from < 0 || from >= next.length || to < 0 || to >= next.length || from === to) return next;
-  const [moved] = next.splice(from, 1);
-  next.splice(to, 0, moved);
-  return next;
-}
+/** Immutably move an array item from one index to another. */
+export const moveItem = moveDynamicFieldRow;

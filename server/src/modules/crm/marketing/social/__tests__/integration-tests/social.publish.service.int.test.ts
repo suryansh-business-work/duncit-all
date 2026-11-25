@@ -10,6 +10,8 @@ jest.mock('@modules/crm/marketing/social/social.publisher', () => ({
   ...jest.requireActual('@modules/crm/marketing/social/social.publisher'),
   publishNow: jest.fn(),
 }));
+// The CDN is not reached from a test: the media check has its own suite.
+jest.mock('@modules/crm/marketing/social/social.media.check', () => ({ mediaReachProblems: jest.fn(async () => []) }));
 
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
@@ -72,7 +74,7 @@ describe('create — drafts', () => {
     const out = await svc.create(input({ text: '', media_url: ` ${IMAGE} `, account_ids: [String(yt._id)], scheduled_at: at }), USER);
     expect(out).toMatchObject({ media_url: IMAGE, media_type: 'IMAGE', scheduled_at: at, status: 'DRAFT' });
     expect(out.targets).toEqual([
-      { account_id: String(yt._id), account_name: 'Duncit YOUTUBE', platform: 'YOUTUBE', status: 'PENDING', permalink: '', error: '', published_at: null },
+      { account_id: String(yt._id), account_name: 'Duncit YOUTUBE', platform: 'YOUTUBE', status: 'PENDING', permalink: '', error: '', first_comment_error: '', published_at: null },
     ]);
   });
 
@@ -155,7 +157,8 @@ describe('create — media', () => {
       USER
     );
     expect(out.status).toBe('SCHEDULED');
-    expect(out.media).toEqual(media);
+    // Nothing was measured, so the API says so rather than inventing sizes.
+    expect(out.media).toEqual(media.map((item) => ({ ...item, width: null, height: null, duration_s: null })));
   });
 });
 

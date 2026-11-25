@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Words and colours are set at run time from the synced labels and theme (CrmWidgetProvider). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@android:id/background"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:clipToOutline="true"
+  android:orientation="vertical"
+  android:padding="12dp">
+
+  <TextView
+    android:id="@+id/crm_widget_title"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:textSize="14sp"
+    android:textStyle="bold" />
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_weight="1"
+    android:gravity="center"
+    android:orientation="horizontal">
+
+    <LinearLayout
+      android:id="@+id/crm_widget_dial"
+      style="@style/CrmWidgetAction">
+      <ImageView
+        android:id="@+id/crm_widget_dial_icon"
+        style="@style/CrmWidgetIcon"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_crm_call" />
+      <TextView android:id="@+id/crm_widget_dial_label" style="@style/CrmWidgetLabel" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:id="@+id/crm_widget_search"
+      style="@style/CrmWidgetAction">
+      <ImageView
+        android:id="@+id/crm_widget_search_icon"
+        style="@style/CrmWidgetIcon"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_crm_search" />
+      <TextView android:id="@+id/crm_widget_search_label" style="@style/CrmWidgetLabel" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:id="@+id/crm_widget_reminders"
+      style="@style/CrmWidgetAction">
+      <ImageView
+        android:id="@+id/crm_widget_reminders_icon"
+        style="@style/CrmWidgetIcon"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_crm_event" />
+      <TextView android:id="@+id/crm_widget_reminders_label" style="@style/CrmWidgetLabel" />
+    </LinearLayout>
+  </LinearLayout>
+</LinearLayout>

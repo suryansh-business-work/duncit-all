@@ -1,0 +1,33 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "types": ["node", "jest"],
+    "paths": {
+      "@/*": ["./src/*"],
+      // The app's own Kotlin module (Expo local module, autolinked from modules/).
+      "crm-telephony": ["./modules/crm-telephony"],
+      // Linked @duncit packages are typechecked from their own source, so their
+      // peer imports resolve from packages/<name>/ — empty in CI, where only
+      // this app is installed. Point them at this app's copy (the same lines
+      // the member app carries, for the same reason).
+      "zod": ["./node_modules/zod"],
+      "date-fns": ["./node_modules/date-fns"],
+      "date-fns/*": ["./node_modules/date-fns/*"],
+      "date-fns-tz": ["./node_modules/date-fns-tz"],
+      "date-fns-tz/*": ["./node_modules/date-fns-tz/*"],
+      "@duncit/regex": ["./node_modules/@duncit/regex"],
+      "@duncit/utils": ["./node_modules/@duncit/utils"],
+      "@duncit/datetime": ["./node_modules/@duncit/datetime"],
+      "@duncit/i18n": ["./node_modules/@duncit/i18n"],
+      // The portal's console colours, read from their MUI-free files: the
+      // package's main entry pulls in MUI, which this app does not install.
+      "@duncit/theme/mode-colors": ["../../packages/theme/src/mode-colors.ts"],
+      "@duncit/theme/tokens": ["../../packages/theme/src/tokens.ts"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "android", "ios", "dist", "coverage"]
+}

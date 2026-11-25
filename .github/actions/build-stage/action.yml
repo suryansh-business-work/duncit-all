@@ -47,6 +47,10 @@ inputs:
   run_url:
     description: This workflow run's URL.
     required: true
+  app:
+    description: CRM for the Duncit CRM app; empty for the member app.
+    required: false
+    default: ''
 
 runs:
   using: composite
@@ -69,4 +73,5 @@ runs:
         DUNCIT_RELEASE_EMAIL: ${{ inputs.release_email }}
         DUNCIT_RELEASE_PASSWORD: ${{ inputs.release_password }}
         RUN_URL: ${{ inputs.run_url }}
+        APP: ${{ inputs.app }}
       run: node scripts/report-app-build.mjs || true

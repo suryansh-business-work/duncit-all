@@ -78,6 +78,7 @@ const ROUTES = [
   '/app-builds',
   '/app-builds/android',
   '/app-builds/ios',
+  '/app-builds/crm',
   '/app-builds/settings',
 ];
 

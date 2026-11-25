@@ -5,17 +5,12 @@ import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
 import { FormField } from '@duncit/forms';
 import { useTranslation } from '@duncit/shell';
-import { BAND_TONES, QUALITY_LIMITS, type BandTone } from '../../../lib/generated/lead-quality-rules';
+import { CRM_QUALITY_BAND_TONE_KEY } from '@duncit/utils';
+import { BAND_TONES, QUALITY_LIMITS } from '../../../lib/generated/lead-quality-rules';
 import { issueMessage, issuesAt } from '../lead-quality-config.issues';
 import { blankBand, type LeadQualityConfigFormValues } from '../lead-quality-config.schema';
 import { useLiveIssues } from './LiveIssues';
 import RowControls from './RowControls';
-
-const TONE_KEY: Record<BandTone, string> = {
-  success: 'crm.leadQualitySettings.toneSuccess',
-  warning: 'crm.leadQualitySettings.toneWarning',
-  error: 'crm.leadQualitySettings.toneError',
-};
 
 /** The classification bands: a name, the score each starts at and its ring colour. */
 export default function BandsFields() {
@@ -66,7 +61,7 @@ export default function BandsFields() {
               <FormField<LeadQualityConfigFormValues> select name={`bands.${index}.tone`} label={t('crm.leadQualitySettings.bandTone')} size="small">
                 {BAND_TONES.map((tone) => (
                   <MenuItem key={tone} value={tone}>
-                    <Chip size="small" color={tone} label={t(TONE_KEY[tone])} />
+                    <Chip size="small" color={tone} label={t(CRM_QUALITY_BAND_TONE_KEY[tone])} />
                   </MenuItem>
                 ))}
               </FormField>

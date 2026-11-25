@@ -41,7 +41,8 @@ export default function MusicTrackRow({ track, added, busy, onAdd }: Readonly<Pr
         </Box>
         {added ? (
           <Tooltip title={t('ai.reels.sources.alreadyAdded')}>
-            <CheckIcon fontSize="small" role="img" aria-label={t('ai.reels.sources.alreadyAdded')} sx={{ color: 'success.main', mx: 1 }} />
+            {/* titleAccess, not role/aria-label: MUI hides an icon from screen readers unless it has one. */}
+            <CheckIcon fontSize="small" titleAccess={t('ai.reels.sources.alreadyAdded')} sx={{ color: 'success.main', mx: 1 }} />
           </Tooltip>
         ) : (
           <Tooltip title={t('ai.reels.sources.add')}>

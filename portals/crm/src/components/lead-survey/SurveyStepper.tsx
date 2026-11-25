@@ -1,16 +1,21 @@
 import { useMemo, useState } from 'react';
 import { Alert, Stack, Step, StepLabel, Stepper, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import SurveyQuestionField, { type FieldAnswer } from './SurveyQuestionField';
+import {
+  crmFirstUnanswered,
+  crmSeedSurveyAnswers,
+  crmSurveyAnswer,
+  crmSurveyAnswerInput,
+  type CrmSurveyAnswerInput,
+  type CrmSurveyAnswers,
+  type CrmSurveyFieldAnswer,
+} from '@duncit/utils';
+import SurveyQuestionField from './SurveyQuestionField';
 import { splitSections } from './surveySections';
 import type { LeadSurveyAnswer, LeadSurveyDef } from './queries';
 import { useTranslation } from '@duncit/shell';
 
-export interface SurveyAnswerInput {
-  qid: string;
-  value?: string | null;
-  values?: string[];
-}
+export type SurveyAnswerInput = CrmSurveyAnswerInput;
 
 interface Props {
   survey: LeadSurveyDef;
@@ -20,44 +25,29 @@ interface Props {
   submitLabel?: string;
 }
 
-type State = Record<string, FieldAnswer>;
-const seed = (initial?: LeadSurveyAnswer[]): State => {
-  const s: State = {};
-  for (const a of initial ?? []) s[a.qid] = { value: a.value ?? '', values: a.values };
-  return s;
-};
-
 /** Section-stepped survey form — one step per SECTION; final step submits. */
 export default function SurveyStepper({ survey, initialAnswers, submitting, onSubmit, submitLabel }: Readonly<Props>) {
   const { t } = useTranslation();
   const submitLabelText = submitLabel ?? t('crm.components.submit');
-  const sections = useMemo(() => splitSections(survey.questions, survey.title || 'Survey'), [survey]);
-  const [answers, setAnswers] = useState<State>(() => seed(initialAnswers));
+  const sections = useMemo(() => splitSections(survey.questions, survey.title || t('crm.common.survey')), [survey, t]);
+  const [answers, setAnswers] = useState<CrmSurveyAnswers>(() => crmSeedSurveyAnswers(initialAnswers));
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const get = (qid: string): FieldAnswer => answers[qid] ?? { value: '', values: [] };
-  const set = (qid: string, patch: Partial<FieldAnswer>) => setAnswers((a) => ({ ...a, [qid]: { ...get(qid), ...patch } }));
+  const get = (qid: string) => crmSurveyAnswer(answers, qid);
+  const set = (qid: string, patch: Partial<CrmSurveyFieldAnswer>) => setAnswers((a) => ({ ...a, [qid]: { ...get(qid), ...patch } }));
 
   const validate = (idx: number) => {
-    for (const q of sections[idx].questions) {
-      if (!q.required) continue;
-      const a = get(q.qid);
-      const filled = q.type === 'MCQ' && q.multi ? a.values.length > 0 : a.value.trim() !== '';
-      if (!filled) { setError(`Please answer: ${q.label}`); return false; }
-    }
-    setError(null);
-    return true;
+    const missing = crmFirstUnanswered(sections[idx].questions, answers);
+    setError(missing ? t('crm.leadSurvey.pleaseAnswer', { vars: { label: missing.label } }) : null);
+    return !missing;
   };
 
   const isLast = step >= sections.length - 1;
   const next = () => { if (validate(step)) setStep((s) => Math.min(s + 1, sections.length - 1)); };
   const submit = () => {
     if (!validate(step)) return;
-    const payload: SurveyAnswerInput[] = sections
-      .flatMap((s) => s.questions)
-      .map((q) => (q.type === 'MCQ' && q.multi ? { qid: q.qid, values: get(q.qid).values } : { qid: q.qid, value: get(q.qid).value }));
-    onSubmit(payload);
+    onSubmit(crmSurveyAnswerInput(sections.flatMap((s) => s.questions), answers));
   };
 
   if (sections.length === 0) return <Alert severity="info">{t('crm.components.thisSurveyHasNoQuestions')}</Alert>;
@@ -85,11 +75,11 @@ export default function SurveyStepper({ survey, initialAnswers, submitting, onSu
       <Stack direction="row" spacing={1.5} sx={{
         justifyContent: "space-between"
       }}>
-        <DuncitButton disabled={step === 0 || submitting} onClick={() => setStep((s) => Math.max(0, s - 1))}>Back</DuncitButton>
+        <DuncitButton disabled={step === 0 || submitting} onClick={() => setStep((s) => Math.max(0, s - 1))}>{t('crm.leadSurvey.back')}</DuncitButton>
         {isLast ? (
-          <DuncitButton variant="contained" onClick={submit} disabled={submitting}>{submitting ? 'Saving…' : submitLabelText}</DuncitButton>
+          <DuncitButton variant="contained" onClick={submit} disabled={submitting}>{submitting ? t('shell.common.saving') : submitLabelText}</DuncitButton>
         ) : (
-          <DuncitButton variant="contained" onClick={next} disabled={submitting}>Next</DuncitButton>
+          <DuncitButton variant="contained" onClick={next} disabled={submitting}>{t('crm.leadSurvey.next')}</DuncitButton>
         )}
       </Stack>
     </Stack>

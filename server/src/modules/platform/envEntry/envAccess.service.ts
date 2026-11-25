@@ -15,6 +15,12 @@ import { EnvAccessGrantModel } from './envAccess.model';
  * and every env resolver checks the unlock server-side — hiding the page
  * would protect nothing.
  *
+ * One unlock serves every portal that edits the store (Tech, Marketing ›
+ * Settings › Integrations, Instagram Leads' Serper key): the same person's
+ * other sessions share it while they come from the same network, until it
+ * expires. A token used from anywhere else still needs a code, and "Lock now"
+ * ends the unlock in every portal at once.
+ *
  * The code itself is the shared `otpService` one (expiry, attempt limit, single
  * use); only what a verified code opens lives here.
  */
@@ -36,6 +42,12 @@ function sessionHash(ctx: GraphQLContext): string | null {
   return sha(header.slice(7));
 }
 
+/** The network the request came from (nginx is trusted, so this is the client), hashed; null when unknown. */
+function networkHash(ctx: GraphQLContext): string | null {
+  const ip = ctx.req?.ip;
+  return typeof ip === 'string' && ip ? sha(ip) : null;
+}
+
 /** `admin@duncit.com` → `ad***@duncit.com` — enough to recognise, not to harvest. */
 export function maskEmail(email: string): string {
   const [local, domain] = email.split('@');
@@ -48,10 +60,16 @@ const locked = () =>
     extensions: { code: 'ENV_LOCKED' },
   });
 
-function liveGrant(ctx: GraphQLContext) {
+/** This session's own unlock, else one the same person made from the same network in another portal. */
+async function liveGrant(ctx: GraphQLContext) {
   const hash = sessionHash(ctx);
-  if (!hash) return Promise.resolve(null);
-  return EnvAccessGrantModel.findOne({ session_hash: hash, expires_at: { $gt: new Date() } }).lean();
+  if (!hash) return null;
+  const now = new Date();
+  const own = await EnvAccessGrantModel.findOne({ session_hash: hash, expires_at: { $gt: now } }).lean();
+  if (own) return own;
+  const network = networkHash(ctx);
+  if (!network) return null;
+  return EnvAccessGrantModel.findOne({ user_id: ctx.user?.id, ip_hash: network, expires_at: { $gt: now } }).lean();
 }
 
 export const envAccessService = {
@@ -109,7 +127,7 @@ export const envAccessService = {
     const expires_at = new Date(Date.now() + ttlMinutes() * 60_000);
     await EnvAccessGrantModel.findOneAndUpdate(
       { session_hash: hash },
-      { $set: { user_id: ctx.user?.id, expires_at } },
+      { $set: { user_id: ctx.user?.id, expires_at, ip_hash: networkHash(ctx) ?? '' } },
       { upsert: true }
     );
     logs.server.info('envAccess.service', 'verify', {
@@ -120,10 +138,10 @@ export const envAccessService = {
     return this.status(ctx);
   },
 
-  /** End the unlock early ("Lock now"). */
+  /** End the unlock early ("Lock now") — in every portal, since they share it. */
   async lock(ctx: GraphQLContext) {
-    const hash = sessionHash(ctx);
-    if (hash) await EnvAccessGrantModel.deleteOne({ session_hash: hash });
+    // Only a signed-in session with a token can lock (sessionHash needs both); its own grant is among these.
+    if (sessionHash(ctx)) await EnvAccessGrantModel.deleteMany({ user_id: ctx.user?.id });
     return this.status(ctx);
   },
 };

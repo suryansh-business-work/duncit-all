@@ -8,6 +8,7 @@ coverageGate: true
 consumers:
   - 'app/mweb'
   - 'app/mobile-app'
+  - 'app/crm-app'
   - 'portals/*'
   - 'packages/ui'
   - 'packages/shell'
@@ -2186,6 +2187,41 @@ clubAdminRangeLabels(t)['12m']                       // 'Last 12 months'
 podAuditActionLabel('VENUE_DECLINED', t)   // 'Venue Rejected'
 podAuditActionLabel('ATTENDANCE_FORCED', t) // 'Attendance Marked by Club Admin' — a no-scan mark, toned warning
 podAuditRiskOptions(t).map((o) => o.value) // ['LOW', 'MEDIUM', 'HIGH', 'PENDING']
+```
+
+### CRM portal ↔ Duncit CRM app — `crm-dashboard`, `crm-quality-analytics`, `crm-quality-labels`, `crm-call`, lead pages and settings
+
+The CRM portal and the Duncit CRM Android app (`app/crm-app`) run on the same backend and must
+count, label and word things the same way, so the logic both need lives here and the portal
+re-exports it under its old names.
+
+| Module | What it gives |
+| --- | --- |
+| `crm-dashboard` | `crmRangeToWindow`, `crmLeadsInWindow`, `crmAggregateStages / Priorities / Services / SuperCategories / Totals` — the Dashboard's counts (super categories: most leads first, then by name). |
+| `crm-quality-analytics` | `crmSumCounts`, `crmFormatScore`, `crmShareOf`, `crmIsEmptyAnalytics`, `crmIsoWeekMonday`. |
+| `crm-quality-labels` | Copy keys and tones for qualification and Lead Research candidate statuses (`CrmTone`). |
+| `crm-service-targets` | Services Offered: `CRM_SERVICE_TARGETS` (the lead kinds a service applies to), `crmDefaultServiceTargets`, `crmPickServiceTargets`, `crmHasAnyServiceTarget` (at least one must be on), `crmAllServiceTargets` (All on/off), `crmServiceTargetLabelKeys` (the "Applies to" labels), `crmNormalizeServiceTitles` (trimmed, de-duplicated titles). |
+| `crm-lead-lists` | The per-kind lead pages and the reminders calendar: Fill with AI rows (`crmAiParseRecords`, `crmAiRecordToRow`, `crmAiRowError`, `crmAiRowToInput`), Excel import (`CRM_VENUE_IMPORT_FIELDS` / `CRM_HOST_IMPORT_FIELDS`, `crmImportFieldsFor`, `crmImportAutoMatch`, `crmImportReady`, `crmImportMappingInput`), Nearby leads (`crmFormatKm`, `CRM_GEO_PRECISION_KEY`), `crmDueUrgency` (overdue / due soon / later) and `crmCalendarEvents` (reminders and lead follow-ups as one filtered, sorted list). |
+| `crm-lead-detail` | A lead page's values: `CRM_DASH`, `crmJoinList`, `crmFormatCapacity`, `crmFormatCount`, `crmSafeHref` (http/https only), the status / priority tones and `crmToneOf`, `crmSocialCount`, `crmServicesHint`, `crmWhatsappDigits`, `crmMapsUrl`, and the custom field values (`crmParseDynamicValues`, `crmDynamicValueText`). |
+| `crm-quality-detail` | The lead Quality Score tab: verification, status, gate, auto-check, via and trigger label keys and tones, `crmKeyOr`, `crmQualityTone`, `crmFormatPoints`, `crmRingValue`, `crmEvidenceByKey`, `crmItemNamesOf`, `crmListedRefusals`. |
+| `crm-email-compose` | The lead email composer: `CRM_TEMPLATE_TARGET`, `crmTemplatesFor`, `crmTemplatePlaceholders`, `crmInterpolateTemplate`, `crmStripPlaceholders`, `crmSeedTemplateValue`, `crmTextToHtml`, `crmProviderToSelect`, and a lead's template values (`crmVenueTemplateValues`, `crmHostTemplateValues`). |
+| `crm-lead-quality-settings` | Settings › Lead Quality Score: config status keys and tones, change-kind and threshold-hint keys, band tone keys. |
+| `crm-lead-media` | The lead Logos & Images tab: media types, groups and limits, `crmOtherMediaKind`, `crmMediaBytes`, `crmImageMeta`. |
+| `crm-lead-survey` | The lead Survey tab: `crmSplitSurveySections`, `crmSeedSurveyAnswers`, `crmSurveyAnswer`, `crmFirstUnanswered`, `crmSurveyAnswerInput`, `crmToggleSurveyOption`, the share link (`crmSurveyLinkUrl`, `crmSurveyLinkLive`) and `crmSurveyEntryStatus`. |
+| `crm-manual-logs` | The lead Manual Logs tab: granularities and their labels, history types and views, `crmLogKey`, `crmGroupLogs` (by day / week / month), `crmLogHistory`, `crmLogPeopleIds` (the @mentioned people). |
+| `crm-comms-logs` | The lead Communications tab: status tones, the All / Email / Call filters and `crmCommsTypeCounts`, `crmCallHasTranscript`, `crmTranscriptLabelKey`, `CRM_CALL_SENTIMENT`. |
+| `crm-website-pages` | The lead Website tab: page status tones, the scrape limit, `crmUnfetchedPages`. |
+| `crm-lead-ai` | The lead Ask AI assistant: suggestions, source labels and action headings, `crmLeadAiKb`, `crmLeadAiReminderUpdate`, `crmTextPreview`. |
+| `crm-email-templates` | Email Templates: the venue / host variable catalogue with label keys (`crmEmailVariablesFor`, `crmForeignEmailVariables`), `crmEmailTemplateSlug`, `crmInsertMjmlImage`, `crmEmailVarsJson`, `crmMergeDetectedVariables`, the brand shelves and email image types. |
+| `crm-whatsapp` | Tools › WhatsApp Lead Generator: the poll, stuck-restart and extraction-poll timings (`WA_*`), `waConnectionStatusView` / `waExtractionView` (label key + tone), `waExtractionPercent`, `waInitialConnectStep`, `waFirstStatusAction`, `waShouldRetryError`. |
+| `crm-managed-options` | The Amenities / Event Suitability lists: `crmSortManagedOptions` (by place, then name), `crmFilterManagedOptions` (name search), `crmNextManagedOrder` (after the last entry). |
+| `crm-call` | The CRM call line (Twilio rings the agent, joins the lead, records): `CRM_CALL_STATUSES`, `crmToCallStatus`, `crmIsTerminalCallStatus`, `crmCallStatusView` (label key + tone, "On hold" for a held call), `crmMergeSegment` / `crmFilterSegments` (the live transcript; same array back when nothing changes), `crmFormatDuration`, `crmElapsedSeconds`, `crmCanStartCall`. |
+
+```ts
+crmToCallStatus('RINGING')                 // 'RINGING' — anything else the API sends reads as null
+crmCallStatusView('IN_PROGRESS', true)     // { labelKey: 'crm.call.statusOnHold', tone: 'warning' }
+crmFormatDuration(3725)                    // '1:02:05'
+crmCanStartCall({ configured: true, from_number: '+1555', agent_number: '+9198' }, '98123') // true
 ```
 
 ## The grievance form is one spec, four validators

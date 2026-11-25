@@ -192,14 +192,23 @@ describe('accounts.health_check', () => {
   it('names the accounts that need a person', async () => {
     const checked_at = new Date();
     m(runHealthChecks).mockResolvedValue([
-      { account_id: ACCOUNT, platform: 'LINKEDIN', name: 'Duncit', status: 'CONNECTED', ok: true, expired: false, message: '', expires_in_days: 40, checked_at },
-      { account_id: OTHER, platform: 'INSTAGRAM', name: 'Duncit Pets', status: 'EXPIRED', ok: false, expired: true, message: 'token lapsed', expires_in_days: -2, checked_at },
+      { account_id: ACCOUNT, platform: 'LINKEDIN', name: 'Duncit', status: 'CONNECTED', ok: true, expired: false, message: '', expires_in_days: 40, messaging_missing_permission: null, checked_at },
+      { account_id: OTHER, platform: 'INSTAGRAM', name: 'Duncit Pets', status: 'EXPIRED', ok: false, expired: true, message: 'token lapsed', expires_in_days: -2, messaging_missing_permission: 'instagram_manage_messages', checked_at },
     ]);
     const out = await runTool('accounts.health_check', {}, ctxFor('ACCOUNT_DOCTOR'));
     expect(out.summary).toBe('2 account(s) checked; 1 need a person: Duncit Pets (token lapsed)');
     expect(out.data).toEqual([
-      { account_id: ACCOUNT, platform: 'LINKEDIN', name: 'Duncit', ok: true, expired: false, message: '', expires_in_days: 40 },
-      { account_id: OTHER, platform: 'INSTAGRAM', name: 'Duncit Pets', ok: false, expired: true, message: 'token lapsed', expires_in_days: -2 },
+      { account_id: ACCOUNT, platform: 'LINKEDIN', name: 'Duncit', ok: true, expired: false, message: '', expires_in_days: 40, messaging_missing_permission: null },
+      { account_id: OTHER, platform: 'INSTAGRAM', name: 'Duncit Pets', ok: false, expired: true, message: 'token lapsed', expires_in_days: -2, messaging_missing_permission: 'instagram_manage_messages' },
     ]);
+  });
+
+  it('names a healthy account that cannot message until it is reconnected with the permission', async () => {
+    const checked_at = new Date();
+    m(runHealthChecks).mockResolvedValue([
+      { account_id: ACCOUNT, platform: 'FACEBOOK', name: 'Duncit Page', status: 'CONNECTED', ok: true, expired: false, message: '', expires_in_days: null, messaging_missing_permission: 'pages_messaging', checked_at },
+    ]);
+    const out = await runTool('accounts.health_check', {}, ctxFor('ACCOUNT_DOCTOR'));
+    expect(out.summary).toBe('1 account(s) checked; 0 need a person; 1 cannot message: Duncit Page (needs pages_messaging)');
   });
 });

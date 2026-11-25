@@ -24,11 +24,14 @@ const STATE_STEP = 0.1;
 /** A portal's own state colour must shed at least 5% of the rest fill's luminance to read as a step. */
 const STATE_LUMINANCE = 0.95;
 
+type Rgb = [number, number, number];
+
 /** `#rgb` or `#rrggbb` to its three 0–255 channels. */
-function channels(hex: string): number[] {
+function channels(hex: string): Rgb {
   const body = hex.slice(1);
   const full = body.length === 3 ? [...body].map((ch) => ch + ch).join('') : body;
-  return [0, 2, 4].map((at) => Number.parseInt(full.slice(at, at + 2), 16));
+  const at = (start: number) => Number.parseInt(full.slice(start, start + 2), 16);
+  return [at(0), at(2), at(4)];
 }
 
 const toHex = (rgb: readonly number[]): string =>
@@ -41,8 +44,8 @@ const linear = (channel: number): number => {
 
 /** WCAG relative luminance, 0 (black) to 1 (white). */
 export function luminance(hex: string): number {
-  const [r, g, b] = channels(hex).map(linear);
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const [r, g, b] = channels(hex);
+  return 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
 }
 
 /** WCAG contrast ratio between two colours, 1 to 21. */
@@ -54,8 +57,10 @@ export function contrastRatio(a: string, b: string): number {
 
 /** `from` mixed toward `to` by `weight` (0–1), as `#rrggbb`. */
 export function mix(from: string, to: string, weight: number): string {
-  const target = channels(to);
-  return toHex(channels(from).map((v, i) => v + (target[i] - v) * weight));
+  const [fr, fg, fb] = channels(from);
+  const [tr, tg, tb] = channels(to);
+  const step = (a: number, b: number) => a + (b - a) * weight;
+  return toHex([step(fr, tr), step(fg, tg), step(fb, tb)]);
 }
 
 const clears = (color: string, grounds: readonly string[]): boolean =>

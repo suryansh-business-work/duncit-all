@@ -58,7 +58,7 @@ export default function LeadsToolbar({
         {onFillWithAi && (
           <Tooltip title={t('crm.components.pasteAFreeTextDescriptionAnd')}>
             <DuncitButton startIcon={<AutoFixHighIcon />} variant="outlined" color="secondary" onClick={onFillWithAi}>
-              Fill with AI
+              {t('crm.aiFill.button')}
             </DuncitButton>
           </Tooltip>
         )}

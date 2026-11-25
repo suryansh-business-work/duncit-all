@@ -20,6 +20,9 @@ exports:
   - 'can'
   - 'canAny'
   - 'hasAppAccess'
+  - 'readSessionClaim'
+  - 'isPortalTokenPending'
+  - 'isPortalTokenVerified'
   - 'ME_FIELDS'
   - 'buildMeQuerySource'
   - 'DUID_STORAGE_KEY'
@@ -110,6 +113,23 @@ Roles **are** the authorisation model: the server gates on `requireRole` and
 there is no permission collection, so `can` resolves to the roles the server
 actually enforces rather than a second client-side vocabulary that could
 disagree with it.
+
+## Console session claim
+
+A console sign-in (`portal_key` sent) is minted with a `psv` claim that stays
+`verified: false` until the Security Verification screen is completed; the
+server treats such a token as signed out everywhere else.
+
+```ts
+import { isPortalTokenPending, readSessionClaim } from '@duncit/user-core';
+
+readSessionClaim(token); // { portal: 'crm', verified: false, policy: undefined } | null
+isPortalTokenPending(token); // true → show the Security Verification screen
+```
+
+Read for the SCREEN only — the signature is not checked. The portals use it
+through `@duncit/shell` and the Duncit CRM app imports it directly, so both
+gate on the same reading.
 
 ## Device
 

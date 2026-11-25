@@ -132,6 +132,10 @@ export interface CreateLogInput {
   recording_url?: string | null;
   created_by?: string | null;
   metadata?: Record<string, unknown> | null;
+  /** Defaults to OUTBOUND: every log written before calls could be taken on a phone was one. */
+  direction?: 'OUTBOUND' | 'INBOUND';
+  /** Defaults to PENDING for a CALL (a recording is on its way) and NONE otherwise. */
+  transcript_status?: 'NONE' | 'PENDING' | 'READY' | 'FAILED';
 }
 
 export const communicationLogService = {
@@ -224,7 +228,7 @@ export const communicationLogService = {
   async create(input: CreateLogInput) {
     const doc = await CommunicationLogModel.create({
       type: input.type,
-      direction: 'OUTBOUND',
+      direction: input.direction ?? 'OUTBOUND',
       entity_type: input.entity_type,
       entity_id: new Types.ObjectId(input.entity_id),
       provider_id: input.provider_id ? new Types.ObjectId(input.provider_id) : null,
@@ -238,7 +242,7 @@ export const communicationLogService = {
       duration_seconds: input.duration_seconds ?? 0,
       recording_url: input.recording_url ?? '',
       external_id: input.external_id ?? '',
-      transcript_status: input.type === 'CALL' ? 'PENDING' : 'NONE',
+      transcript_status: input.transcript_status ?? (input.type === 'CALL' ? 'PENDING' : 'NONE'),
       created_by: input.created_by ?? null,
       metadata: input.metadata ?? {},
     });
@@ -339,6 +343,16 @@ export const communicationLogService = {
       status: { $nin: TERMINAL_CALL },
       created_at: { $gte: new Date(Date.now() - ACTIVE_CALL_WINDOW_MS) },
     }).sort({ created_at: -1 });
+    return pub(doc);
+  },
+
+  /** Store a transcript produced outside Twilio (a recording the CRM app uploaded), or the reason there is none. */
+  async saveTranscript(id: string, result: { transcript?: string | null; error?: string | null }) {
+    const text = (result.transcript ?? '').trim();
+    const set: Record<string, unknown> = text
+      ? { transcript: text, transcript_status: 'READY' }
+      : { transcript_status: 'FAILED', error_message: (result.error ?? 'No transcript was produced').slice(0, 500) };
+    const doc = await CommunicationLogModel.findByIdAndUpdate(id, { $set: set }, { new: true });
     return pub(doc);
   },
 

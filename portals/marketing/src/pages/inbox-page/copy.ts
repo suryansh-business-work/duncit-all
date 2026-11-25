@@ -1,3 +1,4 @@
+import type { InboxChannel, SocialInboxItemKind, SocialWindowState } from './dm.queries';
 import type { SocialInboxStatus, SocialInboxView } from './queries';
 
 /**
@@ -34,3 +35,32 @@ export const inboxViewOf = (params: URLSearchParams): SocialInboxView => {
 
 /** The longest reply a network takes; what to show while the capabilities are loading. */
 export const FALLBACK_REPLY_MAX = 280;
+
+/** The channel tabs, in tab order: everything, DMs, comments, Threads replies. */
+export const INBOX_CHANNELS: readonly InboxChannel[] = ['all', 'dms', 'comments', 'threads'];
+
+export const INBOX_CHANNEL_LABEL: Record<InboxChannel, string> = {
+  all: 'marketing.inbox.channelAll',
+  dms: 'marketing.inbox.channelDms',
+  comments: 'marketing.inbox.channelComments',
+  threads: 'marketing.inbox.channelThreads',
+};
+
+/** Meta's messaging window, as a conversation shows it. */
+export const WINDOW_LABEL: Record<SocialWindowState, string> = {
+  OPEN: 'marketing.inbox.windowOpen',
+  HUMAN_AGENT: 'marketing.inbox.windowHumanAgent',
+  CLOSED: 'marketing.inbox.windowClosed',
+};
+
+export const WINDOW_COLORS = { OPEN: 'success', HUMAN_AGENT: 'warning', CLOSED: 'default' } as const;
+
+/** What a row of the All tab is. */
+export const ITEM_KIND_LABEL: Record<SocialInboxItemKind, string> = {
+  COMMENT: 'marketing.inbox.kindComment',
+  THREADS_REPLY: 'marketing.inbox.kindThreadsReply',
+  DM: 'marketing.inbox.kindDm',
+};
+
+/** The comment queue's server channel for a comment tab. */
+export const COMMENT_CHANNEL = { comments: 'COMMENTS', threads: 'THREADS_REPLIES' } as const;

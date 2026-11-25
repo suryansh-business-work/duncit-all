@@ -1248,3 +1248,110 @@ const schema = makeAskDuncitHandoverSchema(t);
 schema.parse({ ...askDuncitHandoverDefaults, summary: 'Refund for a cancelled pod' });
 // { team: 'SUPPORT', summary: 'Refund for a cancelled pod' }
 ```
+
+### CRM lead forms — `crm-leads`
+
+The CRM portal's lead forms (`portals/crm/src/forms/*-lead`) and the Duncit CRM Android app's lead
+editor (`app/crm-app/src/forms/lead`) validate with the same rules, so a lead the phone saves is one
+the portal would accept, with the same sentences. One factory per kind:
+`makeVenueLeadSchema`, `makeHostLeadSchema`, `makeEcommLeadSchema`, `makeCreatorLeadSchema`,
+`makeCommunityLeadSchema`. They share the field rules `contactsSchemaFor(t)` (every contact row
+optional; a phone, by its last ten digits, or an email repeated on the same lead is refused with
+`crm.duplicates.phoneRepeated` / `crm.duplicates.emailRepeated`), `numeric`, `phone`, `urlish`,
+`serviceOfferedSchema` and `socialLinksSchema` / `withSocialLinks` (at most `SOCIAL_LINK_MAX` (20)
+links, names up to `SOCIAL_NAME_MAX` (60) characters).
+
+The live duplicate check across leads is the server's `crmLeadDuplicates`; `duplicateCheckKey(contacts,
+website)` decides what both surfaces send it: phones with 7 or more digits, emails with an `@`, and
+the website, as a stable string (`''` when nothing could match), debounced by
+`DUPLICATE_CHECK_DEBOUNCE_MS` (500 ms).
+
+```ts
+import { duplicateCheckKey, emptyCrmContact, makeEcommLeadSchema } from '@duncit/forms/schemas';
+
+makeEcommLeadSchema(t).safeParse({
+  super_category_id: 'c1', seller_name: 'Paws Co', brand_name: '', gst_number: '', website: '',
+  instagram_link: '', services_offered: [], contacts: [emptyCrmContact], lead_status: 'New', priority: 'Medium',
+}).success; // true
+
+duplicateCheckKey([{ mobile_number: '98110 00001', email: '' }], '');
+// '{"contacts":[{"mobile_number":"98110 00001","email":""}],"website":""}'
+```
+
+### CRM managed lists — `managed-option`
+
+CRM › Data › Venues › Amenities and Event Suitability, in the CRM portal and the Duncit CRM app:
+`makeManagedOptionSchema(t)` asks for a name (`crm.data.optionNameRequired`, trimmed — the server
+also refuses a duplicate) and a place that is a whole number from 0 up or blank
+(`crm.data.optionOrderInvalid`); `toManagedOptionInput(values)` saves a blank place as 0, as the
+portal always has.
+
+```ts
+import { makeManagedOptionSchema, toManagedOptionInput } from '@duncit/forms/schemas';
+
+makeManagedOptionSchema(t).safeParse({ name: '  ', sort_order: null, is_active: true }).success; // false
+toManagedOptionInput({ name: ' AC ', sort_order: null, is_active: true }); // { name: 'AC', sort_order: 0, is_active: true }
+```
+
+### CRM Static Content — `call-prompt`
+
+CRM › AI Call Prompts › Static Content, in the CRM portal and the Duncit CRM app:
+`makeCallPromptSchema(t)` with `CALL_PROMPT_LIMITS` (name 2–80, description up to 200, context
+10–5000 characters, all trimmed; a language is required) and `CALL_PROMPT_LANGUAGES` (`auto` first, then
+the Indian languages the AI agent speaks, each with its label key). Messages are `crm.callPrompts.*`.
+
+### CRM lead pages — `nearby-leads`, `lead-evidence`
+
+Shared by the CRM portal and the Duncit CRM app. `makeNearbyLeadsSchema(t)` with `NEARBY_RADIUS`
+(min, max, default and the 0.5 km step) and `nearbyLeadsDefaults`: a search around my location or a
+city / area within the radius. `makeLeadEvidenceSchema(t)` with `LEAD_EVIDENCE_STATUSES`, the text
+and URL limits, `leadEvidenceDefaults` and `leadEvidenceDecision`: what a person records against a
+Quality Score criterion (a source link or a note, and whether it is verified).
+
+### CRM settings — `lead-quality-config`, `lead-quality-issues`, `dynamic-field`
+
+`leadQualityEditor(rules)` binds the Lead Quality Score form (Zod schema, conversions to and from
+the stored config, the live check and blank rows) to the generated copy of the server rules the
+client passes in: the portal's `src/lib/generated/lead-quality-rules.ts`, or the app's, written by
+its codegen (`node scripts/generate-lead-quality-rules.mjs --out …`). `lead-quality-issues` maps each
+rules issue to its form field and copy key and reads a refused save (`leadQualityFailure`).
+`makeDynamicFieldSchema(t)` checks a custom field (label, at least one lead type, options for a
+Select) in the portal's order of messages; `deriveDynamicFieldName`, `toDynamicFieldInput` and
+`moveDynamicFieldRow` (the app's up / down reorder) build what is saved.
+
+### Media names — `media-name`
+
+`makeMediaNameSchema(t)` with `MEDIA_NAME_MAX`: the name given to an uploaded image or file on a CRM
+lead's Logos & Images tab and in the Email Templates library (trimmed, required, capped).
+
+### Email Templates — `email-template`, `email-theme`, `email-prompt`
+
+CRM › Email Templates in the portal and the app. `email-template`: `makeEmailTemplateCreateSchema(t)`
+(target, name, slug) with `toEmailTemplateCreateInput`, `makeEmailTestSendSchema(t)` (a valid address,
+the shared email rule) and `makeEmailAiRequestSchema(t)` for the AI writer. `email-theme`:
+`makeEmailThemeSchema(t)` with the colour fields, `EMAIL_THEME_RANGES`, the field copy and
+`emailThemeToValues`. `email-prompt`: `makeEmailPromptSchema(t)` with `EMAIL_PROMPT_MAX` and the
+placeholders a prompt may use.
+
+### WhatsApp gateway — `wa-gateway`
+
+CRM › Tools › WhatsApp Lead Generator, step 1 in the portal and the app: `makeWaGatewaySchema(t, hasKey)`
+asks for the gateway URL and an API key up to `WA_API_KEY_MAX` characters (the key may stay blank when
+one is already saved, `hasKey`).
+
+### Console sign-in — `makeConsoleLoginSchema`
+
+The portal login card's rules, shared with the Duncit CRM app's sign-in: an e-mail address
+(trimmed, checked against the HTML5 pattern the console login has always used) and any
+non-empty password, with the card's own `session.login.emailRequired` / `emailInvalid` /
+`passwordRequired` messages. Use this, not `makeLoginSchema`, for a console: the member contract
+sets an 8-character password floor and a phone channel the console login mutation does not take.
+`@duncit/user-context`'s `buildLoginSchema` holds the same three rules today and should move onto
+this export.
+
+```ts
+import { consoleLoginDefaults, makeConsoleLoginSchema } from '@duncit/forms/schemas';
+
+makeConsoleLoginSchema(t).safeParse({ email: ' asha@duncit.com ', password: '1' });
+// { success: true, data: { email: 'asha@duncit.com', password: '1' } }
+```

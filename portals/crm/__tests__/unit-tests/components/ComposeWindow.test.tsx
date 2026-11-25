@@ -26,22 +26,22 @@ describe('ComposeWindow', () => {
   it('minimize hides the body, expand restores it', () => {
     renderWindow();
     expect(screen.getByText('compose-body')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'minimize' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Minimize' }));
     expect(screen.queryByText('compose-body')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'minimize' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Minimize' }));
     expect(screen.getByText('compose-body')).toBeTruthy();
   });
 
   it('maximize keeps the body visible (toggles layout)', () => {
     renderWindow();
-    fireEvent.click(screen.getByRole('button', { name: 'maximize' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Maximize' }));
     expect(screen.getByText('compose-body')).toBeTruthy();
   });
 
   it('close fires onClose', () => {
     const onClose = vi.fn();
     renderWindow(true, onClose);
-    fireEvent.click(screen.getByRole('button', { name: 'close' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -74,11 +74,11 @@ describe('ComposeWindow', () => {
     renderWindow();
     const panel = screen.getByTestId('compose-window');
 
-    fireEvent.pointerDown(screen.getByRole('button', { name: 'close' }), { clientX: 100, clientY: 100 });
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Close' }), { clientX: 100, clientY: 100 });
     fireEvent.pointerMove(globalThis.window, { clientX: 140, clientY: 140 });
     expect(panel).toHaveStyle({ transform: 'translate(0px, 0px)' });
 
-    fireEvent.click(screen.getByRole('button', { name: 'maximize' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Maximize' }));
     fireEvent.pointerDown(screen.getByText('Email · Hall'), { clientX: 100, clientY: 100 });
     fireEvent.pointerMove(globalThis.window, { clientX: 140, clientY: 140 });
     expect(panel).toHaveStyle({ transform: 'translateX(-50%)' });

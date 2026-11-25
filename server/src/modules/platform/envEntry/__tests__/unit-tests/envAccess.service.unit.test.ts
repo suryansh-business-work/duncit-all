@@ -5,7 +5,7 @@ import { anyDelivered, otpService } from '@modules/platform/otp/otp.service';
 import { rootAdminEmail } from '@modules/access/user/user.roles';
 import { logs } from '@observability/log';
 
-jest.mock('../../envAccess.model', () => ({ EnvAccessGrantModel: { findOne: jest.fn(), findOneAndUpdate: jest.fn(), deleteOne: jest.fn() } }));
+jest.mock('../../envAccess.model', () => ({ EnvAccessGrantModel: { findOne: jest.fn(), findOneAndUpdate: jest.fn(), deleteOne: jest.fn(), deleteMany: jest.fn() } }));
 jest.mock('@modules/platform/otp/otp.service', () => ({ anyDelivered: jest.fn(), otpService: { request: jest.fn(), verify: jest.fn(), consume: jest.fn() } }));
 jest.mock('@modules/access/user/user.roles', () => ({ rootAdminEmail: jest.fn() }));
 jest.mock('@observability/log', () => ({ logs: { server: { warn: jest.fn(), info: jest.fn() } } }));
@@ -51,6 +51,41 @@ describe('status and require', () => {
     grantLookup(null);
     await expect(envAccessService.status(ctx())).resolves.toMatchObject({ unlocked: false, expires_at: null });
     await expect(envAccessService.require(ctx())).rejects.toMatchObject({ message: expect.stringContaining('locked'), ...LOCKED });
+  });
+});
+
+describe('one unlock across portals', () => {
+  const lookups = () => (EnvAccessGrantModel.findOne as jest.Mock).mock.calls.map((call) => call[0]);
+  /** The session's own lookup misses; the shared one answers `shared`. */
+  const sharedLookup = (shared: unknown) =>
+    (EnvAccessGrantModel.findOne as jest.Mock)
+      .mockReturnValueOnce({ lean: () => Promise.resolve(null) })
+      .mockReturnValueOnce({ lean: () => Promise.resolve(shared) });
+
+  beforeEach(() => (EnvAccessGrantModel.findOne as jest.Mock).mockReset());
+
+  it('opens another portal of the same person on the same network with the unlock made elsewhere', async () => {
+    const expires = new Date('2026-01-01T10:00:00Z');
+    sharedLookup({ expires_at: expires });
+    const marketing = ctx({ req: { headers: { authorization: 'Bearer marketing-tok' }, ip: '203.0.113.7' } });
+    await expect(envAccessService.status(marketing)).resolves.toEqual({ unlocked: true, expires_at: expires.toISOString(), sent_to: 'ad***@duncit.com' });
+    expect(lookups()).toEqual([
+      { session_hash: sha('marketing-tok'), expires_at: { $gt: expect.any(Date) } },
+      { user_id: 'u1', ip_hash: sha('203.0.113.7'), expires_at: { $gt: expect.any(Date) } },
+    ]);
+  });
+
+  it('stays locked from another network, or when the address is unknown, and does not look further once the session has its own', async () => {
+    sharedLookup(null);
+    await expect(envAccessService.require(ctx({ req: { headers: { authorization: 'Bearer stolen' }, ip: '198.51.100.9' } }))).rejects.toMatchObject(LOCKED);
+    (EnvAccessGrantModel.findOne as jest.Mock).mockReset();
+    grantLookup(null);
+    await expect(envAccessService.status(ctx({ req: { headers: { authorization: 'Bearer tok-1' }, ip: '' } }))).resolves.toMatchObject({ unlocked: false });
+    expect(EnvAccessGrantModel.findOne).toHaveBeenCalledTimes(1);
+    (EnvAccessGrantModel.findOne as jest.Mock).mockReset();
+    grantLookup({ expires_at: new Date('2026-01-01T10:00:00Z') });
+    await expect(envAccessService.status(ctx({ req: { headers: { authorization: 'Bearer tok-1' }, ip: '203.0.113.7' } }))).resolves.toMatchObject({ unlocked: true });
+    expect(EnvAccessGrantModel.findOne).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -111,7 +146,7 @@ describe('verify', () => {
       expect(match({})).toBe(false);
       const [filter, update, options] = (EnvAccessGrantModel.findOneAndUpdate as jest.Mock).mock.calls[0];
       expect(filter).toEqual({ session_hash: sha('tok-1') });
-      expect(update.$set).toEqual({ user_id: 'u1', expires_at: new Date('2026-01-01T09:30:00Z') });
+      expect(update.$set).toEqual({ user_id: 'u1', expires_at: new Date('2026-01-01T09:30:00Z'), ip_hash: '' });
       expect(options).toEqual({ upsert: true });
     } finally {
       jest.useRealTimers();
@@ -138,6 +173,11 @@ describe('verify', () => {
     }
   });
 
+  it('records the network it was unlocked from, hashed, so the person\'s other portals there share it', async () => {
+    await envAccessService.verify(ctx({ req: { headers: { authorization: 'Bearer tok-1' }, ip: '203.0.113.7' } }), 'c1', '1');
+    expect((EnvAccessGrantModel.findOneAndUpdate as jest.Mock).mock.calls[0][1].$set.ip_hash).toBe(sha('203.0.113.7'));
+  });
+
   it('does not unlock anything when the code is wrong', async () => {
     (otpService.verify as jest.Mock).mockRejectedValue(new Error('Invalid code'));
     await expect(envAccessService.verify(ctx(), 'c1', '000000')).rejects.toThrow('Invalid code');
@@ -146,14 +186,14 @@ describe('verify', () => {
 });
 
 describe('lock', () => {
-  it('ends the unlock early and reports the new status', async () => {
+  it('ends the unlock early in every portal, and reports the new status', async () => {
     grantLookup(null);
     await expect(envAccessService.lock(ctx())).resolves.toMatchObject({ unlocked: false });
-    expect(EnvAccessGrantModel.deleteOne).toHaveBeenCalledWith({ session_hash: sha('tok-1') });
+    expect(EnvAccessGrantModel.deleteMany).toHaveBeenCalledWith({ user_id: 'u1' });
   });
 
   it('does nothing for a session that has no token', async () => {
     await expect(envAccessService.lock(ctx({ req: { headers: {} } }))).resolves.toMatchObject({ unlocked: false });
-    expect(EnvAccessGrantModel.deleteOne).not.toHaveBeenCalled();
+    expect(EnvAccessGrantModel.deleteMany).not.toHaveBeenCalled();
   });
 });

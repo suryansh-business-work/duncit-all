@@ -43,6 +43,22 @@ export type SocialReviewStatus = (typeof SOCIAL_REVIEW_STATUSES)[number];
 export const SOCIAL_INBOX_STATUSES = ['OPEN', 'REPLIED', 'DONE', 'SPAM'] as const;
 export type SocialInboxStatus = (typeof SOCIAL_INBOX_STATUSES)[number];
 
+/** A direct-message conversation's messages: what the person sent us, and what we sent back. */
+export const SOCIAL_MESSAGE_DIRECTIONS = ['IN', 'OUT'] as const;
+export type SocialMessageDirection = (typeof SOCIAL_MESSAGE_DIRECTIONS)[number];
+
+/** RECEIVED for an inbound message; an outbound one is SENT once the network took it, FAILED when it refused. */
+export const SOCIAL_MESSAGE_STATUSES = ['RECEIVED', 'SENT', 'FAILED'] as const;
+export type SocialMessageStatus = (typeof SOCIAL_MESSAGE_STATUSES)[number];
+
+/**
+ * Meta's messaging window for a conversation: free-form replies within 24
+ * hours of the person's last message, a human agent's reply (HUMAN_AGENT tag)
+ * up to 7 days, nothing after — and nothing ever to someone who never wrote.
+ */
+export const SOCIAL_WINDOW_STATES = ['OPEN', 'HUMAN_AGENT', 'CLOSED'] as const;
+export type SocialWindowState = (typeof SOCIAL_WINDOW_STATES)[number];
+
 /** The slices of the Inbox its summary cards open. */
 export const SOCIAL_INBOX_VIEWS = ['OPEN', 'FLAGGED', 'UNASSIGNED', 'MINE', 'ALL'] as const;
 export type SocialInboxView = (typeof SOCIAL_INBOX_VIEWS)[number];
@@ -69,6 +85,10 @@ export type SocialTargetStatus = (typeof SOCIAL_TARGET_STATUSES)[number];
 export const SOCIAL_MEDIA_TYPES = ['IMAGE', 'VIDEO'] as const;
 export type SocialMediaType = (typeof SOCIAL_MEDIA_TYPES)[number];
 
+/** How a post shows: in the feed (two or more media make a carousel), as a Reel, or as a 24-hour Story. */
+export const SOCIAL_POST_TYPES = ['FEED', 'REEL', 'STORY'] as const;
+export type SocialPostType = (typeof SOCIAL_POST_TYPES)[number];
+
 export const SOCIAL_IDEA_STATUSES = ['NEW', 'USED', 'DISMISSED'] as const;
 export type SocialIdeaStatus = (typeof SOCIAL_IDEA_STATUSES)[number];
 
@@ -82,6 +102,12 @@ export interface SocialAppCredentials {
   redirectUri: string;
   /** LinkedIn's `LinkedIn-Version` header or a Meta app's Graph version; '' for the others. */
   version: string;
+  /**
+   * The Facebook Login for Business configuration (Instagram and Facebook
+   * only). When set, Meta takes the permissions and assets from it; '' falls
+   * back to asking for the default permission list.
+   */
+  configId?: string;
 }
 
 export interface SocialTokens {
@@ -170,6 +196,10 @@ export interface SocialConnector {
 export interface PublishMedia {
   url: string;
   type: SocialMediaType;
+  /** Pixels and seconds the composer measured; absent (or null) when it could not, and then no shape rule applies. */
+  width?: number | null;
+  height?: number | null;
+  duration_s?: number | null;
 }
 
 /**
@@ -185,11 +215,19 @@ export interface PublishContent {
   media_type: SocialMediaType | null;
   /** Instagram usernames invited as collaborators; only Instagram uses them (social.rules maxCollaborators). */
   collaborators?: string[];
+  /** FEED when absent — every post stored before post types. */
+  post_type?: SocialPostType;
+  /** A network's own caption in place of `text` there; a network without one gets `text`. */
+  captions?: Partial<Record<SocialPlatform, string>>;
+  /** Posted as the first comment under an Instagram feed post or reel, once it is out. */
+  first_comment?: string;
 }
 
 export interface PublishResult {
   external_id: string;
   permalink: string;
+  /** The post went out but its first comment did not; why. Absent when it went, or there was none. */
+  first_comment_error?: string;
 }
 
 /** The writing half of a platform. */

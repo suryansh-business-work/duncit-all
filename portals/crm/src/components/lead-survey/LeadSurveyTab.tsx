@@ -76,7 +76,7 @@ export default function LeadSurveyTab({ entity, leadId }: Readonly<Props>) {
     const res = await generate({ variables: { entity, lead_id: leadId, survey_id: survey.id } });
     const token = res.data?.generateLeadSurveyLink?.token as string | undefined;
     if (token) await navigator.clipboard?.writeText(surveyLinkUrl(token)).catch(() => undefined);
-  }, 'Link generated & copied to clipboard');
+  }, t('crm.leadSurvey.linkCopied'));
 
   if (loading && !data) return <QueryGuard loading spinnerSx={{ py: 4 }} />;
 
@@ -90,7 +90,7 @@ export default function LeadSurveyTab({ entity, leadId }: Readonly<Props>) {
           color: "text.secondary",
           fontWeight: 600
         }}>
-        Multiple categories — pick which survey to use:
+        {t('crm.leadSurvey.pickWhich')}
       </Typography>
       {categories.length > 0 && (
         <TextField select size="small" label={t('crm.common.category')} value={categoryId || categories[0].id} sx={{ minWidth: 180 }}
@@ -99,7 +99,7 @@ export default function LeadSurveyTab({ entity, leadId }: Readonly<Props>) {
         </TextField>
       )}
       {subCategories.length > 0 && (
-        <TextField select size="small" label="Sub-category" value={subCategoryId || subCategories[0].id} sx={{ minWidth: 180 }}
+        <TextField select size="small" label={t('crm.leadSurvey.subCategory')} value={subCategoryId || subCategories[0].id} sx={{ minWidth: 180 }}
           onChange={(e) => setSubCategoryId(e.target.value)}>
           {subCategories.map((c) => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
         </TextField>
@@ -109,16 +109,16 @@ export default function LeadSurveyTab({ entity, leadId }: Readonly<Props>) {
 
   return (
     <LeadDetailCard
-      title={survey?.title || 'Survey'}
+      title={survey?.title || t('crm.common.survey')}
       subtitle={t('crm.components.fillItAsAStepperShare')}
       icon={<AssignmentIcon color="primary" />}
       action={survey && (
         <Stack direction="row" spacing={1}>
           <DuncitButton size="small" startIcon={<EditNoteIcon />} variant={filling ? 'contained' : 'outlined'} onClick={() => (filling ? setFilling(false) : openFill())}>
-            {filling ? 'Close form' : 'Fill manually'}
+            {filling ? t('crm.leadSurvey.closeForm') : t('crm.leadSurvey.fillManually')}
           </DuncitButton>
           <DuncitButton size="small" startIcon={<LinkIcon />} variant="outlined" disabled={generating} onClick={onGenerateLink}>
-            Generate link
+            {t('crm.leadSurvey.generateLink')}
           </DuncitButton>
         </Stack>
       )}
@@ -128,14 +128,13 @@ export default function LeadSurveyTab({ entity, leadId }: Readonly<Props>) {
         {picker}
         {!survey && (
           <Alert severity="info">
-            No onboarding survey matches {showPicker ? 'the selected category' : "this lead's category"} yet. Create one in
-            the Onboarding portal scoped to that Super → Category → Sub, then reopen this tab.
+            {showPicker ? t('crm.leadSurvey.noSurveySelected') : t('crm.leadSurvey.noSurveyLead')}
           </Alert>
         )}
         {survey && filling && (
           <>
             <LeadSurveyFields entity={entity} leadId={leadId} survey={survey} initialAnswers={seed}
-              onSaved={() => { setFilling(false); setSnack('Survey saved'); refetch(); }} />
+              onSaved={() => { setFilling(false); setSnack(t('crm.leadSurvey.saved')); refetch(); }} />
             <Divider />
           </>
         )}

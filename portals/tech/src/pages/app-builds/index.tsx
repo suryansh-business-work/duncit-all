@@ -14,11 +14,13 @@ import { usePlayStorePush } from './usePlayStorePush';
 import { useAppStorePush } from './useAppStorePush';
 import {
   APP_BUILDS_TABLE,
+  APP_BUILDS_TABLE_CRM,
   DELETE_APP_BUILD,
   hasAppStorePushInFlight,
   hasPushInFlight,
   isLive,
   isStaleRunning,
+  type AppBuildApp,
   type AppBuildPlatform,
   type AppBuildRow,
 } from './queries';
@@ -42,6 +44,8 @@ const ENV_OF: Record<EnvFilter, 'PRODUCTION' | 'STAGING' | null> = {
 
 interface Props {
   platform: AppBuildPlatform;
+  /** Which app's builds — the member app unless this is the Duncit CRM table. */
+  app?: AppBuildApp;
 }
 
 /**
@@ -49,7 +53,8 @@ interface Props {
  * ios-build workflows report every merge-to-main build here (artifact stored on
  * the VPS, announcement on Slack); this table is the store of record.
  */
-export default function AppBuildsPage({ platform }: Readonly<Props>) {
+export default function AppBuildsPage({ platform, app = 'DUNCIT' }: Readonly<Props>) {
+  const crm = app === 'CRM';
   const { t } = useTranslation();
   const client = useApolloClient();
   const confirm = useConfirm();
@@ -70,10 +75,10 @@ export default function AppBuildsPage({ platform }: Readonly<Props>) {
   const appEnv = ENV_OF[envTabs.value];
   const baseFetch = useApolloTableFetch<AppBuildRow>(
     client,
-    APP_BUILDS_TABLE,
+    crm ? APP_BUILDS_TABLE_CRM : APP_BUILDS_TABLE,
     'appBuildsTable',
     { extraVariables: { platform, app_env: appEnv } },
-    [platform, appEnv]
+    [platform, appEnv, crm]
   );
 
   // The page it just fetched is what decides whether to keep polling: no live
@@ -131,10 +136,12 @@ export default function AppBuildsPage({ platform }: Readonly<Props>) {
     [confirm, removeBuild, t]
   );
 
-  const title =
-    platform === 'ANDROID' ? t('tech.appBuilds.androidTitle') : t('tech.appBuilds.iosTitle');
-  const subtitle =
-    platform === 'ANDROID' ? t('tech.appBuilds.androidSubtitle') : t('tech.appBuilds.iosSubtitle');
+  let title = platform === 'ANDROID' ? t('tech.appBuilds.androidTitle') : t('tech.appBuilds.iosTitle');
+  let subtitle = platform === 'ANDROID' ? t('tech.appBuilds.androidSubtitle') : t('tech.appBuilds.iosSubtitle');
+  if (crm) {
+    title = t('tech.appBuilds.crmTitle');
+    subtitle = t('tech.appBuilds.crmSubtitle');
+  }
 
   return (
     <Box>
@@ -168,6 +175,7 @@ export default function AppBuildsPage({ platform }: Readonly<Props>) {
       <AppBuildsTable
         key={envTabs.value}
         platform={platform}
+        app={app}
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         onRowClick={openRow}
@@ -180,6 +188,7 @@ export default function AppBuildsPage({ platform }: Readonly<Props>) {
       <CreateBuildDialog
         open={creating}
         platform={platform}
+        app={app}
         onClose={() => setCreating(false)}
         onQueued={() => refetchRef.current?.()}
       />

@@ -14,7 +14,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import { DuncitButton } from '@duncit/buttons';
 import type { CrmDynamicFieldKind } from '../../api/crm.types';
 import DynamicFieldOptionsEditor from './DynamicFieldOptionsEditor';
-import { KIND_LABELS, type DraftState } from './dynamicFieldDraft';
+import { KIND_LABEL_KEY, type DraftState } from './dynamicFieldDraft';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -38,7 +38,9 @@ export default function DynamicFieldForm({ draft, busy, onChange, onCancel, onSa
           fontWeight: 700,
           mb: 1.5
         }}>
-        {draft.id ? `Edit field — ${draft.label || draft.name}` : 'New field'}
+        {draft.id
+          ? t('crm.managedynamicfieldspage.editFieldTitle', { vars: { name: draft.label || draft.name } })
+          : t('crm.managedynamicfieldspage.newField')}
       </Typography>
       <Stack spacing={1.5}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
@@ -62,9 +64,9 @@ export default function DynamicFieldForm({ draft, busy, onChange, onCancel, onSa
             onChange={(e) => set({ kind: e.target.value as CrmDynamicFieldKind })}
             sx={{ minWidth: 160 }}
           >
-            {(Object.keys(KIND_LABELS) as CrmDynamicFieldKind[]).map((k) => (
+            {(Object.keys(KIND_LABEL_KEY) as CrmDynamicFieldKind[]).map((k) => (
               <MenuItem key={k} value={k}>
-                {KIND_LABELS[k]}
+                {t(KIND_LABEL_KEY[k])}
               </MenuItem>
             ))}
           </TextField>
@@ -151,7 +153,7 @@ export default function DynamicFieldForm({ draft, busy, onChange, onCancel, onSa
             {t('shell.common.cancel')}
           </DuncitButton>
           <DuncitButton variant="contained" startIcon={<SaveIcon />} onClick={onSave} disabled={busy}>
-            {busy ? 'Saving…' : 'Save field'}
+            {busy ? t('shell.common.saving') : t('crm.managedynamicfieldspage.saveField')}
           </DuncitButton>
         </Stack>
       </Stack>

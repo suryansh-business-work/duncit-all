@@ -1,25 +1,12 @@
 import { useState } from 'react';
 import { Card, CardContent, Chip, Stack, Step, StepLabel, Stepper, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
+import { waConnectionStatusView, waInitialConnectStep } from '@duncit/utils';
 import type { WaConnection } from '../whatsappQueries';
 import ConnectedSummary from './ConnectedSummary';
 import GatewayStep from './GatewayStep';
 import LinkStep from './LinkStep';
 import { useWaConnect } from './useWaConnect';
-
-const STATUS_COLOR: Record<WaConnection['status'], 'success' | 'warning' | 'error' | 'default'> = {
-  CONNECTED: 'success',
-  CONNECTING: 'warning',
-  ERROR: 'error',
-  DISCONNECTED: 'default',
-};
-
-const STATUS_LABEL_KEY: Record<WaConnection['status'], string> = {
-  CONNECTED: 'crm.tools.statusConnected',
-  CONNECTING: 'crm.tools.statusConnecting',
-  ERROR: 'crm.tools.statusError',
-  DISCONNECTED: 'crm.tools.statusDisconnected',
-};
 
 /** Step indexes of the connect stepper. */
 const GATEWAY_STEP = 0;
@@ -39,14 +26,13 @@ interface Props {
 export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<Props>) {
   const { t } = useTranslation();
   const wa = useWaConnect(connection, onChanged);
-  const [step, setStep] = useState(
-    connection.status === 'CONNECTING' || connection.connected_at ? LINK_STEP : GATEWAY_STEP,
-  );
+  const [step, setStep] = useState(waInitialConnectStep(connection) === 'link' ? LINK_STEP : GATEWAY_STEP);
 
   if (connection.status === 'CONNECTED') {
     return <ConnectedSummary connection={connection} busy={wa.busy} onDisconnect={wa.stop} />;
   }
 
+  const view = waConnectionStatusView(connection.status);
   return (
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
       <CardContent>
@@ -55,7 +41,7 @@ export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<
             <Typography component="h2" sx={{ fontWeight: 800 }}>
               {t('crm.tools.gatewayConnection')}
             </Typography>
-            <Chip size="small" label={t(STATUS_LABEL_KEY[connection.status])} color={STATUS_COLOR[connection.status]} />
+            <Chip size="small" label={t(view.labelKey)} color={view.tone} />
           </Stack>
           <Stepper activeStep={step} alternativeLabel>
             <Step completed={step > GATEWAY_STEP}>

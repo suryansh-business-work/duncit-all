@@ -26,7 +26,7 @@ export default function PageContentDialog({ page, onClose }: Readonly<Props>) {
         <Typography component="span" variant="subtitle1" noWrap sx={{
           fontWeight: 800
         }}>
-          {page?.title || 'Page content'}
+          {page?.title || t('crm.websitePages.pageContent')}
         </Typography>
         {page && (
           <Link href={page.url} target="_blank" rel="noopener noreferrer" variant="caption" sx={{ wordBreak: 'break-all' }}>
@@ -40,7 +40,7 @@ export default function PageContentDialog({ page, onClose }: Readonly<Props>) {
             <Typography variant="caption" sx={{
               color: "text.secondary"
             }}>
-              {page.content_chars.toLocaleString()} characters extracted
+              {t('crm.websitePages.charsExtracted', { vars: { count: page.content_chars.toLocaleString() } })}
             </Typography>
             <Box
               component="pre"
@@ -61,7 +61,7 @@ export default function PageContentDialog({ page, onClose }: Readonly<Props>) {
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
-            No content fetched yet.
+            {t('crm.websitePages.noContent')}
           </Typography>
         )}
       </DialogContent>

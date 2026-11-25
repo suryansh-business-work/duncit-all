@@ -9,6 +9,8 @@ import { postTitle, publishNow, requeueFailed } from './social.publisher';
 import type { PublishContent, PublishMedia, SocialMediaType, SocialPublishStatus } from './social.types';
 import { cancelRun, startRun, userActor } from '../runs/marketingRun.service';
 import { normalizeCollaborators } from './social.collaborators';
+import { mediaReachProblems } from './social.media.check';
+import { contentOptions, pubOptions, storedOptions, type PostOptionsInput } from './social.publish.options';
 
 /**
  * The composer's side of publishing: create, edit, delete, retry, and the
@@ -24,10 +26,10 @@ import { normalizeCollaborators } from './social.collaborators';
 export type SocialPublishMode = 'DRAFT' | 'SCHEDULE' | 'NOW';
 export type SocialQueueView = 'QUEUE' | 'DRAFTS' | 'SENT' | 'APPROVALS';
 
-export interface ScheduledPostInput {
+export interface ScheduledPostInput extends PostOptionsInput {
   text: string;
-  /** Every piece of media in order; when given it replaces media_url / media_type. */
-  media?: { url: string; type: SocialMediaType }[] | null;
+  /** Every piece of media in order, with what the composer measured of it; when given it replaces media_url / media_type. */
+  media?: { url: string; type: SocialMediaType; width?: number | null; height?: number | null; duration_s?: number | null }[] | null;
   media_url?: string | null;
   media_type?: SocialMediaType | null;
   account_ids: string[];
@@ -72,12 +74,12 @@ function notFound(): never {
 
 /** The media as given: the list when there is one, else the one piece older callers send. */
 function mediaOf(input: ScheduledPostInput): PublishMedia[] {
-  if (input.media) return input.media.map((item) => ({ url: item.url.trim(), type: item.type })).filter((item) => item.url);
+  if (input.media) return input.media.map((item) => ({ ...item, url: item.url.trim() })).filter((item) => item.url);
   const media_url = (input.media_url ?? '').trim();
   return media_url ? [{ url: media_url, type: input.media_type ?? 'IMAGE' }] : [];
 }
 
-const toContent = (input: ScheduledPostInput): PublishContent => publishContent(input.text.trim(), mediaOf(input));
+const toContent = (input: ScheduledPostInput): PublishContent => ({ ...publishContent(input.text.trim(), mediaOf(input)), ...contentOptions(input) });
 
 /** The reel this post carries, checked — a link to a reel that cannot exist would never read back. */
 function reelLinkOf(input: ScheduledPostInput): string {
@@ -115,6 +117,8 @@ async function buildTargets(input: ScheduledPostInput, content: PublishContent) 
     if (problems.length > 0) badInput(`${problems.join('. ')}.`);
     const expired = accounts.filter((account) => account.status === 'EXPIRED').map((account) => account.name);
     if (expired.length > 0) badInput(`Reconnect ${expired.join(', ')} before posting to it.`);
+    const missing = await mediaReachProblems(content.media);
+    if (missing.length > 0) badInput(`${missing.join('. ')}.`);
   }
   return accounts.map((account) => ({ account_id: String(account._id), platform: account.platform, status: 'PENDING' as const }));
 }
@@ -138,7 +142,7 @@ async function accountNames(ids: string[]): Promise<Map<string, string>> {
 const pub = (o: any, names: Map<string, string>) => ({
   id: String(o._id),
   text: o.text ?? '',
-  media: (o.media ?? []).map((m: PublishMedia) => ({ url: m.url, type: m.type })),
+  media: (o.media ?? []).map((m: PublishMedia) => ({ url: m.url, type: m.type, width: m.width ?? null, height: m.height ?? null, duration_s: m.duration_s ?? null })),
   media_url: o.media_url ?? '',
   media_type: o.media_type ?? null,
   status: o.status,
@@ -148,6 +152,7 @@ const pub = (o: any, names: Map<string, string>) => ({
   reel_project_id: o.reel_project_id ?? '',
   pod_id: o.pod_id ?? '',
   collaborators: o.collaborators ?? [],
+  ...pubOptions(o),
   needs_approval: !!o.needs_approval,
   review_note: o.review_note ?? '',
   approval_run_id: o.approval_run_id ?? '',
@@ -160,6 +165,7 @@ const pub = (o: any, names: Map<string, string>) => ({
     status: t.status,
     permalink: t.permalink ?? '',
     error: t.error ?? '',
+    first_comment_error: t.first_comment_error ?? '',
     published_at: iso(t.published_at),
   })),
 });
@@ -250,6 +256,7 @@ export const socialPublishService = {
       reel_project_id,
       pod_id: podLinkOf(input),
       collaborators: collaboratorsFor(input, targets),
+      ...storedOptions(input, targets.map((target) => target.platform)),
       needs_approval: !!input.needs_approval,
       review_note: '',
       created_by: userId,
@@ -283,6 +290,7 @@ export const socialPublishService = {
       // An edit from the composer does not carry the pod link; it keeps the one it had.
       pod_id: input.pod_id === undefined ? doc.pod_id : podLinkOf(input),
       collaborators: collaboratorsFor(input, targets),
+      ...storedOptions(input, targets.map((target) => target.platform)),
       needs_approval: !!input.needs_approval,
       ...(input.mode === 'DRAFT' ? {} : { review_note: '' }),
       ...(waiting ? { approval_run_id: '' } : {}),

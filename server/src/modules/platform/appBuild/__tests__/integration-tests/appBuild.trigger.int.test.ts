@@ -204,6 +204,8 @@ describe('configuration surfaces', () => {
       ios_channel: null,
       android_staging_channel: null,
       ios_staging_channel: null,
+      crm_channel: null,
+      crm_staging_channel: null,
       last_reported_at: null,
       last_reported_by: null,
       play_store_configured: true,

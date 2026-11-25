@@ -6,13 +6,13 @@ export default function StatsDialog({ job, open, onClose }: Readonly<{ job: WaEx
   const { t } = useTranslation();
   const rows: [string, number | string][] = [
     [t('shell.common.status'), job.status],
-    ['Communities', job.communities],
-    ['Groups', job.groups],
-    ['Contacts processed', `${job.processed} / ${job.total}`],
-    ['Valid numbers', job.valid],
-    ['Invalid / skipped', job.invalid],
-    ['Duplicates (already saved)', job.duplicates],
-    ['New leads created', job.leads_created],
+    [t('crm.common.communities'), job.communities],
+    [t('crm.common.groups'), job.groups],
+    [t('crm.tools.contactsProcessedLabel'), `${job.processed} / ${job.total}`],
+    [t('crm.tools.validNumbers'), job.valid],
+    [t('crm.tools.invalidSkipped'), job.invalid],
+    [t('crm.tools.duplicatesAlreadySaved'), job.duplicates],
+    [t('crm.tools.newLeadsCreated'), job.leads_created],
   ];
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">

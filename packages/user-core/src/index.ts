@@ -16,6 +16,12 @@ export {
   makeDeviceId,
 } from './device';
 export {
+  isPortalTokenPending,
+  isPortalTokenVerified,
+  readSessionClaim,
+  type PortalSessionClaim,
+} from './session-claim';
+export {
   NO_REDIS_HEADER,
   NO_REDIS_STORAGE_KEY,
   resolveNoRedisFlag,

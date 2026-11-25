@@ -11,6 +11,12 @@ import { INSTAGRAM_SERVICE, carouselContainer, graphGet, graphPost } from './met
  * one container per piece, then a CAROUSEL container naming them all. An
  * Instagram post always carries media. Every call goes to the host the
  * account's token belongs to (see graphBase).
+ *
+ * The post type picks the container: a REEL is a REELS container, a STORY a
+ * STORIES one (no caption — a story has none), and a FEED post of one video
+ * also goes out as a reel (Instagram's only video format now). A first
+ * comment is posted under a feed post or reel once it is out; if only that
+ * fails, the post still counts as published and the reason is kept.
  */
 const POLL_MS = 5_000;
 /** Five minutes — a Reel of a few hundred MB can take most of that. */
@@ -51,11 +57,31 @@ async function container(graph: Graph, fields: Record<string, string>): Promise<
   return made.id;
 }
 
-/** A post of one piece: a Reel for a video, else the JPEG rendition of the picture. */
+/** A post of one piece: a story of either kind, else a Reel for a video and the JPEG rendition of a picture. */
 function singleFields(content: PublishContent): Record<string, string> {
-  return content.media_type === 'VIDEO'
-    ? { media_type: 'REELS', video_url: videoSourceUrl(content.media_url) }
-    : { image_url: jpegSourceUrl(content.media_url) };
+  const video = content.media_type === 'VIDEO';
+  if (content.post_type === 'STORY') {
+    return video
+      ? { media_type: 'STORIES', video_url: videoSourceUrl(content.media_url) }
+      : { media_type: 'STORIES', image_url: jpegSourceUrl(content.media_url) };
+  }
+  return video ? { media_type: 'REELS', video_url: videoSourceUrl(content.media_url) } : { image_url: jpegSourceUrl(content.media_url) };
+}
+
+/** What a feed post or reel says: its caption and collaborators. A story carries neither. */
+const wordsOf = (content: PublishContent): Record<string, string> =>
+  content.post_type === 'STORY' ? {} : { caption: content.text, ...collaboratorFields(content) };
+
+/** Post the first comment under the published media; the reason it failed, or '' when it went (or there was none). */
+async function firstComment(graph: Graph, mediaId: string, content: PublishContent): Promise<string> {
+  const message = content.first_comment?.trim() ?? '';
+  if (!message || content.post_type === 'STORY') return '';
+  try {
+    await graphPost<{ id: string }>(graph.version, `/${mediaId}/comments`, graph.token, { message }, graph.base);
+    return '';
+  } catch (error) {
+    return (error instanceof Error ? error.message : String(error)).slice(0, 500);
+  }
 }
 
 /** One piece inside a carousel: a video is a VIDEO there, not a Reel. */
@@ -81,10 +107,11 @@ export const instagramPublisher: SocialPublisher = {
     const make = (fields: Record<string, string>) => container(graph, fields);
     const creation =
       content.media.length > 1
-        ? await carouselContainer(content.media.map(itemFields), { caption: content.text, ...collaboratorFields(content) }, make)
-        : await make({ ...singleFields(content), caption: content.text, ...collaboratorFields(content) });
+        ? await carouselContainer(content.media.map(itemFields), wordsOf(content), make)
+        : await make({ ...singleFields(content), ...wordsOf(content) });
     const published = await graphPost<{ id: string }>(graph.version, `/${graph.ig}/media_publish`, graph.token, { creation_id: creation }, graph.base);
     const post = await graphGet<{ permalink?: string }>(graph.version, `/${published.id}`, graph.token, { fields: 'permalink' }, graph.base);
-    return { external_id: published.id, permalink: post.permalink ?? '' };
+    const commentError = await firstComment(graph, published.id, content);
+    return { external_id: published.id, permalink: post.permalink ?? '', ...(commentError ? { first_comment_error: commentError } : {}) };
   },
 };

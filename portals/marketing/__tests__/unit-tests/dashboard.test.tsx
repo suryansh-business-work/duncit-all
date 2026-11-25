@@ -217,6 +217,12 @@ describe('DashboardPage', () => {
     expect(await screen.findByText('Every account is healthy')).toBeInTheDocument();
   });
 
+  it('says no account is connected yet instead of calling none healthy', async () => {
+    renderDashboard([marketingDashboardMock({ social: { ...makeMarketingDashboard().social, connected: 0, attention: 0 } })]);
+    expect(await screen.findByText('No accounts connected yet')).toBeInTheDocument();
+    expect(screen.queryByText('Every account is healthy')).not.toBeInTheDocument();
+  });
+
   it('breaks engagement down by network and leads by stage, and prices the automation', async () => {
     renderDashboard();
     expect(await screen.findByText('Engagement by network')).toBeInTheDocument();

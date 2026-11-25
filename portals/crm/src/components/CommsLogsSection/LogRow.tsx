@@ -5,6 +5,8 @@ import CallLogDetails from './CallLogDetails';
 import type { CommunicationLogItem } from '../../api/comms.gql';
 import { EmailStatusBadge } from '../email-status';
 import { formatDateTime } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
+import { crmCommsStatusTone } from '@duncit/utils';
 
 const fmt = (value?: string | null) => {
   if (!value) return '—';
@@ -12,18 +14,6 @@ const fmt = (value?: string | null) => {
   return formatDateTime(d) || '—';
 };
 
-const STATUS_COLOUR: Record<string, 'success' | 'error' | 'warning' | 'info' | 'default'> = {
-  SENT: 'success',
-  DELIVERED: 'success',
-  COMPLETED: 'success',
-  INITIATED: 'info',
-  IN_PROGRESS: 'info',
-  RINGING: 'info',
-  QUEUED: 'default',
-  FAILED: 'error',
-  NO_ANSWER: 'warning',
-  BUSY: 'warning',
-};
 
 interface Props {
   log: CommunicationLogItem;
@@ -35,6 +25,7 @@ interface Props {
 }
 
 export default function LogRow({ log, onRequestTranscript, onSummarize, refreshing, summarizing }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Stack
       direction="row"
@@ -65,9 +56,9 @@ export default function LogRow({ log, onRequestTranscript, onSummarize, refreshi
               fontWeight: 800,
               minWidth: 0
             }}>
-            {log.type === 'EMAIL' ? log.subject || '(no subject)' : `Call to ${log.contact_value}`}
+            {log.type === 'EMAIL' ? log.subject || t('crm.comms.noSubject') : t('crm.comms.callTo', { vars: { number: log.contact_value } })}
           </Typography>
-          <Chip size="small" label={log.status} color={STATUS_COLOUR[log.status] ?? 'default'} />
+          <Chip size="small" label={log.status} color={crmCommsStatusTone(log.status)} />
           {log.provider_name && <Chip size="small" variant="outlined" label={log.provider_name} />}
         </Stack>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center', minWidth: 0 }}>

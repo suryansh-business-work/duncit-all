@@ -102,6 +102,13 @@ const communicationLogSchema = new Schema(
 communicationLogSchema.index({ entity_type: 1, entity_id: 1, created_at: -1 });
 // The agent's own call that is still live (restoring the call window after a reload).
 communicationLogSchema.index({ created_by: 1, created_at: -1 });
+// A call made on a phone's own SIM is reported by the Duncit CRM app, and the
+// app re-sends whatever it is unsure the server took. One row per caller per
+// device call: the partial filter leaves every Twilio/email log untouched.
+communicationLogSchema.index(
+  { created_by: 1, external_id: 1 },
+  { unique: true, name: 'device_call_once', partialFilterExpression: { 'metadata.mode': 'DEVICE' } }
+);
 
 export type CommunicationLogDoc = InferSchemaType<typeof communicationLogSchema> & { _id: any };
 export const CommunicationLogModel = model('CommunicationLog', communicationLogSchema);

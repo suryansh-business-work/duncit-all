@@ -13,7 +13,9 @@
  *
  * Run `node scripts/generate-lead-quality-rules.mjs` after editing the rules;
  * `--check` fails instead of writing, which is what CI runs so a stale copy
- * cannot ship.
+ * cannot ship. `--out <path>` (from the repo root) writes another client's
+ * copy instead: the Duncit CRM app's codegen writes its own into its
+ * gitignored `src/generated/`, so it is rebuilt on every CI run.
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -21,7 +23,15 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SOURCE = join(ROOT, "server/src/modules/crm/leadQuality/leadQuality.rules.ts");
-const OUT = join(ROOT, "portals/crm/src/lib/generated/lead-quality-rules.ts");
+const outAt = process.argv.indexOf("--out");
+const outArg = outAt === -1 ? null : process.argv[outAt + 1];
+if (outAt !== -1 && !outArg) {
+  console.error("generate-lead-quality-rules: --out needs a path");
+  process.exit(1);
+}
+const OUT = outArg
+  ? resolve(ROOT, outArg)
+  : join(ROOT, "portals/crm/src/lib/generated/lead-quality-rules.ts");
 const NAME = "generate-lead-quality-rules";
 const check = process.argv.includes("--check");
 

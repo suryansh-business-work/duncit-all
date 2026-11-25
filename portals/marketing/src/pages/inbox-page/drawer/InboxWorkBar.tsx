@@ -3,8 +3,11 @@ import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import type { InboxComment, SocialInboxStatus } from '../queries';
 
+/** What the bar works on — a comment or a DM conversation: who has it and where it stands. */
+export type InboxWorkItem = Pick<InboxComment, 'assigned_user_id' | 'assigned_name' | 'status'>;
+
 interface Props {
-  comment: InboxComment;
+  item: InboxWorkItem;
   /** The signed-in person, for Assign to me; null when unknown. */
   userId: string | null;
   /** The owner picker lists everybody with access — only some roles may read that list. */
@@ -15,17 +18,17 @@ interface Props {
   onStatus: (status: SocialInboxStatus) => Promise<boolean>;
 }
 
-/** Who has the comment, and the ways to close it or put it back in the queue. */
-export default function InboxWorkBar({ comment, userId, canPick, busy, onAssign, onPick, onStatus }: Readonly<Props>) {
+/** Who has the comment or conversation, and the ways to close it or put it back in the queue. */
+export default function InboxWorkBar({ item, userId, canPick, busy, onAssign, onPick, onStatus }: Readonly<Props>) {
   const { t } = useTranslation();
-  const mine = userId !== null && comment.assigned_user_id === userId;
-  const open = comment.status === 'OPEN';
+  const mine = userId !== null && item.assigned_user_id === userId;
+  const open = item.status === 'OPEN';
   return (
     <Stack spacing={1} data-testid="inbox-work">
       <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
         <Typography variant="subtitle2">{t('marketing.inbox.assignee')}</Typography>
         <Typography variant="body2" data-testid="inbox-assignee">
-          {comment.assigned_name || t('marketing.inbox.nobody')}
+          {item.assigned_name || t('marketing.inbox.nobody')}
         </Typography>
         {userId && !mine && (
           <DuncitButton size="small" onClick={() => onAssign(userId)} disabled={busy} data-testid="inbox-assign-me">

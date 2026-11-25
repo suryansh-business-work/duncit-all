@@ -19,6 +19,7 @@ import BlockIcon from '@mui/icons-material/Block';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { crmSurveyEntryStatus } from '@duncit/utils';
 import { surveyLinkUrl, type LeadSurveyDef, type LeadSurveyEntry } from './queries';
 import { formatDateTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
@@ -38,10 +39,10 @@ const fmt = (iso?: string | null) => (iso ? formatDateTime(iso) : '—');
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
+/** How the entry stands (@duncit/utils, so the Duncit CRM app reads it the same). */
 const statusChip = (e: LeadSurveyEntry, t: Translate) => {
-  if (e.source === 'LINK' && e.token_revoked) return <Chip size="small" label={t('crm.components.revoked')} variant="outlined" />;
-  if (e.filled) return <Chip size="small" color="success" label={t('crm.components.filled')} variant="outlined" />;
-  return <Chip size="small" color="warning" label={t('crm.components.pending')} variant="outlined" />;
+  const status = crmSurveyEntryStatus(e);
+  return <Chip size="small" color={status.tone} label={t(status.labelKey)} variant="outlined" />;
 };
 
 /** Per-lead log of every survey generation/response (manual, link, app). */
@@ -96,7 +97,7 @@ export default function LeadSurveyEntriesTable({ entries, survey, onRevoke, onDe
                   <Typography variant="body2">{fmt(e.created_at)}</Typography>
                   {e.generated_by && <Typography variant="caption" sx={{
                     color: "text.secondary"
-                  }}>by {e.generated_by}</Typography>}
+                  }}>{t('crm.leadSurvey.byName', { vars: { name: e.generated_by } })}</Typography>}
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2">{fmt(e.submitted_at)}</Typography>

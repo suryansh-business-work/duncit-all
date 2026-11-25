@@ -24,6 +24,24 @@ export const socialPublishTypeDefs = gql`
     VIDEO
   }
 
+  "How a post shows: in the feed (two or more media make a carousel), as a Reel, or as a 24-hour Story. Reels and Stories go to Instagram only."
+  enum SocialPostType {
+    FEED
+    REEL
+    STORY
+  }
+
+  "One network's own caption, in place of the post's text there."
+  type SocialPostCaption {
+    platform: SocialPlatform!
+    text: String!
+  }
+
+  input SocialPostCaptionInput {
+    platform: SocialPlatform!
+    text: String!
+  }
+
   "DRAFT saves it, SCHEDULE sends it at scheduled_at, NOW sends it straight away."
   enum SocialPublishMode {
     DRAFT
@@ -63,8 +81,10 @@ export const socialPublishTypeDefs = gql`
     platform: SocialPlatform!
     status: SocialTargetStatus!
     permalink: String
-    "Why this network refused the post; empty when it did not."
+    "Why this network refused the post; empty when it did not. On a target waiting to be tried again, why the last try failed."
     error: String
+    "The post went out but its Instagram first comment did not; why. Empty when it went or there was none."
+    first_comment_error: String
     published_at: String
   }
 
@@ -72,6 +92,10 @@ export const socialPublishTypeDefs = gql`
   type SocialPostMedia {
     url: String!
     type: SocialMediaType!
+    "Pixels and seconds the composer measured; null when it could not."
+    width: Int
+    height: Int
+    duration_s: Float
   }
 
   type SocialScheduledPost {
@@ -92,6 +116,11 @@ export const socialPublishTypeDefs = gql`
     pod_id: String
     "Instagram usernames invited as collaborators; the other networks ignore them."
     collaborators: [String!]!
+    post_type: SocialPostType!
+    "Per-network captions in place of text; empty when every network gets the same text."
+    captions: [SocialPostCaption!]!
+    "Posted under the Instagram feed post or reel once it is out; empty when there is none."
+    first_comment: String!
     "A reviewer must say yes before it goes out."
     needs_approval: Boolean!
     "Why the reviewer sent it back; shown to the author on the draft."
@@ -134,6 +163,10 @@ export const socialPublishTypeDefs = gql`
   input SocialPostMediaInput {
     url: String!
     type: SocialMediaType!
+    "Pixels and seconds the composer measured, for the shape and length rules; omit when unknown."
+    width: Int
+    height: Int
+    duration_s: Float
   }
 
   input SocialScheduledPostInput {
@@ -157,6 +190,12 @@ export const socialPublishTypeDefs = gql`
     collaborators: [String!]
     "With SCHEDULE or NOW, parks the post as PENDING_APPROVAL and opens an approval run."
     needs_approval: Boolean
+    "FEED when omitted. REEL (one video) and STORY (one picture or video) are refused for any network but Instagram."
+    post_type: SocialPostType
+    "A caption per network in place of text; one per network, and only those the post goes to are kept."
+    captions: [SocialPostCaptionInput!]
+    "Posted under the Instagram feed post or reel once it is out; kept only when an Instagram account is picked."
+    first_comment: String
   }
 
   input SocialIdeasInput {

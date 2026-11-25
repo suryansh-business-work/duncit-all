@@ -1,7 +1,9 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { appBuildService } from './appBuild.service';
-import type { AppBuildEnv, AppBuildPlatform, AppStoreTrack, PlayStoreTrack } from './appBuild.model';
+import { crmAppBuildSettings, updateCrmAppBuildSettings } from './appBuild.crmSettings';
+import { CRM_RW } from '@modules/crm/crm/crm.constants';
+import type { AppBuildApp, AppBuildEnv, AppBuildPlatform, AppStoreTrack, PlayStoreTrack } from './appBuild.model';
 import {
   generateIosSigning,
   iosSigningBundle,
@@ -20,11 +22,26 @@ export const appBuildResolvers = {
   Query: {
     appBuildsTable: (
       _p: unknown,
-      args: { platform: AppBuildPlatform; query?: TableQueryInput | null; app_env?: AppBuildEnv | null },
+      args: {
+        platform: AppBuildPlatform;
+        query?: TableQueryInput | null;
+        app_env?: AppBuildEnv | null;
+        app?: AppBuildApp | null;
+      },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, BUILDS_MANAGE);
-      return appBuildService.table(args.platform, args.query, args.app_env);
+      return appBuildService.table(args.platform, args.query, args.app_env, args.app);
+    },
+    // CRM staff download their own app from the CRM portal; the build table
+    // itself stays a Tech capability.
+    crmAppDownload: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, [...CRM_RW]);
+      return appBuildService.crmDownload();
+    },
+    crmAppBuildSettings: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, [...CRM_RW]);
+      return crmAppBuildSettings();
     },
     appBuildSettings: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, BUILDS_MANAGE);
@@ -44,6 +61,14 @@ export const appBuildResolvers = {
     },
   },
   Mutation: {
+    updateCrmAppBuildSettings: (
+      _p: unknown,
+      args: { input: { production_channel?: string | null; staging_channel?: string | null } },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, [...CRM_RW]);
+      return updateCrmAppBuildSettings(args.input, user);
+    },
     reportAppBuild: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, BUILDS_MANAGE);
       return appBuildService.report(args.input, user.email ?? user.id);

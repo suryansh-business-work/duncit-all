@@ -393,12 +393,22 @@ describe('completeConnect', () => {
     error.mockRestore();
   });
 
-  it('stores nothing when the handshake found no account', async () => {
+  it('refuses, storing nothing, when the handshake found no account — it is not a success', async () => {
     m(readConnectState).mockReturnValue(state);
     m(socialCredentials).mockResolvedValue(CREDS);
     m(CONNECTORS.X.connect).mockResolvedValue([]);
-    expect(await svc.completeConnect('c', 's')).toEqual({ provider: 'X', count: 0 });
+    await expect(svc.completeConnect('c', 's')).rejects.toThrow('The network connected no account.');
+    expect(await SocialAccountModel.countDocuments()).toBe(0);
     expect(syncSocialAccount).not.toHaveBeenCalled();
+  });
+
+  it('says what to check on Meta when a Facebook Login consent granted no Page or Instagram account', async () => {
+    m(readConnectState).mockReturnValue({ ...state, provider: 'INSTAGRAM' });
+    m(socialCredentials).mockResolvedValue(CREDS);
+    m(CONNECTORS.INSTAGRAM.connect).mockResolvedValue([]);
+    await expect(svc.completeConnect('c', 's')).rejects.toThrow(
+      'Meta connected no Facebook Page or Instagram professional account. Press Connect again and pick at least one on the consent screen'
+    );
   });
 });
 

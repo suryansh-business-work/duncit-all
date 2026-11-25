@@ -4,6 +4,8 @@ export type AppBuildPlatform = 'ANDROID' | 'IOS';
 export type AppBuildStatus = 'QUEUED' | 'RUNNING' | 'SUCCESS' | 'FAILED';
 export type AppBuildArtifactKind = 'APK' | 'AAB' | 'IPA';
 export type AppBuildEnv = 'PRODUCTION' | 'STAGING';
+/** The member app, or the internal Duncit CRM app (Android only). */
+export type AppBuildApp = 'DUNCIT' | 'CRM';
 export type AppBuildTrigger = 'PUSH' | 'PORTAL';
 
 /** A stage the runner entered, stamped when it got there. */
@@ -144,6 +146,9 @@ export interface AppBuildSettings {
   /** Where staging builds are announced; null sends them to the production channel. */
   android_staging_channel: string | null;
   ios_staging_channel: string | null;
+  /** Where Duncit CRM builds are announced, per environment. */
+  crm_channel: string | null;
+  crm_staging_channel: string | null;
   last_reported_at: string | null;
   last_reported_by: string | null;
   play_store_configured: boolean;
@@ -161,11 +166,8 @@ export interface AppBuildCiToken {
   issued_for: string;
 }
 
-export const APP_BUILDS_TABLE = gql`
-  query AppBuildsTable($platform: AppBuildPlatform!, $query: TableQueryInput, $app_env: AppBuildEnv) {
-    appBuildsTable(platform: $platform, query: $query, app_env: $app_env) {
-      total
-      rows {
+/** One build row, as both the member app and the Duncit CRM tables read it. */
+const APP_BUILD_ROW_FIELDS = `
         id
         build_no
         platform
@@ -235,7 +237,27 @@ export const APP_BUILDS_TABLE = gql`
         slack_ts
         slack_error
         created_at
-      }
+`;
+
+export const APP_BUILDS_TABLE = gql`
+  query AppBuildsTable($platform: AppBuildPlatform!, $query: TableQueryInput, $app_env: AppBuildEnv) {
+    appBuildsTable(platform: $platform, query: $query, app_env: $app_env) {
+      total
+      rows { ${APP_BUILD_ROW_FIELDS} }
+    }
+  }
+`;
+
+/**
+ * The Duncit CRM app's builds. A document of its own rather than an `app`
+ * variable on the one above: the member app's page keeps sending exactly the
+ * query it always has, whatever server version answers it.
+ */
+export const APP_BUILDS_TABLE_CRM = gql`
+  query CrmAppBuildsTable($platform: AppBuildPlatform!, $query: TableQueryInput, $app_env: AppBuildEnv) {
+    appBuildsTable(platform: $platform, query: $query, app_env: $app_env, app: CRM) {
+      total
+      rows { ${APP_BUILD_ROW_FIELDS} }
     }
   }
 `;
@@ -247,6 +269,8 @@ export const APP_BUILD_SETTINGS = gql`
       ios_channel
       android_staging_channel
       ios_staging_channel
+      crm_channel
+      crm_staging_channel
       last_reported_at
       last_reported_by
       play_store_configured
@@ -274,6 +298,8 @@ export const UPDATE_APP_BUILD_SETTINGS = gql`
       ios_channel
       android_staging_channel
       ios_staging_channel
+      crm_channel
+      crm_staging_channel
       last_reported_at
       last_reported_by
       play_store_configured

@@ -80,14 +80,24 @@ const INBOX_FIELDS = gql`
 `;
 
 export const SOCIAL_INBOX_TABLE = gql`
-  query SocialInboxTable($query: TableQueryInput, $view: SocialInboxView) {
-    socialInboxTable(query: $query, view: $view) {
+  query SocialInboxTable($query: TableQueryInput, $view: SocialInboxView, $channel: SocialInboxChannel) {
+    socialInboxTable(query: $query, view: $view, channel: $channel) {
       rows {
         ...InboxCommentFields
       }
       total
       page
       page_size
+    }
+  }
+  ${INBOX_FIELDS}
+`;
+
+/** One comment, for opening a comment row of the All tab. */
+export const SOCIAL_INBOX_COMMENT = gql`
+  query SocialInboxComment($id: ID!) {
+    socialInboxComment(id: $id) {
+      ...InboxCommentFields
     }
   }
   ${INBOX_FIELDS}

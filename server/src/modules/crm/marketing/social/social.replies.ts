@@ -4,6 +4,7 @@ import { userActor, withRun, type RunActor } from '../runs/marketingRun.service'
 import { READERS } from './providers';
 import { SocialApiError } from './providers/http';
 import { REPLIERS } from './providers/replies';
+import { usesFacebookGraph } from './providers/instagram';
 import { SocialAccountModel, SocialCommentModel, SocialPostModel } from './social.model';
 import { socialCredentials } from './social.credentials';
 import { inboxComment } from './social.inbox';
@@ -46,7 +47,7 @@ export const REPLY_LIMIT: Readonly<Record<SocialPlatform, number>> = {
   X: 280,
 };
 
-/** An Instagram account connected through the Facebook app holds a Page token; replying with it needs a scope that app never asks for. */
+/** An Instagram account on a Facebook Login token (a Page token) replies with this permission instead; the old Facebook app never asked for it. */
 const PAGE_TOKEN_INSTAGRAM_PERMISSION = 'instagram_manage_comments';
 /** A reply stuck longer than this (a crash mid-send) no longer blocks the next one. */
 const LOCK_MS = 2 * 60_000;
@@ -55,13 +56,16 @@ interface ReplyAccount {
   platform: SocialPlatform;
   provider: SocialProvider;
   scopes?: string[] | null;
+  meta?: Record<string, unknown> | null;
 }
 
 /** The permission this account is missing to reply, or null when it has what it needs. */
 export function missingReplyPermission(account: ReplyAccount): string | null {
   const permission = REPLY_PERMISSION[account.platform];
   if (!REPLIERS[account.platform]) return permission;
-  if (account.platform === 'INSTAGRAM' && account.provider === 'FACEBOOK') return PAGE_TOKEN_INSTAGRAM_PERMISSION;
+  if (account.platform === 'INSTAGRAM' && usesFacebookGraph(account)) {
+    return (account.scopes ?? []).includes(PAGE_TOKEN_INSTAGRAM_PERMISSION) ? null : PAGE_TOKEN_INSTAGRAM_PERMISSION;
+  }
   // An account connected before the scope was asked for has an older grant; an empty list says nothing either way.
   const scopes = account.scopes ?? [];
   if (scopes.length > 0 && !scopes.includes(permission)) return permission;

@@ -50,7 +50,7 @@ jobs:
         id: plan
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node scripts/ci-affected.mjs plan --under app/ --extra app/mobile-app --global .github/workflows/apps-ci.yml
+        run: node scripts/ci-affected.mjs plan --under app/ --extra app/mobile-app --extra app/crm-app --global .github/workflows/apps-ci.yml
 
   mweb:
     name: mWeb (test → typecheck → lint → build)
@@ -143,3 +143,50 @@ jobs:
         run: npx expo export --platform web --output-dir dist
         env:
           CI: '1'
+
+  crm:
+    # The Duncit CRM Android app: a standalone npm project like the member app.
+    # Its jest suite runs here, with its 85% coverage threshold, because it has
+    # no coverage job of its own in sonar.yml yet; the lcov is kept for Sonar.
+    name: Duncit CRM App (test → typecheck → lint)
+    needs: plan
+    if: contains(fromJSON(needs.plan.outputs.dirs), 'app/crm-app')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: app/crm-app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: app/crm-app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate GraphQL types
+        run: npm run codegen
+
+      - name: Test (jest --coverage, 85% threshold)
+        run: npx jest --coverage --ci --maxWorkers=2
+
+      - name: Keep the coverage report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: crm-app-lcov
+          path: app/crm-app/coverage/lcov.info
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint (eslint --max-warnings 0)
+        run: npm run lint

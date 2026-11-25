@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
-import { parseApiError } from '@duncit/utils';
+import { crmMergeSegment, parseApiError } from '@duncit/utils';
 import {
   CONTROL_CRM_CALL,
   START_CRM_PORTAL_CALL,
@@ -25,11 +25,8 @@ const IDLE: Omit<CallSessionState, 'lead'> = {
   errorCode: null,
 };
 
-/** Add a segment once (Twilio may send it twice), keeping spoken order. */
-export function mergeSegment(segments: TranscriptSegment[], next: TranscriptSegment): TranscriptSegment[] {
-  if (segments.some((s) => s.seq === next.seq && s.speaker === next.speaker)) return segments;
-  return [...segments, next].sort((a, b) => a.seq - b.seq);
-}
+/** Add a segment once (Twilio may send it twice), keeping spoken order — shared with the CRM app. */
+export const mergeSegment = crmMergeSegment;
 
 /**
  * Everything about the one call the agent is on: placing it, its live status

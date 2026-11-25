@@ -1011,6 +1011,7 @@
       "description": "Team alerts and channel notifications",
       "docUrl": "https://api.slack.com/apps",
       "usedIn": [
+        "server/src/modules/platform/appBuild/appBuild.apps.ts",
         "server/src/modules/platform/appBuild/appBuild.service.ts",
         "server/src/modules/platform/appBuild/appStoreRelease.service.ts",
         "server/src/modules/platform/appBuild/playRelease.service.ts",
@@ -1152,6 +1153,32 @@
           },
           "usedIn": [
             "server/src/modules/platform/appBuild/appBuild.service.ts"
+          ]
+        },
+        {
+          "name": "crm_android_builds_channel",
+          "label": "Duncit CRM Production Builds Channel (optional)",
+          "hint": "Channel ID production Duncit CRM APKs announce to; blank uses the Android builds channel (CRM portal → Download CRM App → Settings, or Tech → App Builds → Settings)",
+          "envKey": "SLACK_CRM_ANDROID_BUILDS_CHANNEL",
+          "description": "Channel the internal Duncit CRM app's production CI builds announce to, so sales staff get each new APK without the member app's build noise.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/appBuild/appBuild.apps.ts"
+          ]
+        },
+        {
+          "name": "crm_android_staging_builds_channel",
+          "label": "Duncit CRM Staging Builds Channel (optional)",
+          "hint": "Channel ID staging Duncit CRM APKs announce to; blank uses the Duncit CRM production builds channel (CRM portal → Download CRM App → Settings, or Tech → App Builds → Settings)",
+          "envKey": "SLACK_CRM_ANDROID_STAGING_BUILDS_CHANNEL",
+          "description": "Channel the internal Duncit CRM app's staging CI builds announce to, so testers get each staging APK apart from production releases.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/appBuild/appBuild.apps.ts"
           ]
         },
         {
@@ -1803,22 +1830,24 @@
     },
     "SOCIAL_INSTAGRAM": {
       "label": "Instagram app",
-      "description": "Connect Instagram accounts; read posts and comments; publish posts and reels",
+      "description": "Connect Instagram professional accounts through Facebook Login for Business (Unified login); read posts and comments; publish posts and reels",
       "docUrl": "https://developers.facebook.com/apps/",
-      "apiDocsUrl": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/",
+      "apiDocsUrl": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-facebook-login/",
       "usedIn": [
-        "server/src/modules/crm/marketing/social/social.credentials.ts"
+        "server/src/modules/crm/marketing/social/social.credentials.ts",
+        "server/src/modules/crm/marketing/social/social.webhook.router.ts"
       ],
       "alsoReadBy": [
-        "server/src/modules/crm/marketing/social/social.credentials.ts"
+        "server/src/modules/crm/marketing/social/social.credentials.ts",
+        "server/src/modules/crm/marketing/social/social.webhook.router.ts"
       ],
       "fields": [
         {
           "name": "app_id",
-          "label": "Instagram App ID",
-          "hint": "developers.facebook.com/apps → your app → Instagram → API setup with Instagram login → Instagram app ID (not the Facebook App ID)",
+          "label": "Meta App ID",
+          "hint": "developers.facebook.com/apps → your app → App settings → Basic → App ID. With Unified login this is the Meta app ID, not a separate Instagram app ID",
           "envKey": "SOCIAL_INSTAGRAM_APP_ID",
-          "description": "Instagram app Marketing → Social Accounts connects accounts through.",
+          "description": "Meta app the Instagram button connects accounts through (Facebook Login for Business). Usually the same app as the Facebook entry.",
           "validation": {
             "type": "text"
           },
@@ -1826,14 +1855,25 @@
         },
         {
           "name": "app_secret",
-          "label": "Instagram App Secret",
-          "hint": "Same page → Instagram app secret",
+          "label": "Meta App Secret",
+          "hint": "Same page → App secret",
           "secret": true,
           "envKey": "SOCIAL_INSTAGRAM_APP_SECRET",
-          "description": "Exchanges and refreshes Instagram access tokens.",
+          "description": "Exchanges the login code for a token and checks granted permissions (debug_token) for Instagram accounts.",
           "validation": {
             "type": "text",
             "required": true
+          },
+          "usedIn": []
+        },
+        {
+          "name": "login_config_id",
+          "label": "Login configuration ID",
+          "hint": "developers.facebook.com/apps → your app → Use cases → Instagram API → API setup with Unified login → Facebook Login for Business → Configurations → Configuration ID. The configuration must include the Facebook Page, its Instagram account and the messaging permissions",
+          "envKey": "SOCIAL_INSTAGRAM_LOGIN_CONFIG_ID",
+          "description": "Facebook Login for Business configuration the Instagram button Connect opens. Meta takes the permissions and the asset picker (Pages and Instagram accounts) from it; when empty, Connect asks for the default permission list instead.",
+          "validation": {
+            "type": "text"
           },
           "usedIn": []
         },
@@ -1842,7 +1882,19 @@
           "label": "Graph API Version (optional)",
           "hint": "e.g. v23.0; default v23.0",
           "envKey": "SOCIAL_INSTAGRAM_GRAPH_VERSION",
-          "description": "Instagram Graph API version every call is pinned to.",
+          "description": "Graph API version every Instagram call on graph.facebook.com is pinned to.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "webhook_verify_token",
+          "label": "Webhook verify token",
+          "hint": "Any long random string you choose. Paste the same value in Meta for Developers → your app → Webhooks (Instagram and Page objects) → Verify token, with the callback URL https://<server>/social/webhooks/meta",
+          "secret": true,
+          "envKey": "SOCIAL_INSTAGRAM_WEBHOOK_VERIFY_TOKEN",
+          "description": "Proves to Meta that the webhook URL is ours when Meta checks the subscription. Webhooks deliver Instagram and Messenger DMs and comments to the Inbox within seconds; the scheduled sync stays as the fallback.",
           "validation": {
             "type": "text"
           },
@@ -1852,21 +1904,23 @@
     },
     "SOCIAL_FACEBOOK": {
       "label": "Facebook app",
-      "description": "Connect Facebook Pages; read posts and comments; publish to Pages",
+      "description": "Connect Facebook Pages (and their linked Instagram accounts) through Facebook Login for Business; read posts and comments; publish to Pages",
       "docUrl": "https://developers.facebook.com/apps/",
       "apiDocsUrl": "https://developers.facebook.com/docs/pages-api/",
       "usedIn": [
         "server/src/modules/crm/marketing/social/social.credentials.ts",
-        "server/src/modules/crm/marketing/social/social.migration.ts"
+        "server/src/modules/crm/marketing/social/social.migration.ts",
+        "server/src/modules/crm/marketing/social/social.webhook.router.ts"
       ],
       "alsoReadBy": [
-        "server/src/modules/crm/marketing/social/social.credentials.ts"
+        "server/src/modules/crm/marketing/social/social.credentials.ts",
+        "server/src/modules/crm/marketing/social/social.webhook.router.ts"
       ],
       "fields": [
         {
           "name": "app_id",
-          "label": "Facebook App ID",
-          "hint": "developers.facebook.com/apps → your Business app → App settings → Basic. Add Facebook Login for Business; posting to Pages needs pages_manage_posts approved",
+          "label": "Meta App ID",
+          "hint": "developers.facebook.com/apps → your app → App settings → Basic → App ID. Posting to Pages needs pages_manage_posts under the Pages use case",
           "envKey": "SOCIAL_FACEBOOK_APP_ID",
           "description": "Facebook app Pages are connected through.",
           "validation": {
@@ -1876,14 +1930,25 @@
         },
         {
           "name": "app_secret",
-          "label": "Facebook App Secret",
+          "label": "Meta App Secret",
           "hint": "App settings → Basic → App secret",
           "secret": true,
           "envKey": "SOCIAL_FACEBOOK_APP_SECRET",
-          "description": "Exchanges and refreshes Facebook Page tokens.",
+          "description": "Exchanges the login code for a token and checks granted permissions (debug_token) for Facebook Pages.",
           "validation": {
             "type": "text",
             "required": true
+          },
+          "usedIn": []
+        },
+        {
+          "name": "login_config_id",
+          "label": "Login configuration ID",
+          "hint": "developers.facebook.com/apps → your app → Use cases → Instagram API → API setup with Unified login → Facebook Login for Business → Configurations → Configuration ID. The configuration must include the Facebook Page, its Instagram account and the messaging permissions",
+          "envKey": "SOCIAL_FACEBOOK_LOGIN_CONFIG_ID",
+          "description": "Facebook Login for Business configuration the Facebook button Connect opens. Meta takes the permissions and the asset picker (Pages and Instagram accounts) from it; when empty, Connect asks for the default permission list instead.",
+          "validation": {
+            "type": "text"
           },
           "usedIn": []
         },
@@ -1893,6 +1958,18 @@
           "hint": "e.g. v23.0; default v23.0",
           "envKey": "SOCIAL_FACEBOOK_GRAPH_VERSION",
           "description": "Facebook Graph API version every call is pinned to.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": []
+        },
+        {
+          "name": "webhook_verify_token",
+          "label": "Webhook verify token",
+          "hint": "Any long random string you choose. Paste the same value in Meta for Developers → your app → Webhooks (Instagram and Page objects) → Verify token, with the callback URL https://<server>/social/webhooks/meta",
+          "secret": true,
+          "envKey": "SOCIAL_FACEBOOK_WEBHOOK_VERIFY_TOKEN",
+          "description": "Proves to Meta that the webhook URL is ours when Meta checks the subscription. Webhooks deliver Instagram and Messenger DMs and comments to the Inbox within seconds; the scheduled sync stays as the fallback.",
           "validation": {
             "type": "text"
           },
@@ -1915,11 +1992,12 @@
         {
           "name": "app_id",
           "label": "Threads App ID",
-          "hint": "developers.facebook.com/apps → your app → Threads API → Settings → Threads App ID. Posting needs threads_content_publish",
+          "hint": "developers.facebook.com/apps → your Threads app → Use cases → Threads API → Settings → Threads App ID (differs from the Meta App ID). Add the server callback URL shown on the settings page under Redirect Callback URLs there",
           "envKey": "SOCIAL_THREADS_APP_ID",
           "description": "Threads app accounts are connected through.",
           "validation": {
-            "type": "text"
+            "type": "text",
+            "required": true
           },
           "usedIn": []
         },
@@ -2188,6 +2266,7 @@
       "docUrl": "https://console.anthropic.com/settings/keys",
       "apiDocsUrl": "https://platform.claude.com/docs/en/api/overview",
       "usedIn": [
+        "server/src/modules/crm/marketing/social/social.inbox.ai.ts",
         "server/src/services/anthropic/anthropic.client.ts",
         "server/src/services/openai/openai.client.ts"
       ],
@@ -2204,6 +2283,7 @@
             "required": true
           },
           "usedIn": [
+            "server/src/modules/crm/marketing/social/social.inbox.ai.ts",
             "server/src/services/openai/openai.client.ts"
           ]
         },
@@ -2745,6 +2825,7 @@
       "usedIn": [
         ".github/workflows/android-build.yml",
         ".github/workflows/coverage.yml",
+        ".github/workflows/crm-android-build.yml",
         ".github/workflows/e2e.yml",
         ".github/workflows/ios-build.yml",
         ".github/workflows/sonar.yml",
@@ -2761,6 +2842,7 @@
       "usedIn": [
         ".github/workflows/android-build.yml",
         ".github/workflows/coverage.yml",
+        ".github/workflows/crm-android-build.yml",
         ".github/workflows/e2e.yml",
         ".github/workflows/ios-build.yml",
         ".github/workflows/sonar.yml",
@@ -2777,6 +2859,7 @@
       "usedIn": [
         ".github/workflows/android-build.yml",
         ".github/workflows/coverage.yml",
+        ".github/workflows/crm-android-build.yml",
         ".github/workflows/e2e.yml",
         ".github/workflows/ios-build.yml",
         ".github/workflows/sonar.yml",
@@ -2793,6 +2876,7 @@
       "usedIn": [
         ".github/workflows/android-build.yml",
         ".github/workflows/coverage.yml",
+        ".github/workflows/crm-android-build.yml",
         ".github/workflows/e2e.yml",
         ".github/workflows/ios-build.yml",
         ".github/workflows/sonar.yml",
@@ -2851,7 +2935,8 @@
         "type": "text"
       },
       "usedIn": [
-        ".github/workflows/android-build.yml"
+        ".github/workflows/android-build.yml",
+        ".github/workflows/crm-android-build.yml"
       ]
     },
     "ANDROID_UPLOAD_STORE_PASSWORD": {
@@ -2862,7 +2947,8 @@
         "type": "text"
       },
       "usedIn": [
-        ".github/workflows/android-build.yml"
+        ".github/workflows/android-build.yml",
+        ".github/workflows/crm-android-build.yml"
       ]
     },
     "ANDROID_UPLOAD_KEY_ALIAS": {
@@ -2873,7 +2959,8 @@
         "type": "text"
       },
       "usedIn": [
-        ".github/workflows/android-build.yml"
+        ".github/workflows/android-build.yml",
+        ".github/workflows/crm-android-build.yml"
       ]
     },
     "ANDROID_UPLOAD_KEY_PASSWORD": {
@@ -2884,7 +2971,8 @@
         "type": "text"
       },
       "usedIn": [
-        ".github/workflows/android-build.yml"
+        ".github/workflows/android-build.yml",
+        ".github/workflows/crm-android-build.yml"
       ]
     },
     "MWEB_ANDROID_CERT_SHA256": {

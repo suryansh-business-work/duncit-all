@@ -1,5 +1,6 @@
 import type { ChipProps } from '@mui/material';
 import type { Translate } from '@duncit/shell';
+import { CRM_CANDIDATE_STATUS_KEY, CRM_CANDIDATE_STATUS_TONE } from '@duncit/utils';
 
 /**
  * Copy keys and chip colours for the Lead Research values the API returns:
@@ -11,19 +12,10 @@ import type { Translate } from '@duncit/shell';
 
 type ChipColor = ChipProps['color'];
 
-export const CANDIDATE_STATUS_KEY: Record<string, string> = {
-  NEW: 'crm.leadResearch.statusNew',
-  ADDED: 'crm.leadResearch.statusAdded',
-  REJECTED: 'crm.leadResearch.statusRejected',
-  DUPLICATE: 'crm.leadResearch.statusDuplicate',
-};
+/* Candidate status copy and colours live in @duncit/utils (crm-quality-labels), shared with the Duncit CRM app. */
+export const CANDIDATE_STATUS_KEY: Record<string, string> = { ...CRM_CANDIDATE_STATUS_KEY };
 
-export const CANDIDATE_STATUS_COLOR: Record<string, ChipColor> = {
-  NEW: 'info',
-  ADDED: 'success',
-  REJECTED: 'default',
-  DUPLICATE: 'warning',
-};
+export const CANDIDATE_STATUS_COLOR: Record<string, ChipColor> = { ...CRM_CANDIDATE_STATUS_TONE };
 
 export const CANDIDATE_ORIGIN_KEY: Record<string, string> = {
   DISCOVERY: 'crm.leadResearch.originDiscovery',

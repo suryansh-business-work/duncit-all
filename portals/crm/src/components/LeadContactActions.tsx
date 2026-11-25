@@ -70,11 +70,11 @@ export default function LeadContactActions({ entity, leadId, displayName, email,
         flexWrap: "wrap",
         mt: 1.5
       }}>
-      <Tooltip title={mobile ? `Call ${mobile}` : 'No phone number on file'}>
+      <Tooltip title={mobile ? t('crm.leadDetail.callNumber', { vars: { number: mobile } }) : t('crm.leadDetail.noPhone')}>
         <span>
           <ButtonGroup variant="outlined" size="small" ref={anchorRef} disabled={!mobile} aria-label={t('crm.components.callOptions')} sx={{ height: CALL_HEIGHT }}>
             <DuncitButton startIcon={<PhoneIcon />} onClick={() => callLead && callWindow?.openCall(callLead)} disabled={!callWindow} sx={BTN_SX}>
-              Call
+              {t('crm.leadDetail.call')}
             </DuncitButton>
             <DuncitButton size="small" onClick={() => setMenuOpen((v) => !v)} aria-label={t('crm.components.moreOptions')} aria-haspopup="menu" aria-expanded={menuOpen} data-testid="lead-call-options" sx={{ px: 0.5, height: CALL_HEIGHT, minHeight: CALL_HEIGHT }}>
               <ArrowDropDownIcon fontSize="small" />
@@ -94,10 +94,10 @@ export default function LeadContactActions({ entity, leadId, displayName, email,
                   onKeyDown={(event) => { if (event.key === 'Escape' || event.key === 'Tab') setMenuOpen(false); }}
                 >
                   <MenuItem disabled={!callWindow} onClick={() => { setMenuOpen(false); if (callLead) callWindow?.openCall(callLead); }}>
-                    <PhoneIcon fontSize="small" sx={{ mr: 1 }} /> Call
+                    <PhoneIcon fontSize="small" sx={{ mr: 1 }} /> {t('crm.leadDetail.call')}
                   </MenuItem>
                   <MenuItem onClick={() => { setMenuOpen(false); setAiOpen(true); }}>
-                    <SmartToyIcon fontSize="small" sx={{ mr: 1 }} /> AI Call
+                    <SmartToyIcon fontSize="small" sx={{ mr: 1 }} /> {t('crm.leadDetail.aiCall')}
                   </MenuItem>
                 </MenuList>
               </ClickAwayListener>
@@ -106,7 +106,7 @@ export default function LeadContactActions({ entity, leadId, displayName, email,
         )}
       </Popper>
 
-      <Tooltip title={waNumber ? 'Open WhatsApp chat' : 'No WhatsApp number on file'}>
+      <Tooltip title={waNumber ? t('crm.leadDetail.openWhatsapp') : t('crm.leadDetail.noWhatsapp')}>
         <span>
           <DuncitButton
             size="small"
@@ -116,11 +116,11 @@ export default function LeadContactActions({ entity, leadId, displayName, email,
             onClick={() => window.open(`https://wa.me/${waNumber}`, '_blank', 'noopener,noreferrer')}
             sx={BTN_SX}
           >
-            WhatsApp
+            {t('crm.leadDetail.whatsapp')}
           </DuncitButton>
         </span>
       </Tooltip>
-      <Tooltip title={email ? `Email ${email}` : 'No email on file'}>
+      <Tooltip title={email ? t('crm.leadDetail.emailAddress', { vars: { email } }) : t('crm.leadDetail.noEmailOnFile')}>
         <span>
           <DuncitButton size="small" variant="outlined" startIcon={<EmailIcon />} disabled={!email} onClick={() => setEmailOpen(true)} sx={BTN_SX}>
             {t('shell.common.email')}

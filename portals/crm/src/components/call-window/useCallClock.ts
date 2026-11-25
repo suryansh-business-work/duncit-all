@@ -1,18 +1,10 @@
 import { useEffect, useState } from 'react';
+import { crmElapsedSeconds, crmFormatDuration } from '@duncit/utils';
 
-/** "m:ss", or "h:mm:ss" past an hour. */
-export function formatDuration(totalSeconds: number): string {
-  const s = Math.max(0, Math.floor(totalSeconds));
-  const hours = Math.floor(s / 3600);
-  const minutes = Math.floor((s % 3600) / 60);
-  const seconds = String(s % 60).padStart(2, '0');
-  return hours > 0 ? `${hours}:${String(minutes).padStart(2, '0')}:${seconds}` : `${minutes}:${seconds}`;
-}
+/** "m:ss", or "h:mm:ss" past an hour — shared with the CRM app. */
+export const formatDuration = crmFormatDuration;
 
-const elapsed = (since: string | null) => {
-  const start = since ? Date.parse(since) : Number.NaN;
-  return Number.isNaN(start) ? 0 : Math.max(0, Math.floor((Date.now() - start) / 1000));
-};
+const elapsed = (since: string | null) => crmElapsedSeconds(since);
 
 /**
  * Seconds since the contact picked up, ticking while the call is live and

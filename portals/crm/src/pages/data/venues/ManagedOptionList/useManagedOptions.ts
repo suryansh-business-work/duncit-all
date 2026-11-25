@@ -9,13 +9,15 @@ import {
   type CrmManagedOptionGroup,
 } from '../../../../api/data.gql';
 import { CRM_LEAD_CONFIG } from '../../../../api/crm.gql';
-import { parseApiError } from '@duncit/utils';
+import { crmFilterManagedOptions, crmNextManagedOrder, crmSortManagedOptions, parseApiError } from '@duncit/utils';
+import { useTranslation } from '@duncit/shell';
 import type { ManagedEditRow } from '../ManagedOptionEditRow';
 
 const blank: ManagedEditRow = { name: '', sort_order: '0', is_active: true };
 
 /** Query, mutations and draft state behind one managed-option group's list. */
 export function useManagedOptions(group: CrmManagedOptionGroup) {
+  const { t } = useTranslation();
   const queryVars = { group, include_inactive: true };
   const { data, loading, error } = useQuery<{ crmManagedOptions: CrmManagedOption[] }>(CRM_MANAGED_OPTIONS, {
     variables: queryVars,
@@ -31,25 +33,19 @@ export function useManagedOptions(group: CrmManagedOptionGroup) {
   const [formError, setFormError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
-  const rows = useMemo(
-    () => (data?.crmManagedOptions ?? []).slice().sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name)),
-    [data]
-  );
-  const visible = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return q ? rows.filter((r) => r.name.toLowerCase().includes(q)) : rows;
-  }, [rows, search]);
+  // Order, search and the next place are shared with the Duncit CRM app (@duncit/utils).
+  const rows = useMemo(() => crmSortManagedOptions(data?.crmManagedOptions ?? []), [data]);
+  const visible = useMemo(() => crmFilterManagedOptions(rows, search), [rows, search]);
   const busy = createState.loading || updateState.loading || deleteState.loading;
 
   const startCreate = () => {
-    const next = rows.length ? Math.max(...rows.map((r) => r.sort_order)) + 1 : 0;
-    setDraft({ ...blank, sort_order: String(next) });
+    setDraft({ ...blank, sort_order: String(crmNextManagedOrder(rows)) });
     setFormError(null);
   };
 
   const persist = async (current: ManagedEditRow) => {
     const name = current.name.trim();
-    if (!name) return setFormError('Name is required.');
+    if (!name) return setFormError(t('crm.data.optionNameRequired'));
     const parsed = Number.parseInt(current.sort_order, 10);
     const sort_order = Number.isFinite(parsed) ? parsed : 0;
     try {

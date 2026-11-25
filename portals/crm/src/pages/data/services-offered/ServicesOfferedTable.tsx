@@ -10,7 +10,7 @@ import {
 } from '@duncit/table';
 import type { CrmServiceOfferedRow } from '../../../api/data.gql';
 import { useTranslation } from '@duncit/shell';
-import { SERVICE_TARGETS } from '../../../config/serviceTargets';
+import { SERVICE_TARGETS, serviceTargetLabelKeys } from '../../../config/serviceTargets';
 
 interface Props {
   fetchRows: TableFetch<CrmServiceOfferedRow>;
@@ -27,11 +27,8 @@ const dash = (v?: string | null) => (v?.trim() ? v : '—');
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 /** The lead kinds a row shows on, as labels; every kind collapses to "All lead types". */
-const targetLabels = (s: CrmServiceOfferedRow, t: Translate): string[] => {
-  const on = SERVICE_TARGETS.filter((target) => s[target.flag]);
-  if (on.length === SERVICE_TARGETS.length) return [t('crm.data.allLeadTypes')];
-  return on.map((target) => t(target.labelKey));
-};
+const targetLabels = (s: CrmServiceOfferedRow, t: Translate): string[] =>
+  serviceTargetLabelKeys(s).map((key) => t(key));
 
 const targetLabel = (s: CrmServiceOfferedRow, t: Translate) => targetLabels(s, t).join(', ') || '—';
 

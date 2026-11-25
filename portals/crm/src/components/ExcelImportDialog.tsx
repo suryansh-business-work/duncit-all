@@ -79,7 +79,7 @@ export default function ExcelImportDialog({ open, entity, title, onClose, onImpo
         fetchPolicy: 'network-only',
       });
       const found = res.data?.crmExcelInspect?.headers ?? [];
-      if (found.length === 0) throw new Error('No column headers found in the first row.');
+      if (found.length === 0) throw new Error(t('crm.excelImport.noHeaders'));
       setHeaders(found);
       setMapping(autoMatch(fields, found));
       setStep('map');
@@ -124,8 +124,7 @@ export default function ExcelImportDialog({ open, entity, title, onClose, onImpo
             <Typography variant="body2" sx={{
               color: "text.secondary"
             }}>
-              Upload an Excel (.xlsx) or CSV file. Next you'll map your columns to lead fields.
-              Multi-value columns accept comma-separated values.
+              {t('crm.excelImport.intro')}
             </Typography>
             {onDownloadTemplate && (
               <DuncitButton size="small" variant="outlined" sx={{ alignSelf: 'flex-start' }} onClick={onDownloadTemplate}>{t('crm.components.downloadTemplate')}</DuncitButton>
@@ -136,11 +135,11 @@ export default function ExcelImportDialog({ open, entity, title, onClose, onImpo
               alignItems: "center"
             }}>
               <DuncitButton variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => inputRef.current?.click()} disabled={inspecting}>
-                {inspecting ? 'Reading…' : 'Choose file'}
+                {inspecting ? t('crm.excelImport.reading') : t('crm.excelImport.chooseFile')}
               </DuncitButton>
               <Typography variant="body2" noWrap sx={{
                 color: "text.secondary"
-              }}>{fileName || 'No file selected'}</Typography>
+              }}>{fileName || t('crm.excelImport.noFile')}</Typography>
             </Stack>
           </Stack>
         )}
@@ -155,7 +154,7 @@ export default function ExcelImportDialog({ open, entity, title, onClose, onImpo
         <DuncitButton onClick={close} disabled={inspecting || importing}>{t('shell.common.close')}</DuncitButton>
         {step === 'map' && (
           <DuncitButton variant="contained" onClick={doImport} disabled={importing || !requiredOk}>
-            {importing ? 'Importing…' : t('crm.userLeads.import')}
+            {importing ? t('crm.excelImport.importing') : t('crm.userLeads.import')}
           </DuncitButton>
         )}
       </DialogActions>

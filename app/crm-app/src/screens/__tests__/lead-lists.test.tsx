@@ -202,7 +202,7 @@ describe('LeadListScreen', () => {
         WAIT,
       ),
     ).toBeOnTheScreen();
-    expect(screen.getByText('Creators Leads')).toBeOnTheScreen();
+    expect(mockNav.setOptions).toHaveBeenCalledWith({ title: 'Creators Leads' });
     expect(screen.queryByTestId('lead-list-ai')).toBeNull();
     expect(screen.queryByTestId('lead-list-import')).toBeNull();
     expect(screen.queryByTestId('lead-list-services')).toBeNull();

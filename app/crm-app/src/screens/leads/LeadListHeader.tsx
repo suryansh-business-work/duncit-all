@@ -43,12 +43,8 @@ export function LeadListHeader(props: Readonly<Props>) {
   );
   return (
     <YStack gap="$2" marginBottom="$3">
-      <YStack gap="$1">
-        <Text fontSize="$7" fontWeight="800" role="heading">
-          {t(definition.copy.title)}
-        </Text>
-        <Text color="$muted">{t(definition.copy.subtitle)}</Text>
-      </YStack>
+      {/* The screen header already names the page; the subtitle says what it is for. */}
+      <Text color="$muted">{t(definition.copy.subtitle)}</Text>
       <DuncitButton
         label={t(definition.copy.newLead)}
         onPress={props.onNew}

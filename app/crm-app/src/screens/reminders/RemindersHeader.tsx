@@ -47,7 +47,11 @@ function ChoiceRow<T extends string>({
       style={{ marginHorizontal: -16 }}
       contentContainerStyle={{ paddingHorizontal: 16 }}
     >
-      <XStack gap="$2" role="radiogroup" aria-label={label}>
+      <XStack gap="$2" alignItems="center" role="radiogroup" aria-label={label}>
+        {/* Named on screen too, as the portal's Type and Status selects are: two rows both start with "All". */}
+        <Text color="$muted" fontSize="$2" aria-hidden>
+          {label}
+        </Text>
         {options.map((option) => (
           <DuncitButton
             key={option.value}

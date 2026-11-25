@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { RefreshControl, ScrollView } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack, useTheme } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 import { crmIsEmptyAnalytics } from '@duncit/utils';
 
 import { Card } from '@/components/Card';
@@ -27,7 +26,6 @@ type Choice = typeof ALL | LeadKind;
  */
 export function QualityAnalyticsScreen() {
   const { t } = useTranslation();
-  const theme = useTheme();
   const [choice, setChoice] = useState<Choice>(ALL);
   const variables = useMemo(() => ({ entity_type: choice === ALL ? null : choice }), [choice]);
   const { data, loading, error, refetch } = useGqlQuery(CrmAppQualityAnalyticsDocument, variables, {
@@ -41,22 +39,10 @@ export function QualityAnalyticsScreen() {
       contentContainerStyle={{ padding: 16, gap: 12 }}
       refreshControl={<RefreshControl refreshing={false} onRefresh={refetch} />}
     >
-      <XStack alignItems="center" gap="$2">
-        <MaterialIcons
-          name="insights"
-          size={24}
-          color={theme.accentText?.val}
-          accessibilityElementsHidden
-        />
-        <YStack flex={1}>
-          <Text fontSize="$7" fontWeight="800" role="heading">
-            {t('crm.leadQualityAnalytics.title')}
-          </Text>
-          <Text color="$muted" fontSize="$2">
-            {t('crm.leadQualityAnalytics.subtitle')}
-          </Text>
-        </YStack>
-      </XStack>
+      {/* The screen header names the page; the subtitle says what it shows. */}
+      <Text color="$muted" fontSize="$2">
+        {t('crm.leadQualityAnalytics.subtitle')}
+      </Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <XStack gap="$2" role="tablist">
           {choices.map((c) => (

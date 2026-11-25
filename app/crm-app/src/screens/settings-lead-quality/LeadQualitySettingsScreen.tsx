@@ -1,17 +1,16 @@
 import { useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
 import {
   useNavigation,
   useRoute,
   type NavigationProp,
   type RouteProp,
 } from '@react-navigation/native';
-import { Text, XStack, YStack, useTheme } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
-import { DuncitButton } from '@/components/DuncitButton';
+import { TabBar } from '@/components/TabBar';
 import { QUALITY_LEAD_TYPES } from '@/generated/lead-quality-rules';
-import type { LeadKind } from '@/features/leads/leadKinds';
+import { isLeadKind, type LeadKind } from '@/features/leads/leadKinds';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AppStackParamList } from '@/navigation/types';
 import { LeadTypeSettings } from './LeadTypeSettings';
@@ -32,7 +31,6 @@ const LEAD_TYPE_LABEL_KEY: Record<LeadKind, string> = {
  */
 export function LeadQualitySettingsScreen() {
   const { t } = useTranslation();
-  const theme = useTheme();
   const navigation = useNavigation<NavigationProp<AppStackParamList>>();
   const { params } = useRoute<RouteProp<AppStackParamList, 'LeadQualitySettings'>>();
   const [leadType, setLeadType] = useState<LeadKind>(params?.leadType ?? 'HOST_LEAD');
@@ -47,39 +45,21 @@ export function LeadQualitySettingsScreen() {
         contentContainerStyle={{ padding: 16, gap: 12 }}
         keyboardShouldPersistTaps="handled"
       >
-        <XStack alignItems="center" gap="$2">
-          <MaterialIcons
-            name="tune"
-            size={24}
-            color={theme.accentText?.val}
-            accessibilityElementsHidden
-          />
-          <YStack flex={1}>
-            <Text fontSize="$7" fontWeight="800" role="heading">
-              {t('crm.leadQualitySettings.title')}
-            </Text>
-            <Text color="$muted" fontSize="$2">
-              {t('crm.leadQualitySettings.subtitle')}
-            </Text>
-          </YStack>
-        </XStack>
-        <XStack
-          flexWrap="wrap"
-          gap="$2"
-          role="tablist"
-          aria-label={t('crm.leadQualitySettings.leadTypesAria')}
-        >
-          {QUALITY_LEAD_TYPES.map((type) => (
-            <DuncitButton
-              key={type}
-              label={t(LEAD_TYPE_LABEL_KEY[type])}
-              onPress={() => setLeadType(type)}
-              size="sm"
-              variant={leadType === type ? 'solid' : 'outline'}
-              testID={`lead-quality-tab-${type}`}
-            />
-          ))}
-        </XStack>
+        {/* The screen header names the page; the lead types are the portal's tabs. */}
+        <Text color="$muted" fontSize="$2">
+          {t('crm.leadQualitySettings.subtitle')}
+        </Text>
+        <TabBar
+          tabs={QUALITY_LEAD_TYPES.map((type) => ({
+            key: type,
+            label: t(LEAD_TYPE_LABEL_KEY[type]),
+          }))}
+          active={leadType}
+          onChange={(key) => {
+            if (isLeadKind(key)) setLeadType(key);
+          }}
+          testID="lead-quality-tab"
+        />
         <LeadTypeSettings
           key={leadType}
           leadType={leadType}

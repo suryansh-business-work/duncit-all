@@ -1,6 +1,7 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
+import { autoReplyMutations, autoReplyQueries } from './social.autoReply.resolver';
 import { socialConversationMutations, socialConversationQueries, socialConversationTypes } from './social.conversation.resolver';
 import { socialInbox, type SocialInboxChannel } from './social.inbox';
 import { inboxItemsTable } from './social.inbox.items';
@@ -38,6 +39,7 @@ export const socialInboxResolvers = {
     },
     // Direct messages and Social Settings (social.conversation.resolver.ts).
     ...socialConversationQueries,
+    ...autoReplyQueries,
   },
   Mutation: {
     assignSocialComment: (_p: unknown, args: { id: string; user_id?: string | null }, ctx: Ctx) => {
@@ -61,5 +63,6 @@ export const socialInboxResolvers = {
       return suggestDirectMessage(args.id, user);
     },
     ...socialConversationMutations,
+    ...autoReplyMutations,
   },
 };

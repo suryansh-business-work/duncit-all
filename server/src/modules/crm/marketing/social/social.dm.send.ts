@@ -28,9 +28,11 @@ export interface DmSender {
   user?: { id: string; email?: string | null };
   /** Set when an auto-reply rule sends: automation never uses the human-agent window and never writes to an opted-out person. */
   automation_rule_id?: string;
+  /** The approval run an approved auto-reply continues, so Activity shows the send under it. */
+  parent_run_id?: string;
 }
 
-function refuse(code: string, message: string): never {
+export function refuse(code: string, message: string): never {
   throw new GraphQLError(message, { extensions: { code } });
 }
 
@@ -55,7 +57,18 @@ async function prepare(id: string, text: string, sender: DmSender): Promise<Prep
       ? 'Automated replies only go within 24 hours of the person’s last message.'
       : 'The messaging window is closed: replies go only within 7 days of the person’s last message, and never to someone who has not written.');
   }
-  const account = await SocialAccountModel.findById(conversation.account_id).select('+access_token +refresh_token').lean<AccountWithTokens>();
+  return { conversation, terms, ...(await messagingAccount(conversation.account_id)) };
+}
+
+/**
+ * The account a message goes out from, with its app: refused when it needs
+ * reconnecting, lacks the messaging permission, or (Instagram) is not linked
+ * to a Facebook Page — the checks a DM and a private reply share.
+ */
+export async function messagingAccount(accountId: string): Promise<{ account: AccountWithTokens; creds: SocialAppCredentials }> {
+  const account = isValidObjectId(accountId)
+    ? await SocialAccountModel.findById(accountId).select('+access_token +refresh_token').lean<AccountWithTokens>()
+    : null;
   if (!account) refuse('NOT_FOUND', 'Social account not found');
   if (account.status === 'EXPIRED') refuse('BAD_USER_INPUT', 'This account needs reconnecting in Social Accounts before it can send messages.');
   const missing = missingDmPermission(account);
@@ -65,7 +78,16 @@ async function prepare(id: string, text: string, sender: DmSender): Promise<Prep
   }
   const creds = await socialCredentials(account.provider);
   if (!creds) refuse('NOT_CONFIGURED', 'This network’s app is not set up yet — add it under Marketing › Settings › Integrations.');
-  return { conversation, account, terms, creds };
+  return { account, creds };
+}
+
+/** Meta's refusal in plain words; a dead token marks the account for reconnecting. */
+export async function sendFailure(account: AccountWithTokens, error: unknown): Promise<string> {
+  const mapped = mapSendError(error);
+  if (mapped.reconnect) {
+    await SocialAccountModel.updateOne({ _id: account._id }, { $set: { status: 'EXPIRED', last_error: mapped.message } });
+  }
+  return mapped.message;
 }
 
 async function lock(id: string): Promise<boolean> {
@@ -77,16 +99,22 @@ async function lock(id: string): Promise<boolean> {
   return taken.modifiedCount > 0;
 }
 
-async function actorOf(sender: DmSender): Promise<RunActor> {
+export async function actorOf(sender: Pick<DmSender, 'user'>): Promise<RunActor> {
   if (sender.user) return userActor(sender.user);
   return { kind: 'AGENT', name: 'Auto-reply' };
 }
 
-async function deliver(prepared: Prepared, text: string, actor: RunActor) {
+async function deliver(prepared: Prepared, text: string, actor: RunActor, parentRunId?: string) {
   const { conversation, account, terms, creds } = prepared;
   const who = conversation.participant.username || conversation.participant.name || 'a person';
   return withRun(
-    { workflow: 'INBOX_REPLY', name: `Message to ${who} on ${account.platform}`, actor, links: { account_id: String(account._id) } },
+    {
+      workflow: 'INBOX_REPLY',
+      name: `Message to ${who} on ${account.platform}`,
+      actor,
+      links: { account_id: String(account._id) },
+      ...(parentRunId ? { parent_run_id: parentRunId } : {}),
+    },
     (run) =>
       run.step(
         'message',
@@ -105,16 +133,13 @@ async function deliver(prepared: Prepared, text: string, actor: RunActor) {
  * that could refuse was checked in prepare(); what fails here is the network's
  * answer (or no answer). A dead token marks the account for reconnecting.
  */
-async function deliverOrRefuse(prepared: Prepared, text: string, actor: RunActor, keepFailure: (message: string) => Promise<void>) {
+async function deliverOrRefuse(prepared: Prepared, text: string, sender: DmSender, actor: RunActor, keepFailure: (message: string) => Promise<void>) {
   try {
-    return await deliver(prepared, text, actor);
+    return await deliver(prepared, text, actor, sender.parent_run_id);
   } catch (error) {
-    const mapped = mapSendError(error);
-    if (mapped.reconnect) {
-      await SocialAccountModel.updateOne({ _id: prepared.account._id }, { $set: { status: 'EXPIRED', last_error: mapped.message } });
-    }
-    await keepFailure(mapped.message);
-    return refuse('SEND_FAILED', `The message was not sent — ${mapped.message}`);
+    const message = await sendFailure(prepared.account, error);
+    await keepFailure(message);
+    return refuse('SEND_FAILED', `The message was not sent — ${message}`);
   }
 }
 
@@ -135,7 +160,7 @@ export async function sendDirectMessage(id: string, rawText: string, sender: DmS
     tag: prepared.terms.tag,
   };
   try {
-    const sent = await deliverOrRefuse(prepared, text, actor, async (message) => {
+    const sent = await deliverOrRefuse(prepared, text, sender, actor, async (message) => {
       await SocialMessageModel.create({ ...base, conversation_id: id, external_id: '', sent_at: new Date(), status: 'FAILED', error: message });
     });
     // Stored under Meta's id, so the echo the webhook brings back is the same message.

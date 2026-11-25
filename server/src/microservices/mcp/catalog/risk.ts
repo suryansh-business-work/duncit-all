@@ -114,6 +114,10 @@ const CONFIRM_FIELDS = new Set([
   // and a public reply under their comment. An agent drafts; a person agrees.
   'sendSocialMessage',
   'replyToSocialComment',
+  // An auto-reply rule then writes to real people with no one pressing Send
+  // (a trusted rule skips Approvals), so making or changing one is agreed first.
+  'createSocialAutoReplyRule',
+  'updateSocialAutoReplyRule',
 ]);
 
 /** Words that mean a mutation reaches people or systems outside Duncit. */

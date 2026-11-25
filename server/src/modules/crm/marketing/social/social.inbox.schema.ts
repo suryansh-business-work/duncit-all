@@ -262,6 +262,49 @@ export const socialInboxTypeDefs = gql`
     webhook_error: String!
   }
 
+  "What an auto-reply rule answers: a whole-message keyword, a phrase anywhere (FAQ), a person's first DM (WELCOME), or a phrase in a comment, answered with one private reply (COMMENT_TO_DM)."
+  enum SocialAutoReplyKind {
+    KEYWORD
+    FAQ
+    WELCOME
+    COMMENT_TO_DM
+  }
+
+  "A rule that answers inbound DMs or comments on its own, inside Meta's 24-hour window, never to someone who opted out, under the daily cap."
+  type SocialAutoReplyRule {
+    id: ID!
+    name: String!
+    kind: SocialAutoReplyKind!
+    "Upper-cased words or phrases; empty for WELCOME."
+    keywords: [String!]!
+    reply_text: String!
+    "The accounts it answers for; empty means every connected Facebook and Instagram account."
+    account_ids: [ID!]!
+    "A trusted rule sends at once even when Social Settings asks for approval."
+    trusted: Boolean!
+    enabled: Boolean!
+    "Replies it sent in the last 7 days."
+    sent_7d: Int!
+    updated_at: String
+  }
+
+  type SocialAutoReplyRuleTablePage {
+    rows: [SocialAutoReplyRule!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
+  input SocialAutoReplyRuleInput {
+    name: String!
+    kind: SocialAutoReplyKind!
+    keywords: [String!]!
+    reply_text: String!
+    account_ids: [ID!]!
+    trusted: Boolean!
+    enabled: Boolean!
+  }
+
   extend type Query {
     "Every comment from every connected account, newest first; view pins a summary card's slice."
     socialInboxTable(query: TableQueryInput, view: SocialInboxView, channel: SocialInboxChannel): SocialCommentTablePage!
@@ -279,6 +322,8 @@ export const socialInboxTypeDefs = gql`
     socialSettings: SocialSettings!
     "The URL Meta delivers webhooks to, for the app's Webhooks setup."
     socialWebhookUrl: String!
+    "The auto-reply rules, most recently changed first."
+    socialAutoReplyRulesTable(query: TableQueryInput): SocialAutoReplyRuleTablePage!
   }
 
   extend type Mutation {
@@ -299,5 +344,10 @@ export const socialInboxTypeDefs = gql`
     updateSocialSettings(input: SocialSettingsInput!): SocialSettings!
     "Put the person into the Marketing pipeline (matched by Instagram handle) and link the conversation to the lead."
     createLeadFromSocialConversation(id: ID!): SocialConversationLead!
+    "Add an auto-reply rule. Refused with BAD_USER_INPUT for a keyword that is a stop or start keyword, or an account that cannot message."
+    createSocialAutoReplyRule(input: SocialAutoReplyRuleInput!): SocialAutoReplyRule!
+    updateSocialAutoReplyRule(id: ID!, input: SocialAutoReplyRuleInput!): SocialAutoReplyRule!
+    "Delete a rule. The replies it already made stay in Activity."
+    deleteSocialAutoReplyRule(id: ID!): Boolean!
   }
 `;

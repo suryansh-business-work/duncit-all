@@ -3,6 +3,7 @@ import { inSequence } from '@utils/in-sequence';
 import { READERS } from './providers';
 import { participantProfile } from './providers/meta.messaging';
 import { analyzePendingComments } from './social.ai';
+import { autoReplyToComment, autoReplyToDm } from './social.autoReply';
 import { SocialConversationModel } from './social.conversation.model';
 import { socialCredentials } from './social.credentials';
 import { linkDmToLeads, recordDm } from './social.dm.ingest';
@@ -51,17 +52,31 @@ async function handleDm(event: DmEvent): Promise<boolean> {
     attachments: event.attachments,
     sent_at: event.sent_at,
   });
-  if (recorded.duplicate || !recorded.created) return !recorded.duplicate;
-  const username = await enrichParticipant(recorded.conversation_id, account, event.participant_id).catch((error: unknown) => {
-    logs.server.warn(COMPONENT, 'participantProfile', { error, conversation_id: recorded.conversation_id });
+  if (recorded.duplicate) return false;
+  if (recorded.created) await welcomeNewConversation(recorded.conversation_id, account, event);
+  if (event.direction === 'IN') {
+    await autoReplyToDm({
+      account_id: String(account._id),
+      conversation_id: recorded.conversation_id,
+      external_id: event.external_id,
+      text: event.text,
+      first_message: recorded.created,
+    }).catch((error: unknown) => logs.server.error(COMPONENT, 'autoReplyToDm', { error, conversation_id: recorded.conversation_id }));
+  }
+  return true;
+}
+
+/** A conversation's first message: who the person is, and whether they are a lead writing back. */
+async function welcomeNewConversation(conversationId: string, account: AccountWithTokens, event: DmEvent): Promise<void> {
+  const username = await enrichParticipant(conversationId, account, event.participant_id).catch((error: unknown) => {
+    logs.server.warn(COMPONENT, 'participantProfile', { error, conversation_id: conversationId });
     return '';
   });
   const settings = await loadSocialSettings();
   if (event.direction === 'IN' && username && settings.link_dms_to_leads) {
-    const conversation = await SocialConversationModel.findById(recorded.conversation_id).select('opted_out').lean();
-    await linkDmToLeads(recorded.conversation_id, username, conversation?.opted_out ?? false);
+    const conversation = await SocialConversationModel.findById(conversationId).select('opted_out').lean();
+    await linkDmToLeads(conversationId, username, conversation?.opted_out ?? false);
   }
-  return true;
 }
 
 /** A comment the webhook saw before the sync did: its post is stubbed until the sync fills it in. */
@@ -83,6 +98,7 @@ async function handleComment(event: CommentEvent): Promise<boolean> {
         platform: event.platform,
         author_name: event.author_name,
         author_handle: event.author_handle,
+        author_id: event.author_id,
         text: event.text,
         permalink: post.permalink ?? '',
         published_at: event.published_at,
@@ -91,7 +107,14 @@ async function handleComment(event: CommentEvent): Promise<boolean> {
     },
     { upsert: true }
   );
-  return stored.upsertedCount > 0;
+  if (stored.upsertedCount === 0) return false;
+  await autoReplyToComment({
+    account_id: accountId,
+    comment_id: String(stored.upsertedId),
+    external_id: event.external_id,
+    text: event.text,
+  }).catch((error: unknown) => logs.server.error(COMPONENT, 'autoReplyToComment', { error, external_id: event.external_id }));
+  return true;
 }
 
 /** One AI pass at a time per process: a burst of webhooks leaves the rest to the pass already running. */

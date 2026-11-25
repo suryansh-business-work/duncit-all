@@ -142,6 +142,8 @@ const commentSchema = new Schema(
     external_id: { type: String, required: true },
     author_name: { type: String, default: '' },
     author_handle: { type: String, default: '' },
+    /** The commenter's id on the network, kept from webhooks so an opt-out can be honoured; '' on comments read before it was. */
+    author_id: { type: String, default: '' },
     text: { type: String, default: '' },
     permalink: { type: String, default: '' },
     published_at: { type: Date, required: true, index: true },
@@ -162,6 +164,8 @@ const commentSchema = new Schema(
     last_activity_at: { type: Date, default: null },
     // Set while a reply is being sent, so a double press cannot post it twice.
     reply_lock_at: { type: Date, default: null },
+    // Meta allows one private reply (a DM to the commenter) per comment: when it went, or was claimed.
+    private_reply_at: { type: Date, default: null },
   },
   { timestamps }
 );

@@ -26,3 +26,4 @@ export * from './inbox.mock';
 export * from './dm.mock';
 export * from './analytics.mock';
 export * from './podPromo.mock';
+export * from './auto-reply.mock';

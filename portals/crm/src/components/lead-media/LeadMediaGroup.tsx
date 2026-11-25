@@ -35,7 +35,7 @@ export default function LeadMediaGroup({ group, items, busy, onUpload, actions }
   const { t } = useTranslation();
   const limit = LEAD_MEDIA_LIMITS[group.kind];
   const full = items.length >= limit;
-  const moveLabel = group.kind === 'LOGO' ? t('crm.media.moveToImages') : t('crm.media.moveToLogos');
+  const moveLabel = t(group.moveKey);
 
   return (
     <Stack component="section" spacing={1.5} aria-label={t(group.titleKey)}>

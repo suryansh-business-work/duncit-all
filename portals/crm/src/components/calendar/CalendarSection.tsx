@@ -136,16 +136,16 @@ export default function CalendarSection() {
             }}>{title}</Typography>
           <Box sx={{ flex: 1 }} />
           <TextField select size="small" label={t('shell.common.type')} value={entity} onChange={(e) => setEntity(e.target.value as EntityFilter)} sx={{ minWidth: 120 }}>
-            <MenuItem value="ALL">All</MenuItem>
+            <MenuItem value="ALL">{t('crm.calendar.all')}</MenuItem>
             <MenuItem value="VENUE_LEAD">{t('crm.common.venue')}</MenuItem>
-            <MenuItem value="HOST_LEAD">Host</MenuItem>
+            <MenuItem value="HOST_LEAD">{t('crm.common.host')}</MenuItem>
           </TextField>
           <TextField select size="small" label={t('shell.common.status')} value={status} onChange={(e) => setStatus(e.target.value as StatusFilter)} sx={{ minWidth: 120 }}>
-            <MenuItem value="ALL">All</MenuItem>
+            <MenuItem value="ALL">{t('crm.calendar.all')}</MenuItem>
             <MenuItem value="PENDING">{t('crm.components.pending')}</MenuItem>
-            <MenuItem value="DONE">Done</MenuItem>
+            <MenuItem value="DONE">{t('crm.components.done')}</MenuItem>
           </TextField>
-          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => { setEditing(null); setFormOpen(true); }}>Add</DuncitButton>
+          <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => { setEditing(null); setFormOpen(true); }}>{t('crm.common.add')}</DuncitButton>
         </Stack>
 
         <ToggleButtonGroup size="small" exclusive value={view} onChange={(_e, v) => v && setView(v)} aria-label={t('shell.common.view')} sx={{ mb: 1.5, flexWrap: 'wrap' }}>
@@ -163,7 +163,7 @@ export default function CalendarSection() {
           <CalendarMonth cursor={cursor} events={events} onEvent={onEvent} />
         )}
         {(!loading || events.length > 0) && view !== 'month' && (
-          <CalendarList days={listDays} events={events} onEvent={onEvent} emptyHint="Nothing scheduled in this range." />
+          <CalendarList days={listDays} events={events} onEvent={onEvent} emptyHint={t('crm.calendar.nothingScheduled')} />
         )}
       </CardContent>
 

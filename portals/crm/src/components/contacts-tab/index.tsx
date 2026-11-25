@@ -34,7 +34,7 @@ export default function ContactsTab({ entity, leadId, leadName, contacts }: Read
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
-            No contacts on file yet.
+            {t('crm.leadDetail.noContacts')}
           </Typography>
         )}
         {contacts.map((contact, idx) => (

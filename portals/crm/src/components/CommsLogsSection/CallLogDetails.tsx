@@ -4,16 +4,11 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { formatTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
+import { crmCallHasTranscript, crmTranscriptLabelKey } from '@duncit/utils';
 import { TranscriptWave } from './statusVisuals';
 import CallSummaryCard from './CallSummaryCard';
 import type { CommunicationLogItem } from '../../api/comms.gql';
 
-const transcriptLabelKey = (log: CommunicationLogItem) => {
-  if (log.transcript_status === 'PENDING') return 'crm.call.transcriptPending';
-  if (log.transcript_status === 'FAILED') return 'crm.call.transcriptFailed';
-  if (log.recording_url) return 'crm.call.transcriptNotRequested';
-  return 'crm.call.noRecordingYet';
-};
 
 interface Props {
   log: CommunicationLogItem;
@@ -27,8 +22,7 @@ interface Props {
 export default function CallLogDetails({ log, onRequestTranscript, onSummarize, refreshing, summarizing }: Readonly<Props>) {
   const { t } = useTranslation();
   const segments = log.transcript_segments ?? [];
-  const transcriptReady = log.transcript_status === 'READY' && !!log.transcript;
-  const hasTranscript = transcriptReady || segments.length > 0;
+  const hasTranscript = crmCallHasTranscript(log);
 
   const transcript = segments.length > 0 ? (
     <Stack component="ol" spacing={0.75} sx={{ listStyle: 'none', m: 0, p: 0, mt: 0.5 }}>
@@ -68,7 +62,7 @@ export default function CallLogDetails({ log, onRequestTranscript, onSummarize, 
           </Box>
         ) : (
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-            <Chip size="small" variant="outlined" color={log.transcript_status === 'FAILED' ? 'error' : 'default'} label={t(transcriptLabelKey(log))} />
+            <Chip size="small" variant="outlined" color={log.transcript_status === 'FAILED' ? 'error' : 'default'} label={t(crmTranscriptLabelKey(log))} />
             {log.recording_url && (
               <DuncitButton size="small" variant="outlined" startIcon={<RefreshIcon />} onClick={() => onRequestTranscript(log.id)} disabled={refreshing}>
                 {log.transcript_status === 'FAILED' ? t('crm.call.retryTranscript') : t('crm.call.getTranscript')}

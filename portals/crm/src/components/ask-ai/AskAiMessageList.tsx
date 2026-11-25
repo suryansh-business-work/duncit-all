@@ -4,6 +4,7 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import PersonIcon from '@mui/icons-material/Person';
 import { DuncitRichTextInput } from '@duncit/rich-text';
 import { useTranslation } from '@duncit/shell';
+import { CRM_LEAD_AI_SUGGESTIONS } from '@duncit/utils';
 import type { AskAiMessage } from '../../api/askAi.gql';
 
 interface Props {
@@ -40,7 +41,7 @@ function UserText({ text }: Readonly<{ text: string }>) {
 export default function AskAiMessageList({ messages, pending, error, onSuggestion, renderActions }: Readonly<Props>) {
   const { t } = useTranslation();
   const endRef = useRef<HTMLDivElement | null>(null);
-  const suggestions = [t('crm.askAi.suggestSummary'), t('crm.askAi.suggestEmail'), t('crm.askAi.suggestReminder')];
+  const suggestions = CRM_LEAD_AI_SUGGESTIONS.map((key) => t(key));
 
   // Keep the newest turn in view, including while the assistant is thinking.
   useEffect(() => {

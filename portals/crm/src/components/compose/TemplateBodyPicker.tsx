@@ -3,7 +3,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client/react';
 import { Alert, Box, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { RENDER, TEMPLATES, type EmailAsset, type EmailTemplate } from '../../api/emailTemplates.gql';
-import { parseApiError } from '@duncit/utils';
+import {
+  crmInterpolateTemplate,
+  crmSeedTemplateValue,
+  crmStripPlaceholders,
+  crmTemplatePlaceholders,
+  crmTemplatesFor,
+  parseApiError,
+} from '@duncit/utils';
 import VariablesValuesEditor from '../email/VariablesValuesEditor';
 import { useTranslation } from '@duncit/shell';
 
@@ -23,45 +30,13 @@ interface Props {
   onChange: (body: TemplateBody) => void;
 }
 
-const PLACEHOLDER = /{{\s*([\w.]+)\s*}}/g;
-
-/** Every {{ slug }} placeholder used in the text. */
-function placeholders(text: string): string[] {
-  const set = new Set<string>();
-  let m: RegExpExecArray | null;
-  PLACEHOLDER.lastIndex = 0;
-  while ((m = PLACEHOLDER.exec(text))) set.add(m[1]);
-  return [...set];
-}
-
-const interpolate = (tpl: string, vars: Record<string, string>) =>
-  tpl.replace(PLACEHOLDER, (_m, k) => (vars[k] != null && vars[k] !== '' ? String(vars[k]) : ''));
-
-/** Remove any placeholder that survived rendering so no raw slug is ever sent. */
-const stripLeftover = (s: string) => s.replace(PLACEHOLDER, '');
-
-/** Best value for a placeholder: lead value → template default → name/email heuristic. */
-function seedValue(slug: string, sample: string | null | undefined, vv: Record<string, string>, name: string, email: string): string {
-  if (vv[slug]) return vv[slug];
-  if (sample) return sample;
-  const k = slug.toLowerCase();
-  if (/email/.test(k)) return email;
-  if (/name/.test(k)) return name;
-  return '';
-}
-
 /** Template send mode: pick a template, auto-fill EVERY placeholder from the lead, render. */
 export default function TemplateBodyPicker({ entity, variableValues, leadName, leadEmail, onChange }: Readonly<Props>) {
   const { t } = useTranslation();
   const client = useApolloClient();
   const { data, loading } = useQuery<{ emailTemplates: EmailTemplate[] }>(TEMPLATES, { fetchPolicy: 'cache-and-network' });
   // Creator / community leads have no template target of their own yet: they get the static templates.
-  const TARGET_FOR = { VENUE_LEAD: 'VENUE', HOST_LEAD: 'HOST', ECOMM_LEAD: 'ECOMM', CREATOR_LEAD: 'STATIC', COMMUNITY_LEAD: 'STATIC' } as const;
-  const wanted = TARGET_FOR[entity];
-  const templates = useMemo(
-    () => (data?.emailTemplates ?? []).filter((t) => t.is_active && (t.target === 'STATIC' || t.target === wanted)),
-    [data, wanted]
-  );
+  const templates = useMemo(() => crmTemplatesFor(data?.emailTemplates ?? [], entity), [data, entity]);
 
   const [selectedId, setSelectedId] = useState('');
   const [vars, setVars] = useState<Record<string, string>>({});
@@ -77,10 +52,10 @@ export default function TemplateBodyPicker({ entity, variableValues, leadName, l
     const tpl = templates.find((t) => t.template_id === id)!;
     // Cover EVERY placeholder in the MJML + subject — not just declared ones —
     // so a {{ venue_name }} the author forgot to "declare" still binds.
-    const allKeys = [...new Set([...placeholders(tpl.mjml), ...placeholders(tpl.subject)])];
+    const allKeys = [...new Set([...crmTemplatePlaceholders(tpl.mjml), ...crmTemplatePlaceholders(tpl.subject)])];
     const sampleOf = new Map(tpl.variables.map((v) => [v.key, v.sample]));
     setKeys(allKeys);
-    setVars(Object.fromEntries(allKeys.map((k) => [k, seedValue(k, sampleOf.get(k), variableValues, leadName, leadEmail)])));
+    setVars(Object.fromEntries(allKeys.map((k) => [k, crmSeedTemplateValue(k, sampleOf.get(k), variableValues, leadName, leadEmail)])));
   };
 
   useEffect(() => {
@@ -91,13 +66,13 @@ export default function TemplateBodyPicker({ entity, variableValues, leadName, l
       const merged = { ...variableValues, ...vars };
       try {
         const res = await client.query<any>({ query: RENDER, variables: { mjml: selected.mjml, vars: JSON.stringify(merged) }, fetchPolicy: 'network-only' });
-        const renderedHtml = stripLeftover(res.data?.renderEmailTemplate?.html);
+        const renderedHtml = crmStripPlaceholders(res.data?.renderEmailTemplate?.html);
         setHtml(renderedHtml);
         setErrors(res.data?.renderEmailTemplate?.errors);
-        onChange({ subject: interpolate(selected.subject, merged), html: renderedHtml, ready: !!renderedHtml, attachments });
+        onChange({ subject: crmInterpolateTemplate(selected.subject, merged), html: renderedHtml, ready: !!renderedHtml, attachments });
       } catch (e) {
         setErrors([parseApiError(e)]);
-        onChange({ subject: interpolate(selected.subject, merged), html: '', ready: false, attachments });
+        onChange({ subject: crmInterpolateTemplate(selected.subject, merged), html: '', ready: false, attachments });
       }
     }, 500);
     return () => clearTimeout(id);
@@ -106,8 +81,8 @@ export default function TemplateBodyPicker({ entity, variableValues, leadName, l
 
   const editorVars = useMemo(() => keys.map((k) => ({ key: k })), [keys]);
 
-  const pickHint = templates.length ? 'Pick a saved template.' : 'No active templates — create one under Email Templates.';
-  const helperText = loading ? 'Loading templates…' : pickHint;
+  const pickHint = templates.length ? t('crm.compose.pickTemplate') : t('crm.compose.noTemplates');
+  const helperText = loading ? t('crm.compose.loadingTemplates') : pickHint;
 
   return (
     <Stack spacing={1.5}>
@@ -136,7 +111,7 @@ export default function TemplateBodyPicker({ entity, variableValues, leadName, l
           {selected.attachments.length > 0 && (
             <Typography variant="caption" sx={{
               color: "text.secondary"
-            }}>{selected.attachments.length} attachment(s) will be sent.</Typography>
+            }}>{t('crm.compose.attachments', { count: selected.attachments.length })}</Typography>
           )}
           {errors.length > 0 && <Alert severity="warning">{errors.slice(0, 2).join(' · ')}</Alert>}
           <Typography variant="caption" sx={{

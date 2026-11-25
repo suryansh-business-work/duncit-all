@@ -2,13 +2,14 @@ import { Box, Card, Chip, Stack, Typography } from '@mui/material';
 import HandymanIcon from '@mui/icons-material/Handyman';
 import type { CrmServiceOffered } from '../api/crm.types';
 import { useTranslation } from '@duncit/shell';
+import { crmServiceLabel } from '@duncit/utils';
 
 interface Props {
   services: CrmServiceOffered[];
 }
 
-const displayName = (s: CrmServiceOffered) =>
-  s.service === 'Other' ? (s.custom_name || '').trim() || 'Other' : (s.service || '').trim();
+/** A service's name, a custom one by its own name (shared with the Duncit CRM app). */
+const displayName = (s: CrmServiceOffered) => crmServiceLabel(s);
 
 /**
  * Read-only grid of services as small cards. Cards collapse to a single

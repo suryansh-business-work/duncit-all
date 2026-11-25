@@ -1,21 +1,14 @@
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import { formatDateTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
+import { CRM_QUALITY_TRIGGER_KEY } from '@duncit/utils';
 import type { LeadQualityEvent } from '../../api/leadQuality.gql';
 import ExternalLink from '../ExternalLink';
 import { STATUS_KEY, VIA_KEY, keyOr } from '../lead-quality/qualityLabels';
 import { formatPoints } from './qualityFormat';
 
-/** What started a rescore, as the history names it. */
-const TRIGGER_KEY: Record<string, string> = {
-  CREATE: 'crm.leadQualityTab.triggerCreate',
-  UPDATE: 'crm.leadQualityTab.triggerUpdate',
-  EVIDENCE: 'crm.leadQualityTab.triggerEvidence',
-  RECALCULATE: 'crm.leadQualityTab.triggerRecalculate',
-  CONFIG_PUBLISH: 'crm.leadQualityTab.triggerConfigPublish',
-  RESEARCH: 'crm.leadQualityTab.triggerResearch',
-  BACKFILL: 'crm.leadQualityTab.triggerBackfill',
-};
+/** What started a rescore, as the history names it (shared with the Duncit CRM app). */
+const TRIGGER_KEY = CRM_QUALITY_TRIGGER_KEY;
 
 interface Props {
   event: LeadQualityEvent;

@@ -1,20 +1,10 @@
 import { StatusChip as UiStatusChip, type StatusColorMap } from '@duncit/ui';
+import { CRM_LEAD_PRIORITY_TONE, CRM_LEAD_STATUS_TONE } from '@duncit/utils';
 
-const STATUS_COLOR: StatusColorMap = {
-  New: 'info',
-  Contacted: 'info',
-  Qualified: 'info',
-  'Follow-up': 'warning',
-  Negotiation: 'warning',
-  Won: 'success',
-  Lost: 'error',
-};
+/* The tones are shared with the Duncit CRM app (@duncit/utils crm-lead-detail). */
+const STATUS_COLOR: StatusColorMap = { ...CRM_LEAD_STATUS_TONE };
 
-const PRIORITY_COLOR: StatusColorMap = {
-  Low: 'default',
-  Medium: 'info',
-  High: 'error',
-};
+const PRIORITY_COLOR: StatusColorMap = { ...CRM_LEAD_PRIORITY_TONE };
 
 export function StatusChip({ value }: Readonly<{ value: string }>) {
   return <UiStatusChip status={value} colorMap={STATUS_COLOR} variant="outlined" />;

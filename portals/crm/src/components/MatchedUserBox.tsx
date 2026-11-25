@@ -6,20 +6,26 @@ import { PlatformIcons } from '@duncit/ui';
 import type { CrmMatchedUser } from '../api/crm.types';
 import { EmailStatusBadge } from './email-status';
 
-const matchLabel = (m: CrmMatchedUser) => `Also a Duncit user · ${m.matched_on === 'EMAIL' ? 'Email' : 'Phone'} match`;
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const matchLabel = (m: CrmMatchedUser, t: Translate) =>
+  t('crm.leadDetail.alsoDuncitUser', {
+    vars: { via: m.matched_on === 'EMAIL' ? t('shell.common.email') : t('shell.common.phone') },
+  });
 
 /**
  * Small chip for the lead hero row when the lead is also a Duncit user, with
  * the platforms that account uses Duncit from beside it.
  */
 export function MatchedUserChip({ matched }: Readonly<{ matched: CrmMatchedUser }>) {
+  const { t } = useTranslation();
   return (
     <Stack direction="row" spacing={1} component="span" sx={{ alignItems: 'center' }}>
       <Chip
         size="small"
         color="success"
         icon={<VerifiedUserIcon fontSize="small" />}
-        label={matchLabel(matched)}
+        label={matchLabel(matched, t)}
         variant="outlined"
       />
       <PlatformIcons platforms={matched.platforms_used} testId="matched-user-chip-platforms" />
@@ -50,7 +56,7 @@ export default function MatchedUserBox({ matched }: Readonly<{ matched: CrmMatch
               }}>
               <Typography component="p" variant="subtitle2" sx={{
                 fontWeight: 800
-              }}>{matched.full_name || 'Duncit user'}</Typography>
+              }}>{matched.full_name || t('crm.leadDetail.duncitUser')}</Typography>
               <MatchedUserChip matched={matched} />
             </Stack>
             <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>

@@ -25,8 +25,8 @@ export default function ImportResultView({ result }: Readonly<{ result: ImportRe
         <Typography variant="body2" sx={{
           fontWeight: 700
         }}>
-          Imported {result.inserted} of {result.inserted + result.failed} rows
-          {result.failed > 0 ? ` · ${result.failed} failed` : ''}
+          {t('crm.excelImport.imported', { vars: { inserted: result.inserted, total: result.inserted + result.failed } })}
+          {result.failed > 0 ? ` · ${t('crm.excelImport.failedCount', { vars: { count: result.failed } })}` : ''}
         </Typography>
       </Alert>
       {result.errors.length > 0 && (
@@ -34,7 +34,7 @@ export default function ImportResultView({ result }: Readonly<{ result: ImportRe
           <Table size="small" stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ width: 70 }}>Row</TableCell>
+                <TableCell sx={{ width: 70 }}>{t('crm.excelImport.row')}</TableCell>
                 <TableCell>{t('crm.components.reason')}</TableCell>
               </TableRow>
             </TableHead>

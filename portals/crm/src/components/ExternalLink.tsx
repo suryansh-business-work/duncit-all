@@ -1,6 +1,7 @@
 import { Link, type LinkProps } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import type { ReactNode } from 'react';
+import { crmSafeHref } from '@duncit/utils';
 
 interface Props extends Omit<LinkProps, 'href' | 'children'> {
   href: string;
@@ -28,19 +29,7 @@ const toSxList = (sx: LinkProps['sx']) => {
  * "instagram.com/x" becomes https://; any other scheme (javascript:, data:)
  * is never handed to the browser.
  */
-export function safeHref(href: string): string | null {
-  const value = href.trim();
-  for (const candidate of [value, `https://${value}`]) {
-    try {
-      const { protocol } = new URL(candidate);
-      if (protocol === 'https:' || protocol === 'http:') return candidate;
-      return null;
-    } catch {
-      // Not parseable as-is; try it as a bare host next.
-    }
-  }
-  return null;
-}
+export const safeHref = crmSafeHref;
 
 export default function ExternalLink({ href, children, withIcon = true, sx, ...rest }: Readonly<Props>) {
   const target = safeHref(href);

@@ -41,7 +41,7 @@ export default function ContactCard({ contact, index, onCall, onEmail }: Readonl
           <Typography component="p" variant="subtitle2" noWrap sx={{
             fontWeight: 700
           }}>
-            {contact.name || (index === 0 ? 'Primary contact' : `Contact ${index + 1}`)}
+            {contact.name || (index === 0 ? t('crm.leadDetail.primaryContact') : t('crm.leadDetail.contactNumber', { vars: { index: index + 1 } }))}
           </Typography>
           {contact.role && (
             <Typography variant="caption" noWrap sx={{
@@ -101,14 +101,14 @@ export default function ContactCard({ contact, index, onCall, onEmail }: Readonl
         )}
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-        <Tooltip title={contact.mobile_number ? 'Call' : 'No number'}>
+        <Tooltip title={contact.mobile_number ? t('crm.leadDetail.call') : t('crm.leadDetail.noNumber')}>
           <span>
             <DuncitIconButton size="small" color="primary" disabled={!contact.mobile_number} onClick={() => onCall(contact)} aria-label={t('crm.components.callContact')}>
               <PhoneIcon fontSize="small" />
             </DuncitIconButton>
           </span>
         </Tooltip>
-        <Tooltip title={contact.email ? 'Email' : 'No email'}>
+        <Tooltip title={contact.email ? t('shell.common.email') : t('crm.leadDetail.noEmail')}>
           <span>
             <DuncitIconButton size="small" color="primary" disabled={!contact.email} onClick={() => onEmail(contact)} aria-label={t('crm.components.emailContact')}>
               <EmailIcon fontSize="small" />

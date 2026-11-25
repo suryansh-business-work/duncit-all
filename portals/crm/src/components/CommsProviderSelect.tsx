@@ -3,6 +3,7 @@ import { useQuery } from '@apollo/client/react';
 import { MenuItem, TextField } from '@mui/material';
 import { COMMS_PROVIDER_OPTIONS, type CommsProviderOption } from '../api/comms.gql';
 import { useTranslation } from '@duncit/shell';
+import { crmProviderToSelect } from '@duncit/utils';
 
 interface Props {
   type: 'SMTP' | 'TWILIO_CALL';
@@ -29,12 +30,8 @@ export default function CommsProviderSelect({ type, value, onChange, label, size
   const options = data?.commsProviderOptions ?? [];
 
   useEffect(() => {
-    if (!options.length) return;
-    const selectable = !value || !options.some((opt) => opt.id === value);
-    if (selectable) {
-      const def = options.find((opt) => opt.is_default) ?? options[0];
-      onChange(def.id);
-    }
+    const next = crmProviderToSelect(options, value);
+    if (next) onChange(next);
   }, [options, value, onChange]);
 
   return (
@@ -45,12 +42,12 @@ export default function CommsProviderSelect({ type, value, onChange, label, size
       value={value}
       onChange={(e) => onChange(e.target.value)}
       disabled={loading || options.length === 0}
-      helperText={options.length === 0 ? 'No active providers — configure in Tech portal' : ' '}
+      helperText={options.length === 0 ? t('crm.compose.noProviders') : ' '}
       fullWidth
     >
       {options.map((opt) => (
         <MenuItem key={opt.id} value={opt.id}>
-          {opt.name}{opt.is_default ? ' · default' : ''}
+          {opt.is_default ? t('crm.compose.providerDefault', { vars: { name: opt.name } }) : opt.name}
         </MenuItem>
       ))}
     </TextField>

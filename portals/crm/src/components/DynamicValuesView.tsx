@@ -6,38 +6,14 @@ import { CRM_DYNAMIC_FIELDS } from '../api/crm.gql';
 import type { CrmDynamicField } from '../api/crm.types';
 import { LeadDetailRow } from './LeadDetailCard';
 import { formatDate as adminDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
+import { crmDynamicValueText, crmParseDynamicValues } from '@duncit/utils';
 
 interface Props {
   entity: CrmLeadEntityType;
   /** JSON-stringified value map from the lead. */
   json: string;
 }
-
-/** Dynamic values come from JSON, so a printable value is a scalar; objects
- * are JSON-stringified rather than becoming `[object Object]` (Sonar S6551). */
-const toText = (v: unknown): string => {
-  if (v == null) return '';
-  if (typeof v === 'string') return v;
-  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
-  return JSON.stringify(v);
-};
-
-const fmt = (field: CrmDynamicField, raw: unknown): string => {
-  if (raw === null || raw === undefined || raw === '') return '—';
-  if (field.kind === 'boolean') return raw ? 'Yes' : 'No';
-  if (field.kind === 'date') {
-    const shown = adminDate(toText(raw));
-    if (shown) return shown;
-  }
-  if (field.kind === 'select') {
-    // Map stored option value(s) back to their human label(s). Handles both
-    // single-select (string) and multi-select (string[]).
-    const labelFor = (v: unknown) => field.options.find((o) => o.value === v)?.label ?? toText(v);
-    if (Array.isArray(raw)) return raw.length ? raw.map(labelFor).join(', ') : '—';
-    return labelFor(raw);
-  }
-  return toText(raw);
-};
 
 /**
  * Read-only renderer for an entity's dynamic-field values. Fetches the
@@ -50,13 +26,9 @@ export default function DynamicValuesView({ entity, json }: Readonly<Props>) {
     fetchPolicy: 'cache-first',
   });
 
-  const values = useMemo(() => {
-    try {
-      return JSON.parse(json || '{}') as Record<string, unknown>;
-    } catch {
-      return {};
-    }
-  }, [json]);
+  const { t } = useTranslation();
+  const values = useMemo(() => crmParseDynamicValues(json), [json]);
+  const words = { yes: t('shell.common.yes'), no: t('shell.common.no'), formatDate: (iso: string) => adminDate(iso) || '' };
 
   const fields = data?.crmDynamicFields ?? [];
 
@@ -65,8 +37,7 @@ export default function DynamicValuesView({ entity, json }: Readonly<Props>) {
     return (
       <Typography variant="body2" sx={{
         color: "text.secondary"
-      }}>No custom fields defined yet. Open Settings → Dynamic Fields to add some.
-              </Typography>
+      }}>{t('crm.leadDetail.noCustomFields')}</Typography>
     );
   }
 
@@ -74,7 +45,7 @@ export default function DynamicValuesView({ entity, json }: Readonly<Props>) {
     <Box>
       <Stack spacing={0.25}>
         {fields.map((f) => (
-          <LeadDetailRow key={f.id} label={f.label} value={fmt(f, values[f.name])} />
+          <LeadDetailRow key={f.id} label={f.label} value={crmDynamicValueText(f, values[f.name], words)} />
         ))}
       </Stack>
     </Box>

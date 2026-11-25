@@ -16,6 +16,7 @@ import { useCallSocket } from '../../hooks/useCallSocket';
 import LogRow from './LogRow';
 import { useTranslation } from '@duncit/shell';
 import { fireAndForget, logs as appLogs } from '@duncit/logs';
+import { crmCommsTypeCounts } from '@duncit/utils';
 
 type Filter = 'ALL' | 'EMAIL' | 'CALL';
 
@@ -79,13 +80,7 @@ export default function CommsLogsSection({ entityType, entityId }: Readonly<Prop
     }
   };
 
-  const counts = logs.reduce(
-    (acc, log) => {
-      acc[log.type] += 1;
-      return acc;
-    },
-    { EMAIL: 0, CALL: 0 }
-  );
+  const counts = crmCommsTypeCounts(logs);
 
   const logsContent = logs.length === 0 ? (
     <Typography
@@ -95,7 +90,7 @@ export default function CommsLogsSection({ entityType, entityId }: Readonly<Prop
         py: 4,
         textAlign: 'center'
       }}>
-      No communication yet. Email or call from the actions above to start the log.
+      {t('crm.comms.empty')}
     </Typography>
   ) : (
     <Stack spacing={1}>
@@ -130,7 +125,7 @@ export default function CommsLogsSection({ entityType, entityId }: Readonly<Prop
             <Typography variant="caption" sx={{
               color: "text.secondary"
             }}>
-              Calls via Twilio, emails via SMTP. Transcripts are fetched from Servam AI for recorded calls.
+              {t('crm.comms.subtitle')}
             </Typography>
           </Box>
         </Stack>
@@ -144,7 +139,7 @@ export default function CommsLogsSection({ entityType, entityId }: Readonly<Prop
             mb: 2
           }}>
           <Chip
-            label={`All (${total})`}
+            label={t('crm.comms.filterAll', { vars: { count: total } })}
             color={filter === 'ALL' ? 'primary' : 'default'}
             variant={filter === 'ALL' ? 'filled' : 'outlined'}
             onClick={() => setFilter('ALL')}
@@ -153,7 +148,7 @@ export default function CommsLogsSection({ entityType, entityId }: Readonly<Prop
             size="small"
           />
           <Chip
-            label={`Email (${counts.EMAIL})`}
+            label={t('crm.comms.filterEmail', { vars: { count: counts.EMAIL } })}
             color={filter === 'EMAIL' ? 'primary' : 'default'}
             variant={filter === 'EMAIL' ? 'filled' : 'outlined'}
             onClick={() => setFilter('EMAIL')}
@@ -162,7 +157,7 @@ export default function CommsLogsSection({ entityType, entityId }: Readonly<Prop
             size="small"
           />
           <Chip
-            label={`Call (${counts.CALL})`}
+            label={t('crm.comms.filterCall', { vars: { count: counts.CALL } })}
             color={filter === 'CALL' ? 'primary' : 'default'}
             variant={filter === 'CALL' ? 'filled' : 'outlined'}
             onClick={() => setFilter('CALL')}

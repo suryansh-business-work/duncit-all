@@ -54,7 +54,7 @@ export default function FillWithAiDialog({ open, entity, title, onClose, onSaved
       const raw = res.data?.aiParseCrmLeads;
       const parsed = raw ? JSON.parse(raw) : {};
       const records: any[] = Array.isArray(parsed) ? parsed : parsed.records ?? [];
-      if (records.length === 0) throw new Error('No leads found in that text. Add more detail and retry.');
+      if (records.length === 0) throw new Error(t('crm.aiFill.noneFound'));
       setRows(records.map((r, i) => recordToRow(r, entity, i)));
       setStep('review');
     } catch (err) {
@@ -67,7 +67,7 @@ export default function FillWithAiDialog({ open, entity, title, onClose, onSaved
     let ok = 0;
     const next: AiRow[] = [];
     for (const row of rows) {
-      const validation = rowError(row, entity);
+      const validation = rowError(row, entity, t);
       if (validation) { next.push({ ...row, _error: validation }); continue; }
       try {
         await createMut({ variables: { input: rowToInput(row, entity) } });
@@ -79,7 +79,7 @@ export default function FillWithAiDialog({ open, entity, title, onClose, onSaved
     setRows(next);
     if (ok > 0) onSaved(ok);
     if (next.length === 0) close();
-    else setError(`${ok} created · ${next.length} need fixing (see Issue column).`);
+    else setError(t('crm.aiFill.partial', { vars: { created: ok, failed: next.length } }));
   };
 
   return (
@@ -97,8 +97,7 @@ export default function FillWithAiDialog({ open, entity, title, onClose, onSaved
               <Typography variant="body2" sx={{
                 color: "text.secondary"
               }}>
-                Paste text describing one or more {entity === 'VENUE_LEAD' ? 'venues' : 'hosts'} — a list, a brief,
-                multiple messages. We'll extract each as a row you can edit before saving.
+                {entity === 'VENUE_LEAD' ? t('crm.aiFill.introVenues') : t('crm.aiFill.introHosts')}
               </Typography>
               <TextField label={t('crm.components.pasteTextHere')} multiline minRows={8} maxRows={16} fullWidth value={text} onChange={(e) => setText(e.target.value)} />
             </>
@@ -107,7 +106,7 @@ export default function FillWithAiDialog({ open, entity, title, onClose, onSaved
               <Typography variant="body2" sx={{
                 color: "text.secondary"
               }}>
-                {rows.length} record{rows.length === 1 ? '' : 's'} found. Edit any cell, then Confirm & save.
+                {t('crm.aiFill.found', { count: rows.length })}
               </Typography>
               <AiRecordsTable entity={entity} rows={rows} onChange={setRows} />
             </>
@@ -118,13 +117,13 @@ export default function FillWithAiDialog({ open, entity, title, onClose, onSaved
         <DuncitButton onClick={close} disabled={parsing || saving}>{t('shell.common.cancel')}</DuncitButton>
         {step === 'input' ? (
           <DuncitButton variant="contained" onClick={parse} disabled={parsing} startIcon={<AutoFixHighIcon />}>
-            {parsing ? 'Parsing…' : 'Parse'}
+            {parsing ? t('crm.aiFill.parsing') : t('crm.aiFill.parse')}
           </DuncitButton>
         ) : (
           <>
-            <DuncitButton onClick={() => setStep('input')} disabled={saving}>Back</DuncitButton>
+            <DuncitButton onClick={() => setStep('input')} disabled={saving}>{t('crm.aiFill.back')}</DuncitButton>
             <DuncitButton variant="contained" onClick={save} disabled={saving || rows.length === 0}>
-              {saving ? 'Saving…' : `Confirm & save ${rows.length}`}
+              {saving ? t('shell.common.saving') : t('crm.aiFill.confirm', { vars: { count: rows.length } })}
             </DuncitButton>
           </>
         )}

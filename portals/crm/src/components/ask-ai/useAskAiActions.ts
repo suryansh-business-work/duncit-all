@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client/react';
-import { parseApiError } from '@duncit/utils';
+import { crmLeadAiReminderUpdate, parseApiError } from '@duncit/utils';
 import type { CrmLeadAiActionStatus } from '@duncit/gql-types';
 import { CREATE_CRM_REMINDER, CRM_REMINDERS, UPDATE_CRM_REMINDER, type ReminderEntity } from '../../api/reminders.gql';
 import type { AskAiAction, AskAiMessage } from '../../api/askAi.gql';
@@ -19,15 +19,8 @@ interface Options {
   onChanged: () => void;
 }
 
-/** Only the fields the assistant proposed to change. */
-function updateInput(action: AskAiAction) {
-  const input: Record<string, string> = {};
-  if (action.title) input.title = action.title;
-  if (action.due_at) input.due_at = action.due_at;
-  if (action.notes) input.notes = action.notes;
-  if (action.reminder_status) input.status = action.reminder_status;
-  return input;
-}
+/** Only the fields the assistant proposed to change (@duncit/utils, shared with the Duncit CRM app). */
+const updateInput = (action: AskAiAction) => crmLeadAiReminderUpdate(action);
 
 /**
  * Carries out the assistant's proposals with the CRM's own mutations — the

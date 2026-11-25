@@ -1,4 +1,5 @@
 import { Stack, TextField, Typography } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 
 export interface DeclaredVar {
   key: string;
@@ -19,12 +20,13 @@ interface Props {
  * field per declared variable (replaces the old raw-JSON textarea).
  */
 export default function VariablesValuesEditor({ variables, values, onChange, emptyHint }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (variables.length === 0) {
     return (
       <Typography variant="caption" sx={{
         color: "text.secondary"
       }}>
-        {emptyHint ?? 'No variables declared yet.'}
+        {emptyHint ?? t('crm.emailTemplates.noVariablesDeclared')}
       </Typography>
     );
   }
@@ -35,7 +37,7 @@ export default function VariablesValuesEditor({ variables, values, onChange, emp
           key={v.key}
           size="small"
           label={v.key}
-          placeholder={v.description ?? `Value for {{ ${v.key} }}`}
+          placeholder={v.description ?? t('crm.emailTemplates.valueFor', { vars: { key: v.key } })}
           value={values[v.key] ?? ''}
           onChange={(e) => onChange({ ...values, [v.key]: e.target.value })}
           fullWidth

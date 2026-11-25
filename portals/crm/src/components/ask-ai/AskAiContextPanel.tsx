@@ -4,6 +4,7 @@ import MemoryIcon from '@mui/icons-material/Memory';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useTranslation } from '@duncit/shell';
+import { CRM_LEAD_AI_SOURCE_LABEL, crmLeadAiKb } from '@duncit/utils';
 import type { AskAiContext } from '../../api/askAi.gql';
 
 interface Props {
@@ -11,19 +12,9 @@ interface Props {
   loading: boolean;
 }
 
-const kb = (chars: number) => (chars / 1024).toFixed(1);
-
-/** One literal key per source the server reports (the translation gate needs literals). */
-const SOURCE_LABEL: Record<string, string> = {
-  profile: 'crm.askAi.source.profile',
-  notes: 'crm.askAi.source.notes',
-  activity: 'crm.askAi.source.activity',
-  emails: 'crm.askAi.source.emails',
-  calls: 'crm.askAi.source.calls',
-  reminders: 'crm.askAi.source.reminders',
-  website: 'crm.askAi.source.website',
-  conversation: 'crm.askAi.source.conversation',
-};
+/** Each source's literal key, and the size line (@duncit/utils, shared with the Duncit CRM app). */
+const SOURCE_LABEL = CRM_LEAD_AI_SOURCE_LABEL;
+const kb = crmLeadAiKb;
 
 /**
  * What the assistant read before answering: every source with its record

@@ -1,4 +1,5 @@
 import { Box, Chip, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { useTranslation } from '@duncit/shell';
 import type { ImportField } from '../../config/importFields';
 
 interface Props {
@@ -12,14 +13,14 @@ const IGNORE = '';
 
 /** One row per canonical field → a Select of detected spreadsheet headers. */
 export default function ColumnMappingStep({ fields, headers, mapping, onChange }: Readonly<Props>) {
+  const { t } = useTranslation();
   const set = (field: string, header: string) => onChange({ ...mapping, [field]: header });
   return (
     <Stack spacing={1.25}>
       <Typography variant="body2" sx={{
         color: "text.secondary"
       }}>
-        Match each lead field to a column from your file. Required fields are marked. Leave as
-        "— Ignore —" to skip a field.
+        {t('crm.excelImport.mappingIntro')}
       </Typography>
       <Box sx={{ maxHeight: 360, overflowY: 'auto', pr: 0.5 }}>
         <Stack spacing={1}>
@@ -30,7 +31,7 @@ export default function ColumnMappingStep({ fields, headers, mapping, onChange }
               <Box sx={{ width: 200, flexShrink: 0 }}>
                 <Typography variant="body2" component="div" noWrap>
                   {f.label}
-                  {f.required && <Chip size="small" color="error" label="required" sx={{ ml: 0.5, height: 18 }} />}
+                  {f.required && <Chip size="small" color="error" label={t('crm.excelImport.required')} sx={{ ml: 0.5, height: 18 }} />}
                 </Typography>
               </Box>
               <TextField
@@ -42,7 +43,7 @@ export default function ColumnMappingStep({ fields, headers, mapping, onChange }
                 error={f.required && !mapping[f.field]}
                 slotProps={{ htmlInput: { 'aria-label': f.label, 'aria-required': f.required } }}
               >
-                <MenuItem value={IGNORE}><em>— Ignore —</em></MenuItem>
+                <MenuItem value={IGNORE}><em>{t('crm.excelImport.ignore')}</em></MenuItem>
                 {headers.map((h) => <MenuItem key={h} value={h}>{h}</MenuItem>)}
               </TextField>
             </Stack>

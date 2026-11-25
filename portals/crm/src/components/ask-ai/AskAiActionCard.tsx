@@ -6,6 +6,7 @@ import { DuncitButton } from '@duncit/buttons';
 import { htmlToText } from '@duncit/rich-text';
 import { formatDateTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
+import { CRM_LEAD_AI_ACTION_HEADING, crmTextPreview } from '@duncit/utils';
 import type { AskAiAction } from '../../api/askAi.gql';
 
 export interface AskAiActionHandlers {
@@ -25,10 +26,8 @@ interface Props extends AskAiActionHandlers {
   busy: boolean;
 }
 
-const preview = (html: string) => {
-  const text = htmlToText(html).replace(/\s+/g, ' ').trim();
-  return text.length > 180 ? `${text.slice(0, 180)}…` : text;
-};
+/** A one-line opening of the draft (@duncit/utils, shared with the Duncit CRM app). */
+const preview = (html: string) => crmTextPreview(htmlToText(html));
 
 function Details({ action }: Readonly<{ action: AskAiAction }>) {
   const { t } = useTranslation();
@@ -62,9 +61,9 @@ function Details({ action }: Readonly<{ action: AskAiAction }>) {
 }
 
 const HEADINGS = {
-  EMAIL_DRAFT: { key: 'crm.askAi.emailDraft', icon: <EmailIcon fontSize="small" color="primary" /> },
-  CREATE_REMINDER: { key: 'crm.askAi.newReminder', icon: <AlarmAddIcon fontSize="small" color="primary" /> },
-  UPDATE_REMINDER: { key: 'crm.askAi.reminderChange', icon: <EditCalendarIcon fontSize="small" color="primary" /> },
+  EMAIL_DRAFT: { key: CRM_LEAD_AI_ACTION_HEADING.EMAIL_DRAFT, icon: <EmailIcon fontSize="small" color="primary" /> },
+  CREATE_REMINDER: { key: CRM_LEAD_AI_ACTION_HEADING.CREATE_REMINDER, icon: <AlarmAddIcon fontSize="small" color="primary" /> },
+  UPDATE_REMINDER: { key: CRM_LEAD_AI_ACTION_HEADING.UPDATE_REMINDER, icon: <EditCalendarIcon fontSize="small" color="primary" /> },
 } as const;
 
 /** One proposal under an answer. Nothing is sent or saved until the agent presses a button here. */

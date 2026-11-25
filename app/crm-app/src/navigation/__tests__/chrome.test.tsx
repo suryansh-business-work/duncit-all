@@ -85,8 +85,11 @@ describe('useConsoleChrome', () => {
 
 describe('AppNavigation', () => {
   // The container waits for the launch link before it draws the navigator.
-  it.each([true, false])('renders the navigator once the launch link is read (dark: %s)', async (dark) => {
-    render(<AppNavigation dark={dark} />, { wrapper: inMode(dark ? 'dark' : 'light') });
-    expect(await screen.findByText('root navigator')).toBeTruthy();
-  });
+  it.each([true, false])(
+    'renders the navigator once the launch link is read (dark: %s)',
+    async (dark) => {
+      render(<AppNavigation dark={dark} />, { wrapper: inMode(dark ? 'dark' : 'light') });
+      expect(await screen.findByText('root navigator')).toBeTruthy();
+    },
+  );
 });

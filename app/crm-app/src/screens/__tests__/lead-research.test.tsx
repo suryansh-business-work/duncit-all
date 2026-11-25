@@ -77,7 +77,13 @@ const serve = (overrides: Map<unknown, Handler> = new Map()) =>
       return {
         crmLeadDiscoveryJobs: [
           JOB,
-          { ...JOB, id: 'j2', status: 'FAILED', succeeded: 0, error_message: 'Search quota used up' },
+          {
+            ...JOB,
+            id: 'j2',
+            status: 'FAILED',
+            succeeded: 0,
+            error_message: 'Search quota used up',
+          },
         ],
       };
     throw new Error('unexpected operation');

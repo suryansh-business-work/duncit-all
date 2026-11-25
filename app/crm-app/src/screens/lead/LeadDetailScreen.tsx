@@ -7,11 +7,12 @@ import {
   type NavigationProp,
   type RouteProp,
 } from '@react-navigation/native';
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, XStack } from 'tamagui';
 import { fireAndForget, logs } from '@duncit/logs';
 
 import { DuncitButton } from '@/components/DuncitButton';
 import { StateView } from '@/components/StateView';
+import { TabBar } from '@/components/TabBar';
 import { isLeadKind, type LeadKind } from '@/features/leads/leadKinds';
 import { useLead } from '@/features/leads/useLead';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -21,12 +22,11 @@ import { LeadOverview } from './LeadOverview';
 import { LeadReminders } from './LeadReminders';
 
 const TABS = ['overview', 'activity', 'reminders'] as const;
-type Tab = (typeof TABS)[number];
 
 function LeadDetail({ kind, id }: Readonly<{ kind: LeadKind; id: string }>) {
   const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp<AppStackParamList>>();
-  const [tab, setTab] = useState<Tab>('overview');
+  const [tab, setTab] = useState<string>('overview');
   const { lead, loading, error, refetch } = useLead(kind, id, t('crmApp.common.loadFailed'));
 
   // Re-read on return from Add note / Add reminder, so the new entry is there.
@@ -44,13 +44,11 @@ function LeadDetail({ kind, id }: Readonly<{ kind: LeadKind; id: string }>) {
   }
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
+      {/* The header already carries the lead's name; this row says what kind it is. */}
       <XStack alignItems="center" gap="$2">
-        <YStack flex={1}>
-          <Text fontSize="$8" fontWeight="800" role="heading">
-            {lead.name}
-          </Text>
-          <Text color="$muted">{t(`crmApp.kind.${kind}`)}</Text>
-        </YStack>
+        <Text flex={1} color="$muted">
+          {t(`crmApp.kind.${kind}`)}
+        </Text>
         <DuncitButton
           label={t('crmApp.editor.edit')}
           onPress={() => navigation.navigate('LeadEditor', { kind, id })}
@@ -59,20 +57,12 @@ function LeadDetail({ kind, id }: Readonly<{ kind: LeadKind; id: string }>) {
           testID="lead-edit"
         />
       </XStack>
-      <XStack gap="$2" role="tablist">
-        {TABS.map((key) => (
-          <YStack key={key} flex={1}>
-            <DuncitButton
-              label={t(`crmApp.lead.${key}`)}
-              onPress={() => setTab(key)}
-              variant={tab === key ? 'solid' : 'outline'}
-              size="sm"
-              fullWidth
-              testID={`lead-tab-${key}`}
-            />
-          </YStack>
-        ))}
-      </XStack>
+      <TabBar
+        tabs={TABS.map((key) => ({ key, label: t(`crmApp.lead.${key}`) }))}
+        active={tab}
+        onChange={setTab}
+        testID="lead-tab"
+      />
       {tab === 'overview' ? (
         <LeadOverview
           lead={lead}

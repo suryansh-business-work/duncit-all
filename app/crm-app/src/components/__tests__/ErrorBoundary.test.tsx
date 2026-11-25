@@ -7,7 +7,7 @@ jest.mock('@duncit/logs', () => ({ logs: { mobileApp: { error: jest.fn(), warn: 
 
 import { logs } from '@duncit/logs';
 import { submitFeedback } from '@/services/feedback';
-import { resetTokenCache, setToken } from '@/services/session';
+import { clearToken, resetTokenCache, setToken } from '@/services/session';
 import { renderWithTheme } from '@/test-utils';
 import { ErrorBoundary } from '../ErrorBoundary';
 
@@ -20,8 +20,10 @@ function Flaky() {
   return <Text>Screen is fine</Text>;
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   shouldThrow = true;
+  // Signed out by default: a token stored by an earlier test must not leak into the next one.
+  await clearToken();
   resetTokenCache();
   jest.clearAllMocks();
   jest.spyOn(console, 'error').mockImplementation(() => undefined);

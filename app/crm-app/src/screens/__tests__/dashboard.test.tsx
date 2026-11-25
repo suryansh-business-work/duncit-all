@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 
 import { CrmAppDashboardDocument } from '@/graphql/dashboard';
 import { CrmAppLeadOptionsDocument } from '@/graphql/leadEditor';
@@ -95,6 +96,28 @@ describe('DashboardScreen', () => {
       expect(screen.getByTestId('kpi-total')).toHaveProp('aria-label', 'Total Leads: 3'),
     );
     expect(screen.getByLabelText('Uncategorised: 1 venue, 0 host')).toBeOnTheScreen();
+  });
+
+  it('narrows to a custom From–To range, and keeps the range when a pick is cancelled', async () => {
+    const open = DateTimePickerAndroid.open as jest.Mock;
+    const lastYearDay = new Date(lastYear);
+    renderWithTheme(<DashboardScreen />);
+    await screen.findByTestId('kpi-total');
+    fireEvent.press(screen.getByTestId('dashboard-range-custom'));
+    // Both ends open: every lead counts.
+    await waitFor(() =>
+      expect(screen.getByTestId('kpi-total')).toHaveProp('aria-label', 'Total Leads: 3'),
+    );
+    open.mockImplementationOnce(({ onChange }) => onChange({ type: 'set' }, lastYearDay));
+    fireEvent.press(screen.getByTestId('dashboard-to'));
+    // Up to last year's day: only last year's lead.
+    await waitFor(() =>
+      expect(screen.getByTestId('kpi-total')).toHaveProp('aria-label', 'Total Leads: 1'),
+    );
+    expect(open.mock.calls.at(-1)?.[0]).toMatchObject({ mode: 'date' });
+    open.mockImplementationOnce(({ onChange }) => onChange({ type: 'dismissed' }));
+    fireEvent.press(screen.getByTestId('dashboard-from'));
+    expect(screen.getByTestId('kpi-total')).toHaveProp('aria-label', 'Total Leads: 1');
   });
 
   it('says when a range holds no leads', async () => {

@@ -8,6 +8,7 @@ import {
   crmLeadsInWindow,
   crmRangeToWindow,
   type CrmDashboardRange,
+  type CrmDateWindow,
 } from '@duncit/utils';
 
 import { CrmAppDashboardDocument } from '@/graphql/dashboard';
@@ -23,6 +24,8 @@ const NO_VARS = {};
 export function useDashboard(
   range: CrmDashboardRange,
   labels: { uncategorised: string; loadFailed: string },
+  /** The from–to days of the Custom range (whole days, either end optional). */
+  custom: CrmDateWindow = {},
 ) {
   const leads = useGqlQuery(CrmAppDashboardDocument, NO_VARS, { fallbackError: labels.loadFailed });
   const options = useGqlQuery(CrmAppLeadOptionsDocument, NO_VARS, {
@@ -30,7 +33,7 @@ export function useDashboard(
   });
 
   const numbers = useMemo(() => {
-    const window = crmRangeToWindow(range, {});
+    const window = crmRangeToWindow(range, custom);
     const venue = crmLeadsInWindow(leads.data?.venueLeads ?? [], window);
     const host = crmLeadsInWindow(leads.data?.hostLeads ?? [], window);
     const config = options.data?.crmLeadConfig;
@@ -47,7 +50,7 @@ export function useDashboard(
       services: crmAggregateServices(venue, host),
       superCategories: crmAggregateSuperCategories(categories, venue, host, labels.uncategorised),
     };
-  }, [range, leads.data, options.data, labels.uncategorised]);
+  }, [range, custom, leads.data, options.data, labels.uncategorised]);
 
   const refetch = async () => {
     await Promise.all([leads.refetch(), options.refetch()]);

@@ -2,17 +2,14 @@ import { useState } from 'react';
 import { RefreshControl, ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack, useTheme } from 'tamagui';
-import { CRM_DASHBOARD_RANGES, type CrmDashboardRange } from '@duncit/utils';
+import type { CrmDashboardRange, CrmDateWindow } from '@duncit/utils';
 
-import { DuncitButton } from '@/components/DuncitButton';
 import { StateView } from '@/components/StateView';
 import { useDashboard } from '@/features/dashboard/useDashboard';
 import { useTranslation } from '@/hooks/useTranslation';
 import { BarChartCard } from '@/components/BarChartCard';
 import { KpiGrid } from '@/components/KpiGrid';
-
-/** The phone offers the preset ranges; a custom from–to range stays on the portal for now. */
-const RANGES = CRM_DASHBOARD_RANGES.filter((r) => r !== 'custom');
+import { DashboardRangePicker } from './DashboardRangePicker';
 
 /**
  * The CRM portal's Dashboard: venue and host leads for a date range — the KPI
@@ -23,10 +20,15 @@ export function DashboardScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
   const [range, setRange] = useState<CrmDashboardRange>('month');
-  const d = useDashboard(range, {
-    uncategorised: t('crmApp.dashboard.uncategorised'),
-    loadFailed: t('crmApp.common.loadFailed'),
-  });
+  const [custom, setCustom] = useState<CrmDateWindow>({});
+  const d = useDashboard(
+    range,
+    {
+      uncategorised: t('crmApp.dashboard.uncategorised'),
+      loadFailed: t('crmApp.common.loadFailed'),
+    },
+    custom,
+  );
   const venueColor = theme.accentText?.val ?? '';
   const hostColor = theme.info?.val ?? '';
   const legend = [
@@ -57,23 +59,7 @@ export function DashboardScreen() {
           </Text>
         </YStack>
       </XStack>
-      <XStack
-        flexWrap="wrap"
-        gap="$2"
-        role="radiogroup"
-        aria-label={t('crm.dashboard.dashboardTimeRange')}
-      >
-        {RANGES.map((r) => (
-          <DuncitButton
-            key={r}
-            label={t(`crmApp.dashboard.range.${r}`)}
-            onPress={() => setRange(r)}
-            size="sm"
-            variant={range === r ? 'solid' : 'outline'}
-            testID={`dashboard-range-${r}`}
-          />
-        ))}
-      </XStack>
+      <DashboardRangePicker range={range} onRange={setRange} custom={custom} onCustom={setCustom} />
       {d.loading || d.error ? (
         <StateView loading={d.loading} error={d.error} onRetry={d.refetch} />
       ) : (

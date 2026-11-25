@@ -48,7 +48,7 @@ export default function RangeFilter({ range, custom, onRangeChange, onCustomChan
                 slotProps={{ textField: { size: 'small' } }}
               />
               <DatePicker
-                label="To"
+                label={t('crm.dashboard.to')}
                 value={custom.to ?? null}
                 onChange={(value) => onCustomChange({ ...custom, to: value ?? undefined })}
                 slotProps={{ textField: { size: 'small' } }}

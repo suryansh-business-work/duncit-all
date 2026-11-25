@@ -1112,6 +1112,7 @@ export const CRM_BUNDLE: NestedCatalogue = {
     dashboard: {
       dashboardTimeRange: 'dashboard time range',
       from: 'From',
+      to: 'To',
       leadRows: 'Lead rows',
       leadsByPriority: 'Leads by Priority',
       leadsByStage: 'Leads by Stage',

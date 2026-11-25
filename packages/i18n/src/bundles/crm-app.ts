@@ -37,7 +37,15 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
     dashboard: {
       title: 'CRM Dashboard',
       subtitle: 'Venue & host leads overview — counts, pipeline stages and priority mix.',
-      range: { today: 'Today', week: 'This week', month: 'This month', year: 'This year', all: 'All time' },
+      range: {
+        today: 'Today',
+        week: 'This week',
+        month: 'This month',
+        year: 'This year',
+        all: 'All time',
+        custom: 'Custom',
+      },
+      pickDate: 'Pick a date',
       venue: 'Venue',
       host: 'Host',
       split: '{venue} venue, {host} host',

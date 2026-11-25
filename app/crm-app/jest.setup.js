@@ -18,7 +18,9 @@ jest.mock('expo-secure-store', () => {
 });
 
 jest.mock('expo-location', () => ({
-  requestForegroundPermissionsAsync: jest.fn().mockResolvedValue({ granted: false, canAskAgain: true }),
+  requestForegroundPermissionsAsync: jest
+    .fn()
+    .mockResolvedValue({ granted: false, canAskAgain: true }),
   getCurrentPositionAsync: jest.fn(),
   Accuracy: { High: 4 },
 }));
@@ -40,3 +42,33 @@ jest.mock('expo-task-manager', () => ({
 }));
 
 jest.mock('expo-crypto', () => ({ randomUUID: jest.fn(() => 'install-uuid') }));
+
+// The date/time picker and the web view are native views: a plain View that
+// keeps its props, so a spec can fire onChange or read the html it was given.
+jest.mock('@react-native-community/datetimepicker', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  const Picker = (props) => React.createElement(View, props);
+  return {
+    __esModule: true,
+    default: Picker,
+    DateTimePickerAndroid: { open: jest.fn(), dismiss: jest.fn() },
+  };
+});
+
+jest.mock('react-native-webview', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  const WebView = (props) => React.createElement(View, props);
+  return { __esModule: true, default: WebView, WebView };
+});
+
+// Pickers answer "cancelled" until a spec says what was picked.
+jest.mock('expo-image-picker', () => ({
+  launchImageLibraryAsync: jest.fn().mockResolvedValue({ canceled: true, assets: null }),
+  requestMediaLibraryPermissionsAsync: jest.fn().mockResolvedValue({ granted: true }),
+}));
+
+jest.mock('expo-document-picker', () => ({
+  getDocumentAsync: jest.fn().mockResolvedValue({ canceled: true, assets: null }),
+}));

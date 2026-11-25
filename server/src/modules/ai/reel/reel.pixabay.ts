@@ -61,6 +61,14 @@ interface PixabayAnswer<T> {
 
 const whole = (value: number | null | undefined): number => Math.max(0, Math.round(value ?? 0));
 
+/**
+ * The key as Pixabay knows it. A Pixabay key never holds whitespace, but one
+ * copied off its docs page can carry a space inside it ("58803161- b3b3…"),
+ * which Pixabay refuses as an invalid key — so every space is dropped, not
+ * only the ends.
+ */
+export const pixabayKey = (raw: string): string => [...raw].filter((ch) => ch.trim() !== '').join('');
+
 const rateLimited = (seconds: number) =>
   new GraphQLError(`Pixabay's limit of 100 searches a minute is used up. Try again in ${seconds} seconds.`, {
     extensions: { code: 'RATE_LIMITED', retry_after_s: seconds },
@@ -92,7 +100,7 @@ export function fitsAspect(width: number, height: number, aspect: ReelAspect): b
 }
 
 async function ask<T>(path: string, params: URLSearchParams): Promise<PixabayAnswer<T>> {
-  const key = (await getRuntimeEnvValue('PIXABAY_API_KEY')).trim();
+  const key = pixabayKey(await getRuntimeEnvValue('PIXABAY_API_KEY'));
   if (!key) throw configError('Pixabay', 'PIXABAY');
   return cachedSearch(`reel:pixabay:${path}?${params.toString()}`, async () => {
     await assertRoom();

@@ -292,16 +292,14 @@ describe('testEnvConnection: upstream probes', () => {
     await expect(testEnvConnection('PEXELS', { api_key: 'k' })).resolves.toEqual({ ok: false, message: 'Pexels rejected the key (HTTP 403)' });
   });
 
-  it('Pixabay: required, a pasted space caught before any request, rejected and valid', async () => {
+  it('Pixabay: required, a pasted space dropped as the searches drop it, rejected and valid', async () => {
     await expect(testEnvConnection('PIXABAY', {})).resolves.toEqual({ ok: false, message: 'API key is required' });
-    await expect(testEnvConnection('PIXABAY', { api_key: '58803161- b3b3' })).resolves.toEqual({
-      ok: false,
-      message: 'The API key has a space in it — paste it again without spaces',
-    });
+    await expect(testEnvConnection('PIXABAY', { api_key: ' \t ' })).resolves.toEqual({ ok: false, message: 'API key is required' });
     expect(fetchMock).not.toHaveBeenCalled();
     answer(400);
-    await expect(testEnvConnection('PIXABAY', { api_key: '1-abc' })).resolves.toEqual({ ok: false, message: 'Pixabay rejected the key (HTTP 400)' });
-    expect(String(fetchMock.mock.calls[0][0])).toContain('key=1-abc');
+    await expect(testEnvConnection('PIXABAY', { api_key: '58803161- b3b3' })).resolves.toEqual({ ok: false, message: 'Pixabay rejected the key (HTTP 400)' });
+    // The key Reel Studio will send, not the one pasted: no space, no %20 or +.
+    expect(String(fetchMock.mock.calls[0][0])).toContain('key=58803161-b3b3&');
     answer(200, { totalHits: 1, hits: [] });
     await expect(testEnvConnection('PIXABAY', { api_key: '1-abc' })).resolves.toEqual({ ok: true, message: 'Pixabay API key is valid' });
   });

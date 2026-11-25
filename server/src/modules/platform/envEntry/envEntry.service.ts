@@ -142,11 +142,15 @@ async function probePexels(str: ConfigStr): Promise<TestResult> {
   return res.ok ? { ok: true, message: 'Pexels API key is valid' } : { ok: false, message: `Pexels rejected the key (HTTP ${res.status})` };
 }
 
-/** One request of the key's 100 a minute; Pixabay answers 400 to a key it does not know. */
+/**
+ * One request of the key's 100 a minute; Pixabay answers 400 to a key it does
+ * not know. A space pasted inside the key is dropped, as Reel Studio's
+ * searches drop it (reel.pixabay.ts `pixabayKey`), so the test proves the key
+ * the searches will send.
+ */
 async function probePixabay(str: ConfigStr): Promise<TestResult> {
-  const key = str('api_key');
+  const key = [...str('api_key')].filter((ch) => ch.trim() !== '').join('');
   if (!key) return { ok: false, message: 'API key is required' };
-  if (/\s/.test(key)) return { ok: false, message: 'The API key has a space in it — paste it again without spaces' };
   const res = await fetch(`https://pixabay.com/api/?key=${encodeURIComponent(key)}&q=test&per_page=3`);
   return res.ok ? { ok: true, message: 'Pixabay API key is valid' } : { ok: false, message: `Pixabay rejected the key (HTTP ${res.status})` };
 }

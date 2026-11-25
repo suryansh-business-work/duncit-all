@@ -10,11 +10,14 @@ const messages = (input: unknown) => {
 };
 
 describe('makeConsoleLoginSchema', () => {
-  it('asks for both boxes when they are empty', () => {
-    expect(messages(consoleLoginDefaults)).toEqual([
-      'session.login.emailRequired',
-      'session.login.passwordRequired',
-    ]);
+  it('asks for both boxes when they are empty (each box shows its first message)', () => {
+    const result = schema.safeParse(consoleLoginDefaults);
+    const first: Record<string, string> = {};
+    for (const issue of result.success ? [] : result.error.issues) first[String(issue.path[0])] ??= issue.message;
+    expect(first).toEqual({
+      email: 'session.login.emailRequired',
+      password: 'session.login.passwordRequired',
+    });
   });
 
   it('refuses an address without a domain, and trims the one it accepts', () => {

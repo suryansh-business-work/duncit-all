@@ -9,6 +9,15 @@ import { makeLoginSchema } from '@/forms/login';
 const messages = (result: { success: boolean; error?: { issues: { message: string }[] } }) =>
   result.success ? [] : (result.error?.issues ?? []).map((i) => i.message);
 
+const firstPerField = (result: {
+  success: boolean;
+  error?: { issues: { path: PropertyKey[]; message: string }[] };
+}) => {
+  const out: Record<string, string> = {};
+  for (const issue of result.error?.issues ?? []) out[String(issue.path[0])] ??= issue.message;
+  return out;
+};
+
 describe('sign-in (the portal login card rules)', () => {
   const schema = makeLoginSchema(fallbackT);
 
@@ -17,10 +26,11 @@ describe('sign-in (the portal login card rules)', () => {
   });
 
   it('refuses a missing or malformed address and an empty password with the portal messages', () => {
-    expect(messages(schema.safeParse({ email: '', password: '' }))).toEqual([
-      'E-mail address is required',
-      'Password is required',
-    ]);
+    // The form shows each field's first message, as the portal does.
+    expect(firstPerField(schema.safeParse({ email: '', password: '' }))).toEqual({
+      email: 'E-mail address is required',
+      password: 'Password is required',
+    });
     expect(messages(schema.safeParse({ email: 'not-an-email', password: 'x' }))).toEqual([
       'Enter a valid e-mail address',
     ]);

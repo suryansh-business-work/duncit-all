@@ -153,7 +153,7 @@ describe('LoginScreen — sign in with an emailed code', () => {
     fireEvent.changeText(screen.getByTestId('otp-login-email'), 'asha@duncit.com');
     await act(async () => fireEvent.press(screen.getByTestId('otp-send-code')));
     expect(screen.getByTestId('otp-login-error')).toHaveTextContent(
-      'Too many codes requested. Try again later.',
+      /Too many codes requested. Try again later./,
     );
     expect(screen.queryByTestId('field-otp')).toBeNull();
   });

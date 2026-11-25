@@ -1,6 +1,7 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import * as Location from 'expo-location';
 
+import { CrmAppSecurityChallengeDocument } from '@/graphql/auth';
 import { gqlRequest } from '@/services/graphql.client';
 import { renderWithTheme } from '@/test-utils';
 import { useAuthStore } from '@/stores/auth.store';
@@ -120,11 +121,13 @@ describe('SecurityVerificationScreen', () => {
     });
     let submits = 0;
     let loads = 0;
-    request.mockImplementation(async (_doc: unknown, vars?: { input?: unknown }) => {
-      if (!vars?.input) {
+    request.mockImplementation(async (doc: unknown, vars?: { input?: unknown }) => {
+      // Only the challenge counts as a load; the frame also reads Admin Branding.
+      if (doc === CrmAppSecurityChallengeDocument) {
         loads += 1;
         return { portalSecurityChallenge: challenge };
       }
+      if (!vars?.input) return { branding: null };
       submits += 1;
       throw new ApiError('The policy changed', 409, { code: 'POLICY_CHANGED' });
     });

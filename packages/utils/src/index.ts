@@ -2531,3 +2531,18 @@ export {
   crmSortManagedOptions,
   type CrmManagedOptionLike,
 } from './crm-managed-options';
+// CRM Services Offered: lead-type targets and titles (CRM portal + Duncit CRM app).
+export {
+  CRM_SERVICE_TARGETS,
+  crmAllServiceTargets,
+  crmDefaultServiceTargets,
+  crmHasAnyServiceTarget,
+  crmNormalizeServiceTitles,
+  crmPickServiceTargets,
+  crmServiceTargetFlag,
+  crmServiceTargetLabelKeys,
+  type CrmServiceTarget,
+  type CrmServiceTargetFlag,
+  type CrmServiceTargetKind,
+  type CrmServiceTargets,
+} from './crm-service-targets';

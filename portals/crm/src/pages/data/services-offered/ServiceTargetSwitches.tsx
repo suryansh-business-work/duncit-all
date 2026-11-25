@@ -1,14 +1,11 @@
 import { Alert, FormControlLabel, Stack, Switch, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
-import { SERVICE_TARGETS, hasAnyTarget, type ServiceTargets } from '../../../config/serviceTargets';
+import { SERVICE_TARGETS, allServiceTargets, hasAnyTarget, type ServiceTargets } from '../../../config/serviceTargets';
 
 interface Props {
   value: ServiceTargets;
   onChange: (next: ServiceTargets) => void;
 }
-
-const allTo = (on: boolean): ServiceTargets =>
-  Object.fromEntries(SERVICE_TARGETS.map((t) => [t.flag, on])) as ServiceTargets;
 
 /**
  * One switch per lead kind a Service Offered can show on, plus "All". "All" is
@@ -44,7 +41,7 @@ export default function ServiceTargetSwitches({ value, onChange }: Readonly<Prop
           />
         ))}
         <FormControlLabel
-          control={<Switch checked={all} onChange={(e) => onChange(allTo(e.target.checked))} />}
+          control={<Switch checked={all} onChange={(e) => onChange(allServiceTargets(e.target.checked))} />}
           label={t('crm.data.allLeadTypes')}
         />
       </Stack>

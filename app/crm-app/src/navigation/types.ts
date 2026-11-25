@@ -1,6 +1,7 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
 import type { ManagedOptionGroup } from '@/features/data/useManagedOptions';
+import type { EditableService } from '@/features/services-offered/serviceOffered';
 import type { LeadKind } from '@/features/leads/leadKinds';
 
 export type TabParamList = {
@@ -44,6 +45,9 @@ export type AppStackParamList = {
   /** CRM › AI Call Prompts › Static Content, and adding or editing one prompt. */
   CallPrompts: undefined;
   CallPromptEditor: { id?: string };
+  /** CRM › Data › Services Offered, and adding (no service) or editing one. */
+  ServicesOffered: undefined;
+  ServiceOfferedEditor: { service?: EditableService };
   /** CRM › Data › Venues › Amenities or Event Suitability. */
   ManagedOptions: { group: ManagedOptionGroup };
   /** A portal page the app does not have yet: what it is, and a way to open it in the portal. */

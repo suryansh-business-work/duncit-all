@@ -298,6 +298,12 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
       unavailable: 'Calling is not available on this device.',
       openedDialer: 'Your phone’s dialer opened. Allow phone calls in Settings to call straight from Duncit CRM.',
     },
+    servicesOffered: {
+      sortBy: 'Sort by',
+      sortedAscending: '{field}, sorted ascending',
+      sortedDescending: '{field}, sorted descending',
+      titlesRequired: 'Add at least one service title.',
+    },
     call: {
       screenTitle: 'Call',
       recording: 'Recording',

@@ -15,6 +15,8 @@ import { CallScreen } from '@/screens/call/CallScreen';
 import { ManagedOptionsScreen } from '@/screens/data/ManagedOptionsScreen';
 import { CallPromptsScreen } from '@/screens/call-prompts/CallPromptsScreen';
 import { CallPromptEditorScreen } from '@/screens/call-prompts/CallPromptEditorScreen';
+import { ServicesOfferedScreen } from '@/screens/services-offered/ServicesOfferedScreen';
+import { ServiceOfferedEditorScreen } from '@/screens/services-offered/ServiceOfferedEditorScreen';
 import { MenuScreen } from '@/screens/menu/MenuScreen';
 import { PortalPageScreen } from '@/screens/portal/PortalPageScreen';
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
@@ -133,6 +135,8 @@ export function RootNavigator() {
       <Stack.Screen name="ManagedOptions" component={ManagedOptionsScreen} />
       <Stack.Screen name="CallPrompts" component={CallPromptsScreen} />
       <Stack.Screen name="CallPromptEditor" component={CallPromptEditorScreen} />
+      <Stack.Screen name="ServicesOffered" component={ServicesOfferedScreen} />
+      <Stack.Screen name="ServiceOfferedEditor" component={ServiceOfferedEditorScreen} />
       <Stack.Screen
         name="Call"
         component={CallScreen}

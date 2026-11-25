@@ -2200,6 +2200,7 @@ re-exports it under its old names.
 | `crm-dashboard` | `crmRangeToWindow`, `crmLeadsInWindow`, `crmAggregateStages / Priorities / Services / SuperCategories / Totals` — the Dashboard's counts (super categories: most leads first, then by name). |
 | `crm-quality-analytics` | `crmSumCounts`, `crmFormatScore`, `crmShareOf`, `crmIsEmptyAnalytics`, `crmIsoWeekMonday`. |
 | `crm-quality-labels` | Copy keys and tones for qualification and Lead Research candidate statuses (`CrmTone`). |
+| `crm-service-targets` | Services Offered: `CRM_SERVICE_TARGETS` (the lead kinds a service applies to), `crmDefaultServiceTargets`, `crmPickServiceTargets`, `crmHasAnyServiceTarget` (at least one must be on), `crmAllServiceTargets` (All on/off), `crmServiceTargetLabelKeys` (the "Applies to" labels), `crmNormalizeServiceTitles` (trimmed, de-duplicated titles). |
 | `crm-managed-options` | The Amenities / Event Suitability lists: `crmSortManagedOptions` (by place, then name), `crmFilterManagedOptions` (name search), `crmNextManagedOrder` (after the last entry). |
 | `crm-call` | The CRM call line (Twilio rings the agent, joins the lead, records): `CRM_CALL_STATUSES`, `crmToCallStatus`, `crmIsTerminalCallStatus`, `crmCallStatusView` (label key + tone, "On hold" for a held call), `crmMergeSegment` / `crmFilterSegments` (the live transcript; same array back when nothing changes), `crmFormatDuration`, `crmElapsedSeconds`, `crmCanStartCall`. |
 

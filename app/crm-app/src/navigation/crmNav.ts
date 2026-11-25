@@ -26,7 +26,8 @@ export type NavTarget =
         | 'EmailVerifier'
         | 'QualityAnalytics'
         | 'LeadResearch'
-        | 'CallPrompts';
+        | 'CallPrompts'
+        | 'ServicesOffered';
     }
   | { type: 'leads'; kind: LeadKind }
   | { type: 'options'; group: ManagedOptionGroup }
@@ -168,7 +169,7 @@ export const CRM_NAV: readonly NavItem[] = [
         key: 'servicesOffered',
         labelKey: 'shell.nav.servicesOffered',
         icon: m('contacts'),
-        target: portal('/data/services-offered'),
+        target: { type: 'screen', screen: 'ServicesOffered' },
       },
       {
         key: 'venues',

@@ -11,6 +11,8 @@ import { LeadReminders } from '../lead/LeadReminders';
 
 jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
+// ReminderRow opens the lead from a reminder; no navigator is mounted here.
+jest.mock('@react-navigation/native', () => ({ useNavigation: () => ({ navigate: jest.fn() }) }));
 jest.mock('@/services/dialer', () => ({
   dialNumber: jest.fn(),
   whatsappUrl: (raw: string) => `https://wa.me/${raw.replace(/\D/g, '')}`,

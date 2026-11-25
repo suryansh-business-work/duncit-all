@@ -54,7 +54,7 @@ describe('LeadForm (venue)', () => {
     fireEvent.press(screen.getByTestId('lead-venue-types-Turf'));
     fireEvent.press(screen.getByTestId('lead-save'));
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
-    expect(onSubmit).toHaveBeenCalledWith(
+    expect(onSubmit.mock.calls[0]?.[0]).toEqual(
       expect.objectContaining({ venue_types: ['Other'], venue_type_other: 'Rooftop' }),
     );
   });
@@ -78,7 +78,7 @@ describe('LeadForm (venue)', () => {
     expect(screen.queryByText('Contact 2')).toBeNull();
     fireEvent.press(screen.getByTestId('lead-save'));
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
-    expect(onSubmit).toHaveBeenCalledWith(
+    expect(onSubmit.mock.calls[0]?.[0]).toEqual(
       expect.objectContaining({ contacts: [expect.objectContaining({ name: 'Mira' })] }),
     );
   });
@@ -108,7 +108,7 @@ describe('LeadForm (venue)', () => {
     expect(screen.getByTestId('follow-up-value')).toHaveTextContent('No follow-up set');
     fireEvent.press(screen.getByTestId('lead-save'));
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
-    expect(onSubmit).toHaveBeenCalledWith(
+    expect(onSubmit.mock.calls[0]?.[0]).toEqual(
       expect.objectContaining({ assigned_user_id: '', assigned_to: '', next_follow_up_date: null }),
     );
   });

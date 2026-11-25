@@ -12,6 +12,9 @@ import type { CrmLeadEntityType } from '@modules/crm/crm/crm.constants';
  * contact count: a lead often calls from the number it gave for WhatsApp.
  */
 
+/** A date as Mongo hands it back: a Date, an ISO string, or nothing. */
+export type StoredDate = Date | string | null;
+
 export interface StoredContact {
   name?: string | null;
   role?: string | null;
@@ -22,8 +25,8 @@ export interface StoredContact {
 export interface StoredActivity {
   type?: string | null;
   summary?: string | null;
-  created_at?: Date | string | null;
-  deleted_at?: Date | string | null;
+  created_at?: StoredDate;
+  deleted_at?: StoredDate;
 }
 
 /** The fields a phone match reads off any lead kind. */
@@ -33,7 +36,7 @@ export interface StoredLeadForPhone {
   lead_status?: string | null;
   priority?: string | null;
   assigned_to?: string | null;
-  next_follow_up_date?: Date | string | null;
+  next_follow_up_date?: StoredDate;
   contacts?: ReadonlyArray<StoredContact | null> | null;
   activity_log?: ReadonlyArray<StoredActivity | null> | null;
   [field: string]: unknown;
@@ -84,7 +87,7 @@ export function contactKeys(
   return out;
 }
 
-const iso = (value: Date | string | null | undefined): string | null => {
+const iso = (value: StoredDate | undefined): string | null => {
   if (!value) return null;
   const date = value instanceof Date ? value : new Date(value);
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
@@ -96,8 +99,10 @@ export function lastActivity(log: StoredLeadForPhone['activity_log']): StoredAct
   return live.at(-1) ?? null;
 }
 
-const nameOf = (entity_type: CrmLeadEntityType, lead: StoredLeadForPhone): string =>
-  String(lead[LEAD_NAME_FIELDS[entity_type]] ?? '');
+const nameOf = (entity_type: CrmLeadEntityType, lead: StoredLeadForPhone): string => {
+  const name = lead[LEAD_NAME_FIELDS[entity_type]];
+  return typeof name === 'string' ? name : '';
+};
 
 /** The match card for a lead that holds `key`, or null when it does not (the query is a superset). */
 export function toPhoneMatch(

@@ -137,7 +137,7 @@ export async function attachDeviceCallRecording(raw: unknown, user: AuthUser) {
     throw badInput('recording_url must be a file uploaded through Duncit');
   }
   const doc = await CommunicationLogModel.findById(input.log_id);
-  if (!doc || doc.type !== 'CALL' || (doc.metadata as { mode?: string } | null)?.mode !== MODE) {
+  if (doc?.type !== 'CALL' || (doc.metadata as { mode?: string } | null)?.mode !== MODE) {
     throw notFound('Device call');
   }
   if (doc.created_by !== user.id && !hasRole(user, ['SUPER_ADMIN'])) {
@@ -150,11 +150,18 @@ export async function attachDeviceCallRecording(raw: unknown, user: AuthUser) {
   doc.recording_url = input.recording_url;
   doc.transcript_status = 'PENDING';
   await doc.save();
-  transcribeDeviceRecording(input.log_id, input.recording_url, input.file_name, input.content_type).catch((error: unknown) => {
-    logs.server.error('crm', 'device-call-transcript', { error, log_id: input.log_id, msg: 'Device call transcription failed' });
-    communicationLogService
-      .saveTranscript(input.log_id, { error: 'The recording could not be transcribed' })
-      .catch((saveError: unknown) => logs.server.error('crm', 'device-call-transcript', { error: saveError, log_id: input.log_id }));
-  });
+  transcribeOrMarkFailed(input).catch((error: unknown) =>
+    logs.server.error('crm', 'device-call-transcript', { error, log_id: input.log_id }),
+  );
   return communicationLogService.get(input.log_id);
+}
+
+/** Transcribe and summarise the recording; when that fails, say so on the call. */
+async function transcribeOrMarkFailed(input: { log_id: string; recording_url: string; file_name?: string | null; content_type?: string | null }) {
+  try {
+    await transcribeDeviceRecording(input.log_id, input.recording_url, input.file_name, input.content_type);
+  } catch (error) {
+    logs.server.error('crm', 'device-call-transcript', { error, log_id: input.log_id, msg: 'Device call transcription failed' });
+    await communicationLogService.saveTranscript(input.log_id, { error: 'The recording could not be transcribed' });
+  }
 }

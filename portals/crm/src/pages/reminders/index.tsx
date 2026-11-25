@@ -19,7 +19,7 @@ export default function RemindersPage() {
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
-            Calendar of reminders and lead follow-ups. Overdue is red, due soon is amber, later is green.
+            {t('crm.reminders.subtitle')}
           </Typography>
         </Box>
       </Stack>

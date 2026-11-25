@@ -102,14 +102,14 @@ export default function WhatsAppBrowser() {
         }}>
         <DuncitTabs {...tabs} />
         <DuncitButton size="small" variant="contained" startIcon={<BoltIcon />} disabled={running} onClick={() => fireAndForget(startExtraction(), logs.portal.crm, 'WhatsAppBrowser', 'startExtraction')}>
-          {running ? 'Extracting…' : 'Extract'}
+          {running ? t('crm.tools.extracting') : t('crm.tools.extract')}
         </DuncitButton>
       </Stack>
 
       <TextField
         size="small"
         fullWidth
-        placeholder="Search…"
+        placeholder={t('shell.table.search')}
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
         sx={{ mb: 1 }}
@@ -120,7 +120,7 @@ export default function WhatsAppBrowser() {
       />
 
       {tab === 'groups' && community && (
-        <Chip sx={{ mb: 1 }} label={`Community: ${community.name}`} onDelete={() => setCommunity(null)} />
+        <Chip sx={{ mb: 1 }} label={t('crm.tools.communityFilter', { vars: { name: community.name } })} onDelete={() => setCommunity(null)} />
       )}
 
       {loading && items.length === 0 ? (
@@ -135,7 +135,7 @@ export default function WhatsAppBrowser() {
             {tab === 'communities' &&
               items.map((c: any) => (
                 <ListItemButton key={c.id} onClick={() => { setCommunity({ jid: c.community_jid, name: c.name }); setTab('groups'); }}>
-                  <ListItemText primary={c.name} secondary={`${c.groups_count} groups`} />
+                  <ListItemText primary={c.name} secondary={t('crm.tools.groupsCount', { count: c.groups_count })} />
                 </ListItemButton>
               ))}
             {tab === 'groups' &&
@@ -146,7 +146,7 @@ export default function WhatsAppBrowser() {
               ))}
             {tab === 'users' &&
               items.map((u: any) => (
-                <ListItemText key={u.id} primary={u.name || `+${u.phone}`} secondary={`+${u.phone}${u.is_business ? ' · Business' : ''}`} sx={{ px: 2, py: 0.5 }} />
+                <ListItemText key={u.id} primary={u.name || `+${u.phone}`} secondary={u.is_business ? t('crm.tools.businessNumber', { vars: { phone: `+${u.phone}` } }) : `+${u.phone}`} sx={{ px: 2, py: 0.5 }} />
               ))}
             {total === 0 && (
               <Typography
@@ -155,7 +155,7 @@ export default function WhatsAppBrowser() {
                   px: 2,
                   py: 1
                 }}>
-                {running ? 'Extracting from WhatsApp…' : 'No data yet. Tap Extract to pull from WhatsApp.'}
+                {running ? t('crm.tools.extractingFromWhatsapp') : t('crm.tools.noDataYet')}
               </Typography>
             )}
           </List>

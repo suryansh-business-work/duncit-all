@@ -108,7 +108,7 @@ export default function VenueLeadsPage() {
         superCategoryOptions={superCategoryOptions}
         toolbarActions={
           <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/venue-leads/new', { state: editorOrigin })}>
-            New Venue Lead
+            {t('crm.venueLeads.newLead')}
           </DuncitButton>
         }
         onView={(lead) => navigate(`/venue-leads/${lead.id}/view`)}
@@ -119,10 +119,10 @@ export default function VenueLeadsPage() {
       <ConfirmDialog
         open={!!toDelete}
         title={t('crm.venueLeads.deleteVenueLead')}
-        message={`Delete "${toDelete?.venue_name}"? This cannot be undone.`}
+        message={t('crm.venueLeads.deleteMessage', { vars: { name: toDelete?.venue_name ?? '' } })}
         confirmLabel={t('shell.common.delete')}
         destructive
-        busyLabel="Working…"
+        busyLabel={t('crm.common.working')}
         loading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setToDelete(null)}
@@ -134,7 +134,7 @@ export default function VenueLeadsPage() {
         title={t('crm.venueLeads.fillVenueLeadsWithAi')}
         onClose={() => setShowAi(false)}
         onSaved={(count) => {
-          setToast(`Created ${count} venue lead${count === 1 ? '' : 's'}`);
+          setToast(t('crm.venueLeads.createdCount', { count }));
           refetchRef.current?.();
         }}
       />
@@ -145,7 +145,7 @@ export default function VenueLeadsPage() {
         title={t('crm.venueLeads.importVenueLeadsFromExcel')}
         onClose={() => setShowImport(false)}
         onImported={(result) => {
-          setToast(`Imported ${result.inserted} of ${result.inserted + result.failed} rows`);
+          setToast(t('crm.excelImport.imported', { vars: { inserted: result.inserted, total: result.inserted + result.failed } }));
           refetchRef.current?.();
         }}
         onDownloadTemplate={() => fetchExcel('template')}

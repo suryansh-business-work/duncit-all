@@ -63,12 +63,12 @@ export default function VenueOverviewTab({ lead, t, followUpLabel }: Readonly<Pr
               <Typography component="h2" variant="subtitle1" sx={{
                 fontWeight: 800
               }}>
-                Lead tracking
+                {t('crm.prospectLeads.leadTracking')}
               </Typography>
             </Stack>
             <LeadDetailRow label={t('crm.common.source')} value={lead.lead_source || '—'} />
             <LeadDetailRow label={t('crm.common.assignedTo')} value={lead.assigned_to || '—'} />
-            <LeadDetailRow label="Follow-up" value={followUpLabel} />
+            <LeadDetailRow label={t('crm.leadDetail.followUp')} value={followUpLabel} />
             <Divider sx={{ my: 1 }} />
             <LeadDetailRow label={t('shell.common.created')} value={lead.created_at ? formatDateTime(lead.created_at) : '—'} />
             <LeadDetailRow label={t('shell.common.updated')} value={lead.updated_at ? formatDateTime(lead.updated_at) : '—'} />
@@ -82,7 +82,7 @@ export default function VenueOverviewTab({ lead, t, followUpLabel }: Readonly<Pr
                     fontWeight: 700,
                     letterSpacing: 0.4
                   }}>
-                  REMARKS
+                  {t('crm.leadDetail.remarksCaption')}
                 </Typography>
                 <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5 }}>
                   {lead.remarks}

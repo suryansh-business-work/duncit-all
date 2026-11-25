@@ -5,10 +5,11 @@ import CloseIcon from '@mui/icons-material/Close';
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { DuncitIconButton } from '@duncit/buttons';
+import { waExtractionPercent } from '@duncit/utils';
 import { logs } from '@duncit/logs';
 import { useExtraction } from '../ExtractionContext';
 import { useTranslation } from '@duncit/shell';
-import { STATUS_TITLE, spin } from './status';
+import { spin, statusTitleKey } from './status';
 import { MinimizedChip, ProgressSection, StatRow } from './parts';
 import StatsDialog from './StatsDialog';
 
@@ -21,8 +22,8 @@ export default function ExtractionWidget() {
 
   if (!job || job.id === hiddenId) return null;
   const running = job.status === 'RUNNING';
-  const pct = job.total > 0 ? Math.round((job.processed / job.total) * 100) : 0;
-  const title = STATUS_TITLE[job.status];
+  const pct = waExtractionPercent(job);
+  const title = t(statusTitleKey(job.status));
 
   if (!open) {
     return <MinimizedChip job={job} pct={pct} onOpen={() => setOpen(true)} />;
@@ -60,7 +61,7 @@ export default function ExtractionWidget() {
         <Tooltip title={t('crm.tools.minimize')}>
           <DuncitIconButton size="small" onClick={() => setOpen(false)}><MinimizeIcon fontSize="small" /></DuncitIconButton>
         </Tooltip>
-        <Tooltip title={running ? 'Cancel extraction' : 'Dismiss'}>
+        <Tooltip title={running ? t('crm.tools.cancelExtraction') : t('crm.tools.dismiss')}>
           <DuncitIconButton
             size="small"
             color={running ? 'error' : 'default'}
@@ -85,7 +86,7 @@ export default function ExtractionWidget() {
 
       <Box sx={{ p: 1.5, pt: 1 }}>
         {job.status === 'FAILED' ? (
-          <Typography variant="body2" color="error" role="alert">{job.error || 'Extraction failed.'}</Typography>
+          <Typography variant="body2" color="error" role="alert">{job.error || t('crm.tools.extractionFailedFallback')}</Typography>
         ) : (
           <StatRow job={job} />
         )}

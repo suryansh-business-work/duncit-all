@@ -23,7 +23,7 @@ export default function VenueLinkedHostsTab({ lead, t, navigate }: Readonly<Prop
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
-          No hosts linked yet. Open Edit → "Linked Hosts" to associate host leads.
+          {t('crm.leadDetail.noLinkedHosts')}
         </Typography>
       ) : (
         <Box

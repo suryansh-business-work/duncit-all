@@ -1,20 +1,13 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { fireAndForget, logs } from '@duncit/logs';
+import { WA_POLL_MS, WA_STUCK_RESTART_MS, waFirstStatusAction, waShouldRetryError } from '@duncit/utils';
 import { WA_CONNECT, WA_DISCONNECT, WA_QR, WA_STATUS, type WaConnection } from '../whatsappQueries';
 
 const LOGGER = logs.portal['crm'];
 
-/** How often the live status + QR are re-read while a scan is pending. */
-export const WA_POLL_MS = 3000;
-/**
- * A session with no QR after this long is treated as stuck and restarted once. It outlasts the
- * gateway's own start deadline (a 2-minute WhatsApp Web boot window plus 30 s), so a slow but
- * healthy boot is never cut short.
- */
-export const WA_STUCK_RESTART_MS = 180_000;
-/** Automatic restarts per visit for a start that failed (e.g. `auth timeout`) before it is left to the user. */
-export const WA_MAX_ERROR_RESTARTS = 2;
+// The link step's timing rules, shared with the Duncit CRM app (@duncit/utils).
+export { WA_MAX_ERROR_RESTARTS, WA_POLL_MS, WA_STUCK_RESTART_MS } from '@duncit/utils';
 
 const log = (action: string, error: unknown) =>
   LOGGER.warn('WhatsAppConnectCard', action, { error, code: `wa_${action}_failed` });
@@ -75,13 +68,12 @@ export function useWaConnect(connection: WaConnection, onChanged: () => void) {
     if (!liveStatus) return;
     if (!firstStatusSeen.current) {
       firstStatusSeen.current = true;
-      if (liveStatus === 'CONNECTING') armed.current = true;
-      else if (linkedBefore && (liveStatus === 'DISCONNECTED' || liveStatus === 'ERROR')) {
-        fireAndForget(start(liveStatus === 'ERROR'), LOGGER, 'WhatsAppConnectCard', 'resume');
-      }
+      const action = waFirstStatusAction(liveStatus, linkedBefore);
+      if (action === 'arm') armed.current = true;
+      else if (action !== 'none') fireAndForget(start(action === 'restart'), LOGGER, 'WhatsAppConnectCard', 'resume');
       return;
     }
-    if (liveStatus === 'ERROR' && armed.current && errorRestarts.current < WA_MAX_ERROR_RESTARTS) {
+    if (waShouldRetryError(liveStatus, armed.current, errorRestarts.current)) {
       errorRestarts.current += 1;
       fireAndForget(start(true), LOGGER, 'WhatsAppConnectCard', 'errorRestart');
     }

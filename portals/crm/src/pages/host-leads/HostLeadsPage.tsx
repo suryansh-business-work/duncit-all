@@ -108,7 +108,7 @@ export default function HostLeadsPage() {
         superCategoryOptions={superCategoryOptions}
         toolbarActions={
           <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/host-leads/new', { state: editorOrigin })}>
-            New Host Lead
+            {t('crm.hostLeads.newLead')}
           </DuncitButton>
         }
         onView={(lead) => navigate(`/host-leads/${lead.id}/view`)}
@@ -119,10 +119,10 @@ export default function HostLeadsPage() {
       <ConfirmDialog
         open={!!toDelete}
         title={t('crm.hostLeads.deleteHostLead')}
-        message={`Delete "${toDelete?.host_name}"? This cannot be undone.`}
+        message={t('crm.hostLeads.deleteMessage', { vars: { name: toDelete?.host_name ?? '' } })}
         confirmLabel={t('shell.common.delete')}
         destructive
-        busyLabel="Working…"
+        busyLabel={t('crm.common.working')}
         loading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setToDelete(null)}
@@ -134,7 +134,7 @@ export default function HostLeadsPage() {
         title={t('crm.hostLeads.fillHostLeadsWithAi')}
         onClose={() => setShowAi(false)}
         onSaved={(count) => {
-          setToast(`Created ${count} host lead${count === 1 ? '' : 's'}`);
+          setToast(t('crm.hostLeads.createdCount', { count }));
           refetchRef.current?.();
         }}
       />
@@ -145,7 +145,7 @@ export default function HostLeadsPage() {
         title={t('crm.hostLeads.importHostLeadsFromExcel')}
         onClose={() => setShowImport(false)}
         onImported={(result) => {
-          setToast(`Imported ${result.inserted} of ${result.inserted + result.failed} rows`);
+          setToast(t('crm.excelImport.imported', { vars: { inserted: result.inserted, total: result.inserted + result.failed } }));
           refetchRef.current?.();
         }}
         onDownloadTemplate={() => fetchExcel('template')}

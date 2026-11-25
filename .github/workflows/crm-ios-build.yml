@@ -12,8 +12,12 @@
 #
 # SIGNED with the member app's Apple Distribution certificate — Apple allows a
 # team very few — and an App Store profile for the CRM bundle ID, which the
-# server makes the first time this asks (crmIosSigningBundle). The one setting
-# it needs is the Duncit CRM Bundle ID on Tech → Environment → App Store Connect.
+# server makes the first time this asks (crmIosSigningBundle). That identity
+# lives on PRODUCTION, where ios-build.yml signs too, so signing always comes
+# from there whichever server the build reports to. The one setting it needs
+# is the Duncit CRM Bundle ID on production's Tech → Environment → App Store
+# Connect. Until production has it, the `signing` preflight skips a push's
+# macOS build with a warning (a portal-started build is recorded as failed).
 # An App Store-signed IPA installs only through TestFlight or the App Store, so
 # an opted-in dispatch uploads it to App Store Connect with the same key; that
 # needs the "Duncit CRM" app created once in App Store Connect.
@@ -62,6 +66,8 @@ permissions:
 
 env:
   APP: CRM
+  # Where the signing identity lives (see the header): always production.
+  SIGNING_GRAPHQL_URL: https://server.duncit.com/graphql
   APP_ENV: ${{ inputs.app_env || (github.ref_name == 'staging' && 'staging' || 'production') }}
   EXPO_PUBLIC_API_URL: >-
     ${{ (inputs.app_env || (github.ref_name == 'staging' && 'staging' || 'production')) == 'staging' && 'https://staging.server.duncit.com' || 'https://server.duncit.com' }}
@@ -93,9 +99,60 @@ jobs:
           node scripts/ci-affected.mjs plan --under app/crm-app --extra app/crm-app
           --global .github/workflows/crm-ios-build.yml --global 'server/src/modules/**/*.schema.ts' --global 'server/src/microservices/**/*.schema.ts'
 
-  build:
+  # A minute on Linux before an hour on macOS: is the CRM app's signing set up
+  # on production yet? Not yet (the server predates crmIosSigningBundle, or the
+  # CRM bundle ID is not set) is a person's step, not a code fault: a push
+  # skips the build with a warning, while a build someone started from the
+  # portal is recorded as failed with the reason, so its row does not wait
+  # forever. No key reaches this runner.
+  signing:
+    name: Is Duncit CRM iOS signing set up?
     needs: plan
     if: always() && (github.event_name == 'workflow_dispatch' || needs.plan.outputs.any == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    env:
+      REPORT_GRAPHQL_URL: >-
+        ${{ inputs.report_url || (github.ref_name == 'staging' && secrets.DUNCIT_RELEASE_TOKEN_STAGING != '' && 'https://staging.server.duncit.com/graphql' || 'https://server.duncit.com/graphql') }}
+      REPORT_TOKEN: >-
+        ${{ (contains(inputs.report_url, 'staging.') || (inputs.report_url == '' && github.ref_name == 'staging' && secrets.DUNCIT_RELEASE_TOKEN_STAGING != '')) && secrets.DUNCIT_RELEASE_TOKEN_STAGING || secrets.DUNCIT_RELEASE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # The failure report below describes the commit range.
+          fetch-depth: 0
+
+      - name: Ask production for the CRM signing identity
+        id: check
+        env:
+          DUNCIT_GRAPHQL_URL: ${{ env.SIGNING_GRAPHQL_URL }}
+          DUNCIT_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN }}
+          DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+          DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+        run: node scripts/fetch-ios-signing.mjs --check
+
+      - name: Record a portal-started build that cannot be signed
+        if: steps.check.outputs.ready != 'true' && github.event_name == 'workflow_dispatch'
+        env:
+          PLATFORM: IOS
+          STATUS: FAILED
+          ERROR_MESSAGE: ${{ steps.check.outputs.reason }}
+          DISPATCH_ID: ${{ inputs.dispatch_id }}
+          DUNCIT_GRAPHQL_URL: ${{ env.REPORT_GRAPHQL_URL }}
+          DUNCIT_RELEASE_TOKEN: ${{ env.REPORT_TOKEN }}
+          DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+          DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          node scripts/report-app-build.mjs || true
+          echo "::error::${ERROR_MESSAGE}"
+          exit 1
+
+  build:
+    needs: [plan, signing]
+    if: always() && needs.signing.outputs.ready == 'true'
     name: Build & publish Duncit CRM IPA
     runs-on: macos-26
     timeout-minutes: 120
@@ -190,12 +247,13 @@ jobs:
           run_url: ${{ env.RUN_URL }}
 
       - name: Fetch the signing identity
-        # First, before any compiling: a missing CRM bundle ID or an expired
+        # From production, where the identity lives — not from the server the
+        # build reports to. First, before any compiling: an expired
         # certificate should cost a minute here, not the hour to the archive.
         working-directory: .
         env:
-          DUNCIT_GRAPHQL_URL: ${{ env.REPORT_GRAPHQL_URL }}
-          DUNCIT_RELEASE_TOKEN: ${{ env.REPORT_TOKEN }}
+          DUNCIT_GRAPHQL_URL: ${{ env.SIGNING_GRAPHQL_URL }}
+          DUNCIT_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN }}
           DUNCIT_RELEASE_EMAIL: ${{ env.REPORT_EMAIL }}
           DUNCIT_RELEASE_PASSWORD: ${{ env.REPORT_PASSWORD }}
         run: node scripts/fetch-ios-signing.mjs

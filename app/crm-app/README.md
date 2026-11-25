@@ -77,7 +77,9 @@ download them from the CRM portal: sidebar → **Download CRM App**.
 
 The IPA is signed with the member app's Apple Distribution certificate and an
 App Store profile the server makes for the CRM bundle ID, which must be set on
-Tech → Environment → App Store Connect → Duncit CRM Bundle ID. An App
+production's Tech → Environment → App Store Connect → Duncit CRM Bundle ID
+(signing always comes from production, where the member app signs too; until
+it is set up, a push skips the iOS build with a warning). An App
 Store-signed IPA installs only through TestFlight: create the "Duncit CRM" app
 once in App Store Connect, then dispatch `crm-ios-build.yml` with
 `submit_to_app_store` and add staff as TestFlight testers. The iOS build uses

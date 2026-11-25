@@ -45,6 +45,7 @@ const lead = {
 beforeEach(() => {
   jest.clearAllMocks();
   (readPermissions as jest.Mock).mockResolvedValue({ phone: true });
+  (requestPermission as jest.Mock).mockResolvedValue(undefined);
   mockPhone.lookupNumber.mockResolvedValue(null);
 });
 

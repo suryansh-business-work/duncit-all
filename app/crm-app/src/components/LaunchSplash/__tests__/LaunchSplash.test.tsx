@@ -14,7 +14,7 @@ import { LaunchSplashGate, SPLASH_MAX_MS } from '..';
 const video = ExpoVideo as unknown as {
   __player: { muted: boolean; loop: boolean; play: jest.Mock };
   __emit: (event: string, payload?: unknown) => void;
-  VideoView: unknown;
+  VideoView: (props: object) => unknown;
 };
 const hide = SplashScreen.hideAsync as jest.Mock;
 
@@ -49,7 +49,10 @@ it('plays the video once, muted, and keeps the native splash until its first fra
   expect(video.__player.play).toHaveBeenCalledTimes(1);
   expect(hide).not.toHaveBeenCalled();
 
-  act(() => screen.getByTestId('video-view').props.onFirstFrameRender());
+  // The splash is hidden from screen readers, so its parts are queried with hidden elements.
+  act(() =>
+    screen.getByTestId('video-view', { includeHiddenElements: true }).props.onFirstFrameRender(),
+  );
   expect(hide).toHaveBeenCalledTimes(1);
   expect(onDone).not.toHaveBeenCalled();
 });
@@ -89,11 +92,11 @@ it('skips the video when the phone asks for reduced motion', async () => {
 
 it('gets out of the way, with the native splash hidden, when the video surface itself crashes', async () => {
   jest.spyOn(console, 'error').mockImplementation(() => undefined);
-  jest.replaceProperty(video, 'VideoView', () => {
+  jest.spyOn(video, 'VideoView').mockImplementation(() => {
     throw new Error('no video decoder');
   });
   const onDone = await renderSplash();
   expect(onDone).toHaveBeenCalledTimes(1);
   expect(hide).toHaveBeenCalled();
-  expect(screen.queryByTestId('launch-splash')).toBeNull();
+  expect(screen.queryByTestId('launch-splash', { includeHiddenElements: true })).toBeNull();
 });

@@ -1,5 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 
+import accent from '../../../crm-accent.json';
 import { gqlRequest } from '@/services/graphql.client';
 import { fallbackT } from '@/i18n/fallback';
 import { STORAGE_KEYS } from '@/services/secure-storage';
@@ -61,8 +62,9 @@ describe('nativeTheme', () => {
   it('paints with the design tokens of the phone’s mode and the CRM accent', () => {
     const lightTheme = nativeTheme('light');
     const darkTheme = nativeTheme('dark');
-    expect(lightTheme.primary).toBe('#4338ca');
-    expect(darkTheme.primary).toBe('#4338ca');
+    // The caller card's buttons use the CRM accent's deepest step (white text on it).
+    expect(lightTheme.primary).toBe(accent.active);
+    expect(darkTheme.primary).toBe(accent.active);
     expect(lightTheme.surface).not.toBe(darkTheme.surface);
     expect(nativeTheme(null)).toEqual(lightTheme);
   });

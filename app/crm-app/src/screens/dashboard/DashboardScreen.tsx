@@ -9,7 +9,7 @@ import { StateView } from '@/components/StateView';
 import { useDashboard } from '@/features/dashboard/useDashboard';
 import { useTranslation } from '@/hooks/useTranslation';
 import { BarChartCard } from './BarChartCard';
-import { KpiGrid } from './KpiGrid';
+import { KpiGrid } from '@/components/KpiGrid';
 
 /** The phone offers the preset ranges; a custom from–to range stays on the portal for now. */
 const RANGES = CRM_DASHBOARD_RANGES.filter((r) => r !== 'custom');

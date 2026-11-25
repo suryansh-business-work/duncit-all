@@ -1580,6 +1580,8 @@ export const CRM_BUNDLE: NestedCatalogue = {
       imported: 'Imported',
       newUserLead: 'New user lead',
       phoneWithCountryCode: 'Phone (with country code)',
+      phoneRequired: 'Enter a phone number with its country code',
+      nameTooLong: 'Name is too long',
       sourceWhatsappAccount: 'Source WhatsApp account',
       whatsappLead: 'WhatsApp Lead',
     },

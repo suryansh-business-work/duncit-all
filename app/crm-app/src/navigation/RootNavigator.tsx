@@ -14,6 +14,9 @@ import { PostCallScreen } from '@/screens/post-call/PostCallScreen';
 import { MenuScreen } from '@/screens/menu/MenuScreen';
 import { PortalPageScreen } from '@/screens/portal/PortalPageScreen';
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
+import { UserLeadsScreen } from '@/screens/user-leads/UserLeadsScreen';
+import { UserLeadDetailScreen } from '@/screens/user-leads/UserLeadDetailScreen';
+import { UserLeadEditorScreen } from '@/screens/user-leads/UserLeadEditorScreen';
 import { MainTabs } from './MainTabs';
 import { screenLayout } from './screenLayout';
 import type { AppStackParamList } from './types';
@@ -86,6 +89,21 @@ export function RootNavigator() {
         name="Dashboard"
         component={DashboardScreen}
         options={{ title: t('shell.nav.dashboard') }}
+      />
+      <Stack.Screen
+        name="UserLeads"
+        component={UserLeadsScreen}
+        options={{ title: t('shell.nav.whatsappLeads') }}
+      />
+      <Stack.Screen
+        name="UserLeadDetail"
+        component={UserLeadDetailScreen}
+        options={{ title: '' }}
+      />
+      <Stack.Screen
+        name="UserLeadEditor"
+        component={UserLeadEditorScreen}
+        options={{ title: '' }}
       />
       <Stack.Screen
         name="PostCall"

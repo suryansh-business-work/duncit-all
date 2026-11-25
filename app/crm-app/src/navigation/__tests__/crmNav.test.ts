@@ -72,6 +72,7 @@ describe('activeNavKey — "you are here"', () => {
     expect(activeNavKey(tabs('Leads', { kind: 'HOST_LEAD' }))).toBe('hostLeads');
     expect(activeNavKey(tabs('Reminders'))).toBe('reminders');
     expect(activeNavKey({ name: 'Dashboard' })).toBe('dashboard');
+    expect(activeNavKey({ name: 'UserLeads' })).toBe('whatsappLeads');
   });
 
   it('marks nothing for screens the portal has no page for, or an unfiltered lead list', () => {

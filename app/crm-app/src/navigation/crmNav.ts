@@ -16,7 +16,7 @@ export type NavIcon =
  */
 export type NavTarget =
   | { type: 'tab'; tab: 'Home' | 'Reminders' }
-  | { type: 'screen'; screen: 'Dashboard' }
+  | { type: 'screen'; screen: 'Dashboard' | 'UserLeads' }
   | { type: 'leads'; kind: LeadKind }
   | { type: 'portal'; path: string };
 
@@ -118,7 +118,7 @@ export const CRM_NAV: readonly NavItem[] = [
             key: 'whatsappLeads',
             labelKey: 'shell.nav.whatsappLeads',
             icon: WHATSAPP,
-            target: portal('/user-leads'),
+            target: { type: 'screen', screen: 'UserLeads' },
           },
         ],
       },

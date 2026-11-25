@@ -393,3 +393,10 @@ export {
   makeConsoleLoginSchema,
   type ConsoleLoginValues,
 } from './console-login';
+// A WhatsApp user lead added or edited by hand (CRM portal + Duncit CRM app).
+export {
+  makeUserLeadSchema,
+  USER_LEAD_NAME_MAX,
+  userLeadDefaults,
+  type UserLeadValues,
+} from './user-lead';

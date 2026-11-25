@@ -24,8 +24,9 @@ export function activeNavKey(route: RouteLike | undefined): string | null {
     const path = param(route, 'path');
     return findNavKey(CRM_NAV, (t) => t.type === 'portal' && t.path === path);
   }
-  if (route.name === 'Dashboard')
-    return findNavKey(CRM_NAV, (t) => t.type === 'screen' && t.screen === 'Dashboard');
+  // A page the app has: its own screen (Dashboard, User Leads…).
+  const own = findNavKey(CRM_NAV, (t) => t.type === 'screen' && t.screen === route.name);
+  if (own) return own;
   if (route.name !== 'Tabs') return null;
   const tabs = route.state;
   const tab = tabs?.routes[tabs.index ?? 0];

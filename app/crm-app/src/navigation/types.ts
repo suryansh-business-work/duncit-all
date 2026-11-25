@@ -23,6 +23,10 @@ export type AppStackParamList = {
   Menu: undefined;
   /** The portal's Dashboard: KPIs and charts for venue and host leads. */
   Dashboard: undefined;
+  /** CRM › User Leads › WhatsApp Leads, one lead, and adding or editing one. */
+  UserLeads: undefined;
+  UserLeadDetail: { id: string };
+  UserLeadEditor: { id?: string };
   /** A portal page the app does not have yet: what it is, and a way to open it in the portal. */
   PortalPage: { path: string; titleKey: string };
 };

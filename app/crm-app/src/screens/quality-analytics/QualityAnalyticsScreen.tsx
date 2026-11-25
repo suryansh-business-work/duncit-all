@@ -57,18 +57,20 @@ export function QualityAnalyticsScreen() {
           </Text>
         </YStack>
       </XStack>
-      <XStack flexWrap="wrap" gap="$2" role="tablist">
-        {choices.map((c) => (
-          <DuncitButton
-            key={c}
-            label={c === ALL ? t('crm.leadQualityAnalytics.allTypes') : t(`crmApp.kind.${c}`)}
-            onPress={() => setChoice(c)}
-            size="sm"
-            variant={choice === c ? 'solid' : 'outline'}
-            testID={`analytics-type-${c}`}
-          />
-        ))}
-      </XStack>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <XStack gap="$2" role="tablist">
+          {choices.map((c) => (
+            <DuncitButton
+              key={c}
+              label={c === ALL ? t('crm.leadQualityAnalytics.allTypes') : t(`crmApp.kind.${c}`)}
+              onPress={() => setChoice(c)}
+              size="sm"
+              variant={choice === c ? 'solid' : 'outline'}
+              testID={`analytics-type-${c}`}
+            />
+          ))}
+        </XStack>
+      </ScrollView>
       {!analytics ? (
         <StateView loading={loading && !error} error={error} onRetry={refetch} />
       ) : null}

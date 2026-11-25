@@ -69,7 +69,7 @@ export function Discoveries({ onShowJob }: Readonly<{ onShowJob: (jobId: string)
       keyExtractor={(job) => job.id}
       refreshing={false}
       onRefresh={refetch}
-      contentContainerStyle={{ padding: 12, gap: 8 }}
+      contentContainerStyle={{ padding: 16, gap: 8 }}
       ListHeaderComponent={
         <YStack gap="$2" marginBottom="$2">
           <Text color="$muted" fontSize="$2">

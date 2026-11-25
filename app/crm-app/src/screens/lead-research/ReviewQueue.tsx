@@ -70,7 +70,7 @@ export function ReviewQueue({ jobId, onClearJob }: Readonly<Props>) {
       onEndReachedThreshold={0.4}
       refreshing={false}
       onRefresh={queue.refresh}
-      contentContainerStyle={{ padding: 12, gap: 8 }}
+      contentContainerStyle={{ padding: 16, gap: 8 }}
       ListHeaderComponent={
         <YStack gap="$2" marginBottom="$2">
           {jobId ? (

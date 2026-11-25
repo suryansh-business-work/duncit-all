@@ -75,7 +75,7 @@ export function EmailVerifierScreen() {
       onEndReached={history.loadMore}
       onEndReachedThreshold={0.4}
       keyboardShouldPersistTaps="handled"
-      contentContainerStyle={{ padding: 12, gap: 8 }}
+      contentContainerStyle={{ padding: 16, gap: 8 }}
       ListHeaderComponent={
         <YStack gap="$3" marginBottom="$2">
           <Card title={t('crm.emailVerifier.singleTitle')}>

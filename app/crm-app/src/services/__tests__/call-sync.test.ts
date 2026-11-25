@@ -1,9 +1,13 @@
 import * as SecureStore from 'expo-secure-store';
 
+import { readDirectoryStatus, syncDirectory } from '@/services/directory-sync';
 import { gqlRequest } from '@/services/graphql.client';
 import { uploadFile } from '@/services/upload';
 import { STORAGE_KEYS } from '@/services/secure-storage';
+import { readSyncStatus } from '@/services/sync-status';
+import { readQueue } from '@/services/recording-queue';
 import { useFeaturesStore } from '@/stores/features.store';
+import { ApiError } from '@/utils/errors';
 import { installId, syncDeviceCalls } from '../call-sync';
 
 const mockPhone = {
@@ -25,6 +29,10 @@ jest.mock('@/services/upload', () => ({
   RECORDINGS_FOLDER: 'call-recordings',
   uploadFile: jest.fn(),
 }));
+jest.mock('@/services/directory-sync', () => ({
+  readDirectoryStatus: jest.fn(),
+  syncDirectory: jest.fn(),
+}));
 
 /**
  * The call sync: calls with CRM contacts reach the lead's communication log
@@ -35,7 +43,8 @@ jest.mock('@/services/upload', () => ({
 const request = gqlRequest as jest.Mock;
 const upload = uploadFile as jest.Mock;
 const store = (SecureStore as unknown as { __store: Map<string, string> }).__store;
-const START = Date.UTC(2026, 10, 24, 10, 0);
+/** Calls from a few minutes ago: their recordings may still appear (recording-queue FIND_WINDOW_MS). */
+const START = Date.now() - 5 * 60 * 1000;
 
 const lead = {
   entityType: 'VENUE_LEAD',
@@ -67,6 +76,8 @@ beforeEach(() => {
   store.set(STORAGE_KEYS.callCheckpoint, String(START - 1));
   store.set(STORAGE_KEYS.installId, 'install-a');
   useFeaturesStore.setState({ autoLog: true, recordings: true, callerId: true, hydrated: true });
+  // A directory synced a moment ago: an unknown number is a personal call, not a stale directory.
+  (readDirectoryStatus as jest.Mock).mockResolvedValue({ syncedAt: Date.now(), count: 1 });
   mockPhone.lookupNumber.mockImplementation(async (n: string) =>
     n === crmCall.number ? lead : null,
   );
@@ -91,8 +102,16 @@ it('logs the CRM call, skips the personal one without sending its number, and mo
 
   const result = await syncDeviceCalls();
 
-  expect(result).toEqual({ logged: 1, recordings: 0, skipped: 1, failed: false });
+  expect(result).toEqual({
+    logged: 1,
+    recordings: 0,
+    skipped: 1,
+    refused: 0,
+    pendingRecordings: 1,
+    failed: false,
+  });
   expect(request).toHaveBeenCalledTimes(1);
+  expect(syncDirectory).not.toHaveBeenCalled();
   expect(request.mock.calls[0][1].input).toMatchObject({
     client_call_id: 'install-a:11',
     entity_type: 'VENUE_LEAD',
@@ -104,6 +123,91 @@ it('logs the CRM call, skips the personal one without sending its number, and mo
   });
   expect(JSON.stringify(request.mock.calls)).not.toContain('9000000000');
   expect(store.get(STORAGE_KEYS.callCheckpoint)).toBe(String(personalCall.date));
+  // Only the CRM call is remembered as logged; the personal number is kept nowhere.
+  const status = await readSyncStatus();
+  expect(status.recent).toEqual([{ k: '9811000001', d: START }]);
+  expect(JSON.stringify(status)).not.toContain('9000000000');
+});
+
+it('refreshes a stale directory before calling a number personal, so a lead added today is logged', async () => {
+  (readDirectoryStatus as jest.Mock).mockResolvedValue({
+    syncedAt: Date.now() - 60 * 60 * 1000,
+    count: 1,
+  });
+  const newLead = { ...crmCall, id: '13', number: '9811000002' };
+  let refreshed = false;
+  (syncDirectory as jest.Mock).mockImplementation(async () => {
+    refreshed = true;
+    return 2;
+  });
+  mockPhone.lookupNumber.mockImplementation(async (n: string) =>
+    n === newLead.number && refreshed ? { ...lead, leadId: 'lead-2' } : null,
+  );
+  mockPhone.getCallLog.mockResolvedValue([newLead, personalCall]);
+
+  const result = await syncDeviceCalls();
+
+  expect(result.logged).toBe(1);
+  expect(request.mock.calls[0][1].input).toMatchObject({
+    entity_id: 'lead-2',
+    client_call_id: 'install-a:13',
+  });
+  // Once per run: the personal call after it does not download the directory again.
+  expect(syncDirectory).toHaveBeenCalledTimes(1);
+  expect(JSON.stringify(request.mock.calls)).not.toContain('9000000000');
+});
+
+it('steps over a call the server refuses for good, records why, and still logs the calls after it', async () => {
+  const second = { ...crmCall, id: '14', date: START + 120_000 };
+  mockPhone.getCallLog.mockResolvedValue([crmCall, second]);
+  request.mockRejectedValueOnce(new ApiError('Lead not found', 200, { code: 'NOT_FOUND' }));
+
+  const result = await syncDeviceCalls();
+
+  expect(result).toMatchObject({ logged: 1, refused: 1, failed: false });
+  expect(store.get(STORAGE_KEYS.callCheckpoint)).toBe(String(second.date));
+  expect((await readSyncStatus()).failures).toEqual([
+    { at: expect.any(Number), code: 'NOT_FOUND', what: 'call' },
+  ]);
+});
+
+it('keeps a recording that is not saved yet, and attaches it on a later run', async () => {
+  mockPhone.getCallLog.mockResolvedValueOnce([crmCall]).mockResolvedValue([]);
+  const first = await syncDeviceCalls();
+  expect(first).toMatchObject({ logged: 1, recordings: 0, pendingRecordings: 1 });
+  expect((await readQueue()).map((q) => q.logId)).toEqual(['log-1']);
+
+  mockPhone.findRecordings.mockResolvedValue([
+    {
+      uri: 'content://2',
+      name: 'Call recording Rohit_241124_1000.m4a',
+      sizeBytes: 900,
+      addedAtMs: START + 100_000,
+      durationMs: 90_000,
+      mimeType: 'audio/mp4',
+      relativePath: 'Recordings/Call/',
+    },
+  ]);
+  mockPhone.copyRecordingToCache.mockResolvedValue('file:///cache/recordings/r.m4a');
+  upload.mockResolvedValue('https://ik.imagekit.io/r.m4a');
+
+  const second = await syncDeviceCalls();
+
+  expect(second).toMatchObject({ logged: 0, recordings: 1, pendingRecordings: 0 });
+  expect(await readQueue()).toEqual([]);
+  expect((await readSyncStatus()).recordingAt).toEqual(expect.any(Number));
+});
+
+it('drops what was waiting when recordings are switched off', async () => {
+  mockPhone.getCallLog.mockResolvedValueOnce([crmCall]).mockResolvedValue([]);
+  await syncDeviceCalls();
+  expect(await readQueue()).toHaveLength(1);
+
+  useFeaturesStore.setState({ recordings: false });
+  await syncDeviceCalls();
+
+  expect(await readQueue()).toEqual([]);
+  expect(upload).not.toHaveBeenCalled();
 });
 
 it('uploads and attaches the phone recording, then deletes the cached copy', async () => {
@@ -172,7 +276,14 @@ it('stops at a failure and keeps the checkpoint before it, so the call is retrie
 it('starts logging from now the first time, never from the phone history', async () => {
   store.delete(STORAGE_KEYS.callCheckpoint);
   const result = await syncDeviceCalls();
-  expect(result).toEqual({ logged: 0, recordings: 0, skipped: 0, failed: false });
+  expect(result).toEqual({
+    logged: 0,
+    recordings: 0,
+    skipped: 0,
+    refused: 0,
+    pendingRecordings: 0,
+    failed: false,
+  });
   expect(mockPhone.getCallLog).not.toHaveBeenCalled();
   expect(Number(store.get(STORAGE_KEYS.callCheckpoint))).toBeGreaterThan(START);
 });

@@ -67,6 +67,18 @@ class CrmTelephonyModule : Module() {
       }
     }
 
+    AsyncFunction("recordingFolders") { sinceMs: Double ->
+      RecordingFinder.callFolders(context, sinceMs.toLong()).map {
+        mapOf("relativePath" to it.relativePath, "count" to it.count, "latestMs" to it.latestMs.toDouble())
+      }
+    }
+
+    Function("diagnostics") { CallingDiagnostics.read(context) }
+
+    Function("requestRedirectionRole") { CallingDiagnostics.requestRedirectionRole(appContext.currentActivity) }
+
+    Function("testCallerCard") { CallingDiagnostics.testCallerCard(context) }
+
     AsyncFunction("copyRecordingToCache") { uri: String, fileName: String ->
       "file://" + RecordingFinder.copyToCache(context, uri, fileName)
     }
@@ -99,6 +111,7 @@ class CrmTelephonyModule : Module() {
       CrmPrefs.clearPostCall(context)
       CrmPrefs.saveActive(context, null)
       CrmPrefs.setEnabled(context, false, false)
+      CallSyncScheduler.cancel(context)
       CrmShortcuts.clear(context)
       CrmWidgetProvider.refreshAll(context)
     }

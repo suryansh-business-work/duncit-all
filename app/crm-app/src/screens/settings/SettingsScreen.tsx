@@ -10,6 +10,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useAuthStore } from '@/stores/auth.store';
 import { useFeaturesStore } from '@/stores/features.store';
 import { CallLineCard } from './CallLineCard';
+import { CallingCard } from './calling/CallingCard';
 import { HomeScreenCard } from './HomeScreenCard';
 import { PermissionsCard } from './PermissionsCard';
 import { SyncCard } from './SyncCard';
@@ -94,6 +95,7 @@ export function SettingsScreen() {
         <>
           <HomeScreenCard />
           <PermissionsCard />
+          <CallingCard />
           <SyncCard />
         </>
       ) : null}

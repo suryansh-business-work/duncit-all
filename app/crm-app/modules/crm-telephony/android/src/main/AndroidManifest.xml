@@ -11,6 +11,13 @@
   <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
 
+  <!-- Settings › Calling & recording names the default dialer (Samsung Phone…). -->
+  <queries>
+    <intent>
+      <action android:name="android.intent.action.DIAL" />
+    </intent>
+  </queries>
+
   <!-- No backups (a session token and lead phone numbers live here) and HTTPS only. -->
   <application android:allowBackup="false" android:usesCleartextTraffic="false">
     <!--
@@ -26,6 +33,21 @@
         <action android:name="android.intent.action.PHONE_STATE" />
       </intent-filter>
     </receiver>
+
+    <!--
+      Outgoing caller ID for calls placed from any dialer: Android tells only
+      the "call redirecting app" (a role the person grants in Settings) the
+      number being called. Duncit never changes the call. Only Telecom, which
+      holds BIND_CALL_REDIRECTION_SERVICE, can bind it.
+    -->
+    <service
+      android:name=".CrmCallRedirectionService"
+      android:exported="true"
+      android:permission="android.permission.BIND_CALL_REDIRECTION_SERVICE">
+      <intent-filter>
+        <action android:name="android.telecom.CallRedirectionService" />
+      </intent-filter>
+    </service>
 
     <receiver
       android:name=".CrmWidgetProvider"

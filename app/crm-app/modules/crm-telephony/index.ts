@@ -57,11 +57,48 @@ export interface PendingPostCall {
   contactName?: string;
 }
 
+/** A folder the phone's call recorder saves into, found on the phone (no path is assumed). */
+export interface RecordingFolder {
+  relativePath: string;
+  count: number;
+  latestMs: number;
+}
+
+/** What Settings › Calling & recording shows about this phone (CallingDiagnostics.kt). */
+export interface CallingDiagnostics {
+  manufacturer: string;
+  model: string;
+  sdk: number;
+  phoneState: boolean;
+  callLog: boolean;
+  overlay: boolean;
+  notifications: boolean;
+  /** The default dialer's name, e.g. "Phone" (Samsung). */
+  defaultDialer: string;
+  dialerIsDuncit: boolean;
+  /** Outgoing caller ID for calls placed from any dialer needs this role. */
+  redirectionAvailable: boolean;
+  redirectionHeld: boolean;
+  batteryUnrestricted: boolean;
+  backgroundRestricted: boolean;
+  callerIdOn: boolean;
+  autoLogOn: boolean;
+  directoryNumbers: number;
+}
+
+/** How the test caller card showed; `empty` when the directory has no numbers yet. */
+export type TestCardResult = 'overlay' | 'notification' | 'empty';
+
 export interface CrmTelephonyModule {
   /** True when the call was placed directly; false when the phone's dialer opened instead. */
   placeCall(number: string): boolean;
   getCallLog(sinceMs: number, limit: number): Promise<CallLogEntry[]>;
   findRecordings(fromMs: number, toMs: number): Promise<RecordingFile[]>;
+  recordingFolders(sinceMs: number): Promise<RecordingFolder[]>;
+  diagnostics(): CallingDiagnostics;
+  /** False when Android cannot offer the role on this phone. */
+  requestRedirectionRole(): boolean;
+  testCallerCard(): TestCardResult;
   copyRecordingToCache(uri: string, fileName: string): Promise<string>;
   deleteCachedRecording(path: string): Promise<boolean>;
   writeDirectory(json: string): Promise<void>;

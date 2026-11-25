@@ -14,6 +14,26 @@ const mockPhone = {
   pinDialerShortcut: jest.fn(),
   canDrawOverlays: jest.fn(() => true),
   setFeatures: jest.fn(),
+  // Settings › Calling & recording (covered in settings/calling/__tests__).
+  diagnostics: jest.fn(() => ({
+    manufacturer: 'samsung',
+    model: 'SM-S921B',
+    sdk: 35,
+    phoneState: true,
+    callLog: true,
+    overlay: true,
+    notifications: true,
+    defaultDialer: 'Phone',
+    dialerIsDuncit: false,
+    redirectionAvailable: true,
+    redirectionHeld: true,
+    batteryUnrestricted: true,
+    backgroundRestricted: false,
+    callerIdOn: true,
+    autoLogOn: true,
+    directoryNumbers: 3,
+  })),
+  recordingFolders: jest.fn(async () => []),
 };
 /** The native call module: present on Android, null on an iPhone. */
 let mockPhoneModule: typeof mockPhone | null = mockPhone;

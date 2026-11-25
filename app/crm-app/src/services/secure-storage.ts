@@ -9,6 +9,8 @@ export const STORAGE_KEYS = {
   installId: 'duncit_crm_install_id',
   callCheckpoint: 'duncit_crm_call_checkpoint',
   directorySyncedAt: 'duncit_crm_directory_synced_at',
+  syncStatus: 'duncit_crm_sync_status',
+  pendingRecordings: 'duncit_crm_pending_recordings',
   features: 'duncit_crm_features',
   locale: 'duncit_crm_locale',
   colorMode: 'duncit_crm_color_mode',

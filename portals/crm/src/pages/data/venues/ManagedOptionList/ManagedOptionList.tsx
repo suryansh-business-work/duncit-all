@@ -97,7 +97,7 @@ export default function ManagedOptionList({ group, addLabel, placeholder, search
             <TableHead>
               <TableRow>
                 <TableCell sx={{ width: 80 }}>{t('shell.common.order')}</TableCell>
-                <TableCell>Name</TableCell>
+                <TableCell>{t('shell.common.name')}</TableCell>
                 <TableCell sx={{ width: 90 }}>{t('crm.common.active')}</TableCell>
                 <TableCell sx={{ width: 110 }} align="right">{t('shell.common.actions')}</TableCell>
               </TableRow>
@@ -114,7 +114,7 @@ export default function ManagedOptionList({ group, addLabel, placeholder, search
                       sx={{
                         color: "text.secondary",
                         py: 2
-                      }}>Nothing here yet. Click "{addLabel}".</Typography>
+                      }}>{t('crm.data.optionsEmpty', { vars: { label: addLabel } })}</Typography>
                   </TableCell>
                 </TableRow>
               )}
@@ -152,11 +152,10 @@ export default function ManagedOptionList({ group, addLabel, placeholder, search
 
       <ConfirmDialog
         open={!!removing}
-        title={`Delete "${removing?.name ?? ''}"`}
+        title={t('crm.data.deleteOptionTitle', { vars: { name: removing?.name ?? '' } })}
         message={t('crm.data.existingLeadsKeepTheirEntriesOnly')}
         confirmLabel={t('shell.common.delete')}
         destructive
-        busyLabel="Working…"
         loading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setRemoving(null)}

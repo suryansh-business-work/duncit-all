@@ -1278,6 +1278,21 @@ duplicateCheckKey([{ mobile_number: '98110 00001', email: '' }], '');
 // '{"contacts":[{"mobile_number":"98110 00001","email":""}],"website":""}'
 ```
 
+### CRM managed lists — `managed-option`
+
+CRM › Data › Venues › Amenities and Event Suitability, in the CRM portal and the Duncit CRM app:
+`makeManagedOptionSchema(t)` asks for a name (`crm.data.optionNameRequired`, trimmed — the server
+also refuses a duplicate) and a place that is a whole number from 0 up or blank
+(`crm.data.optionOrderInvalid`); `toManagedOptionInput(values)` saves a blank place as 0, as the
+portal always has.
+
+```ts
+import { makeManagedOptionSchema, toManagedOptionInput } from '@duncit/forms/schemas';
+
+makeManagedOptionSchema(t).safeParse({ name: '  ', sort_order: null, is_active: true }).success; // false
+toManagedOptionInput({ name: ' AC ', sort_order: null, is_active: true }); // { name: 'AC', sort_order: 0, is_active: true }
+```
+
 ### Console sign-in — `makeConsoleLoginSchema`
 
 The portal login card's rules, shared with the Duncit CRM app's sign-in: an e-mail address

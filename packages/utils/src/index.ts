@@ -2524,3 +2524,10 @@ export {
   type CrmCallStatus,
   type CrmCallStatusView,
 } from './crm-call';
+// CRM managed lists (Amenities, Event Suitability) — CRM portal + Duncit CRM app.
+export {
+  crmFilterManagedOptions,
+  crmNextManagedOrder,
+  crmSortManagedOptions,
+  type CrmManagedOptionLike,
+} from './crm-managed-options';

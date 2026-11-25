@@ -413,8 +413,6 @@
   "portals/crm/src/pages/dashboard/ServicesChart.tsx": 2,
   "portals/crm/src/pages/dashboard/StageChart.tsx": 2,
   "portals/crm/src/pages/dashboard/SuperCategoryChart.tsx": 2,
-  "portals/crm/src/pages/data/venues/AmenitiesPage.tsx": 1,
-  "portals/crm/src/pages/data/venues/EventSuitabilityPage.tsx": 1,
   "portals/crm/src/pages/ecomm-leads/EcommLeadsPage.tsx": 2,
   "portals/crm/src/pages/ecomm-leads/ecommLeadTabs.tsx": 1,
   "portals/crm/src/pages/host-leads/HostLeadDetailPage/HostOverviewTab.tsx": 1,

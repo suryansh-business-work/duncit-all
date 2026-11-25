@@ -12,6 +12,7 @@ import { LeadEditorScreen } from '@/screens/lead/LeadEditorScreen';
 import { AddReminderScreen } from '@/screens/reminders/AddReminderScreen';
 import { PostCallScreen } from '@/screens/post-call/PostCallScreen';
 import { CallScreen } from '@/screens/call/CallScreen';
+import { ManagedOptionsScreen } from '@/screens/data/ManagedOptionsScreen';
 import { MenuScreen } from '@/screens/menu/MenuScreen';
 import { PortalPageScreen } from '@/screens/portal/PortalPageScreen';
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
@@ -127,6 +128,7 @@ export function RootNavigator() {
         component={UserLeadEditorScreen}
         options={{ title: '' }}
       />
+      <Stack.Screen name="ManagedOptions" component={ManagedOptionsScreen} />
       <Stack.Screen
         name="Call"
         component={CallScreen}

@@ -1125,6 +1125,17 @@ export const CRM_BUNDLE: NestedCatalogue = {
       sort: 'Sort',
       topLevelCategory: 'Top-level category',
       typeATitleAndPressEnter: 'Type a title and press Enter',
+      amenitiesIntro: 'Facilities a venue can offer (e.g. Parking, AC, Stage). Shown as checkboxes on the Venue Lead form. Not tied to any Super, Category or Sub Category.',
+      addAmenity: 'Add amenity',
+      searchAmenities: 'Search amenities…',
+      eventSuitabilityIntro: 'Event types a venue is suitable for (e.g. Birthday Party, Workshop). Drives the suitability picker on the Venue Lead form. Not tied to any Super, Category or Sub Category.',
+      addEventType: 'Add event type',
+      searchEventTypes: 'Search event types…',
+      optionsEmpty: 'Nothing here yet. Add the first one with "{label}".',
+      deleteOptionTitle: 'Delete "{name}"',
+      optionNameRequired: 'Name is required.',
+      optionOrderInvalid: 'Use a whole number from 0 up.',
+      optionOrder: 'Order {order}',
     },
 
     duplicates: {

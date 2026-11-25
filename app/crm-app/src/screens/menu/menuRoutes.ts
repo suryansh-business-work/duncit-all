@@ -24,6 +24,10 @@ export function activeNavKey(route: RouteLike | undefined): string | null {
     const path = param(route, 'path');
     return findNavKey(CRM_NAV, (t) => t.type === 'portal' && t.path === path);
   }
+  if (route.name === 'ManagedOptions') {
+    const group = param(route, 'group');
+    return findNavKey(CRM_NAV, (t) => t.type === 'options' && t.group === group);
+  }
   // A page the app has: its own screen (Dashboard, User Leads…).
   const own = findNavKey(CRM_NAV, (t) => t.type === 'screen' && t.screen === route.name);
   if (own) return own;
@@ -49,5 +53,7 @@ export function goTo(navigation: NavigationProp<AppStackParamList>, item: NavIte
   else if (target.type === 'tab') navigation.navigate('Tabs', { screen: target.tab });
   else if (target.type === 'leads')
     navigation.navigate('Tabs', { screen: 'Leads', params: { kind: target.kind } });
+  else if (target.type === 'options')
+    navigation.navigate('ManagedOptions', { group: target.group });
   else navigation.navigate('PortalPage', { path: target.path, titleKey: item.labelKey });
 }

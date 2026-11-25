@@ -1,5 +1,6 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
+import type { ManagedOptionGroup } from '@/features/data/useManagedOptions';
 import type { LeadKind } from '@/features/leads/leadKinds';
 
 export type TabParamList = {
@@ -40,6 +41,8 @@ export type AppStackParamList = {
   LeadResearch: undefined;
   Candidate: { id: string };
   LeadDiscovery: undefined;
+  /** CRM › Data › Venues › Amenities or Event Suitability. */
+  ManagedOptions: { group: ManagedOptionGroup };
   /** A portal page the app does not have yet: what it is, and a way to open it in the portal. */
   PortalPage: { path: string; titleKey: string };
 };

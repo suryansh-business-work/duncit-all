@@ -1,5 +1,6 @@
 import type { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
+import type { ManagedOptionGroup } from '@/features/data/useManagedOptions';
 import type { LeadKind } from '@/features/leads/leadKinds';
 
 /** An icon from the Material set, or the community set for brand marks (WhatsApp). */
@@ -11,6 +12,7 @@ export type NavIcon =
  * Where a menu item goes in the app:
  *  - tab: one of the bottom tabs;
  *  - leads: the Leads tab, filtered to one kind (the portal's per-kind lead pages);
+ *  - options: one of the managed lists (Amenities, Event Suitability);
  *  - portal: a CRM portal page the app does not have yet — its screen says so and
  *    opens that page in the portal (path is the portal's own route).
  */
@@ -21,6 +23,7 @@ export type NavTarget =
       screen: 'Dashboard' | 'UserLeads' | 'EmailVerifier' | 'QualityAnalytics' | 'LeadResearch';
     }
   | { type: 'leads'; kind: LeadKind }
+  | { type: 'options'; group: ManagedOptionGroup }
   | { type: 'portal'; path: string };
 
 export interface NavItem {
@@ -172,13 +175,13 @@ export const CRM_NAV: readonly NavItem[] = [
             key: 'amenities',
             labelKey: 'shell.nav.amenitiesManagement',
             icon: m('analytics'),
-            target: portal('/data/venues/amenities'),
+            target: { type: 'options', group: 'AMENITY' },
           },
           {
             key: 'eventSuitability',
             labelKey: 'shell.nav.eventSuitabilityManagement',
             icon: m('analytics'),
-            target: portal('/data/venues/event-suitability'),
+            target: { type: 'options', group: 'EVENT_SUITABILITY' },
           },
         ],
       },

@@ -49,9 +49,9 @@ describe('CRM_NAV — the portal sidebar', () => {
   });
 
   it('finds an item and the groups on the way to it', () => {
-    expect(
-      findNavKey(CRM_NAV, (t) => t.type === 'portal' && t.path === '/data/venues/amenities'),
-    ).toBe('amenities');
+    expect(findNavKey(CRM_NAV, (t) => t.type === 'options' && t.group === 'AMENITY')).toBe(
+      'amenities',
+    );
     expect(navPath(CRM_NAV, 'amenities')).toEqual(['data', 'venues']);
     expect(navPath(CRM_NAV, 'dashboard')).toEqual([]);
     expect(navPath(CRM_NAV, 'nope')).toBeNull();
@@ -73,6 +73,9 @@ describe('activeNavKey — "you are here"', () => {
     expect(activeNavKey(tabs('Reminders'))).toBe('reminders');
     expect(activeNavKey({ name: 'Dashboard' })).toBe('dashboard');
     expect(activeNavKey({ name: 'UserLeads' })).toBe('whatsappLeads');
+    expect(activeNavKey({ name: 'ManagedOptions', params: { group: 'EVENT_SUITABILITY' } })).toBe(
+      'eventSuitability',
+    );
   });
 
   it('marks nothing for screens the portal has no page for, or an unfiltered lead list', () => {
@@ -88,7 +91,7 @@ describe('goTo', () => {
   const navigation = () => ({ goBack: jest.fn(), navigate: jest.fn() });
   const item = (key: string) => leaves(CRM_NAV).find((page) => page.key === key) as NavItem;
 
-  it('closes the menu, then opens a tab, a kind of lead or a portal page', () => {
+  it('closes the menu, then opens a tab, a kind of lead, a managed list or a portal page', () => {
     const nav = navigation();
     goTo(nav as never, item('dashboard'));
     expect(nav.navigate).toHaveBeenLastCalledWith('Dashboard');
@@ -100,6 +103,8 @@ describe('goTo', () => {
       screen: 'Leads',
       params: { kind: 'CREATOR_LEAD' },
     });
+    goTo(nav as never, item('amenities'));
+    expect(nav.navigate).toHaveBeenLastCalledWith('ManagedOptions', { group: 'AMENITY' });
     goTo(nav as never, item('templates'));
     expect(nav.navigate).toHaveBeenLastCalledWith('PortalPage', {
       path: '/email-templates',

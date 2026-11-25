@@ -413,3 +413,10 @@ export {
   type LeadDiscoveryInput,
   type LeadDiscoveryValues,
 } from './lead-discovery';
+// CRM › Data › Venues: Amenities and Event Suitability entries (CRM portal + Duncit CRM app).
+export {
+  makeManagedOptionSchema,
+  managedOptionDefaults,
+  toManagedOptionInput,
+  type ManagedOptionValues,
+} from './managed-option';

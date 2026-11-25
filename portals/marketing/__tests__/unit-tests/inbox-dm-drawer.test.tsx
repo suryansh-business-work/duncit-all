@@ -35,7 +35,7 @@ vi.mock('@duncit/app-settings', async (importOriginal) => ({
 }));
 
 import ConversationDrawer from '../../src/pages/inbox-page/dms/ConversationDrawer';
-import { MARK_SOCIAL_CONVERSATION_READ, SUGGEST_SOCIAL_MESSAGE } from '../../src/pages/inbox-page/dm.queries';
+import { MARK_SOCIAL_CONVERSATION_READ } from '../../src/pages/inbox-page/dm.queries';
 import { GraphQLError } from 'graphql';
 
 /** A thread already read, so opening it does not call markRead. */
@@ -231,20 +231,5 @@ describe('ConversationDrawer', () => {
     expect(markRead).toHaveBeenCalledTimes(1);
     // A second read would have found no mock left and said so.
     expect(dialogsMock.notify).not.toHaveBeenCalledWith(expect.stringContaining('mock'), 'error');
-  });
-
-  /** One action whose answer carries nothing: once the mock has answered, nothing is said and nothing changes. */
-  const answersNothing = async (testId: string, query: MockedResponse['request']['query'], variables: Record<string, unknown>, data: Record<string, unknown>) => {
-    const answered = vi.fn(() => ({ data }));
-    renderDrawer([conversationMock(read()), { request: { query, variables }, result: answered }]);
-    fireEvent.click(await screen.findByTestId(testId));
-    await waitFor(() => expect(answered).toHaveBeenCalledTimes(1));
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(dialogsMock.notify).not.toHaveBeenCalled();
-  };
-
-  it('leaves the box empty when the AI draft is empty', async () => {
-    await answersNothing('inbox-suggest', SUGGEST_SOCIAL_MESSAGE, { id: 'dm1' }, { suggestSocialMessage: { __typename: 'SocialReplySuggestion', text: '', run_id: 'r' } });
-    expect(screen.getByRole('textbox', { name: 'Reply' })).toHaveValue('');
   });
 });

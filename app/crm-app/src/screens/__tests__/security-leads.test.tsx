@@ -29,7 +29,14 @@ const allConsent = {
   location_consent: true,
 };
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  // clearAllMocks keeps queued once-values; a test that stops early must not hand its answers to the next.
+  (Location.requestForegroundPermissionsAsync as jest.Mock)
+    .mockReset()
+    .mockResolvedValue({ granted: false, canAskAgain: true });
+  (Location.getCurrentPositionAsync as jest.Mock).mockReset();
+});
 
 describe('Security Verification rules', () => {
   it('blocks until every statement is confirmed and a location (or approved alternative) is given', () => {
@@ -91,7 +98,9 @@ describe('SecurityVerificationScreen', () => {
         : { portalSecurityChallenge: challenge },
     );
     renderWithTheme(<SecurityVerificationScreen />);
-    await act(async () => fireEvent.press(await screen.findByTestId('security-location')));
+    // Find outside act: inside it React holds the loaded challenge back until act returns.
+    const share = await screen.findByTestId('security-location');
+    await act(async () => fireEvent.press(share));
     expect(screen.getByText(/Location access is off for Duncit CRM/)).toBeOnTheScreen();
     fireEvent.changeText(screen.getByTestId('security-reason'), 'My GPS chip is broken today');
     await act(async () => fireEvent.press(screen.getByTestId('security-alternative')));

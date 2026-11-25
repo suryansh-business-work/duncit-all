@@ -1,4 +1,5 @@
 import type { ChipProps } from '@mui/material';
+import { CRM_QUALIFICATION_KEY, CRM_QUALIFICATION_TONE } from '@duncit/utils';
 import type { CrmLeadEntityType } from '../../api/crm.types';
 
 /**
@@ -10,17 +11,10 @@ import type { CrmLeadEntityType } from '../../api/crm.types';
 
 type ChipColor = ChipProps['color'];
 
-export const QUALIFICATION_KEY: Record<string, string> = {
-  QUALIFIED: 'crm.leadQuality.qualified',
-  NOT_QUALIFIED: 'crm.leadQuality.notQualified',
-  PENDING_VERIFICATION: 'crm.leadQuality.pendingVerification',
-};
+/* Qualification copy and colours live in @duncit/utils (crm-quality-labels), shared with the Duncit CRM app. */
+export const QUALIFICATION_KEY: Record<string, string> = { ...CRM_QUALIFICATION_KEY };
 
-export const QUALIFICATION_COLOR: Record<string, ChipColor> = {
-  QUALIFIED: 'success',
-  NOT_QUALIFIED: 'error',
-  PENDING_VERIFICATION: 'warning',
-};
+export const QUALIFICATION_COLOR: Record<string, ChipColor> = { ...CRM_QUALIFICATION_TONE };
 
 export const VERIFICATION_KEY: Record<string, string> = {
   COMPLETE: 'crm.leadQuality.verificationComplete',

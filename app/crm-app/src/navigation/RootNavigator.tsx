@@ -16,6 +16,7 @@ import { PortalPageScreen } from '@/screens/portal/PortalPageScreen';
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
 import { UserLeadsScreen } from '@/screens/user-leads/UserLeadsScreen';
 import { EmailVerifierScreen } from '@/screens/email-verifier/EmailVerifierScreen';
+import { QualityAnalyticsScreen } from '@/screens/quality-analytics/QualityAnalyticsScreen';
 import { UserLeadDetailScreen } from '@/screens/user-leads/UserLeadDetailScreen';
 import { UserLeadEditorScreen } from '@/screens/user-leads/UserLeadEditorScreen';
 import { MainTabs } from './MainTabs';
@@ -95,6 +96,11 @@ export function RootNavigator() {
         name="UserLeads"
         component={UserLeadsScreen}
         options={{ title: t('shell.nav.whatsappLeads') }}
+      />
+      <Stack.Screen
+        name="QualityAnalytics"
+        component={QualityAnalyticsScreen}
+        options={{ title: t('shell.nav.leadQualityAnalytics') }}
       />
       <Stack.Screen
         name="EmailVerifier"

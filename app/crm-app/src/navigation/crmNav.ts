@@ -16,7 +16,7 @@ export type NavIcon =
  */
 export type NavTarget =
   | { type: 'tab'; tab: 'Home' | 'Reminders' }
-  | { type: 'screen'; screen: 'Dashboard' | 'UserLeads' | 'EmailVerifier' }
+  | { type: 'screen'; screen: 'Dashboard' | 'UserLeads' | 'EmailVerifier' | 'QualityAnalytics' }
   | { type: 'leads'; kind: LeadKind }
   | { type: 'portal'; path: string };
 
@@ -94,7 +94,7 @@ export const CRM_NAV: readonly NavItem[] = [
         key: 'leadQualityAnalytics',
         labelKey: 'shell.nav.leadQualityAnalytics',
         icon: m('insights'),
-        target: portal('/lead-quality/analytics'),
+        target: { type: 'screen', screen: 'QualityAnalytics' },
       },
       {
         key: 'leadsSettings',

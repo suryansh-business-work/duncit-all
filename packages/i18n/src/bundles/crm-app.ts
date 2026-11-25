@@ -75,6 +75,12 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
       search: 'Search addresses',
       empty: 'No addresses checked yet.',
     },
+    analytics: {
+      weekLabel: 'Week of {week} · average {score}',
+      weekDescription: 'Week of {week}: {leads} leads, average score {score}',
+      cityDetail: '{leads} leads · {qualified} qualified · average {score}',
+      conversionDetail: '{won} won of {leads} leads',
+    },
     menu: {
       open: 'Open menu',
       close: 'Close menu',

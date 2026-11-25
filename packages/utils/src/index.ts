@@ -2493,3 +2493,20 @@ export {
   type CrmStageCount,
   type CrmSuperCategoryCount,
 } from './crm-dashboard';
+// CRM Quality Analytics helpers (CRM portal + Duncit CRM app).
+export {
+  crmFormatScore,
+  crmIsEmptyAnalytics,
+  crmIsoWeekMonday,
+  crmShareOf,
+  crmSumCounts,
+  type CrmCountRow,
+} from './crm-quality-analytics';
+// CRM Lead Quality / Lead Research labels (CRM portal + Duncit CRM app).
+export {
+  CRM_CANDIDATE_STATUS_KEY,
+  CRM_CANDIDATE_STATUS_TONE,
+  CRM_QUALIFICATION_KEY,
+  CRM_QUALIFICATION_TONE,
+  type CrmTone,
+} from './crm-quality-labels';

@@ -132,10 +132,14 @@ export default function App() {
           path="/app-builds/ios"
           element={authed(<AppBuildsPage key="ios" platform="IOS" />)}
         />
-        {/* The internal Duncit CRM Android app (app/crm-app): same table, its own rows. */}
+        {/* The internal Duncit CRM app (app/crm-app): same table, its own rows, one route per platform. */}
         <Route
           path="/app-builds/crm"
           element={authed(<AppBuildsPage key="crm" platform="ANDROID" app="CRM" />)}
+        />
+        <Route
+          path="/app-builds/crm-ios"
+          element={authed(<AppBuildsPage key="crm-ios" platform="IOS" app="CRM" />)}
         />
         <Route path="/app-builds/settings" element={authed(<AppBuildSettingsPage />)} />
         <Route path="/app-builds/store-listing" element={authed(<StoreListingPage />)} />

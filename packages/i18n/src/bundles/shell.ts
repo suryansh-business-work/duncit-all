@@ -937,7 +937,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       duncitWarehouseLocations: 'Duncit Pickup Addresses',
       downloadCrmApp: 'Download CRM App',
       crmMobileApp: 'CRM Mobile App',
-      crmAppBuilds: 'Duncit CRM',
+      crmAppBuilds: 'Duncit CRM Android',
+      crmIosAppBuilds: 'Duncit CRM iOS',
       dynamicFields: 'Dynamic Fields',
       earnWithDuncit: 'Earn with Duncit',
       eCommerceBrandDashboard: 'E-Commerce Brand Dashboard',
@@ -3310,12 +3311,15 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       stagingChannels: 'Staging builds',
       androidStagingChannel: 'Android staging builds channel',
       iosStagingChannel: 'iOS staging builds channel',
-      crmTitle: 'Duncit CRM Builds',
+      crmTitle: 'Duncit CRM Android Builds',
       crmSubtitle:
-        'Every APK of the internal Duncit CRM Android app (crm-android-build workflow), staging and production. CRM staff download the newest one from the CRM portal.',
+        'Every APK and AAB of the internal Duncit CRM Android app (crm-android-build workflow), staging and production. CRM staff download the newest ones from the CRM portal.',
+      crmIosTitle: 'Duncit CRM iOS Builds',
+      crmIosSubtitle:
+        'Every IPA of the internal Duncit CRM iPhone app (crm-ios-build workflow), staging and production, signed for TestFlight. CRM staff download the newest one from the CRM portal.',
       crmChannels: 'Duncit CRM app builds',
       crmChannel: 'Duncit CRM production builds channel',
-      crmChannelHint: 'Pick a channel or paste its ID (e.g. C0123ABCD). Leave empty to announce them in the Android builds channel.',
+      crmChannelHint: 'Pick a channel or paste its ID (e.g. C0123ABCD). Leave empty to announce them in the Android or iOS builds channel.',
       crmStagingChannel: 'Duncit CRM staging builds channel',
       crmStagingChannelHint: 'Pick a channel or paste its ID. Leave empty to announce staging builds in the Duncit CRM production channel.',
       stagingChannelHint:

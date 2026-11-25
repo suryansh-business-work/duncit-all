@@ -1,28 +1,34 @@
 import { gql } from '@apollo/client';
+import type { AppBuildArtifact, CrmAppDownloadBuild } from '@duncit/gql-types';
 
-/** One downloadable Duncit CRM APK (CrmAppDownloadBuild). */
-export interface CrmAppBuild {
-  build_no: string;
-  version: string;
-  build_number: string | null;
-  apk_url: string;
-  size_mb: number | null;
-  app_env: 'PRODUCTION' | 'STAGING';
-  created_at: string | null;
-}
+/** One stored file of a build: the APK or AAB on Android, the IPA on iOS. */
+export type CrmAppArtifact = Pick<AppBuildArtifact, 'kind' | 'url' | 'size_mb'>;
+
+/** One downloadable Duncit CRM build (CrmAppDownloadBuild), as the Download page selects it. */
+export type CrmAppBuild = Pick<
+  CrmAppDownloadBuild,
+  'build_no' | 'version' | 'build_number' | 'platform' | 'app_env' | 'created_at'
+> & { artifacts: CrmAppArtifact[] };
 
 export interface CrmAppDownloadData {
-  crmAppDownload: { production: CrmAppBuild | null; staging: CrmAppBuild | null };
+  crmAppDownload: {
+    production: CrmAppBuild | null;
+    staging: CrmAppBuild | null;
+    ios_production: CrmAppBuild | null;
+    ios_staging: CrmAppBuild | null;
+  };
 }
 
-const BUILD_FIELDS = 'build_no version build_number apk_url size_mb app_env created_at';
+const BUILD_FIELDS = 'build_no version build_number platform app_env created_at artifacts { kind url size_mb }';
 
-/** The newest Duncit CRM Android app per environment, for the Download app page. */
+/** The newest Duncit CRM Android and iPhone builds per environment, for the Download app page. */
 export const CRM_APP_DOWNLOAD = gql`
   query CrmAppDownload {
     crmAppDownload {
       production { ${BUILD_FIELDS} }
       staging { ${BUILD_FIELDS} }
+      ios_production { ${BUILD_FIELDS} }
+      ios_staging { ${BUILD_FIELDS} }
     }
   }
 `;

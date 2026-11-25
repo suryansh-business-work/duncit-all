@@ -12,6 +12,7 @@ import BuildDetailsDialog from './BuildDetailsDialog';
 import { CreateBuildDialog } from './create-build';
 import { usePlayStorePush } from './usePlayStorePush';
 import { useAppStorePush } from './useAppStorePush';
+import { appBuildsHeading } from './heading';
 import {
   APP_BUILDS_TABLE,
   APP_BUILDS_TABLE_CRM,
@@ -136,12 +137,7 @@ export default function AppBuildsPage({ platform, app = 'DUNCIT' }: Readonly<Pro
     [confirm, removeBuild, t]
   );
 
-  let title = platform === 'ANDROID' ? t('tech.appBuilds.androidTitle') : t('tech.appBuilds.iosTitle');
-  let subtitle = platform === 'ANDROID' ? t('tech.appBuilds.androidSubtitle') : t('tech.appBuilds.iosSubtitle');
-  if (crm) {
-    title = t('tech.appBuilds.crmTitle');
-    subtitle = t('tech.appBuilds.crmSubtitle');
-  }
+  const { title, subtitle } = appBuildsHeading(t, platform, app);
 
   return (
     <Box>

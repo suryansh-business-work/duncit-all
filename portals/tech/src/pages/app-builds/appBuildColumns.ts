@@ -32,7 +32,7 @@ export function makeAppBuildColumns(
   onDelete: (row: AppBuildRow) => void,
   onPush: PushToPlay,
   onPushAppStore: PushToAppStore,
-  /** False for the Duncit CRM table: its APK never goes to a store. */
+  /** False for the Duncit CRM tables: their builds never go to a store from here. */
   withStore = true
 ): DuncitColumn<AppBuildRow>[] {
   const storeColumns = withStore

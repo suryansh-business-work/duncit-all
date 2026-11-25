@@ -485,4 +485,20 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "finance.payouts.noVerifiedAccount": [
     "This person has no verified bank account, so money cannot be sent to them from here.",
   ],
+  // The Duncit CRM app is built for iPhone too, and its Android build ships an AAB beside the APK.
+  "crm.downloadApp.intro": [
+    "The Duncit CRM app for Android: leads, reminders, a dialer that logs every call, and caller ID that shows who is calling from the CRM.",
+  ],
+  "crm.downloadApp.androidOnly": [
+    "Android only: caller ID and call logging read the phone’s call log, which iPhones do not allow apps to do.",
+  ],
+  "crm.downloadApp.settings.productionHint": ["Leave empty to publish in the Android builds channel."],
+  "shell.nav.crmAppBuilds": ["Duncit CRM"],
+  "tech.appBuilds.crmTitle": ["Duncit CRM Builds"],
+  "tech.appBuilds.crmSubtitle": [
+    "Every APK of the internal Duncit CRM Android app (crm-android-build workflow), staging and production. CRM staff download the newest one from the CRM portal.",
+  ],
+  "tech.appBuilds.crmChannelHint": [
+    "Pick a channel or paste its ID (e.g. C0123ABCD). Leave empty to announce them in the Android builds channel.",
+  ],
 };

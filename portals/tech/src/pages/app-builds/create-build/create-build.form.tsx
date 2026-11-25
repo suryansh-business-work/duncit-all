@@ -23,7 +23,7 @@ import ArtifactField from './ArtifactField';
 
 interface Props {
   platform: AppBuildPlatform;
-  /** The Duncit CRM app: one APK, no artifact choice, no store submission. */
+  /** The Duncit CRM app: the platform's artifacts, but never a store submission. */
   crm?: boolean;
   config: AppBuildTriggerConfig;
   onSubmit: (values: CreateBuildValues) => void;
@@ -34,7 +34,7 @@ export const CREATE_BUILD_FORM_ID = 'create-build-form';
 
 export default function CreateBuildForm({ platform, crm = false, config, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
-  const kinds: AppBuildArtifactKind[] = crm ? ['APK'] : PLATFORM_ARTIFACTS[platform];
+  const kinds: AppBuildArtifactKind[] = PLATFORM_ARTIFACTS[platform];
   const { control, getValues, handleSubmit, watch, setValue } = useForm<CreateBuildValues, any, CreateBuildValues>({
     defaultValues: {
       app_env: 'PRODUCTION',

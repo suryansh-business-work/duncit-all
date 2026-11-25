@@ -1,18 +1,19 @@
 import { useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import AndroidIcon from '@mui/icons-material/Android';
+import AppleIcon from '@mui/icons-material/Apple';
+import InstallMobileIcon from '@mui/icons-material/InstallMobile';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import { fireAndForget, logs } from '@duncit/logs';
 import { CRM_APP_DOWNLOAD, type CrmAppDownloadData } from '../../api/appDownload.gql';
-import AppBuildCard from './AppBuildCard';
-
-const INSTALL_STEPS = ['step1', 'step2', 'step3', 'step4'] as const;
+import PlatformSection from './PlatformSection';
 
 /**
- * CRM → Download CRM App: the newest Duncit CRM Android APK, built by CI on
- * every push and announced on Slack. Production first; a staging build is
- * offered beside it for testers, labelled as such.
+ * CRM → Download CRM App: the newest Duncit CRM Android build (APK + AAB) and
+ * iPhone build (IPA), built by CI on every push and announced on Slack.
+ * Production first; a staging build is offered beside it for testers,
+ * labelled as such.
  */
 export default function DownloadAppPage() {
   const { t } = useTranslation();
@@ -22,9 +23,9 @@ export default function DownloadAppPage() {
   const download = data?.crmAppDownload;
 
   return (
-    <Stack spacing={2} sx={{ maxWidth: 880 }}>
+    <Stack spacing={3} sx={{ maxWidth: 880 }}>
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-        <AndroidIcon color="primary" />
+        <InstallMobileIcon color="primary" />
         <Box>
           <Typography component="h1" variant="h5" sx={{ fontWeight: 800 }}>
             {t('shell.nav.downloadCrmApp')}
@@ -55,27 +56,33 @@ export default function DownloadAppPage() {
       )}
 
       {download && (
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ '& > *': { flex: 1 } }}>
-          <AppBuildCard env="PRODUCTION" build={download.production} />
-          {download.staging && <AppBuildCard env="STAGING" build={download.staging} />}
-        </Stack>
+        <>
+          <PlatformSection
+            id="crm-app-android"
+            icon={<AndroidIcon color="primary" />}
+            title={t('crm.downloadApp.android')}
+            production={download.production}
+            staging={download.staging}
+            installTitle={t('crm.downloadApp.installTitle')}
+            steps={[
+              t('crm.downloadApp.step1'),
+              t('crm.downloadApp.step2'),
+              t('crm.downloadApp.step3'),
+              t('crm.downloadApp.step4'),
+            ]}
+          />
+          <PlatformSection
+            id="crm-app-ios"
+            icon={<AppleIcon color="primary" />}
+            title={t('crm.downloadApp.ios')}
+            production={download.ios_production}
+            staging={download.ios_staging}
+            installTitle={t('crm.downloadApp.iosInstallTitle')}
+            steps={[t('crm.downloadApp.iosStep1'), t('crm.downloadApp.iosStep2'), t('crm.downloadApp.step3')]}
+            note={t('crm.downloadApp.androidOnly')}
+          />
+        </>
       )}
-
-      <Box component="section" aria-labelledby="crm-app-install">
-        <Typography id="crm-app-install" component="h2" variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-          {t('crm.downloadApp.installTitle')}
-        </Typography>
-        <Box component="ol" sx={{ pl: 3, m: 0 }}>
-          {INSTALL_STEPS.map((step) => (
-            <Typography component="li" variant="body2" key={step} sx={{ mb: 0.5 }}>
-              {t(`crm.downloadApp.${step}`)}
-            </Typography>
-          ))}
-        </Box>
-        <Alert severity="info" sx={{ mt: 2 }}>
-          {t('crm.downloadApp.androidOnly')}
-        </Alert>
-      </Box>
     </Stack>
   );
 }

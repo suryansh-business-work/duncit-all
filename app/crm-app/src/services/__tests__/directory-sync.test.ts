@@ -1,7 +1,11 @@
 import * as SecureStore from 'expo-secure-store';
 
-const phone = { writeDirectory: jest.fn() };
-jest.mock('crm-telephony', () => ({ CrmTelephony: phone }));
+const mockPhone = { writeDirectory: jest.fn() };
+jest.mock('crm-telephony', () => ({
+  get CrmTelephony() {
+    return mockPhone;
+  },
+}));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
 
 import { gqlRequest } from '@/services/graphql.client';
@@ -96,7 +100,7 @@ describe('syncDirectory', () => {
   it('hands the whole directory to the phone and records when and how many', async () => {
     request.mockResolvedValueOnce({ crmPhoneDirectory: { next_cursor: null, items: [row] } });
     await expect(syncDirectory()).resolves.toBe(1);
-    const written = JSON.parse(phone.writeDirectory.mock.calls[0][0]);
+    const written = JSON.parse(mockPhone.writeDirectory.mock.calls[0][0]);
     expect(written.entries).toHaveLength(1);
     expect(written.labels.openLead).toBe('Open in CRM');
     expect(store.get(STORAGE_KEYS.directorySyncedAt)).toMatch(/^\d+\|1$/);

@@ -3,8 +3,8 @@ import * as Location from 'expo-location';
 
 jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
-const nav = { navigate: jest.fn() };
-jest.mock('@react-navigation/native', () => ({ useNavigation: () => nav }));
+const mockNav = { navigate: jest.fn() };
+jest.mock('@react-navigation/native', () => ({ useNavigation: () => mockNav }));
 
 import { gqlRequest } from '@/services/graphql.client';
 import { renderWithTheme } from '@/test-utils';
@@ -109,7 +109,7 @@ describe('LeadsScreen', () => {
     fireEvent.changeText(screen.getByTestId('leads-search'), 'riya');
     await waitFor(() => expect(request.mock.calls.at(-1)?.[1].input).toMatchObject({ search: 'riya', entity_types: ['CREATOR_LEAD'], page: 1 }), { timeout: 2000 });
     fireEvent.press(screen.getByTestId('lead-row-c1'));
-    expect(nav.navigate).toHaveBeenCalledWith('LeadDetail', { kind: 'CREATOR_LEAD', id: 'c1' });
+    expect(mockNav.navigate).toHaveBeenCalledWith('LeadDetail', { kind: 'CREATOR_LEAD', id: 'c1' });
   });
 
   it('shows the error with a retry, and the empty state', async () => {

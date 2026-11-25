@@ -1,7 +1,11 @@
 import * as SecureStore from 'expo-secure-store';
 
-const phone = { setFeatures: jest.fn(), takePendingPostCall: jest.fn() };
-jest.mock('crm-telephony', () => ({ CrmTelephony: phone }));
+const mockPhone = { setFeatures: jest.fn(), takePendingPostCall: jest.fn() };
+jest.mock('crm-telephony', () => ({
+  get CrmTelephony() {
+    return mockPhone;
+  },
+}));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
 
 import { gqlRequest } from '@/services/graphql.client';
@@ -28,7 +32,7 @@ describe('features', () => {
   it('pushes the switches to the Android side and stores them', async () => {
     useFeaturesStore.setState({ ...DEFAULT_FEATURES, autoLog: false });
     await useFeaturesStore.getState().set({ callerId: false });
-    expect(phone.setFeatures).toHaveBeenLastCalledWith(false, false);
+    expect(mockPhone.setFeatures).toHaveBeenLastCalledWith(false, false);
     expect(JSON.parse(store.get(STORAGE_KEYS.features) ?? '{}')).toEqual({ callerId: false, autoLog: false, recordings: true });
   });
 
@@ -43,7 +47,7 @@ describe('features', () => {
     store.set(STORAGE_KEYS.features, '{"callerId":true,"autoLog":false,"recordings":false}');
     await useFeaturesStore.getState().hydrate();
     expect(useFeaturesStore.getState()).toMatchObject({ hydrated: true, autoLog: false, recordings: false });
-    expect(phone.setFeatures).toHaveBeenCalledWith(true, false);
+    expect(mockPhone.setFeatures).toHaveBeenCalledWith(true, false);
   });
 });
 
@@ -67,7 +71,7 @@ describe('locale', () => {
 
 describe('post-call hand-off', () => {
   it('collects what the call receiver left, once', () => {
-    phone.takePendingPostCall.mockReturnValueOnce({ number: '9811000001', direction: 'OUTBOUND', answered: true, startedAt: 1, endedAt: 2 }).mockReturnValueOnce(null);
+    mockPhone.takePendingPostCall.mockReturnValueOnce({ number: '9811000001', direction: 'OUTBOUND', answered: true, startedAt: 1, endedAt: 2 }).mockReturnValueOnce(null);
     expect(usePostCallStore.getState().collect()).toBe(true);
     expect(usePostCallStore.getState().pending?.number).toBe('9811000001');
     usePostCallStore.getState().dismiss();

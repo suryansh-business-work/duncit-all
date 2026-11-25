@@ -1,11 +1,15 @@
 import { Linking, PermissionsAndroid } from 'react-native';
 
-const phone = {
+const mockPhone = {
   placeCall: jest.fn(),
   canDrawOverlays: jest.fn(() => false),
   openOverlaySettings: jest.fn(),
 };
-jest.mock('crm-telephony', () => ({ CrmTelephony: phone }));
+jest.mock('crm-telephony', () => ({
+  get CrmTelephony() {
+    return mockPhone;
+  },
+}));
 
 import { resolveApiUrl } from '@/constants/config';
 import { ApiError, errorCode, errorMessage } from '@/utils/errors';
@@ -61,14 +65,14 @@ describe('dialer', () => {
   });
 
   it('calls straight away when allowed, or opens the phone dialer', async () => {
-    phone.placeCall.mockReturnValueOnce(true).mockReturnValueOnce(false);
+    mockPhone.placeCall.mockReturnValueOnce(true).mockReturnValueOnce(false);
     await expect(dialNumber('98110 00001')).resolves.toBe('called');
     await expect(dialNumber('98110 00001')).resolves.toBe('dialer');
-    expect(phone.placeCall).toHaveBeenCalledWith('9811000001');
+    expect(mockPhone.placeCall).toHaveBeenCalledWith('9811000001');
   });
 
   it('falls back to a tel: link, and says when nothing can dial', async () => {
-    phone.placeCall.mockImplementation(() => {
+    mockPhone.placeCall.mockImplementation(() => {
       throw new Error('no activity');
     });
     jest.spyOn(Linking, 'canOpenURL').mockResolvedValueOnce(true).mockResolvedValueOnce(false);
@@ -104,6 +108,6 @@ describe('permissions', () => {
     await requestPermission('call');
     expect(settings).toHaveBeenCalled();
     await requestPermission('overlay');
-    expect(phone.openOverlaySettings).toHaveBeenCalled();
+    expect(mockPhone.openOverlaySettings).toHaveBeenCalled();
   });
 });

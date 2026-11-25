@@ -57,6 +57,7 @@
     "graphql": "^16.14.2",
     "graphql-request": "^6.1.0",
     "react": "19.2.3",
+    "react-dom": "19.2.3",
     "react-hook-form": "^7.89.0",
     "react-native": "0.86.3",
     "react-native-gesture-handler": "~2.32.0",

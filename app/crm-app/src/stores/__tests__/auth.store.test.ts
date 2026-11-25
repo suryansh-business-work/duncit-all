@@ -1,5 +1,9 @@
-const phone = { clearAll: jest.fn() };
-jest.mock('crm-telephony', () => ({ CrmTelephony: phone }));
+const mockPhone = { clearAll: jest.fn() };
+jest.mock('crm-telephony', () => ({
+  get CrmTelephony() {
+    return mockPhone;
+  },
+}));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
 jest.mock('@/services/background-sync', () => ({ unregisterBackgroundSync: jest.fn() }));
 
@@ -51,7 +55,7 @@ describe('signIn', () => {
     await expect(useAuthStore.getState().signIn('a@b.co', 'longenough')).rejects.toBeInstanceOf(NoCrmAccessError);
     expect(useAuthStore.getState().status).toBe('signedOut');
     expect(await getToken()).toBeNull();
-    expect(phone.clearAll).toHaveBeenCalled();
+    expect(mockPhone.clearAll).toHaveBeenCalled();
   });
 
   it('maps the server’s portal refusal to no-access and passes other errors on', async () => {

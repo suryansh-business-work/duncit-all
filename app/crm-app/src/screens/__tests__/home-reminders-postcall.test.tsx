@@ -4,9 +4,9 @@ jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
 jest.mock('@/services/call-sync', () => ({ syncDeviceCalls: jest.fn() }));
 jest.mock('@/services/permissions', () => ({ readPermissions: jest.fn() }));
-const nav = { navigate: jest.fn(), goBack: jest.fn(), canGoBack: jest.fn(() => true), setOptions: jest.fn() };
+const mockNav = { navigate: jest.fn(), goBack: jest.fn(), canGoBack: jest.fn(() => true), setOptions: jest.fn() };
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => nav,
+  useNavigation: () => mockNav,
   useRoute: () => ({ params: {} }),
   useFocusEffect: (fn: () => void) => require('react').useEffect(fn, [fn]),
 }));
@@ -48,7 +48,7 @@ describe('HomeScreen', () => {
     expect(await screen.findByTestId('home-setup')).toBeOnTheScreen();
     expect(screen.getByText('Nothing due today.')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('home-dialer'));
-    expect(nav.navigate).toHaveBeenCalledWith('Tabs', { screen: 'Dialer' });
+    expect(mockNav.navigate).toHaveBeenCalledWith('Tabs', { screen: 'Dialer' });
   });
 });
 
@@ -69,9 +69,9 @@ describe('RemindersScreen', () => {
     request.mockResolvedValue({ crmReminders: [reminder()] });
     renderWithTheme(<RemindersScreen />);
     fireEvent.press(await screen.findByText('Call Rohit'));
-    expect(nav.navigate).toHaveBeenCalledWith('LeadDetail', { kind: 'VENUE_LEAD', id: 'v1' });
+    expect(mockNav.navigate).toHaveBeenCalledWith('LeadDetail', { kind: 'VENUE_LEAD', id: 'v1' });
     fireEvent.press(screen.getByTestId('reminders-add'));
-    expect(nav.navigate).toHaveBeenCalledWith('AddReminder', {});
+    expect(mockNav.navigate).toHaveBeenCalledWith('AddReminder', {});
   });
 });
 
@@ -86,9 +86,9 @@ describe('PostCallScreen', () => {
     expect(screen.getByText('Lasted 2:14')).toBeOnTheScreen();
     expect(await screen.findByText('Call saved to the CRM')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('post-call-note'));
-    expect(nav.navigate).toHaveBeenCalledWith('AddNote', { kind: 'VENUE_LEAD', id: 'v1', name: 'Smash Arena' });
+    expect(mockNav.navigate).toHaveBeenCalledWith('AddNote', { kind: 'VENUE_LEAD', id: 'v1', name: 'Smash Arena' });
     fireEvent.press(screen.getByTestId('post-call-reminder'));
-    expect(nav.navigate).toHaveBeenCalledWith('AddReminder', expect.objectContaining({ title: 'Call with Smash Arena' }));
+    expect(mockNav.navigate).toHaveBeenCalledWith('AddReminder', expect.objectContaining({ title: 'Call with Smash Arena' }));
   });
 
   it('says when the call could not be saved, and Done clears it', async () => {
@@ -100,6 +100,6 @@ describe('PostCallScreen', () => {
     expect(screen.queryByTestId('post-call-note')).toBeNull();
     fireEvent.press(screen.getByTestId('post-call-done'));
     expect(usePostCallStore.getState().pending).toBeNull();
-    expect(nav.goBack).toHaveBeenCalled();
+    expect(mockNav.goBack).toHaveBeenCalled();
   });
 });

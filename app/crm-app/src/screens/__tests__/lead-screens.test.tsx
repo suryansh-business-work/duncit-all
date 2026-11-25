@@ -2,11 +2,11 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
-const nav = { navigate: jest.fn(), goBack: jest.fn(), canGoBack: jest.fn(() => true), setOptions: jest.fn() };
-let routeParams: Record<string, unknown> = {};
+const mockNav = { navigate: jest.fn(), goBack: jest.fn(), canGoBack: jest.fn(() => true), setOptions: jest.fn() };
+let mockRouteParams: Record<string, unknown> = {};
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => nav,
-  useRoute: () => ({ params: routeParams }),
+  useNavigation: () => mockNav,
+  useRoute: () => ({ params: mockRouteParams }),
   useFocusEffect: (fn: () => void) => require('react').useEffect(fn, [fn]),
 }));
 
@@ -48,7 +48,7 @@ const commLog = {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  routeParams = { kind: 'VENUE_LEAD', id: 'v1' };
+  mockRouteParams = { kind: 'VENUE_LEAD', id: 'v1' };
 });
 
 describe('LeadDetailScreen', () => {
@@ -58,7 +58,7 @@ describe('LeadDetailScreen', () => {
     expect(await screen.findByText('Rohit')).toBeOnTheScreen();
     expect(screen.getByText('Contacted')).toBeOnTheScreen();
     expect(screen.getByText('Liked the turf')).toBeOnTheScreen();
-    expect(nav.setOptions).toHaveBeenCalledWith({ title: 'Smash Arena' });
+    expect(mockNav.setOptions).toHaveBeenCalledWith({ title: 'Smash Arena' });
     expect(request.mock.calls[0][1]).toMatchObject({ id: 'v1', venue: true, host: false });
   });
 
@@ -66,9 +66,9 @@ describe('LeadDetailScreen', () => {
     request.mockResolvedValue({ venue });
     renderWithTheme(<LeadDetailScreen />);
     fireEvent.press(await screen.findByTestId('lead-add-note'));
-    expect(nav.navigate).toHaveBeenCalledWith('AddNote', { kind: 'VENUE_LEAD', id: 'v1', name: 'Smash Arena' });
+    expect(mockNav.navigate).toHaveBeenCalledWith('AddNote', { kind: 'VENUE_LEAD', id: 'v1', name: 'Smash Arena' });
     fireEvent.press(screen.getByTestId('lead-add-reminder'));
-    expect(nav.navigate).toHaveBeenCalledWith('AddReminder', { kind: 'VENUE_LEAD', id: 'v1', name: 'Smash Arena' });
+    expect(mockNav.navigate).toHaveBeenCalledWith('AddReminder', { kind: 'VENUE_LEAD', id: 'v1', name: 'Smash Arena' });
   });
 
   it('shows calls with their AI summary and transcript on the Activity tab', async () => {
@@ -83,7 +83,7 @@ describe('LeadDetailScreen', () => {
   });
 
   it('says not found for a link with a kind the CRM does not have', () => {
-    routeParams = { kind: 'USER_LEAD', id: 'x' };
+    mockRouteParams = { kind: 'USER_LEAD', id: 'x' };
     renderWithTheme(<LeadDetailScreen />);
     expect(screen.getByText('This lead was not found.')).toBeOnTheScreen();
   });
@@ -98,44 +98,44 @@ describe('LeadDetailScreen', () => {
 
 describe('AddNoteScreen', () => {
   it('saves the note as the portal’s manual log, escaped, and goes back', async () => {
-    routeParams = { kind: 'HOST_LEAD', id: 'h1', name: 'Run Club' };
+    mockRouteParams = { kind: 'HOST_LEAD', id: 'h1', name: 'Run Club' };
     request.mockResolvedValue({ addCrmManualLog: { id: 'n9' } });
     renderWithTheme(<AddNoteScreen />);
     fireEvent.changeText(screen.getByTestId('note-body'), 'Call <later>');
     fireEvent.press(screen.getByTestId('note-save'));
-    await waitFor(() => expect(nav.goBack).toHaveBeenCalled());
+    await waitFor(() => expect(mockNav.goBack).toHaveBeenCalled());
     expect(request.mock.calls[0][1]).toEqual({
       input: { entity_type: 'HOST_LEAD', entity_id: 'h1', summary: null, body_html: '<p>Call &lt;later&gt;</p>', body_text: 'Call <later>' },
     });
   });
 
   it('stays on the form with the reason when saving fails', async () => {
-    routeParams = { kind: 'HOST_LEAD', id: 'h1', name: 'Run Club' };
+    mockRouteParams = { kind: 'HOST_LEAD', id: 'h1', name: 'Run Club' };
     request.mockRejectedValue(new Error('Access Denied'));
     renderWithTheme(<AddNoteScreen />);
     fireEvent.changeText(screen.getByTestId('note-body'), 'x');
     fireEvent.press(screen.getByTestId('note-save'));
     expect(await screen.findByText('Access Denied')).toBeOnTheScreen();
-    expect(nav.goBack).not.toHaveBeenCalled();
+    expect(mockNav.goBack).not.toHaveBeenCalled();
   });
 });
 
 describe('AddReminderScreen', () => {
   it('creates a reminder on the lead, due at the chosen time', async () => {
-    routeParams = { kind: 'VENUE_LEAD', id: 'v1', name: 'Smash Arena', title: 'Call with Smash Arena' };
+    mockRouteParams = { kind: 'VENUE_LEAD', id: 'v1', name: 'Smash Arena', title: 'Call with Smash Arena' };
     request.mockResolvedValue({ createCrmReminder: { id: 'r1' } });
     renderWithTheme(<AddReminderScreen />);
     fireEvent.press(screen.getByTestId('reminder-due-hour'));
     const before = Date.now();
     fireEvent.press(screen.getByTestId('reminder-save'));
-    await waitFor(() => expect(nav.goBack).toHaveBeenCalled());
+    await waitFor(() => expect(mockNav.goBack).toHaveBeenCalled());
     const input = request.mock.calls[0][1].input;
     expect(input).toMatchObject({ entity_type: 'VENUE_LEAD', lead_id: 'v1', title: 'Call with Smash Arena', notes: null });
     expect(new Date(input.due_at).getTime() - before).toBeGreaterThanOrEqual(59 * 60 * 1000);
   });
 
   it('makes a general reminder when opened without a lead', async () => {
-    routeParams = {};
+    mockRouteParams = {};
     request.mockResolvedValue({ createCrmReminder: { id: 'r2' } });
     renderWithTheme(<AddReminderScreen />);
     fireEvent.changeText(screen.getByTestId('reminder-title'), 'Team review');

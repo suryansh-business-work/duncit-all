@@ -11,7 +11,7 @@ jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
 import { syncDeviceCalls } from '@/services/call-sync';
 import { isDirectoryStale, readDirectoryStatus, syncDirectory } from '@/services/directory-sync';
 import { gqlRequest } from '@/services/graphql.client';
-import { resetTokenCache, setToken } from '@/services/session';
+import { clearToken, resetTokenCache, setToken } from '@/services/session';
 import { useAuthStore } from '@/stores/auth.store';
 import { useFeaturesStore } from '@/stores/features.store';
 import { useAppSession } from '@/hooks/useAppSession';
@@ -57,7 +57,11 @@ describe('background task', () => {
     defineBackgroundSync();
     const [name, body] = (TaskManager.defineTask as jest.Mock).mock.calls[0];
     expect(name).toBe(BACKGROUND_SYNC_TASK);
+    await clearToken();
     await expect(body()).resolves.toBe(BackgroundTask.BackgroundTaskResult.Failed);
+    await setToken(jwt({ portal: 'crm', verified: true }));
+    (isDirectoryStale as jest.Mock).mockReturnValue(false);
+    await expect(body()).resolves.toBe(BackgroundTask.BackgroundTaskResult.Success);
   });
 
   it('schedules every 15 minutes and unschedules only a registered task', async () => {

@@ -1,13 +1,8 @@
 import { Box, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
+import { EMAIL_THEME_COLOR_GROUPS as GROUPS } from '@duncit/forms/schemas';
 import { THEME_FIELD_COPY } from '../themeFieldCopy';
 import ColorField from './ColorField';
-
-const GROUPS = [
-  { titleKey: 'crm.emailSettings.brandColors', fields: ['primary_color', 'accent_color'] },
-  { titleKey: 'crm.emailSettings.textColors', fields: ['heading_color', 'text_color', 'muted_color'] },
-  { titleKey: 'crm.emailSettings.surfaceColors', fields: ['background_color', 'card_color', 'panel_color', 'border_color'] },
-] as const;
 
 /** Light-mode colours, grouped as a reader sees them: brand, text, surfaces. */
 export default function ThemeColorsSection() {

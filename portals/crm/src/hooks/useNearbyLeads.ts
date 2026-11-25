@@ -4,8 +4,8 @@ import { useApolloTableFetch, type TableFetch, type TableGqlClient } from '@dunc
 import { useTranslation } from '@duncit/shell';
 import { parseApiError } from '@duncit/utils';
 
-/** Bounds and presets of the radius (km). The server refuses anything outside min…max. */
-export const NEARBY_RADIUS = { min: 0.5, max: 50, initial: 5, marks: [1, 2, 5, 10, 25, 50] } as const;
+/** Bounds and presets of the radius (km), shared with the Duncit CRM app (@duncit/forms/schemas). */
+export { NEARBY_RADIUS } from '@duncit/forms/schemas';
 
 /** The radar stays up at least this long, so a fast answer still reads as a scan. */
 export const MIN_SCAN_MS = 1200;

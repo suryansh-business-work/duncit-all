@@ -75,7 +75,7 @@ export default function HostHeroCard({ lead, t, onAskAi, onEdit }: Readonly<Prop
                 <Chip key={t} size="small" label={t} variant="outlined" />
               ))}
               {interests.length > 2 && (
-                <Chip size="small" label={`+${interests.length - 2} more`} variant="outlined" />
+                <Chip size="small" label={t('crm.leadDetail.moreCount', { vars: { count: interests.length - 2 } })} variant="outlined" />
               )}
             </Stack>
             {lead.tags.length > 0 && (

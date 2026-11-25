@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import {
   blankDraft,
   buildDynamicFieldInput,
@@ -8,6 +8,13 @@ import {
   type DraftState,
 } from '@/pages/ManageDynamicFieldsPage/dynamicFieldDraft';
 import type { CrmDynamicField } from '@/api/crm.types';
+import { englishT, type Translate } from '../helpers/englishT';
+
+/** The rules answer in the reader's language; English here, as the page shows them. */
+let t: Translate;
+beforeAll(() => {
+  t = englishT();
+});
 
 describe('deriveName', () => {
   it('lowercases and underscores a human label', () => {
@@ -35,19 +42,19 @@ describe('buildDynamicFieldInput', () => {
   const base: DraftState = { ...blankDraft, label: 'Region' };
 
   it('rejects an empty label', () => {
-    const r = buildDynamicFieldInput({ ...base, label: '   ' }, 0);
+    const r = buildDynamicFieldInput({ ...base, label: '   ' }, 0, t);
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error).toMatch(/Label is required/);
   });
 
   it('rejects when neither venue nor host applies', () => {
-    const r = buildDynamicFieldInput({ ...base, applies_to_venue: false, applies_to_host: false }, 0);
+    const r = buildDynamicFieldInput({ ...base, applies_to_venue: false, applies_to_host: false }, 0, t);
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error).toMatch(/Venue \/ Host/);
   });
 
   it('derives the key from the label for a new field', () => {
-    const r = buildDynamicFieldInput({ ...base, label: 'Venue Region' }, 3);
+    const r = buildDynamicFieldInput({ ...base, label: 'Venue Region' }, 3, t);
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.input.name).toBe('venue_region');
@@ -58,13 +65,13 @@ describe('buildDynamicFieldInput', () => {
   });
 
   it('keeps the existing key when editing', () => {
-    const r = buildDynamicFieldInput({ ...base, id: 'x1', name: 'fixed_key', label: 'New Label' }, 0);
+    const r = buildDynamicFieldInput({ ...base, id: 'x1', name: 'fixed_key', label: 'New Label' }, 0, t);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.input.name).toBe('fixed_key');
   });
 
   it('requires at least one option for select fields', () => {
-    const r = buildDynamicFieldInput({ ...base, kind: 'select', options: [] }, 0);
+    const r = buildDynamicFieldInput({ ...base, kind: 'select', options: [] }, 0, t);
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error).toMatch(/at least one option/i);
   });
@@ -81,7 +88,8 @@ describe('buildDynamicFieldInput', () => {
           { value: '', label: 'ignored' },
         ],
       },
-      0
+      0,
+      t,
     );
     expect(r.ok).toBe(true);
     if (r.ok) {
@@ -94,7 +102,7 @@ describe('buildDynamicFieldInput', () => {
   });
 
   it('forces multi false for non-select kinds', () => {
-    const r = buildDynamicFieldInput({ ...base, kind: 'text', multi: true }, 0);
+    const r = buildDynamicFieldInput({ ...base, kind: 'text', multi: true }, 0, t);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.input.multi).toBe(false);
   });
@@ -160,7 +168,7 @@ describe('draftFromRow blanks', () => {
 
 describe('buildDynamicFieldInput key derivation', () => {
   it('rejects a new label that has no letters or numbers to derive a key from', () => {
-    const r = buildDynamicFieldInput({ ...blankDraft, label: '%%% !!' }, 0);
+    const r = buildDynamicFieldInput({ ...blankDraft, label: '%%% !!' }, 0, t);
     expect(r).toEqual({ ok: false, error: 'Label must contain letters or numbers.' });
   });
 
@@ -168,6 +176,7 @@ describe('buildDynamicFieldInput key derivation', () => {
     const r = buildDynamicFieldInput(
       { ...blankDraft, label: 'SKU count', applies_to_venue: false, applies_to_host: false, applies_to_ecomm: true },
       0,
+      t,
     );
     expect(r.ok && r.input.name).toBe('sku_count');
   });
@@ -179,13 +188,14 @@ describe('buildDynamicFieldInput key derivation', () => {
     const r = buildDynamicFieldInput(
       { ...blankDraft, label: 'Rate band', applies_to_venue: false, applies_to_host: false, ...flag },
       0,
+      t,
     );
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.input).toMatchObject({ applies_to_ecomm: false, ...flag });
   });
 
   it('rejects a field that applies to no lead kind at all', () => {
-    const r = buildDynamicFieldInput({ ...blankDraft, label: 'Orphan', applies_to_venue: false, applies_to_host: false }, 0);
+    const r = buildDynamicFieldInput({ ...blankDraft, label: 'Orphan', applies_to_venue: false, applies_to_host: false }, 0, t);
     expect(r).toEqual({ ok: false, error: 'Pick at least one of: applies to Venue / Host / Ecomm / Creator / Community.' });
   });
 

@@ -77,7 +77,7 @@ export default function EcommLeadsPage() {
         superCategoryOptions={superCategoryOptions}
         toolbarActions={
           <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/ecomm-leads/new', { state: editorOrigin })}>
-            New Ecomm Lead
+            {t('crm.ecommLeads.newLead')}
           </DuncitButton>
         }
         onView={(lead) => navigate(`/ecomm-leads/${lead.id}/view`)}
@@ -88,10 +88,10 @@ export default function EcommLeadsPage() {
       <ConfirmDialog
         open={!!toDelete}
         title={t('crm.ecommLeads.deleteEcommLead')}
-        message={`Delete "${toDelete?.seller_name}"? This cannot be undone.`}
+        message={t('crm.ecommLeads.deleteMessage', { vars: { name: toDelete?.seller_name ?? '' } })}
         confirmLabel={t('shell.common.delete')}
         destructive
-        busyLabel="Working…"
+        busyLabel={t('crm.common.working')}
         loading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setToDelete(null)}

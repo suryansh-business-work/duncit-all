@@ -1,7 +1,4 @@
-import type { useTranslation } from '@duncit/shell';
 import type { WaGatewayFormValues } from './wa-gateway.schema';
-
-export type Translate = ReturnType<typeof useTranslation>['t'];
 
 export interface WaGatewayFormProps {
   /** The saved gateway URL, prefilled. */

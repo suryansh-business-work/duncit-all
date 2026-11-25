@@ -38,7 +38,7 @@ export default function DynamicFieldOptionsEditor({ options, onChange }: Readonl
           color: "text.secondary",
           fontWeight: 700
         }}>
-        Options
+        {t('crm.managedynamicfieldspage.options')}
       </Typography>
       <Stack spacing={1} sx={{ mt: 0.5 }}>
         {rows.map(({ opt, index, key }) => (
@@ -73,7 +73,7 @@ export default function DynamicFieldOptionsEditor({ options, onChange }: Readonl
           </Stack>
         ))}
         <DuncitButton size="small" startIcon={<AddIcon />} onClick={add} sx={{ alignSelf: 'flex-start' }}>
-          Add option
+          {t('crm.managedynamicfieldspage.addOption')}
         </DuncitButton>
       </Stack>
     </Box>

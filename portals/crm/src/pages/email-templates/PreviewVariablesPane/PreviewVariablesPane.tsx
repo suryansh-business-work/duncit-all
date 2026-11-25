@@ -104,7 +104,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
                 sx={{
                   fontWeight: 700,
                   flex: 1
-                }}>Preview · {draft.name}</Typography>
+                }}>{t('crm.emailTemplates.previewNamed', { vars: { name: draft.name } })}</Typography>
               <DuncitIconButton onClick={() => setFullscreen(false)} aria-label={t('crm.emailTemplates.closeFullScreen')}><CloseIcon /></DuncitIconButton>
             </Stack>
             <Box component="iframe" title={t('crm.emailTemplates.previewFrameFullscreen')} srcDoc={previewHtml} sandbox="" sx={{ width: '100%', height: '100%', border: 'none', bgcolor: 'common.white' }} />
@@ -134,7 +134,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
             ) : (
               <VariableChips
                 title={t('crm.emailTemplates.availableFor', { vars: { target: targetNoun } })}
-                items={availableForTarget}
+                items={availableForTarget.map((v) => ({ slug: v.slug, label: t(v.labelKey) }))}
                 declared={declared}
                 onToggle={toggle}
               />

@@ -19,7 +19,8 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import { DuncitButton } from '@duncit/buttons';
 import { CREATE, type EmailTemplateTarget } from '../../api/emailTemplates.gql';
 import { CRM_EMAIL_STARTER } from '../../api/emailSettings.gql';
-import { parseApiError } from '@duncit/utils';
+import { crmEmailTemplateSlug, parseApiError } from '@duncit/utils';
+import { makeEmailTemplateCreateSchema, toEmailTemplateCreateInput } from '@duncit/forms/schemas';
 import MjmlAiButton from './MjmlAiButton';
 import { useTranslation } from '@duncit/shell';
 
@@ -28,8 +29,6 @@ interface Props {
   onClose: () => void;
   onCreated: (templateId: string | null) => void;
 }
-
-const slugify = (s: string) => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
@@ -58,16 +57,17 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
 
   const reset = () => { setTarget(null); setName(''); setSlug(''); setSubject(''); setMjml(''); setError(null); };
   const close = () => { reset(); onClose(); };
-  const effectiveSlug = slug.trim() || slugify(name);
 
   const submit = async () => {
     setError(null);
-    if (!name.trim() || !effectiveSlug || !subject.trim() || !target) {
+    // The shared rule (@duncit/forms/schemas), as the Duncit CRM app checks it.
+    const parsed = makeEmailTemplateCreateSchema(t).safeParse({ target: target ?? '', name, slug, subject });
+    if (!parsed.success) {
       setError(t('crm.emailTemplates.pickATypeAndFillName'));
       return;
     }
     try {
-      const res = await createTpl({ variables: { input: { slug: effectiveSlug, name: name.trim(), subject: subject.trim(), target, mjml } } });
+      const res = await createTpl({ variables: { input: toEmailTemplateCreateInput(parsed.data, mjml) } });
       // createCrmEmailTemplate is non-null and always carries its template_id.
       onCreated(res.data?.createEmailTemplate?.template_id);
       reset();
@@ -96,7 +96,7 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
             </Stack>
             {/* eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3) */}
             <TextField size="small" label={t('shell.common.name')} required value={name} onChange={(e) => setName(e.target.value)} autoFocus fullWidth />
-            <TextField size="small" label={t('crm.emailTemplates.slug')} value={slug} onChange={(e) => setSlug(e.target.value)} placeholder={slugify(name) || 'welcome-email'} helperText={t('crm.emailTemplates.stableCodeKeyAutoDerivedFrom')} fullWidth />
+            <TextField size="small" label={t('crm.emailTemplates.slug')} value={slug} onChange={(e) => setSlug(e.target.value)} placeholder={crmEmailTemplateSlug(name) || t('crm.emailTemplates.slugExample')} helperText={t('crm.emailTemplates.stableCodeKeyAutoDerivedFrom')} fullWidth />
             <TextField size="small" label={t('crm.common.subject')} required value={subject} onChange={(e) => setSubject(e.target.value)} fullWidth />
             <Stack direction="row" spacing={1} sx={{
               alignItems: "center"

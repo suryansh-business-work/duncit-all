@@ -15,6 +15,7 @@ import { ECOMM_LEAD } from '../../api/crm.gql';
 import type { EcommLead } from '../../api/crm.types';
 import { PriorityChip, StatusChip } from '../../components/StatusChips';
 import LeadStatTile from '../../components/LeadStatTile';
+import { crmServicesHint } from '@duncit/utils';
 import LeadTabs from '../../components/LeadTabs';
 import LeadContactActions from '../../components/LeadContactActions';
 import MatchedUserBox, { MatchedUserChip } from '../../components/MatchedUserBox';
@@ -43,7 +44,7 @@ export default function EcommLeadDetailPage() {
 
   if ((loading && !lead) || error || !lead) {
     return (
-      <QueryGuard loading={loading && !lead} error={error} notFound={!lead} notFoundText="Ecomm lead not found." />
+      <QueryGuard loading={loading && !lead} error={error} notFound={!lead} notFoundText={t('crm.ecommLeads.ecommLeadNotFound')} />
     );
   }
 
@@ -142,35 +143,28 @@ export default function EcommLeadDetailPage() {
         <LeadStatTile
           label={t('crm.ecommLeads.catalogue')}
           value={lead.catalog_size || '—'}
-          hint={lead.price_range ? `Price range ${lead.price_range}` : 'Price range not set'}
+          hint={lead.price_range ? t('crm.leadDetail.priceRange', { vars: { range: lead.price_range } }) : t('crm.leadDetail.priceRangeNotSet')}
           icon={<Inventory2Icon fontSize="small" />}
           accent="info"
         />
         <LeadStatTile
           label={t('crm.common.services')}
           value={lead.services_offered.length}
-          hint={
-            lead.services_offered.length
-              ? lead.services_offered
-                  .slice(0, 2)
-                  .map((s) => (s.service === 'Other' ? s.custom_name || 'Other' : s.service))
-                  .join(', ')
-              : 'None tagged'
-          }
+          hint={crmServicesHint(lead.services_offered) || t('crm.leadDetail.noneTagged')}
           icon={<HandymanIcon fontSize="small" />}
           accent="secondary"
         />
         <LeadStatTile
           label={t('crm.ecommLeads.monthlyOrders')}
           value={lead.monthly_orders || '—'}
-          hint={lead.fulfilment_mode ? `Fulfilment: ${lead.fulfilment_mode}` : 'Fulfilment not set'}
+          hint={lead.fulfilment_mode ? t('crm.leadDetail.fulfilment', { vars: { mode: lead.fulfilment_mode } }) : t('crm.leadDetail.fulfilmentNotSet')}
           icon={<ShoppingCartIcon fontSize="small" />}
           accent="primary"
         />
         <LeadStatTile
           label={t('crm.common.nextFollowUp')}
           value={followUpLabel}
-          hint={lead.assigned_to ? `Assigned to ${lead.assigned_to}` : 'Unassigned'}
+          hint={lead.assigned_to ? t('crm.prospectLeads.assignedTo', { vars: { name: lead.assigned_to } }) : t('crm.prospectLeads.unassigned')}
           icon={<EventAvailableIcon fontSize="small" />}
           accent="warning"
         />

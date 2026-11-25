@@ -1,4 +1,5 @@
 import { useMutation } from '@apollo/client/react';
+import { CRM_EMAIL_IMAGE_TYPES } from '@duncit/utils';
 import {
   ADD_CRM_EMAIL_BRAND_ASSETS,
   CRM_EMAIL_SETTINGS,
@@ -11,8 +12,8 @@ import {
 import { useImageUploads } from '../../../lib/useImageUploads';
 import { useActionRunner } from '../../../lib/useActionRunner';
 
-/** Formats every mail client shows — the server refuses SVG and WebP for the same reason. */
-export const EMAIL_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif'] as const;
+/** Formats every mail client shows — shared with the Duncit CRM app (@duncit/utils). */
+export const EMAIL_IMAGE_TYPES = CRM_EMAIL_IMAGE_TYPES;
 
 /**
  * Changes to the CRM email brand library. Each change refetches the settings

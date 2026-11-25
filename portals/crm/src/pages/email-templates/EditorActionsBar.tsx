@@ -27,7 +27,7 @@ export default function EditorActionsBar({ dirty, busy, isActive, onToggleActive
         flexWrap: "wrap"
       }}>
       <DuncitButton variant="contained" startIcon={<SaveIcon />} onClick={onSave} disabled={!dirty || busy} data-testid="crm-template-save">
-        {busy ? 'Saving…' : t('shell.common.save')}
+        {busy ? t('shell.common.saving') : t('shell.common.save')}
       </DuncitButton>
       <DuncitButton startIcon={<SendIcon />} onClick={onSendTest}>{t('crm.emailTemplates.sendTest')}</DuncitButton>
       <DuncitButton color="error" startIcon={<DeleteIcon />} onClick={onDelete} data-testid="crm-template-delete">{t('shell.common.delete')}</DuncitButton>

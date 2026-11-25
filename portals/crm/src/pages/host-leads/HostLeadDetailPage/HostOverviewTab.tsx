@@ -38,7 +38,7 @@ export default function HostOverviewTab({ lead, t, followUpLabel }: Readonly<Pro
             value={lead.community_link ? <ExternalLink variant="body2" href={lead.community_link} /> : '—'}
           />
           <LeadDetailRow label={t('crm.hostLeads.communitySize')} value={lead.community_size ?? '—'} />
-          <LeadDetailRow label={t('crm.hostLeads.previousEvents')} value={lead.previous_events_hosted ? 'Yes' : 'No'} />
+          <LeadDetailRow label={t('crm.hostLeads.previousEvents')} value={lead.previous_events_hosted ? t('shell.common.yes') : t('shell.common.no')} />
           <LeadDetailRow label={t('crm.hostLeads.pastAttendees')} value={lead.past_attendees ?? '—'} />
           <LeadDetailRow label={t('crm.hostLeads.intent')} value={joinList(lead.host_intent_scores)} />
         </LeadDetailCard>
@@ -58,12 +58,12 @@ export default function HostOverviewTab({ lead, t, followUpLabel }: Readonly<Pro
               <Typography component="h2" variant="subtitle1" sx={{
                 fontWeight: 800
               }}>
-                Lead tracking
+                {t('crm.prospectLeads.leadTracking')}
               </Typography>
             </Stack>
             <LeadDetailRow label={t('crm.common.source')} value={lead.lead_source || '—'} />
             <LeadDetailRow label={t('crm.common.assignedTo')} value={lead.assigned_to || '—'} />
-            <LeadDetailRow label="Follow-up" value={followUpLabel} />
+            <LeadDetailRow label={t('crm.leadDetail.followUp')} value={followUpLabel} />
             <Divider sx={{ my: 1 }} />
             <LeadDetailRow label={t('shell.common.created')} value={lead.created_at ? formatDateTime(lead.created_at) : '—'} />
             <LeadDetailRow label={t('shell.common.updated')} value={lead.updated_at ? formatDateTime(lead.updated_at) : '—'} />
@@ -77,7 +77,7 @@ export default function HostOverviewTab({ lead, t, followUpLabel }: Readonly<Pro
                     fontWeight: 700,
                     letterSpacing: 0.4
                   }}>
-                  NOTES
+                  {t('crm.leadDetail.notesCaption')}
                 </Typography>
                 <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5 }}>
                   {lead.notes}

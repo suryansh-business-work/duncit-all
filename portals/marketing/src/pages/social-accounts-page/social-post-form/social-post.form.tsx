@@ -82,7 +82,7 @@ export default function SocialPostForm({ accounts, initial, errorMessage, review
           control={control}
           platforms={platforms}
           postType={postType}
-          hasCaptions={Object.values(initial.captions).some((caption) => caption.trim())}
+          hasCaptions={Object.values(initial.captions).some((caption) => caption?.trim())}
           onClearCaptions={() => setValue('captions', {})}
         />
         {toInstagram && (

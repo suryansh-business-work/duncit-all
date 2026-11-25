@@ -65,13 +65,17 @@ describe('SocialPostForm — post type, captions per network and the first comme
   });
 
   it('drops the captions when per-network captions are turned off, and the first comment when Instagram is not picked', async () => {
-    const onSubmit = renderForm({ account_ids: ['fb1', 'x1'], text: 'Hello', captions: { X: 'Short for X' }, first_comment: 'left over' });
+    // A network shown but never typed in reaches the form as undefined.
+    const onSubmit = renderForm({ account_ids: ['fb1', 'x1'], text: 'Hello', captions: { X: 'Short for X', FACEBOOK: undefined }, first_comment: 'left over' });
     expect(captionBox('X')).toHaveValue('Short for X');
     fireEvent.click(screen.getByTestId('social-post-captions-toggle'));
     expect(captionBox('X')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('social-post-now'));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
-    expect(onSubmit.mock.calls[0][0]).toMatchObject({ captions: {}, first_comment: '' });
+    const sent = onSubmit.mock.calls[0][0];
+    // Exact: toMatchObject({ captions: {} }) would pass whatever captions were left.
+    expect(sent.captions).toEqual({});
+    expect(sent.first_comment).toBe('');
   });
 
   it('shows a caption too long for its network on that caption, counting it in that network’s chip', async () => {
@@ -97,7 +101,7 @@ describe('the options between the form and the API', () => {
       text: 'Hi',
       media: [{ ...IMAGE, width: 1080, height: 1350 }, { ...VIDEO, duration_s: 0, width: null }],
       post_type: 'REEL',
-      captions: { X: '  Short  ', FACEBOOK: '   ', NOT_A_NETWORK: 'dropped' },
+      captions: { X: '  Short  ', FACEBOOK: '   ', INSTAGRAM: undefined, NOT_A_NETWORK: 'dropped' },
       first_comment: '  Book now  ',
     });
     expect(toSocialPostInput(values, null)).toMatchObject({

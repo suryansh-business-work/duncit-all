@@ -2,6 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import { renderWithProviders } from '../testkit';
 import { makeSocialPublishTarget, makeSocialScheduledPost } from '../mocks';
+// The card's actions ask before deleting; the question is not what these tests are about.
+vi.mock('@duncit/dialogs', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/dialogs')>()),
+  useConfirm: () => vi.fn(async () => false),
+}));
+
 import TargetNotes from '../../src/pages/social-accounts-page/publish/TargetNotes';
 import ScheduledPostCard from '../../src/pages/social-accounts-page/publish/ScheduledPostCard';
 

@@ -9,7 +9,7 @@ interface Props {
   platforms: SocialPlatform[];
   text: string;
   /** A network's own caption, by network; it is counted in place of the text there. */
-  captions?: Record<string, string>;
+  captions?: Partial<Record<string, string>>;
   /** How many media items are picked; the count shows against each limit once it is a carousel. */
   mediaCount: number;
   /** How many collaborators are invited; shown against the cap of each network that has them. */

@@ -26,7 +26,7 @@ export interface SocialPostFormValues {
   /** FEED, REEL or STORY; Reels and Stories are Instagram's. */
   post_type: SocialPostType;
   /** A network's own caption, by network; an empty one means the main text. */
-  captions: Record<string, string>;
+  captions: Partial<Record<string, string>>;
   /** Posted under the Instagram post or reel once it is out. */
   first_comment: string;
 }
@@ -127,7 +127,8 @@ export const socialPostSchema = (t: Translate, accounts: SocialAccount[]) =>
       needs_approval: z.boolean(),
       collaborators: collaboratorsSchema(t),
       post_type: z.enum(['FEED', 'REEL', 'STORY']),
-      captions: z.record(z.string(), z.string()),
+      // A caption field shown but not typed in is registered as undefined: that is "no caption", not an error.
+      captions: z.record(z.string(), z.string().optional()),
       first_comment: z.string(),
     })
     .superRefine((values, ctx) => {
@@ -155,9 +156,10 @@ export function toSocialPostInput(values: SocialPostFormValues, ideaId: string |
     collaborators: values.collaborators,
     post_type: values.post_type,
     // Only networks with words of their own; the server keeps the ones the post goes to.
-    captions: Object.entries(values.captions).flatMap(([platform, text]) =>
-      isPlatform(platform) && text.trim() ? [{ platform, text: text.trim() }] : []
-    ),
+    captions: Object.entries(values.captions).flatMap(([platform, text]) => {
+      const words = text?.trim();
+      return isPlatform(platform) && words ? [{ platform, text: words }] : [];
+    }),
     first_comment: values.first_comment.trim(),
   };
 }

@@ -1,10 +1,13 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import * as SecureStore from 'expo-secure-store';
 
 import { gqlRequest } from '@/services/graphql.client';
 import { syncDeviceCalls } from '@/services/call-sync';
-import { readPermissions } from '@/services/permissions';
+import { hasPhoneFeatures, readPermissions } from '@/services/permissions';
+import { STORAGE_KEYS } from '@/services/secure-storage';
 import { renderWithTheme } from '@/test-utils';
 import { useAuthStore } from '@/stores/auth.store';
+import { useFeaturesStore } from '@/stores/features.store';
 import { usePostCallStore } from '@/stores/postCall.store';
 import { HomeScreen } from '../home/HomeScreen';
 import { RemindersScreen } from '../reminders/RemindersScreen';
@@ -13,7 +16,10 @@ import { PostCallScreen } from '../post-call/PostCallScreen';
 jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
 jest.mock('@/services/call-sync', () => ({ syncDeviceCalls: jest.fn() }));
-jest.mock('@/services/permissions', () => ({ readPermissions: jest.fn() }));
+jest.mock('@/services/permissions', () => ({
+  readPermissions: jest.fn(),
+  hasPhoneFeatures: jest.fn(),
+}));
 const mockNav = {
   navigate: jest.fn(),
   goBack: jest.fn(),
@@ -43,6 +49,7 @@ const reminder = (over: Record<string, unknown> = {}) => ({
 
 beforeEach(() => {
   jest.clearAllMocks();
+  (hasPhoneFeatures as jest.Mock).mockReturnValue(true);
   (readPermissions as jest.Mock).mockResolvedValue({
     phone: true,
     call: true,
@@ -70,6 +77,16 @@ describe('HomeScreen', () => {
     expect(screen.getByText('Nothing due today.')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('home-dialer'));
     expect(mockNav.navigate).toHaveBeenCalledWith('Tabs', { screen: 'Dialer' });
+  });
+
+  it('on an iPhone never asks for the Android phone permissions or nudges about them', async () => {
+    (hasPhoneFeatures as jest.Mock).mockReturnValue(false);
+    request.mockResolvedValue({ crmReminders: [] });
+    renderWithTheme(<HomeScreen />);
+    expect(await screen.findByText('Nothing due today.')).toBeOnTheScreen();
+    expect(readPermissions).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('home-setup')).toBeNull();
+    expect(screen.getByTestId('home-dialer')).toBeOnTheScreen();
   });
 });
 
@@ -116,9 +133,31 @@ describe('PostCallScreen', () => {
     contactName: 'Rohit',
   };
 
+  const secureStore = (SecureStore as unknown as { __store: Map<string, string> }).__store;
+  /** The sync status the call sync leaves behind: which calls the server accepted. */
+  const loggedNow = (number: string, startedAt: number) =>
+    secureStore.set(
+      STORAGE_KEYS.syncStatus,
+      JSON.stringify({
+        callAt: 1,
+        recordingAt: null,
+        recent: [{ k: number, d: startedAt }],
+        failures: [],
+      }),
+    );
+
+  beforeEach(() => {
+    secureStore.delete(STORAGE_KEYS.syncStatus);
+    useFeaturesStore.setState({ autoLog: true });
+    (syncDeviceCalls as jest.Mock).mockClear();
+  });
+
   it('saves the call and offers a note, a reminder and the lead', async () => {
     usePostCallStore.setState({ pending: ended });
-    (syncDeviceCalls as jest.Mock).mockResolvedValue({ failed: false });
+    (syncDeviceCalls as jest.Mock).mockImplementation(async () => {
+      loggedNow('9811000001', 5_000);
+      return { failed: false, logged: 1 };
+    });
     renderWithTheme(<PostCallScreen />);
     expect(screen.getByText('Call with Smash Arena')).toBeOnTheScreen();
     expect(screen.getByText('Lasted 2:14')).toBeOnTheScreen();
@@ -146,13 +185,41 @@ describe('PostCallScreen', () => {
         leadName: undefined,
       },
     });
-    (syncDeviceCalls as jest.Mock).mockResolvedValue({ failed: true });
+    (syncDeviceCalls as jest.Mock).mockResolvedValue({ failed: true, logged: 0 });
     renderWithTheme(<PostCallScreen />);
     expect(screen.getByText('Not answered')).toBeOnTheScreen();
-    expect(await screen.findByText(/Sync failed/)).toBeOnTheScreen();
+    expect(await screen.findByText(/tries again by itself/)).toBeOnTheScreen();
     expect(screen.queryByTestId('post-call-note')).toBeNull();
     fireEvent.press(screen.getByTestId('post-call-done'));
     expect(usePostCallStore.getState().pending).toBeNull();
     expect(mockNav.goBack).toHaveBeenCalled();
+  });
+
+  it('never says saved for a call the sync skipped, even though the sync itself worked', async () => {
+    usePostCallStore.setState({ pending: ended });
+    // An earlier call with the same number was logged — but not this one.
+    loggedNow('9811000001', ended.startedAt - 60 * 60 * 1000);
+    (syncDeviceCalls as jest.Mock).mockResolvedValue({ failed: false, logged: 0 });
+    renderWithTheme(<PostCallScreen />);
+    expect(
+      await screen.findByText('Not saved: this number is not on a CRM lead.'),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText('Call saved to the CRM')).toBeNull();
+  });
+
+  it('says saved when an earlier background run already logged this call', async () => {
+    usePostCallStore.setState({ pending: ended });
+    loggedNow('9811000001', ended.startedAt + 3_000);
+    (syncDeviceCalls as jest.Mock).mockResolvedValue({ failed: false, logged: 0 });
+    renderWithTheme(<PostCallScreen />);
+    expect(await screen.findByText('Call saved to the CRM')).toBeOnTheScreen();
+  });
+
+  it('points to Settings when call logging is switched off, without syncing', async () => {
+    usePostCallStore.setState({ pending: ended });
+    useFeaturesStore.setState({ autoLog: false });
+    renderWithTheme(<PostCallScreen />);
+    expect(await screen.findByText(/Call logging is off/)).toBeOnTheScreen();
+    expect(syncDeviceCalls).not.toHaveBeenCalled();
   });
 });

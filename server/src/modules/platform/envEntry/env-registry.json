@@ -1609,6 +1609,7 @@
       "apiDocsUrl": "https://developer.apple.com/documentation/appstoreconnectapi/creating-api-keys-for-app-store-connect-api",
       "usedIn": [
         "server/src/modules/platform/analytics/appInsights/appInsights.config.ts",
+        "server/src/modules/platform/appBuild/iosSigning.crm.ts",
         "server/src/modules/platform/appBuild/iosSigning.service.ts"
       ],
       "fields": [
@@ -1668,6 +1669,19 @@
           "usedIn": [
             "server/src/modules/platform/analytics/appInsights/appInsights.config.ts",
             "server/src/modules/platform/appBuild/iosSigning.service.ts"
+          ]
+        },
+        {
+          "name": "crm_bundle_id",
+          "label": "Duncit CRM Bundle ID",
+          "hint": "The Duncit CRM app’s bundle identifier (app/crm-app/app.json → ios.bundleIdentifier), e.g. com.duncit.crm. Must differ from the Bundle ID above. Registered and given an App Store profile on the first Duncit CRM iOS build",
+          "envKey": "APP_STORE_CONNECT_CRM_BUNDLE_ID",
+          "description": "iOS bundle id of the internal Duncit CRM app. The crm-ios-build workflow signs it with the member app's Apple Distribution certificate and an App Store profile made for this id.",
+          "validation": {
+            "type": "text"
+          },
+          "usedIn": [
+            "server/src/modules/platform/appBuild/iosSigning.crm.ts"
           ]
         }
       ]
@@ -2826,6 +2840,7 @@
         ".github/workflows/android-build.yml",
         ".github/workflows/coverage.yml",
         ".github/workflows/crm-android-build.yml",
+        ".github/workflows/crm-ios-build.yml",
         ".github/workflows/e2e.yml",
         ".github/workflows/ios-build.yml",
         ".github/workflows/sonar.yml",
@@ -2843,6 +2858,7 @@
         ".github/workflows/android-build.yml",
         ".github/workflows/coverage.yml",
         ".github/workflows/crm-android-build.yml",
+        ".github/workflows/crm-ios-build.yml",
         ".github/workflows/e2e.yml",
         ".github/workflows/ios-build.yml",
         ".github/workflows/sonar.yml",
@@ -2860,6 +2876,7 @@
         ".github/workflows/android-build.yml",
         ".github/workflows/coverage.yml",
         ".github/workflows/crm-android-build.yml",
+        ".github/workflows/crm-ios-build.yml",
         ".github/workflows/e2e.yml",
         ".github/workflows/ios-build.yml",
         ".github/workflows/sonar.yml",
@@ -2877,6 +2894,7 @@
         ".github/workflows/android-build.yml",
         ".github/workflows/coverage.yml",
         ".github/workflows/crm-android-build.yml",
+        ".github/workflows/crm-ios-build.yml",
         ".github/workflows/e2e.yml",
         ".github/workflows/ios-build.yml",
         ".github/workflows/sonar.yml",

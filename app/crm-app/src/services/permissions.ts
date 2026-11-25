@@ -2,6 +2,15 @@ import { Linking, PermissionsAndroid, Platform, type Permission } from 'react-na
 import { CrmTelephony } from 'crm-telephony';
 
 /**
+ * Whether this phone has the call features at all. Their native side
+ * (modules/crm-telephony) is Android only: an iPhone does not let apps read
+ * the call log, so there the app leaves out caller ID, call logging, the
+ * Android permissions, the home-screen icon and the background sync. The
+ * dialer still opens the phone's own dialer, and the CRM call line still works.
+ */
+export const hasPhoneFeatures = (): boolean => CrmTelephony !== null;
+
+/**
  * The phone permissions the call features need, grouped the way Settings
  * shows them. Each one is asked for only when the person taps Allow.
  */

@@ -79,6 +79,25 @@ internal object CallerDirectory {
     return CallerMatch(first, leads.size - 1)
   }
 
+  /**
+   * CRM contacts whose lead or contact name contains the query, or whose
+   * number contains its digits (three or more) — every lead kind, offline.
+   * An empty query lists the first `limit` by lead name.
+   */
+  fun search(context: Context, query: String, limit: Int): List<DirectoryEntry> {
+    val all = load(context)?.entries?.values?.flatten() ?: return emptyList()
+    val text = query.trim()
+    val digits = text.filter { it.isDigit() }
+    val matches = if (text.isEmpty()) all else all.filter { entry ->
+      entry.leadName.contains(text, ignoreCase = true) ||
+        entry.contactName.contains(text, ignoreCase = true) ||
+        (digits.length >= MIN_SEARCH_DIGITS && entry.key.contains(digits))
+    }
+    return matches.sortedBy { it.leadName.lowercase() }.take(limit)
+  }
+
+  private const val MIN_SEARCH_DIGITS = 3
+
   private fun strings(obj: JSONObject?): Map<String, String> {
     if (obj == null) return emptyMap()
     val out = HashMap<String, String>()

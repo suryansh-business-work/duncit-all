@@ -1807,6 +1807,8 @@ export type AppAnalyticsEventType =
  */
 export type AppBuild = {
   __typename?: 'AppBuild';
+  /** Which app was built. */
+  app: AppBuildApp;
   /** Which server and database this build's app points at. */
   app_env: AppBuildEnv;
   /** Every push of this build's IPA to TestFlight or the App Store, oldest first. */
@@ -1899,6 +1901,13 @@ export type AppBuild = {
   workflow_run_id: Scalars['String']['output'];
   workflow_run_url: Scalars['String']['output'];
 };
+
+/** Which app a build is of. Builds from before the CRM app existed are DUNCIT. */
+export type AppBuildApp =
+  /** The internal Duncit CRM app (app/crm-app). */
+  | 'CRM'
+  /** The member app (app/mobile-app). */
+  | 'DUNCIT';
 
 /**
  * One push of a build's IPA to TestFlight or App Review. A build keeps every one,
@@ -2034,6 +2043,10 @@ export type AppBuildSettings = {
    * needs it.
    */
   app_store_configured: Scalars['Boolean']['output'];
+  /** Where production Duncit CRM builds are announced. Null sends them to the Android builds channel. */
+  crm_channel?: Maybe<Scalars['String']['output']>;
+  /** Where staging Duncit CRM builds are announced. Null sends them to the CRM production channel. */
+  crm_staging_channel?: Maybe<Scalars['String']['output']>;
   /** Where production iOS builds are announced. */
   ios_channel?: Maybe<Scalars['String']['output']>;
   /** The newest iOS signing identity — what the next iOS build signs with. Null until one is generated. */
@@ -8535,6 +8548,48 @@ export type CrmAiEntity =
   | 'HOST_LEAD'
   | 'VENUE_LEAD';
 
+/** Where each environment's Duncit CRM APK is announced on Slack. */
+export type CrmAppBuildSettings = {
+  __typename?: 'CrmAppBuildSettings';
+  channels: Array<CrmSlackChannel>;
+  /** Why the channel list could not be read, when it could not. */
+  channels_error?: Maybe<Scalars['String']['output']>;
+  production_channel?: Maybe<Scalars['String']['output']>;
+  slack_configured: Scalars['Boolean']['output'];
+  staging_channel?: Maybe<Scalars['String']['output']>;
+};
+
+/** The newest successful Duncit CRM build of each platform and environment; null where none has been built yet. */
+export type CrmAppDownload = {
+  __typename?: 'CrmAppDownload';
+  /** The newest production iOS build (IPA). */
+  ios_production?: Maybe<CrmAppDownloadBuild>;
+  /** The newest staging iOS build (IPA). */
+  ios_staging?: Maybe<CrmAppDownloadBuild>;
+  /** The newest production Android build (APK and AAB). */
+  production?: Maybe<CrmAppDownloadBuild>;
+  /** The newest staging Android build (APK and AAB). */
+  staging?: Maybe<CrmAppDownloadBuild>;
+};
+
+/** One downloadable Duncit CRM build: an APK and an AAB on Android, an IPA on iOS. */
+export type CrmAppDownloadBuild = {
+  __typename?: 'CrmAppDownloadBuild';
+  /** @deprecated Read artifacts: it lists the APK, the AAB and the IPA. Empty on iOS. */
+  apk_url: Scalars['String']['output'];
+  app_env: AppBuildEnv;
+  /** Every file this build stored, each with its own download link. */
+  artifacts: Array<AppBuildArtifact>;
+  build_no: Scalars['String']['output'];
+  build_number?: Maybe<Scalars['String']['output']>;
+  created_at?: Maybe<Scalars['String']['output']>;
+  /** Which platform this build is for. */
+  platform: AppBuildPlatform;
+  /** The size of the file a phone installs: the APK on Android, the IPA on iOS. */
+  size_mb?: Maybe<Scalars['Float']['output']>;
+  version: Scalars['String']['output'];
+};
+
 export type CrmCallAction =
   | 'END'
   | 'HOLD'
@@ -8622,6 +8677,43 @@ export type CrmContactInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   role?: InputMaybe<Scalars['String']['input']>;
   whatsapp_number?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Who placed a call made or taken on a phone's own SIM. */
+export type CrmDeviceCallDirection =
+  | 'INBOUND'
+  | 'OUTBOUND';
+
+export type CrmDeviceCallInput = {
+  /** The app's own id for this call (device id + call log row). Re-sending the same id returns the log already made. */
+  client_call_id: Scalars['String']['input'];
+  contact_name?: InputMaybe<Scalars['String']['input']>;
+  contact_number: Scalars['String']['input'];
+  direction: CrmDeviceCallDirection;
+  duration_seconds: Scalars['Int']['input'];
+  entity_id: Scalars['ID']['input'];
+  entity_type: CommsLogEntity;
+  /** What the caller noted after the call; also written to the lead's timeline. */
+  note?: InputMaybe<Scalars['String']['input']>;
+  outcome: CrmDeviceCallOutcome;
+  /** ISO 8601 with offset; within the last 31 days. */
+  started_at: Scalars['String']['input'];
+};
+
+/** How a phone call ended, as the phone's call log records it. */
+export type CrmDeviceCallOutcome =
+  | 'BUSY'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'NO_ANSWER';
+
+export type CrmDeviceCallRecordingInput = {
+  /** An audio/* type. */
+  content_type?: InputMaybe<Scalars['String']['input']>;
+  file_name?: InputMaybe<Scalars['String']['input']>;
+  log_id: Scalars['ID']['input'];
+  /** The phone's own recording, uploaded through Duncit (getImagekitAuth, folder call-recordings). */
+  recording_url: Scalars['String']['input'];
 };
 
 /** The value a duplicate was found on. */
@@ -9889,6 +9981,53 @@ export type CrmOptionGroup = {
   week_days: Array<Scalars['String']['output']>;
 };
 
+/** One phone number of one lead, as the Duncit CRM app stores it on the device for offline caller ID. */
+export type CrmPhoneDirectoryEntry = {
+  __typename?: 'CrmPhoneDirectoryEntry';
+  assigned_to?: Maybe<Scalars['String']['output']>;
+  city?: Maybe<Scalars['String']['output']>;
+  contact_name?: Maybe<Scalars['String']['output']>;
+  entity_type: CommsLogEntity;
+  lead_id: Scalars['ID']['output'];
+  lead_name: Scalars['String']['output'];
+  lead_status?: Maybe<Scalars['String']['output']>;
+  phone_key: Scalars['String']['output'];
+};
+
+export type CrmPhoneDirectoryPage = {
+  __typename?: 'CrmPhoneDirectoryPage';
+  generated_at: Scalars['String']['output'];
+  items: Array<CrmPhoneDirectoryEntry>;
+  /** Pass back for the next page; null once every lead kind has been walked. */
+  next_cursor?: Maybe<Scalars['String']['output']>;
+};
+
+export type CrmPhoneLookup = {
+  __typename?: 'CrmPhoneLookup';
+  matches: Array<CrmPhoneMatch>;
+  /** The last ten digits the number was compared by; empty when it has too few digits to identify anyone. */
+  phone_key: Scalars['String']['output'];
+};
+
+/** A CRM lead holding a phone number, for the Duncit CRM app's caller ID and dialer. */
+export type CrmPhoneMatch = {
+  __typename?: 'CrmPhoneMatch';
+  assigned_to?: Maybe<Scalars['String']['output']>;
+  city?: Maybe<Scalars['String']['output']>;
+  /** The contact on the lead the number belongs to. */
+  contact_name?: Maybe<Scalars['String']['output']>;
+  contact_role?: Maybe<Scalars['String']['output']>;
+  entity_type: CommsLogEntity;
+  last_activity_at?: Maybe<Scalars['String']['output']>;
+  /** The newest entry on the lead's timeline. */
+  last_activity_summary?: Maybe<Scalars['String']['output']>;
+  lead_id: Scalars['ID']['output'];
+  lead_name: Scalars['String']['output'];
+  lead_status?: Maybe<Scalars['String']['output']>;
+  next_follow_up_date?: Maybe<Scalars['String']['output']>;
+  priority?: Maybe<Scalars['String']['output']>;
+};
+
 /** Lead kinds whose contact email / call goes through the generic CRM lead mutations. */
 export type CrmProspectEntity =
   | 'COMMUNITY_LEAD'
@@ -10002,6 +10141,16 @@ export type CrmServiceOfferedTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<CrmServiceOffered>;
   total: Scalars['Int']['output'];
+};
+
+/** A Slack channel CRM staff can pick for their app's build announcements. */
+export type CrmSlackChannel = {
+  __typename?: 'CrmSlackChannel';
+  id: Scalars['ID']['output'];
+  /** Whether the Duncit bot is in it — it must be, to post. */
+  is_member: Scalars['Boolean']['output'];
+  is_private: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
 };
 
 /** A social profile beyond the main Instagram link (YouTube, Facebook, Linktree…). */
@@ -19264,8 +19413,11 @@ export type Mutation = {
   assignMarketingLeadOwner: MarketingLead;
   /** Hand the comment to a person; a null user_id hands it back to nobody. */
   assignSocialComment: SocialComment;
+  assignSocialConversation: SocialConversationThread;
   assignTicket: Ticket;
   assignUserRoles: User;
+  /** Attach the phone's recording of a device call; it is transcribed and summarised in the background. The caller or a super admin only. */
+  attachCrmDeviceCallRecording: CommunicationLog;
   /**
    * Share the uploaded recordings under the run's own Slack message, and record
    * which file each suite became. Called once, by the gate, after the run has
@@ -19591,6 +19743,8 @@ export type Mutation = {
   createHostLead: HostLead;
   createInterview: Interview;
   createInventoryProduct: InventoryProduct;
+  /** Put the person into the Marketing pipeline (matched by Instagram handle) and link the conversation to the lead. */
+  createLeadFromSocialConversation: SocialConversationLead;
   createLegalDocument: LegalDocument;
   createLocation: Location;
   /** File a case; it gets the next QA-<n> key and lands at the bottom of its column. */
@@ -19636,6 +19790,8 @@ export type Mutation = {
   createScheduledSocialPost: SocialScheduledPost;
   createShortLink: ShortLink;
   createSlotTemplate: SlotTemplate;
+  /** Add an auto-reply rule. Refused with BAD_USER_INPUT for a keyword that is a stop or start keyword, or an account that cannot message. */
+  createSocialAutoReplyRule: SocialAutoReplyRule;
   createSomethingForYouItem: SomethingForYouItem;
   createSurvey: Survey;
   createTeamStructureShare: TeamStructureShare;
@@ -19655,6 +19811,15 @@ export type Mutation = {
   crmExcelImport: CrmExcelImportResult;
   /** Fetch + extract readable content for a single discovered page. */
   crmFetchWebsitePageContent: CrmWebsitePage;
+  /**
+   * Everything the crm-ios-build workflow signs and uploads with, for the
+   * Duncit CRM bundle ID on the APP_STORE_CONNECT env entry. The CRM app signs
+   * with the member app's current Apple Distribution certificate; the first call
+   * after that certificate changes registers the CRM bundle ID if Apple has not
+   * seen it and makes an App Store profile for it, which is why this is a
+   * mutation. Tech/Super admin only.
+   */
+  crmIosSigningBundle: IosSigningBundle;
   /**
    * Chat about one lead, grounded in its CRM data + scraped website content. Returns HTML.
    * @deprecated Use askCrmLeadAi, which keeps the conversation and works for every lead kind.
@@ -19861,6 +20026,8 @@ export type Mutation = {
   deleteScheduledSocialPost: Scalars['Boolean']['output'];
   deleteShortLink: Scalars['Boolean']['output'];
   deleteSlotTemplate: Scalars['Boolean']['output'];
+  /** Delete a rule. The replies it already made stay in Activity. */
+  deleteSocialAutoReplyRule: Scalars['Boolean']['output'];
   deleteSocialIdea: Scalars['Boolean']['output'];
   deleteSomethingForYouItem: Scalars['Boolean']['output'];
   /** Take back your own message. The row stays; the words go. */
@@ -20238,6 +20405,8 @@ export type Mutation = {
   linkGoogleAccount: AuthPayload;
   /** End this session's unlock now. */
   lockEnvAccess: EnvAccessStatus;
+  /** Record a call made or taken on the phone's own SIM against a lead, once per client_call_id. CRM staff only. */
+  logCrmDeviceCall: CommunicationLog;
   /**
    * Record a rejection the store's API could not report, with the reviewer's
    * words. The advice is written at once and the notices go out. Tech/Super
@@ -20306,6 +20475,7 @@ export type Mutation = {
   markRentalRefunded: RentalBooking;
   /** The content is fine: close every open report on it as DISMISSED. */
   markReportedContentOk: ContentReport;
+  markSocialConversationRead: SocialConversationThread;
   /** Mark what they sent you as read. Returns how many that was. */
   markStaffThreadRead: Scalars['Int']['output'];
   markSupportChatRead: SupportChatSession;
@@ -21084,6 +21254,8 @@ export type Mutation = {
   sendRentalRefund: RentalBookingDetail;
   /** Post a message to a Slack channel (full message surface). */
   sendSlackMessage: SlackSendResult;
+  /** Send a direct message. Refused with WINDOW_CLOSED outside Meta's window, NOT_CONFIGURED without the messaging permission or a linked Page. */
+  sendSocialMessage: SocialConversationThread;
   /** Send a message, a file, or both. Text may be empty when a file comes with it. */
   sendStaffMessage: StaffMessage;
   sendSupportChatMessage: SupportChatMessage;
@@ -21255,6 +21427,7 @@ export type Mutation = {
   /** Who answers for the account. A null owner clears it; every id must be a real user. */
   setSocialAccountOwner: SocialAccount;
   setSocialCommentStatus: SocialComment;
+  setSocialConversationStatus: SocialConversationThread;
   setSocialIdeaStatus: SocialIdea;
   /** Keep the reviewer's message on an issue and write the advice again with it. */
   setStoreIssueReviewerMessage: StoreReleaseIssue;
@@ -21594,6 +21767,8 @@ export type Mutation = {
    */
   subscribeMembershipNews: MembershipNewsSubscriber;
   subscribeNewsletter: NewsletterSubscribeResult;
+  /** Ask the AI for a draft direct message. Nothing is sent: the person edits it and presses Send. */
+  suggestSocialMessage: SocialReplySuggestion;
   /** Ask Claude for a draft reply. Nothing is sent: the person edits it and presses Send. */
   suggestSocialReply: SocialReplySuggestion;
   /**
@@ -21779,6 +21954,8 @@ export type Mutation = {
   updateContract: Contract;
   updateCoupon: Coupon;
   updateCreatorLead: CreatorLead;
+  /** Choose the Slack channels Duncit CRM builds announce to (each must be one the bot can see, or empty). CRM staff only. */
+  updateCrmAppBuildSettings: CrmAppBuildSettings;
   updateCrmCallPrompt: CrmCallPrompt;
   updateCrmDynamicField: CrmDynamicField;
   /** Edit one of the CRM email writer prompts (crm.email_mjml or crm.email_mjml.user). */
@@ -21906,6 +22083,8 @@ export type Mutation = {
   updateShortLinkPolicy: ShortLinkPolicy;
   /** Loyalty: switch the programme, its delay and the biggest discount a host may offer. */
   updateSmartIncentiveSettings: SmartIncentiveSettings;
+  updateSocialAutoReplyRule: SocialAutoReplyRule;
+  updateSocialSettings: SocialSettings;
   updateSomethingForYouItem: SomethingForYouItem;
   /**
    * Triage one report: its state, the note, and any images the operator added.
@@ -22567,6 +22746,12 @@ export type MutationAssignSocialCommentArgs = {
 };
 
 
+export type MutationAssignSocialConversationArgs = {
+  id: Scalars['ID']['input'];
+  user_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
 export type MutationAssignTicketArgs = {
   assignee_id?: InputMaybe<Scalars['ID']['input']>;
   ticket_id: Scalars['ID']['input'];
@@ -22576,6 +22761,11 @@ export type MutationAssignTicketArgs = {
 export type MutationAssignUserRolesArgs = {
   role_keys: Array<Scalars['String']['input']>;
   user_id: Scalars['ID']['input'];
+};
+
+
+export type MutationAttachCrmDeviceCallRecordingArgs = {
+  input: CrmDeviceCallRecordingInput;
 };
 
 
@@ -23247,6 +23437,11 @@ export type MutationCreateInventoryProductArgs = {
 };
 
 
+export type MutationCreateLeadFromSocialConversationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationCreateLegalDocumentArgs = {
   input: CreateLegalDocumentInput;
 };
@@ -23411,6 +23606,11 @@ export type MutationCreateShortLinkArgs = {
 
 export type MutationCreateSlotTemplateArgs = {
   input: CreateSlotTemplateInput;
+};
+
+
+export type MutationCreateSocialAutoReplyRuleArgs = {
+  input: SocialAutoReplyRuleInput;
 };
 
 
@@ -24125,6 +24325,11 @@ export type MutationDeleteShortLinkArgs = {
 
 
 export type MutationDeleteSlotTemplateArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteSocialAutoReplyRuleArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -24983,6 +25188,11 @@ export type MutationLinkGoogleAccountArgs = {
 };
 
 
+export type MutationLogCrmDeviceCallArgs = {
+  input: CrmDeviceCallInput;
+};
+
+
 export type MutationLogStoreRejectionArgs = {
   input: LogStoreRejectionInput;
 };
@@ -25079,6 +25289,11 @@ export type MutationMarkRentalRefundedArgs = {
 export type MutationMarkReportedContentOkArgs = {
   id: Scalars['ID']['input'];
   note?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationMarkSocialConversationReadArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -26569,6 +26784,12 @@ export type MutationSendSlackMessageArgs = {
 };
 
 
+export type MutationSendSocialMessageArgs = {
+  id: Scalars['ID']['input'];
+  text: Scalars['String']['input'];
+};
+
+
 export type MutationSendStaffMessageArgs = {
   attachment_name?: InputMaybe<Scalars['String']['input']>;
   attachment_peaks?: InputMaybe<Array<Scalars['Float']['input']>>;
@@ -27039,6 +27260,12 @@ export type MutationSetSocialAccountOwnerArgs = {
 
 
 export type MutationSetSocialCommentStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: SocialInboxStatus;
+};
+
+
+export type MutationSetSocialConversationStatusArgs = {
   id: Scalars['ID']['input'];
   status: SocialInboxStatus;
 };
@@ -27924,6 +28151,11 @@ export type MutationSubscribeNewsletterArgs = {
 };
 
 
+export type MutationSuggestSocialMessageArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationSuggestSocialReplyArgs = {
   id: Scalars['ID']['input'];
 };
@@ -28407,6 +28639,11 @@ export type MutationUpdateCouponArgs = {
 export type MutationUpdateCreatorLeadArgs = {
   id: Scalars['ID']['input'];
   input: CreatorLeadInput;
+};
+
+
+export type MutationUpdateCrmAppBuildSettingsArgs = {
+  input: UpdateCrmAppBuildSettingsInput;
 };
 
 
@@ -28941,6 +29178,17 @@ export type MutationUpdateShortLinkPolicyArgs = {
 
 export type MutationUpdateSmartIncentiveSettingsArgs = {
   input: SmartIncentiveSettingsInput;
+};
+
+
+export type MutationUpdateSocialAutoReplyRuleArgs = {
+  id: Scalars['ID']['input'];
+  input: SocialAutoReplyRuleInput;
+};
+
+
+export type MutationUpdateSocialSettingsArgs = {
+  input: SocialSettingsInput;
 };
 
 
@@ -36578,7 +36826,7 @@ export type Query = {
   analyticsMailSubscriptions: Array<AnalyticsMailSubscription>;
   appBuildSettings: AppBuildSettings;
   appBuildTriggerConfig: AppBuildTriggerConfig;
-  /** CI builds of one platform, newest first (Tech portal App Builds tables). app_env narrows them to one environment; left out lists both. */
+  /** CI builds of one platform, newest first (Tech portal App Builds tables). app_env narrows them to one environment; left out lists both. app picks which app; left out, the member app. */
   appBuildsTable: AppBuildTablePage;
   /** The stored history for one store over a range of at most a year (yyyy-MM-dd, inclusive). */
   appInsightsDaily: Array<AppInsightDailyRow>;
@@ -36988,6 +37236,10 @@ export type Query = {
   creatorLead?: Maybe<CreatorLead>;
   /** With near, only the leads within the radius, nearest first unless another sort is picked. */
   creatorLeadsTable: CreatorLeadTablePage;
+  /** Which Slack channels Duncit CRM builds announce to, with the channels the bot can see. CRM staff only. */
+  crmAppBuildSettings: CrmAppBuildSettings;
+  /** The newest downloadable Duncit CRM Android and iOS builds per environment, for the CRM portal's Download app page. CRM staff only. */
+  crmAppDownload: CrmAppDownload;
   /** Active CRM team members matching a name / email search — the Assigned To picker and @mentions. */
   crmAssignableUsers: Array<CrmStaffUser>;
   /** The configured Twilio caller-ID (From) number, shown on call dialogs. */
@@ -37042,6 +37294,10 @@ export type Query = {
   crmLeadQualityVersions: Array<CrmLeadQualityConfig>;
   crmManagedOptions: Array<CrmManagedOption>;
   crmManagedOptionsTable: CrmManagedOptionTablePage;
+  /** One page of the offline caller-ID directory (limit 1-1000, default 500). CRM staff only. */
+  crmPhoneDirectory: CrmPhoneDirectoryPage;
+  /** Every CRM lead (any kind) whose contact holds this number. CRM staff only. */
+  crmPhoneLookup: CrmPhoneLookup;
   crmReminders: Array<CrmReminder>;
   /** @deprecated Lead forms read crmServicesOffered (CRM › Data › Services Offered). Kept for older clients. */
   crmServices: Array<CrmService>;
@@ -38470,10 +38726,21 @@ export type Query = {
   smartIncentiveSettings: SmartIncentiveSettings;
   socialAccounts: Array<SocialAccount>;
   socialAnalytics: SocialAnalytics;
+  /** The auto-reply rules, most recently changed first. */
+  socialAutoReplyRulesTable: SocialAutoReplyRuleTablePage;
   /** Everything dated in [from, to): posts written here and posts read from the networks. */
   socialCalendar: Array<SocialCalendarItem>;
   socialCommentsTable: SocialCommentTablePage;
+  socialConversation: SocialConversationThread;
+  /** Every DM conversation from every connected account, latest first; view pins a summary card's slice. */
+  socialConversationsTable: SocialConversationTablePage;
+  /** Open, flagged, unassigned and mine, for DMs. */
+  socialDmSummary: SocialInboxSummary;
   socialIdeas: Array<SocialIdea>;
+  /** One comment as the Inbox shows it, for opening a row of the All tab. */
+  socialInboxComment: SocialComment;
+  /** Comments, Threads replies and DM conversations as one queue, newest first (the All tab). */
+  socialInboxItemsTable: SocialInboxItemTablePage;
   socialInboxSummary: SocialInboxSummary;
   /** Every comment from every connected account, newest first; view pins a summary card's slice. */
   socialInboxTable: SocialCommentTablePage;
@@ -38485,6 +38752,7 @@ export type Query = {
   socialReplyCapabilities: Array<SocialReplyCapability>;
   socialScheduledPost: SocialScheduledPost;
   socialScheduledPosts: Array<SocialScheduledPost>;
+  socialSettings: SocialSettings;
   /**
    * Public: is this Google/Apple person already on Duncit?
    *
@@ -38496,6 +38764,8 @@ export type Query = {
    * verified. A hint, not the gate — signup still refuses a taken identity.
    */
   socialSignupStatus: SocialSignupStatus;
+  /** The URL Meta delivers webhooks to, for the app's Webhooks setup. */
+  socialWebhookUrl: Scalars['String']['output'];
   /** Every card, including the switched-off ones. Admin only. */
   somethingForYouItems: Array<SomethingForYouItem>;
   /** Tech > SSL: every certificate certbot holds on this VPS (SUPER_ADMIN / TECH_MANAGER). */
@@ -39130,6 +39400,7 @@ export type QueryAiTranslationPendingArgs = {
 
 
 export type QueryAppBuildsTableArgs = {
+  app?: InputMaybe<AppBuildApp>;
   app_env?: InputMaybe<AppBuildEnv>;
   platform: AppBuildPlatform;
   query?: InputMaybe<TableQueryInput>;
@@ -40177,6 +40448,17 @@ export type QueryCrmManagedOptionsArgs = {
 export type QueryCrmManagedOptionsTableArgs = {
   group: CrmManagedOptionGroup;
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryCrmPhoneDirectoryArgs = {
+  cursor?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryCrmPhoneLookupArgs = {
+  phone: Scalars['String']['input'];
 };
 
 
@@ -42919,6 +43201,11 @@ export type QuerySocialAnalyticsArgs = {
 };
 
 
+export type QuerySocialAutoReplyRulesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QuerySocialCalendarArgs = {
   from: Scalars['String']['input'];
   to: Scalars['String']['input'];
@@ -42930,12 +43217,35 @@ export type QuerySocialCommentsTableArgs = {
 };
 
 
+export type QuerySocialConversationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QuerySocialConversationsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  view?: InputMaybe<SocialInboxView>;
+};
+
+
 export type QuerySocialIdeasArgs = {
   status?: InputMaybe<SocialIdeaStatus>;
 };
 
 
+export type QuerySocialInboxCommentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QuerySocialInboxItemsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  view?: InputMaybe<SocialInboxView>;
+};
+
+
 export type QuerySocialInboxTableArgs = {
+  channel?: InputMaybe<SocialInboxChannel>;
   query?: InputMaybe<TableQueryInput>;
   view?: InputMaybe<SocialInboxView>;
 };
@@ -45557,6 +45867,8 @@ export type ReportActionType =
   | 'TAKEN_DOWN';
 
 export type ReportAppBuildInput = {
+  /** Which app was built. Left out, the member app (every reporter from before the CRM app). */
+  app?: InputMaybe<AppBuildApp>;
   /** Which server the built app talks to. Left out, a new build from the staging branch is STAGING and any other PRODUCTION. */
   app_env?: InputMaybe<AppBuildEnv>;
   /**
@@ -47111,6 +47423,8 @@ export type SocialAccount = {
   __typename?: 'SocialAccount';
   avatar_url?: Maybe<Scalars['String']['output']>;
   created_at?: Maybe<Scalars['String']['output']>;
+  /** Why the last DM read failed; empty when it did not. */
+  dm_error: Scalars['String']['output'];
   /** Comments the AI flagged that nobody has reviewed yet. */
   flagged_open: Scalars['Int']['output'];
   followers: Scalars['Int']['output'];
@@ -47123,6 +47437,8 @@ export type SocialAccount = {
   /** Why the last sync failed; empty when it did not. */
   last_error?: Maybe<Scalars['String']['output']>;
   last_synced_at?: Maybe<Scalars['String']['output']>;
+  /** The messaging permission this connection lacks (Instagram and Facebook); null when it has it or the network has no DMs here. */
+  messaging_missing_permission?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   owner_name?: Maybe<Scalars['String']['output']>;
   /** Who answers for the account and gets its expiry reminders; defaults to whoever connected it. */
@@ -47136,6 +47452,8 @@ export type SocialAccount = {
   token_expires_at?: Maybe<Scalars['String']['output']>;
   /** Whole days until the token lapses (0 or less: lapsed); null for a token that does not expire. */
   token_expires_in_days?: Maybe<Scalars['Int']['output']>;
+  /** Why subscribing the Page to webhooks failed; empty when it did not. */
+  webhook_error: Scalars['String']['output'];
 };
 
 export type SocialAccountEngagement = {
@@ -47205,6 +47523,50 @@ export type SocialAnalyticsInput = {
 export type SocialAuthProvider =
   | 'APPLE'
   | 'GOOGLE';
+
+/** What an auto-reply rule answers: a whole-message keyword, a phrase anywhere (FAQ), a person's first DM (WELCOME), or a phrase in a comment, answered with one private reply (COMMENT_TO_DM). */
+export type SocialAutoReplyKind =
+  | 'COMMENT_TO_DM'
+  | 'FAQ'
+  | 'KEYWORD'
+  | 'WELCOME';
+
+/** A rule that answers inbound DMs or comments on its own, inside Meta's 24-hour window, never to someone who opted out, under the daily cap. */
+export type SocialAutoReplyRule = {
+  __typename?: 'SocialAutoReplyRule';
+  /** The accounts it answers for; empty means every connected Facebook and Instagram account. */
+  account_ids: Array<Scalars['ID']['output']>;
+  enabled: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  /** Upper-cased words or phrases; empty for WELCOME. */
+  keywords: Array<Scalars['String']['output']>;
+  kind: SocialAutoReplyKind;
+  name: Scalars['String']['output'];
+  reply_text: Scalars['String']['output'];
+  /** Replies it sent in the last 7 days. */
+  sent_7d: Scalars['Int']['output'];
+  /** A trusted rule sends at once even when Social Settings asks for approval. */
+  trusted: Scalars['Boolean']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type SocialAutoReplyRuleInput = {
+  account_ids: Array<Scalars['ID']['input']>;
+  enabled: Scalars['Boolean']['input'];
+  keywords: Array<Scalars['String']['input']>;
+  kind: SocialAutoReplyKind;
+  name: Scalars['String']['input'];
+  reply_text: Scalars['String']['input'];
+  trusted: Scalars['Boolean']['input'];
+};
+
+export type SocialAutoReplyRuleTablePage = {
+  __typename?: 'SocialAutoReplyRuleTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<SocialAutoReplyRule>;
+  total: Scalars['Int']['output'];
+};
 
 export type SocialCalendarItem = {
   __typename?: 'SocialCalendarItem';
@@ -47286,6 +47648,71 @@ export type SocialConnectReturn =
   | 'ACCOUNTS'
   | 'CALENDAR';
 
+/** A direct-message conversation between a connected account and one person. */
+export type SocialConversation = {
+  __typename?: 'SocialConversation';
+  account_id: Scalars['ID']['output'];
+  account_name: Scalars['String']['output'];
+  ai_sentiment?: Maybe<SocialSentiment>;
+  ai_severity?: Maybe<SocialSeverity>;
+  ai_status: SocialAiStatus;
+  assigned_name?: Maybe<Scalars['String']['output']>;
+  assigned_user_id?: Maybe<Scalars['ID']['output']>;
+  id: Scalars['ID']['output'];
+  /** The Instagram Leads lead this person was matched to. */
+  ig_lead_id?: Maybe<Scalars['ID']['output']>;
+  /** The person's last message, which the messaging window is measured from. */
+  last_inbound_at?: Maybe<Scalars['String']['output']>;
+  last_message_at?: Maybe<Scalars['String']['output']>;
+  last_message_text: Scalars['String']['output'];
+  /** The Marketing lead (Sequences) this person was matched to. */
+  marketing_lead_id?: Maybe<Scalars['ID']['output']>;
+  /** The person sent a stop keyword: no automated message goes to them. */
+  opted_out: Scalars['Boolean']['output'];
+  participant: SocialConversationParticipant;
+  platform: SocialPlatform;
+  status: SocialInboxStatus;
+  unread_count: Scalars['Int']['output'];
+  /** When the current window state ends; null once closed. */
+  window_closes_at?: Maybe<Scalars['String']['output']>;
+  window_state: SocialWindowState;
+};
+
+/** A lead made from a conversation, and whether it matched one already in the pipeline. */
+export type SocialConversationLead = {
+  __typename?: 'SocialConversationLead';
+  lead_id: Scalars['ID']['output'];
+  merged: Scalars['Boolean']['output'];
+  thread: SocialConversationThread;
+};
+
+export type SocialConversationParticipant = {
+  __typename?: 'SocialConversationParticipant';
+  avatar_url: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  username: Scalars['String']['output'];
+};
+
+export type SocialConversationTablePage = {
+  __typename?: 'SocialConversationTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<SocialConversation>;
+  total: Scalars['Int']['output'];
+};
+
+/** A conversation with its latest messages and what would stop a reply. */
+export type SocialConversationThread = {
+  __typename?: 'SocialConversationThread';
+  conversation: SocialConversation;
+  /** The longest message the network takes. */
+  max_length: Scalars['Int']['output'];
+  /** Oldest first. */
+  messages: Array<SocialMessage>;
+  /** The permission sending needs and this connection lacks; null when it has it. */
+  missing_permission?: Maybe<Scalars['String']['output']>;
+};
+
 export type SocialIdea = {
   __typename?: 'SocialIdea';
   brief?: Maybe<Scalars['String']['output']>;
@@ -47317,6 +47744,45 @@ export type SocialIdeasInput = {
   count?: InputMaybe<Scalars['Int']['input']>;
   /** Empty means the networks Duncit has accounts on. */
   platforms?: InputMaybe<Array<SocialPlatform>>;
+};
+
+/** A tab of the comment queue: every network's comments, or Threads replies on their own. */
+export type SocialInboxChannel =
+  | 'COMMENTS'
+  | 'THREADS_REPLIES';
+
+/** One row of the All tab: a comment, a Threads reply or a DM conversation. */
+export type SocialInboxItem = {
+  __typename?: 'SocialInboxItem';
+  account_id: Scalars['ID']['output'];
+  account_name: Scalars['String']['output'];
+  ai_sentiment?: Maybe<SocialSentiment>;
+  ai_severity?: Maybe<SocialSeverity>;
+  assigned_name?: Maybe<Scalars['String']['output']>;
+  at?: Maybe<Scalars['String']['output']>;
+  author: Scalars['String']['output'];
+  /** The comment's or the conversation's id, by kind. */
+  id: Scalars['ID']['output'];
+  kind: SocialInboxItemKind;
+  platform: SocialPlatform;
+  status: SocialInboxStatus;
+  /** The comment, or the conversation's latest message. */
+  text: Scalars['String']['output'];
+  unread_count: Scalars['Int']['output'];
+};
+
+/** What a row of the Inbox's All tab is. */
+export type SocialInboxItemKind =
+  | 'COMMENT'
+  | 'DM'
+  | 'THREADS_REPLY';
+
+export type SocialInboxItemTablePage = {
+  __typename?: 'SocialInboxItemTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<SocialInboxItem>;
+  total: Scalars['Int']['output'];
 };
 
 /** Where a comment stands in the Inbox: waiting, answered on the network, dealt with without a reply, or junk. */
@@ -47357,6 +47823,40 @@ export type SocialInsights = {
 export type SocialMediaType =
   | 'IMAGE'
   | 'VIDEO';
+
+export type SocialMessage = {
+  __typename?: 'SocialMessage';
+  attachments: Array<SocialMessageAttachment>;
+  /** Sent by an auto-reply rule, not a person. */
+  automated: Scalars['Boolean']['output'];
+  direction: SocialMessageDirection;
+  /** Why the network refused it, in plain words; empty when it did not. */
+  error: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  sent_at?: Maybe<Scalars['String']['output']>;
+  sent_by_name: Scalars['String']['output'];
+  status: SocialMessageStatus;
+  /** HUMAN_AGENT when it went out on Meta's human-agent tag. */
+  tag: Scalars['String']['output'];
+  text: Scalars['String']['output'];
+};
+
+export type SocialMessageAttachment = {
+  __typename?: 'SocialMessageAttachment';
+  type: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
+/** Who wrote a direct message: the person (IN) or the account (OUT). */
+export type SocialMessageDirection =
+  | 'IN'
+  | 'OUT';
+
+/** RECEIVED for an inbound message; an outbound one is SENT once the network took it, FAILED when it refused. */
+export type SocialMessageStatus =
+  | 'FAILED'
+  | 'RECEIVED'
+  | 'SENT';
 
 /** The network an account lives on. */
 export type SocialPlatform =
@@ -47418,6 +47918,18 @@ export type SocialPostAverage = {
   views: Scalars['Float']['output'];
 };
 
+/** One network's own caption, in place of the post's text there. */
+export type SocialPostCaption = {
+  __typename?: 'SocialPostCaption';
+  platform: SocialPlatform;
+  text: Scalars['String']['output'];
+};
+
+export type SocialPostCaptionInput = {
+  platform: SocialPlatform;
+  text: Scalars['String']['input'];
+};
+
 export type SocialPostDetail = {
   __typename?: 'SocialPostDetail';
   average: SocialPostAverage;
@@ -47429,13 +47941,21 @@ export type SocialPostDetail = {
 /** One picture or clip of a post, in the order they show. */
 export type SocialPostMedia = {
   __typename?: 'SocialPostMedia';
+  duration_s?: Maybe<Scalars['Float']['output']>;
+  height?: Maybe<Scalars['Int']['output']>;
   type: SocialMediaType;
   url: Scalars['String']['output'];
+  /** Pixels and seconds the composer measured; null when it could not. */
+  width?: Maybe<Scalars['Int']['output']>;
 };
 
 export type SocialPostMediaInput = {
+  duration_s?: InputMaybe<Scalars['Float']['input']>;
+  height?: InputMaybe<Scalars['Int']['input']>;
   type: SocialMediaType;
   url: Scalars['String']['input'];
+  /** Pixels and seconds the composer measured, for the shape and length rules; omit when unknown. */
+  width?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type SocialPostTablePage = {
@@ -47445,6 +47965,12 @@ export type SocialPostTablePage = {
   rows: Array<SocialPost>;
   total: Scalars['Int']['output'];
 };
+
+/** How a post shows: in the feed (two or more media make a carousel), as a Reel, or as a 24-hour Story. Reels and Stories go to Instagram only. */
+export type SocialPostType =
+  | 'FEED'
+  | 'REEL'
+  | 'STORY';
 
 /** The app a marketer connects through — one app per network. An Instagram account connected through Facebook before Instagram had its own app keeps provider FACEBOOK. */
 export type SocialProvider =
@@ -47484,8 +48010,10 @@ export type SocialPublishTarget = {
   __typename?: 'SocialPublishTarget';
   account_id: Scalars['ID']['output'];
   account_name: Scalars['String']['output'];
-  /** Why this network refused the post; empty when it did not. */
+  /** Why this network refused the post; empty when it did not. On a target waiting to be tried again, why the last try failed. */
   error?: Maybe<Scalars['String']['output']>;
+  /** The post went out but its Instagram first comment did not; why. Empty when it went or there was none. */
+  first_comment_error?: Maybe<Scalars['String']['output']>;
   permalink?: Maybe<Scalars['String']['output']>;
   platform: SocialPlatform;
   published_at?: Maybe<Scalars['String']['output']>;
@@ -47525,9 +48053,13 @@ export type SocialScheduledPost = {
   __typename?: 'SocialScheduledPost';
   /** The marketing run that waits for (or recorded) the decision. */
   approval_run_id?: Maybe<Scalars['String']['output']>;
+  /** Per-network captions in place of text; empty when every network gets the same text. */
+  captions: Array<SocialPostCaption>;
   /** Instagram usernames invited as collaborators; the other networks ignore them. */
   collaborators: Array<Scalars['String']['output']>;
   created_at?: Maybe<Scalars['String']['output']>;
+  /** Posted under the Instagram feed post or reel once it is out; empty when there is none. */
+  first_comment: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   idea_id?: Maybe<Scalars['String']['output']>;
   /** Every piece of media in order; two or more make a carousel. */
@@ -47539,6 +48071,7 @@ export type SocialScheduledPost = {
   needs_approval: Scalars['Boolean']['output'];
   /** The pod promotion this post was made for; empty for any other post. */
   pod_id?: Maybe<Scalars['String']['output']>;
+  post_type: SocialPostType;
   published_at?: Maybe<Scalars['String']['output']>;
   /** The Reel Studio project the posted reel was cut in; empty for any other post. */
   reel_project_id?: Maybe<Scalars['String']['output']>;
@@ -47553,8 +48086,12 @@ export type SocialScheduledPost = {
 
 export type SocialScheduledPostInput = {
   account_ids: Array<Scalars['ID']['input']>;
+  /** A caption per network in place of text; one per network, and only those the post goes to are kept. */
+  captions?: InputMaybe<Array<SocialPostCaptionInput>>;
   /** Instagram usernames to invite as collaborators, at most 3 (the Instagram API limit); only Instagram uses them. */
   collaborators?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Posted under the Instagram feed post or reel once it is out; kept only when an Instagram account is picked. */
+  first_comment?: InputMaybe<Scalars['String']['input']>;
   /** The idea this post was written from; it is marked USED. */
   idea_id?: InputMaybe<Scalars['ID']['input']>;
   /** Every piece of media in order; when given it replaces media_url/media_type. */
@@ -47567,6 +48104,8 @@ export type SocialScheduledPostInput = {
   needs_approval?: InputMaybe<Scalars['Boolean']['input']>;
   /** The pod this post promotes (Publishing › Pod promotions). */
   pod_id?: InputMaybe<Scalars['ID']['input']>;
+  /** FEED when omitted. REEL (one video) and STORY (one picture or video) are refused for any network but Instagram. */
+  post_type?: InputMaybe<SocialPostType>;
   /** The Reel Studio project this reel was cut in, so the studio can read the post's numbers back. */
   reel_project_id?: InputMaybe<Scalars['ID']['input']>;
   /** Required for SCHEDULE; optional on a DRAFT (it then shows on the calendar). */
@@ -47592,6 +48131,52 @@ export type SocialSeries = {
   __typename?: 'SocialSeries';
   key: Scalars['String']['output'];
   values: Array<Scalars['Int']['output']>;
+};
+
+/** Marketing > Social > Settings. Meta's own rules (24-hour window, 7-day human-agent reply, no cold DMs) are not settings. */
+export type SocialSettings = {
+  __typename?: 'SocialSettings';
+  /** Brand-voice notes the AI follows when it drafts a reply (up to 2000 characters). */
+  ai_reply_guidelines: Scalars['String']['output'];
+  /** The most automated replies one account sends in a day (0-500). */
+  auto_reply_daily_cap: Scalars['Int']['output'];
+  /** The master switch for auto-reply rules. */
+  auto_reply_enabled: Scalars['Boolean']['output'];
+  /** An auto-reply waits in Approvals unless its rule is marked trusted. */
+  auto_reply_requires_approval: Scalars['Boolean']['output'];
+  /** The AI rates every new comment and DM for sentiment and severity. */
+  auto_triage: Scalars['Boolean']['output'];
+  /** Days of DM history read when an account is connected (0-90). */
+  backfill_days: Scalars['Int']['output'];
+  /** That person's name, for the Settings page. */
+  default_assignee_name?: Maybe<Scalars['String']['output']>;
+  /** Who a new DM conversation is assigned to; null leaves it unassigned. */
+  default_assignee_user_id?: Maybe<Scalars['ID']['output']>;
+  /** Days before a token expires that its owner is emailed (1-30). */
+  expiry_alert_days: Scalars['Int']['output'];
+  /** An inbound DM from a lead's Instagram handle marks the lead Replied and stops its sequence. */
+  link_dms_to_leads: Scalars['Boolean']['output'];
+  /** A DM that is exactly one of these opts them back in. */
+  opt_in_keywords: Array<Scalars['String']['output']>;
+  /** A DM that is exactly one of these opts the person out of every automated message. */
+  opt_out_keywords: Array<Scalars['String']['output']>;
+  /** Hours between two scheduled reads of an account: the fallback when a webhook was missed (1-24). */
+  sync_every_hours: Scalars['Int']['output'];
+};
+
+export type SocialSettingsInput = {
+  ai_reply_guidelines: Scalars['String']['input'];
+  auto_reply_daily_cap: Scalars['Int']['input'];
+  auto_reply_enabled: Scalars['Boolean']['input'];
+  auto_reply_requires_approval: Scalars['Boolean']['input'];
+  auto_triage: Scalars['Boolean']['input'];
+  backfill_days: Scalars['Int']['input'];
+  default_assignee_user_id?: InputMaybe<Scalars['ID']['input']>;
+  expiry_alert_days: Scalars['Int']['input'];
+  link_dms_to_leads: Scalars['Boolean']['input'];
+  opt_in_keywords: Array<Scalars['String']['input']>;
+  opt_out_keywords: Array<Scalars['String']['input']>;
+  sync_every_hours: Scalars['Int']['input'];
 };
 
 export type SocialSeverity =
@@ -47626,6 +48211,12 @@ export type SocialTopPost = {
   platform: SocialPlatform;
   text: Scalars['String']['output'];
 };
+
+/** Meta's messaging window: OPEN within 24 h of the person's last message, HUMAN_AGENT (a person's reply only) up to 7 days, CLOSED after that or before they ever wrote. */
+export type SocialWindowState =
+  | 'CLOSED'
+  | 'HUMAN_AGENT'
+  | 'OPEN';
 
 /** Who a SOLUTIONS entry is offered to — the sections duncit.com/solutions lists. */
 export type SolutionAudience =
@@ -52576,6 +53167,8 @@ export type TranslationValueInput = {
  * something was merged.
  */
 export type TriggerAppBuildInput = {
+  /** Which app to build. Left out, the member app. CRM builds an APK and/or AAB on Android and an IPA on iOS; Play submission is ignored for it. */
+  app?: InputMaybe<AppBuildApp>;
   /**
    * Which server and database the built app talks to. This is baked into the
    * binary at compile time and cannot be changed afterwards, which is the whole
@@ -53338,6 +53931,10 @@ export type UpdateAppBuildSettingsInput = {
   android_channel?: InputMaybe<Scalars['String']['input']>;
   /** Slack channel ID staging Android builds announce to. Empty sends them to the production channel. */
   android_staging_channel?: InputMaybe<Scalars['String']['input']>;
+  /** Slack channel ID production Duncit CRM builds announce to. Empty falls back to the Android builds channel. */
+  crm_channel?: InputMaybe<Scalars['String']['input']>;
+  /** Slack channel ID staging Duncit CRM builds announce to. Empty falls back to the CRM production channel. */
+  crm_staging_channel?: InputMaybe<Scalars['String']['input']>;
   /** Slack channel ID iOS builds announce to. Empty clears it. */
   ios_channel?: InputMaybe<Scalars['String']['input']>;
   /** Slack channel ID staging iOS builds announce to. Empty sends them to the production channel. */
@@ -53662,6 +54259,13 @@ export type UpdateCouponInput = {
   scope?: InputMaybe<CouponScope>;
   valid_from?: InputMaybe<Scalars['String']['input']>;
   valid_until?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateCrmAppBuildSettingsInput = {
+  /** Slack channel ID for production builds; empty falls back to the Android builds channel. */
+  production_channel?: InputMaybe<Scalars['String']['input']>;
+  /** Slack channel ID for staging builds; empty falls back to the production channel. */
+  staging_channel?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateCrmCallPromptInput = {

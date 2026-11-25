@@ -71,7 +71,7 @@ export default function SourcesPanel({ project, actions, onEditDetails }: Readon
         <AssetList assets={project.assets} usedAssetIds={usedAssetIds} onRemove={actions.removeAsset} />
       </Box>
       <Divider />
-      <DuncitTabs {...tabs} idPrefix={ID_PREFIX} variant="scrollable" scrollButtons="auto" allowScrollButtonsMobile aria-label={t('ai.reels.sources.tabsLabel')} />
+      <DuncitTabs {...tabs} idPrefix={ID_PREFIX} searchable={false} variant="scrollable" scrollButtons="auto" allowScrollButtonsMobile aria-label={t('ai.reels.sources.tabsLabel')} />
       <Stack {...tabPanelProps(ID_PREFIX, tabs.value)} sx={{ flex: 1, minHeight: 0 }}>
         {tabs.value === 'drive' && <DriveTab project={project} actions={actions} onEditDetails={onEditDetails} />}
         {tabs.value === 'stock' && <StockTab project={project} actions={actions} provider="PEXELS" />}

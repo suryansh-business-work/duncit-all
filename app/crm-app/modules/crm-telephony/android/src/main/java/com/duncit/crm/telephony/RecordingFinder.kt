@@ -63,6 +63,24 @@ internal object RecordingFinder {
     return out
   }
 
+  /** A folder the phone's call recorder saves into, found by looking — no brand's path is assumed. */
+  internal data class CallFolder(val relativePath: String, val count: Int, val latestMs: Long)
+
+  /**
+   * The folders holding call recordings since `sinceMs`: every audio folder or
+   * file whose name mentions a call ("Recordings/Call/" on Samsung, "MIUI/sound_recorder/call_rec"
+   * on Xiaomi…), newest first. Empty without the audio permission.
+   */
+  fun callFolders(context: Context, sinceMs: Long): List<CallFolder> {
+    val byFolder = LinkedHashMap<String, MutableList<RecordingFile>>()
+    for (file in between(context, sinceMs, System.currentTimeMillis())) {
+      if (!"${file.relativePath} ${file.name}".contains("call", ignoreCase = true)) continue
+      byFolder.getOrPut(file.relativePath) { mutableListOf() }.add(file)
+    }
+    return byFolder.map { (path, files) -> CallFolder(path, files.size, files.maxOf { it.addedAtMs }) }
+      .sortedByDescending { it.latestMs }
+  }
+
   /** Copy a content:// recording into the app cache so it can be uploaded; returns the file path. */
   fun copyToCache(context: Context, uri: String, fileName: String): String {
     val dir = File(context.cacheDir, "recordings").apply { mkdirs() }

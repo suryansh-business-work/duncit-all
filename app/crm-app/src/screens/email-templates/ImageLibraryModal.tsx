@@ -7,6 +7,7 @@ import { fireAndForget, logs } from '@duncit/logs';
 import { DuncitButton } from '@/components/DuncitButton';
 import { IconButton } from '@/components/email-templates/IconButton';
 import { Notice } from '@/components/email-templates/Notice';
+import { ModalPage } from '@/components/ModalPage';
 import { SURFACE } from '@/components/surface';
 import { RADII } from '@/constants/design';
 import { assetLabel, type EmailAsset } from '@/features/email-templates/draft';
@@ -85,11 +86,7 @@ export function ImageLibraryModal({
 
   return (
     <Modal visible={open} animationType="slide" onRequestClose={onClose}>
-      <YStack
-        flex={1}
-        backgroundColor="$background"
-        aria-label={t('crm.emailTemplates.imageLibrary')}
-      >
+      <ModalPage label={t('crm.emailTemplates.imageLibrary')}>
         <XStack
           alignItems="center"
           paddingLeft="$4"
@@ -174,7 +171,7 @@ export function ImageLibraryModal({
             </XStack>
           )}
         />
-      </YStack>
+      </ModalPage>
     </Modal>
   );
 }

@@ -105,6 +105,13 @@ describe('StudioWorkspace on a wide screen', () => {
     expect(layout.setSize).toHaveBeenCalledWith('TIMELINE', 400);
   });
 
+  it('may shrink below its content, so a long timeline cannot widen the split and push the side pane off screen', async () => {
+    renderWithProviders(<StudioWorkspace state={state()} panes={panes} />);
+    // As a flex item its default min-width is its content's width: the whole
+    // timeline, wider than the screen, which the split then shared out.
+    expect(await screen.findByTestId('reel-workspace-split')).toHaveStyle({ minWidth: '0' });
+  });
+
   it('pops a pane out and closes one from its bar', async () => {
     const layout = state();
     renderWithProviders(<StudioWorkspace state={layout} panes={panes} />);

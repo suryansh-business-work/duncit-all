@@ -86,6 +86,44 @@ describe('PageIntro', () => {
     expect(screen.getByTestId('page-intro')).toHaveStyle({ marginTop: '8px' });
   });
 
+  it('has no close button unless the page asks for one', () => {
+    render(<PageIntro id="crm-leads" summary="Leads." onStartTour={() => undefined} />);
+    expect(screen.queryByRole('button', { name: 'Hide this note' })).not.toBeInTheDocument();
+  });
+
+  it('closes when dismissible, and stays closed on the next visit to that page only', () => {
+    const { unmount } = render(<PageIntro id="reel-studio" summary="Footage on the left." dismissible />);
+    fireEvent.click(screen.getByRole('button', { name: 'Hide this note' }));
+    expect(screen.queryByTestId('page-intro')).not.toBeInTheDocument();
+    expect(localStorage.getItem('duncit.guide.reel-studio.dismissed')).toBe('1');
+    unmount();
+
+    const { unmount: leave } = render(<PageIntro id="reel-studio" summary="Footage on the left." dismissible />);
+    expect(screen.queryByTestId('page-intro')).not.toBeInTheDocument();
+    leave();
+
+    render(<PageIntro id="crm-leads" summary="Leads." dismissible />);
+    expect(screen.getByText('Leads.')).toBeInTheDocument();
+  });
+
+  it('ignores a remembered close when the page no longer offers one, so the intro is never lost for good', () => {
+    localStorage.setItem('duncit.guide.reel-studio.dismissed', '1');
+    render(<PageIntro id="reel-studio" summary="Footage on the left." />);
+    expect(screen.getByText('Footage on the left.')).toBeInTheDocument();
+  });
+
+  it('closes for this visit even when storage is blocked', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('SecurityError');
+    });
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('QuotaExceededError');
+    });
+    render(<PageIntro id="reel-studio" summary="Footage on the left." dismissible />);
+    fireEvent.click(screen.getByRole('button', { name: 'Hide this note' }));
+    expect(screen.queryByTestId('page-intro')).not.toBeInTheDocument();
+  });
+
   it('works with storage blocked: opens as a first visit, folds for this visit only, never throws', () => {
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('SecurityError');

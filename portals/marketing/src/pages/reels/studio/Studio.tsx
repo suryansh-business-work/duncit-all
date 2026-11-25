@@ -125,7 +125,7 @@ export default function Studio({ project }: Readonly<{ project: ReelProject }>) 
   return (
     <FillViewport>
       <Box sx={{ mb: 1 }}>
-        <RunsGuide id={TOUR_ID} summary={t('ai.reels.guide.studioSummary')} steps={[]} tour={tourSteps(t)} />
+        <RunsGuide id={TOUR_ID} summary={t('ai.reels.guide.studioSummary')} steps={[]} tour={tourSteps(t)} dismissible />
       </Box>
       <Paper variant="outlined" sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, borderRadius: 2, overflow: 'hidden' }} data-testid="reel-studio">
         <StudioToolbar

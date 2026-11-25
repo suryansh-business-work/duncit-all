@@ -1,4 +1,5 @@
 import { Schema, model, type Document } from 'mongoose';
+import { APP_BUILD_APPS, type AppBuildApp } from './appBuild.model';
 
 /**
  * One iOS signing identity the server made through the App Store Connect API:
@@ -10,6 +11,12 @@ import { Schema, model, type Document } from 'mongoose';
  * identity is generated.
  */
 export interface IIosSigning extends Document {
+  /**
+   * Which app the profile signs. Identities made before the Duncit CRM app had
+   * none, and every one of them is the member app's, so readers match the
+   * member app as "not CRM" (appFilter).
+   */
+  app?: AppBuildApp;
   bundle_id: string;
   team_id: string;
   /** Apple's resource id — how the certificate is revoked. */
@@ -34,6 +41,7 @@ export interface IIosSigning extends Document {
 
 const iosSigningSchema = new Schema<IIosSigning>(
   {
+    app: { type: String, enum: APP_BUILD_APPS },
     bundle_id: { type: String, required: true, trim: true },
     team_id: { type: String, default: '' },
     certificate_id: { type: String, required: true },

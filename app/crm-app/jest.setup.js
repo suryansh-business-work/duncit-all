@@ -43,6 +43,13 @@ jest.mock('expo-task-manager', () => ({
 
 jest.mock('expo-crypto', () => ({ randomUUID: jest.fn(() => 'install-uuid') }));
 
+// The library's own mock: no system bars unless a spec wraps the tree in a
+// SafeAreaProvider with the insets it wants to test.
+jest.mock(
+  'react-native-safe-area-context',
+  () => require('react-native-safe-area-context/jest/mock').default,
+);
+
 // The date/time picker and the web view are native views: a plain View that
 // keeps its props, so a spec can fire onChange or read the html it was given.
 jest.mock('@react-native-community/datetimepicker', () => {
@@ -55,6 +62,39 @@ jest.mock('@react-native-community/datetimepicker', () => {
     DateTimePickerAndroid: { open: jest.fn(), dismiss: jest.fn() },
   };
 });
+
+// The launch video: a player whose events a spec can fire (`__emit`), and a
+// plain View for the video surface that keeps its props.
+jest.mock('expo-video', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  const listeners = new Map();
+  const player = {
+    muted: false,
+    loop: false,
+    status: 'idle',
+    play: jest.fn(),
+    pause: jest.fn(),
+    addListener: jest.fn((event, listener) => {
+      listeners.set(event, listener);
+      return { remove: () => listeners.delete(event) };
+    }),
+  };
+  return {
+    useVideoPlayer: jest.fn((_source, setup) => {
+      setup?.(player);
+      return player;
+    }),
+    VideoView: (props) => React.createElement(View, { ...props, testID: 'video-view' }),
+    __player: player,
+    __emit: (event, payload) => listeners.get(event)?.(payload),
+  };
+});
+
+jest.mock('expo-splash-screen', () => ({
+  preventAutoHideAsync: jest.fn().mockResolvedValue(true),
+  hideAsync: jest.fn().mockResolvedValue(true),
+}));
 
 jest.mock('react-native-webview', () => {
   const React = require('react');

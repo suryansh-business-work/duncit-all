@@ -14,10 +14,33 @@ const mockPhone = {
   pinDialerShortcut: jest.fn(),
   canDrawOverlays: jest.fn(() => true),
   setFeatures: jest.fn(),
+  playDialTone: jest.fn((_key: string) => true),
+  // Settings › Calling & recording (covered in settings/calling/__tests__).
+  diagnostics: jest.fn(() => ({
+    manufacturer: 'samsung',
+    model: 'SM-S921B',
+    sdk: 35,
+    phoneState: true,
+    callLog: true,
+    overlay: true,
+    notifications: true,
+    defaultDialer: 'Phone',
+    dialerIsDuncit: false,
+    redirectionAvailable: true,
+    redirectionHeld: true,
+    batteryUnrestricted: true,
+    backgroundRestricted: false,
+    callerIdOn: true,
+    autoLogOn: true,
+    directoryNumbers: 3,
+  })),
+  recordingFolders: jest.fn(async () => []),
 };
+/** The native call module: present on Android, null on an iPhone. */
+let mockPhoneModule: typeof mockPhone | null = mockPhone;
 jest.mock('crm-telephony', () => ({
   get CrmTelephony() {
-    return mockPhone;
+    return mockPhoneModule;
   },
 }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
@@ -39,6 +62,7 @@ const request = gqlRequest as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockPhoneModule = mockPhone;
   mockRouteParams = undefined;
 });
 
@@ -54,6 +78,8 @@ describe('DialerScreen', () => {
     renderWithTheme(<DialerScreen />);
     for (const key of '9811000001') fireEvent.press(screen.getByTestId(`key-${key}`));
     expect(screen.getByTestId('dialer-number').props.value).toBe('9811000001');
+    // Every key beeps with its own dial tone.
+    expect(mockPhone.playDialTone.mock.calls.map(([k]) => k).join('')).toBe('9811000001');
     expect(await screen.findByText('Run Club', {}, { timeout: 2000 })).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('dialer-open-lead'));
     expect(mockNav.navigate).toHaveBeenCalledWith('LeadDetail', { kind: 'HOST_LEAD', id: 'h1' });
@@ -123,6 +149,20 @@ describe('SettingsScreen', () => {
     expect(screen.getByText('Confirm on your home screen to add the icon.')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('settings-pin-dialer'));
     expect(screen.getByText(/cannot add icons from apps/)).toBeOnTheScreen();
+  });
+
+  it('on an iPhone keeps the account and the CRM call line, and leaves out the Android call features', () => {
+    mockPhoneModule = null;
+    renderWithTheme(<SettingsScreen />);
+    expect(screen.getByText('Asha Rao')).toBeOnTheScreen();
+    expect(screen.getByTestId('settings-sign-out')).toBeOnTheScreen();
+    expect(screen.getByTestId('settings-call-line')).toBeOnTheScreen();
+    expect(screen.queryByTestId('feature-caller-id')).toBeNull();
+    expect(screen.queryByTestId('feature-auto-log')).toBeNull();
+    expect(screen.queryByTestId('settings-pin-dialer')).toBeNull();
+    expect(screen.queryByTestId('perm-phone')).toBeNull();
+    expect(screen.queryByTestId('perm-phone-ok')).toBeNull();
+    expect(screen.queryByTestId('settings-sync')).toBeNull();
   });
 
   it('signs out', async () => {

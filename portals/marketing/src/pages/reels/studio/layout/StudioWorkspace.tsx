@@ -131,8 +131,11 @@ export default function StudioWorkspace({ state, panes }: Readonly<Props>) {
     );
   }
 
+  // minWidth 0: as a flex item this box would otherwise be as wide as its
+  // widest content — the timeline's whole length — so the split view measured
+  // that width, gave it to the player and pushed the side pane off screen.
   return (
-    <Box sx={{ flex: 1, minHeight: 0, display: 'flex' }} data-testid="reel-workspace-split">
+    <Box sx={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex' }} data-testid="reel-workspace-split">
       {body}
       {windows}
     </Box>

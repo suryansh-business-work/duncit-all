@@ -33,8 +33,9 @@ export default function AppBuildsTable({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   let tableId = platform === 'ANDROID' ? 'tech-app-builds-android' : 'tech-app-builds-ios';
-  if (app === 'CRM') tableId = 'tech-app-builds-crm';
-  // The CRM APK is installed by hand and never goes to a store, so its table has no store column.
+  // The CRM Android id predates the iOS table and keeps saved column choices.
+  if (app === 'CRM') tableId = platform === 'ANDROID' ? 'tech-app-builds-crm' : 'tech-app-builds-crm-ios';
+  // CRM builds never go to a store from here, so their tables have no store column.
   const withStore = app !== 'CRM';
   const columns = useMemo(
     () => makeAppBuildColumns(t, platform, onDelete, onPush, onPushAppStore, withStore),

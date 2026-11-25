@@ -19,8 +19,13 @@ import {
 } from '../background-sync';
 import { uploadFile } from '../upload';
 
+const androidPhone = { takePendingPostCall: jest.fn(() => null), setFeatures: jest.fn() };
+/** The native call module: present on Android, null on an iPhone. */
+let mockPhone: typeof androidPhone | null = androidPhone;
 jest.mock('crm-telephony', () => ({
-  CrmTelephony: { takePendingPostCall: jest.fn(() => null), setFeatures: jest.fn() },
+  get CrmTelephony() {
+    return mockPhone;
+  },
 }));
 jest.mock('@/services/call-sync', () => ({ syncDeviceCalls: jest.fn() }));
 jest.mock('@/services/directory-sync', () => ({
@@ -34,6 +39,7 @@ const jwt = (psv: object) => `h.${Buffer.from(JSON.stringify({ psv })).toString(
 
 beforeEach(async () => {
   jest.clearAllMocks();
+  mockPhone = androidPhone;
   resetTokenCache();
   useFeaturesStore.setState({ hydrated: true });
   (readDirectoryStatus as jest.Mock).mockResolvedValue({ syncedAt: null, count: 0 });
@@ -86,6 +92,26 @@ describe('background task', () => {
     (TaskManager.isTaskRegisteredAsync as jest.Mock).mockResolvedValueOnce(true);
     await unregisterBackgroundSync();
     expect(BackgroundTask.unregisterTaskAsync).toHaveBeenCalledWith(BACKGROUND_SYNC_TASK);
+  });
+});
+
+describe('on an iPhone (no call module)', () => {
+  beforeEach(() => {
+    mockPhone = null;
+  });
+
+  it('has nothing to sync, so it reads no directory and sends no calls even when signed in', async () => {
+    await setToken(jwt({ portal: 'crm', verified: true }));
+    (isDirectoryStale as jest.Mock).mockReturnValue(true);
+    await expect(runSync()).resolves.toBe(true);
+    expect(readDirectoryStatus).not.toHaveBeenCalled();
+    expect(syncDirectory).not.toHaveBeenCalled();
+    expect(syncDeviceCalls).not.toHaveBeenCalled();
+  });
+
+  it('schedules no background task', async () => {
+    await registerBackgroundSync();
+    expect(BackgroundTask.registerTaskAsync).not.toHaveBeenCalled();
   });
 });
 

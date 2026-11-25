@@ -12,9 +12,11 @@ import type { NestedCatalogue } from '../catalogue';
  */
 export const CRM_BUNDLE: NestedCatalogue = {
   crm: {
-    // CRM → Download CRM App: the Duncit CRM Android app built by CI.
+    // CRM → Download CRM App: the Duncit CRM Android and iPhone apps built by CI.
     downloadApp: {
-      intro: 'The Duncit CRM app for Android: leads, reminders, a dialer that logs every call, and caller ID that shows who is calling from the CRM.',
+      intro: 'The Duncit CRM app for Android and iPhone: leads, reminders and a dialer. On Android it also logs every call and shows caller ID from the CRM.',
+      android: 'Android',
+      ios: 'iPhone',
       production: 'Latest app',
       staging: 'Staging app',
       testingOnly: 'Testing only',
@@ -23,6 +25,10 @@ export const CRM_BUNDLE: NestedCatalogue = {
       size: '{size} MB',
       builtOn: 'Built {date}',
       download: 'Download APK',
+      downloadAab: 'Download AAB',
+      downloadIpa: 'Download IPA',
+      aabHint: 'The AAB is for publishing on Google Play. To install on a phone, use the APK.',
+      ipaHint: 'An iPhone installs the app through TestFlight, not from this file. Keep the IPA for records or to upload it to App Store Connect.',
       copyLink: 'Copy link',
       linkCopied: 'Download link copied',
       copyFailed: 'The link could not be copied. Long-press the Download button to copy it instead.',
@@ -34,13 +40,16 @@ export const CRM_BUNDLE: NestedCatalogue = {
       step2: 'When Android asks, allow installs from your browser (Install unknown apps), then install.',
       step3: 'Open Duncit CRM and sign in with the same email and password you use here.',
       step4: 'Allow phone, call log, notifications, audio files and display over other apps, so caller ID and call logging work.',
-      androidOnly: 'Android only: caller ID and call logging read the phone’s call log, which iPhones do not allow apps to do.',
+      iosInstallTitle: 'Install on iPhone',
+      iosStep1: 'Ask Tech to add your Apple ID as a Duncit CRM tester in TestFlight.',
+      iosStep2: 'Install Apple’s TestFlight app from the App Store, open the invitation on your iPhone and install Duncit CRM.',
+      androidOnly: 'On iPhone, caller ID and call logging are not available: iPhones do not let apps read the call log. The dialer opens the phone’s own dialer, and calls on the CRM call line are still recorded.',
       // CRM Mobile App → Settings: where each build is published on Slack.
       settings: {
         title: 'CRM Mobile App Settings',
         intro: 'Choose the Slack channel each new Duncit CRM app build is published to — one for production builds and one for staging builds.',
         production: 'Production builds channel',
-        productionHint: 'Leave empty to publish in the Android builds channel.',
+        productionHint: 'Leave empty to publish in the Android or iOS builds channel.',
         staging: 'Staging builds channel',
         stagingHint: 'Leave empty to publish staging builds in the production channel.',
         none: 'Not set',

@@ -26,7 +26,7 @@ import type { CreateBuildValues } from './create-build.types';
 interface Props {
   open: boolean;
   platform: AppBuildPlatform;
-  /** The Duncit CRM app builds an APK only, never for a store. */
+  /** The Duncit CRM app builds the same artifacts, but never for a store. */
   app?: AppBuildApp;
   onClose: () => void;
   /** Called after a build is queued, so the table shows it without a reload. */
@@ -54,9 +54,7 @@ export default function CreateBuildDialog({ open, platform, app = 'DUNCIT', onCl
   const submit = async (values: CreateBuildValues) => {
     setBusy(true);
     try {
-      const input = crm
-        ? { platform, ...values, app, artifacts: ['APK'], submit_to_play_store: false }
-        : { platform, ...values };
+      const input = crm ? { platform, ...values, app, submit_to_play_store: false } : { platform, ...values };
       const res = await triggerBuild({ variables: { input } });
       const queued = res.data?.triggerAppBuild;
       notifySuccess(

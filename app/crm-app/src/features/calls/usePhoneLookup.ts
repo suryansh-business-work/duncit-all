@@ -11,6 +11,9 @@ export interface PhoneOwner {
   leadId: string;
   leadName: string;
   contactName: string;
+  /** The lead's status and who it is assigned to ('' when the CRM has none). */
+  status: string;
+  assignee: string;
 }
 
 export type LookupState =
@@ -30,6 +33,8 @@ export async function findOwner(number: string): Promise<PhoneOwner | null> {
       leadId: local.leadId,
       leadName: local.leadName,
       contactName: local.contactName,
+      status: local.status ?? '',
+      assignee: local.assignee ?? '',
     };
   }
   const { crmPhoneLookup } = await gqlRequest(CrmAppPhoneLookupDocument, { phone: number });
@@ -40,6 +45,8 @@ export async function findOwner(number: string): Promise<PhoneOwner | null> {
     leadId: match.lead_id,
     leadName: match.lead_name,
     contactName: match.contact_name ?? '',
+    status: match.lead_status ?? '',
+    assignee: match.assigned_to ?? '',
   };
 }
 

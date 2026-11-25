@@ -7,12 +7,18 @@ import { Card } from '@/components/Card';
 import { DuncitButton } from '@/components/DuncitButton';
 import { formatCallDuration } from '@/features/calls/duration';
 import { isLeadKind } from '@/features/leads/leadKinds';
-import { syncDeviceCalls } from '@/services/call-sync';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AppStackParamList } from '@/navigation/types';
 import { usePostCallStore } from '@/stores/postCall.store';
+import { syncPostCall, type SaveState } from './postCallSave';
 
-type SaveState = 'saving' | 'saved' | 'failed';
+const SAVE_KEYS: Record<SaveState, string> = {
+  saving: 'crmApp.postCall.saving',
+  saved: 'crmApp.postCall.saved',
+  notLogged: 'crmApp.postCall.notLogged',
+  retrying: 'crmApp.postCall.retrying',
+  off: 'crmApp.postCall.loggingOff',
+};
 
 /**
  * After a call with a CRM contact: the call is saved to the lead's
@@ -28,9 +34,9 @@ export function PostCallScreen() {
 
   useEffect(() => {
     if (!usePostCallStore.getState().pending) usePostCallStore.getState().collect();
-    syncDeviceCalls()
-      .then((r) => setSave(r.failed ? 'failed' : 'saved'))
-      .catch(() => setSave('failed'));
+    syncPostCall(usePostCallStore.getState().pending)
+      .then(setSave)
+      .catch(() => setSave('retrying'));
   }, []);
 
   const done = () => {
@@ -46,9 +52,8 @@ export function PostCallScreen() {
   const lead =
     isLeadKind(kind) && leadId ? { kind, id: leadId, name: pending?.leadName ?? who } : null;
 
-  let saveText = t('crmApp.postCall.saving');
-  if (save === 'saved') saveText = t('crmApp.postCall.saved');
-  else if (save === 'failed') saveText = t('crmApp.settings.syncFailed');
+  const saveText = t(SAVE_KEYS[save]);
+  const saveTone = save === 'saved' || save === 'saving' ? '$muted' : '$danger';
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
@@ -59,11 +64,7 @@ export function PostCallScreen() {
             ? t('crmApp.postCall.lasted', { vars: { duration: formatCallDuration(seconds) } })
             : t('crmApp.postCall.missed')}
         </Text>
-        <Text
-          color={save === 'failed' ? '$danger' : '$muted'}
-          aria-live="polite"
-          testID="post-call-save"
-        >
+        <Text color={saveTone} aria-live="polite" testID="post-call-save">
           {saveText}
         </Text>
       </Card>

@@ -12,6 +12,10 @@ const DENIED_FIELDS: ReadonlyMap<string, string> = new Map([
   ['giftCardOrderLabelFile', 'returns a shipping label PDF as base64 — a console download'],
   ['staffCallIceServers', 'returns TURN relay credentials'],
   ['downloadIosSigningFile', 'returns an iOS signing certificate'],
+  // What the iOS build workflows sign and upload with: the .p12 with its
+  // password and the App Store Connect key. CI fetches them; nobody else may.
+  ['iosSigningBundle', 'returns the iOS signing key and the App Store Connect key; CI only'],
+  ['crmIosSigningBundle', 'returns the iOS signing key and the App Store Connect key; CI only'],
   ['requestDbBackupDownload', 'returns a link to a full database archive'],
   ['startE2eRun', 'hands the E2E workflow its test credentials; CI only'],
   // The unit-test reporter's writes: a CI run records what it ran, not a person.

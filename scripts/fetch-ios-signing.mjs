@@ -16,6 +16,15 @@
  * Env: DUNCIT_GRAPHQL_URL (the server the build reports to — each server keeps
  * its own identity, as it signs its own tokens), DUNCIT_RELEASE_TOKEN or
  * DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD, RUNNER_TEMP, GITHUB_ENV.
+ * APP=CRM (crm-ios-build) asks for the Duncit CRM app's identity instead: the
+ * same certificate with the CRM bundle ID's own App Store profile, which the
+ * server makes on first use — so that one is a mutation.
+ *
+ * `--check` (crm-ios-build's preflight) writes no file and moves no key: it
+ * sets the step outputs `ready` (true/false) and `reason`. A signing server
+ * that is not set up for the CRM app yet is ready=false with exit 0, so a
+ * push can skip the macOS build instead of failing it; anything else (no
+ * credentials, network, an expired certificate) still exits 1.
  */
 import fs from 'node:fs';
 import os from 'node:os';
@@ -24,9 +33,30 @@ import process from 'node:process';
 import { createCiClient, describeError, MISSING_CREDENTIALS } from './lib/ci-report.mjs';
 
 const GRAPHQL_URL = process.env.DUNCIT_GRAPHQL_URL || 'https://server.duncit.com/graphql';
+const CRM = (process.env.APP || '').trim().toUpperCase() === 'CRM';
+const CHECK = process.argv.includes('--check');
 
-const QUERY = `query IosSigningBundle {
-  iosSigningBundle {
+/**
+ * What a signing server answers while it is not set up for the CRM app yet,
+ * each a step a person has to take — never a code fault worth a red build.
+ */
+const NOT_SET_UP = [
+  {
+    match: /Cannot query field "crmIosSigningBundle"/,
+    reason: 'The signing server does not have Duncit CRM iOS signing yet: it arrives with the next production deploy (merge staging into main).',
+  },
+  { match: /Duncit CRM bundle ID/ },
+  { match: /No iOS signing files yet/ },
+  { match: /App Store Connect is not connected/ },
+];
+
+/** Step outputs for the preflight; one line each, as GITHUB_OUTPUT needs. */
+function writeOutputs(values) {
+  const lines = Object.entries(values).map(([key, value]) => `${key}=${String(value).replaceAll(/\s+/g, ' ')}`);
+  fs.appendFileSync(process.env.GITHUB_OUTPUT, `${lines.join('\n')}\n`);
+}
+
+const BUNDLE_FIELDS = `
     team_id
     bundle_id
     profile_uuid
@@ -37,7 +67,17 @@ const QUERY = `query IosSigningBundle {
     asc_key_id
     asc_issuer_id
     asc_private_key
-  }
+`;
+
+// The preflight asks for no key: the answer only has to prove signing works.
+const FIELDS = CHECK ? 'bundle_id team_id profile_name' : BUNDLE_FIELDS;
+
+const QUERY = CRM
+  ? `mutation CrmIosSigningBundle {
+  crmIosSigningBundle {${FIELDS}  }
+}`
+  : `query IosSigningBundle {
+  iosSigningBundle {${FIELDS}  }
 }`;
 
 try {
@@ -48,7 +88,13 @@ try {
     console.error(`✗ fetch-ios-signing: ${MISSING_CREDENTIALS}`);
     process.exit(1);
   }
-  const { iosSigningBundle: bundle } = await client.gql(QUERY, {}, token);
+  const data = await client.gql(QUERY, {}, token);
+  const bundle = CRM ? data.crmIosSigningBundle : data.iosSigningBundle;
+  if (CHECK) {
+    writeOutputs({ ready: true, reason: '' });
+    console.log(`✓ Signing is set up for ${bundle.bundle_id} — team ${bundle.team_id}, profile "${bundle.profile_name}"`);
+    process.exit(0);
+  }
   // Masked before anything else could print it.
   console.log(`::add-mask::${bundle.p12_password}`);
 
@@ -79,6 +125,14 @@ try {
   fs.appendFileSync(process.env.GITHUB_ENV, `${lines.join('\n')}\n`);
   console.log(`✓ Signing identity for ${bundle.bundle_id} — team ${bundle.team_id}, profile "${bundle.profile_name}"`);
 } catch (err) {
-  console.error(`✗ fetch-ios-signing: ${describeError(err)}`);
+  const message = describeError(err);
+  const notSetUp = CHECK ? NOT_SET_UP.find((entry) => entry.match.test(message)) : undefined;
+  if (notSetUp) {
+    const reason = notSetUp.reason ?? message;
+    writeOutputs({ ready: false, reason });
+    console.log(`::warning title=Duncit CRM iOS signing is not set up::${reason}`);
+    process.exit(0);
+  }
+  console.error(`✗ fetch-ios-signing: ${message}`);
   process.exit(1);
 }

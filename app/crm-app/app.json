@@ -6,19 +6,28 @@
     "orientation": "portrait",
     "scheme": "duncitcrm",
     "userInterfaceStyle": "automatic",
-    "icon": "./assets/duncit-logo.png",
+    "icon": "./assets/duncit-crm-logo.png",
     "assetBundlePatterns": [
       "**/*"
     ],
     "platforms": [
-      "android"
+      "android",
+      "ios"
     ],
+    "ios": {
+      "bundleIdentifier": "com.duncit.crm",
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
     "android": {
       "package": "com.duncit.crm",
       "versionCode": 1,
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/duncit-icon-foreground.png"
+        "foregroundImage": "./assets/duncit-crm-icon-glyph.png",
+        "backgroundColor": "#D20224"
       },
       "permissions": [
         "android.permission.INTERNET",
@@ -33,7 +42,8 @@
         "android.permission.READ_MEDIA_AUDIO"
       ],
       "blockedPermissions": [
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA"
       ],
       "intentFilters": [
         {
@@ -72,9 +82,10 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/duncit-logo.png",
+          "image": "./assets/duncit-crm-icon-glyph.png",
           "imageWidth": 200,
-          "resizeMode": "contain"
+          "resizeMode": "contain",
+          "backgroundColor": "#D80F2C"
         }
       ],
       "expo-secure-store",
@@ -101,8 +112,9 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": false,
-          "microphonePermission": false
+          "photosPermission": "Duncit CRM opens your photo library when you attach photos or videos to a lead or an email template.",
+          "cameraPermission": "Duncit CRM does not take photos. iOS asks for this note because the photo picker it uses can open the camera.",
+          "microphonePermission": "Duncit CRM does not record audio. It only plays back call recordings."
         }
       ]
     ],

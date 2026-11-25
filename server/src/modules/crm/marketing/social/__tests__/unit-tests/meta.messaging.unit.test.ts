@@ -169,6 +169,8 @@ describe('subscribePageWebhooks', () => {
     await subscribePageWebhooks('page-1', 'PAGE-TOKEN', CREDS);
     expect(urlOf(0)).toBe(`${GRAPH}/page-1/subscribed_apps`);
     expect(formOf(0)).toEqual({ subscribed_fields: PAGE_WEBHOOK_FIELDS.join(','), access_token: 'PAGE-TOKEN' });
-    expect(PAGE_WEBHOOK_FIELDS).toEqual(['messages', 'messaging_postbacks', 'message_reactions', 'messaging_seen', 'feed']);
+    // Page field names only: Meta answered "(#100) Param subscribed_fields[3] must be one of …"
+    // to the Instagram-only `messaging_seen` and subscribed the Page to nothing.
+    expect(PAGE_WEBHOOK_FIELDS).toEqual(['messages', 'messaging_postbacks', 'message_reactions', 'feed']);
   });
 });

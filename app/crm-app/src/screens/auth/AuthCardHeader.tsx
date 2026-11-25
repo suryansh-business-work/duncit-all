@@ -4,7 +4,7 @@ import { Text, XStack } from 'tamagui';
 import { RADII } from '@/constants/design';
 import { useTranslation } from '@/hooks/useTranslation';
 
-const LOGO = require('../../../assets/duncit-logo.png');
+const LOGO = require('../../../assets/duncit-crm-logo.png');
 
 /** The portal login card's top row: the Duncit mark and "duncit.com", and the console's name as a chip. */
 export function AuthCardHeader() {

@@ -58,6 +58,21 @@ describe('searchPixabay', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it('drops a space pasted inside the key, which Pixabay would refuse as an invalid key', async () => {
+    env.mockResolvedValue(`${KEY.slice(0, 9)} ${KEY.slice(9)}\n`);
+    fetchMock.mockResolvedValue(answer({ totalHits: 0, hits: [] }));
+    await searchPixabay({ query: 'yoga', kind: 'IMAGE', aspect: 'PORTRAIT', page: 1, perPage: 24 });
+    expect(new URL(fetchMock.mock.calls[0][1]).searchParams.get('key')).toBe(KEY);
+  });
+
+  it('treats a key of only spaces as no key', async () => {
+    env.mockResolvedValue(' \t ');
+    await expect(searchPixabay({ query: 'dog', kind: 'IMAGE', aspect: 'PORTRAIT', page: 1, perPage: 24 })).rejects.toMatchObject({
+      extensions: { code: 'CONFIG_ERROR', env_category: 'PIXABAY' },
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('asks for safe portrait photos and lists them with the Pixabay licence and credit', async () => {
     fetchMock.mockResolvedValue(answer({ totalHits: 60, hits: [photo(1, 1000, 1500), photo(2, 1500, 1000)] }));
     const page = await searchPixabay({ query: 'dog '.repeat(40), kind: 'IMAGE', aspect: 'PORTRAIT', page: 1, perPage: 24 });

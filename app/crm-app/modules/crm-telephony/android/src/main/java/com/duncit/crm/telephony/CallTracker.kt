@@ -8,11 +8,12 @@ import org.json.JSONObject
  *
  *  - RINGING: an incoming CRM contact shows its caller card at once, from the
  *    offline directory — no network, no app process needed.
- *  - OFFHOOK: answered (incoming) or dialled (outgoing). An outgoing call the
- *    CRM dialer placed is known by the number it marked just before dialling.
+ *  - OFFHOOK: answered (incoming) or dialled (outgoing). An outgoing call is
+ *    known by the number the CRM dialer marked just before dialling, or that
+ *    the call-redirection service saw for any other dialer (Samsung Phone).
  *  - IDLE: the card goes away, and a call with a CRM contact leaves a
  *    "call ended — add a note" notification plus a pending post-call record
- *    the app opens on its next start.
+ *    the app opens on its next start, and schedules the call sync.
  *
  * Nothing about a call with a number that is not in the CRM is kept or shown:
  * an employee's personal calls never reach the app.
@@ -36,11 +37,12 @@ internal object CallTracker {
       return
     }
     if (active != null) return
+    // Named by the CRM dialer, or by the call-redirection service for any other dialer.
     val dialled = CrmPrefs.takeOutgoing(context)
-    val dialledNumber = dialled ?: number.orEmpty()
+    val dialledNumber = dialled?.number ?: number.orEmpty()
     CrmPrefs.saveActive(
       context,
-      CrmPrefs.ActiveCall(dialledNumber, "OUTBOUND", System.currentTimeMillis(), true, dialled != null),
+      CrmPrefs.ActiveCall(dialledNumber, "OUTBOUND", System.currentTimeMillis(), true, dialled?.fromCrm == true),
     )
     if (dialledNumber.isNotEmpty() && CrmPrefs.callerIdEnabled(context)) showCaller(context, dialledNumber)
   }
@@ -73,6 +75,8 @@ internal object CallTracker {
         .put("contactName", match.entry.contactName)
     }
     CrmPrefs.savePostCall(context, record)
+    // Log it now, app open or closed, instead of waiting for the next app open.
+    CallSyncScheduler.afterCall(context)
     val labels = CallerDirectory.load(context)?.labels.orEmpty()
     CrmNotifications.showPostCall(context, match?.entry?.leadName ?: number, labels)
   }

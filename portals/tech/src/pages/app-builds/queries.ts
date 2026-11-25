@@ -4,7 +4,7 @@ export type AppBuildPlatform = 'ANDROID' | 'IOS';
 export type AppBuildStatus = 'QUEUED' | 'RUNNING' | 'SUCCESS' | 'FAILED';
 export type AppBuildArtifactKind = 'APK' | 'AAB' | 'IPA';
 export type AppBuildEnv = 'PRODUCTION' | 'STAGING';
-/** The member app, or the internal Duncit CRM app (Android only). */
+/** The member app, or the internal Duncit CRM app (Android and iOS). */
 export type AppBuildApp = 'DUNCIT' | 'CRM';
 export type AppBuildTrigger = 'PUSH' | 'PORTAL';
 

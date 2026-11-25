@@ -10,18 +10,20 @@ interface Props {
   steps: readonly string[];
   /** The spotlight tour over the page's `data-tour` anchors. */
   tour: readonly PortalTourStep[];
+  /** Lets the person close the intro for good (PageIntro `dismissible`). */
+  dismissible?: boolean;
 }
 
 /**
  * The intro block and the first-run tour every runs page opens with. The
  * tour shows itself once per user and again from the intro's Start tour.
  */
-export default function RunsGuide({ id, summary, steps, tour }: Readonly<Props>) {
+export default function RunsGuide({ id, summary, steps, tour, dismissible }: Readonly<Props>) {
   const { user } = useUserData();
   const { open, start, close } = useFirstRunTour(id, user?.user_id);
   return (
     <>
-      <PageIntro id={id} summary={summary} steps={[...steps]} onStartTour={start} />
+      <PageIntro id={id} summary={summary} steps={[...steps]} onStartTour={start} dismissible={dismissible} />
       <PortalTour open={open} steps={tour} onClose={close} />
     </>
   );

@@ -1,4 +1,5 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { StatusBar } from 'expo-status-bar';
 import { Spinner, YStack } from 'tamagui';
 
 import { useTranslation } from '@/hooks/useTranslation';
@@ -38,7 +39,7 @@ import { UserLeadDetailScreen } from '@/screens/user-leads/UserLeadDetailScreen'
 import { UserLeadEditorScreen } from '@/screens/user-leads/UserLeadEditorScreen';
 import { useConsoleChrome } from './chrome';
 import { MainTabs } from './MainTabs';
-import { screenLayout } from './screenLayout';
+import { screenLayout, stackScreenLayout } from './screenLayout';
 import type { AppStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
@@ -67,114 +68,125 @@ export function RootNavigator() {
   if (status === 'security') return <SecurityVerificationScreen />;
 
   return (
-    <Stack.Navigator screenLayout={screenLayout} screenOptions={chrome.stackHeader}>
-      <Stack.Screen name="Tabs" component={MainTabs} options={{ headerShown: false }} />
-      <Stack.Screen
-        name="LeadDetail"
-        component={LeadDetailScreen}
-        options={{ title: t('crmApp.lead.overview') }}
-      />
-      <Stack.Screen
-        name="LeadEditor"
-        component={LeadEditorScreen}
-        options={{ title: t('crmApp.editor.editTitle') }}
-      />
-      <Stack.Screen
-        name="AddNote"
-        component={AddNoteScreen}
-        options={{ title: t('crmApp.note.title') }}
-      />
-      <Stack.Screen
-        name="AddReminder"
-        component={AddReminderScreen}
-        options={{ title: t('crmApp.reminder.title') }}
-      />
-      <Stack.Screen
-        name="Menu"
-        component={MenuScreen}
-        options={{
-          headerShown: false,
-          presentation: 'transparentModal',
-          animation: 'slide_from_left',
-        }}
-      />
-      <Stack.Screen
-        name="Dashboard"
-        component={DashboardScreen}
-        options={{ title: t('shell.nav.dashboard') }}
-      />
-      <Stack.Screen
-        name="UserLeads"
-        component={UserLeadsScreen}
-        options={{ title: t('shell.nav.whatsappLeads') }}
-      />
-      <Stack.Screen
-        name="LeadResearch"
-        component={LeadResearchScreen}
-        options={{ title: t('shell.nav.leadResearch') }}
-      />
-      <Stack.Screen name="Candidate" component={CandidateScreen} options={{ title: '' }} />
-      <Stack.Screen
-        name="LeadDiscovery"
-        component={LeadDiscoveryScreen}
-        options={{ title: t('crm.leadResearch.discoverTitle') }}
-      />
-      <Stack.Screen
-        name="QualityAnalytics"
-        component={QualityAnalyticsScreen}
-        options={{ title: t('shell.nav.leadQualityAnalytics') }}
-      />
-      <Stack.Screen
-        name="EmailVerifier"
-        component={EmailVerifierScreen}
-        options={{ title: t('shell.nav.emailVerifier') }}
-      />
-      <Stack.Screen
-        name="UserLeadDetail"
-        component={UserLeadDetailScreen}
-        options={{ title: '' }}
-      />
-      <Stack.Screen
-        name="UserLeadEditor"
-        component={UserLeadEditorScreen}
-        options={{ title: '' }}
-      />
-      <Stack.Screen name="ManagedOptions" component={ManagedOptionsScreen} />
-      <Stack.Screen name="CallPrompts" component={CallPromptsScreen} />
-      <Stack.Screen name="CallPromptEditor" component={CallPromptEditorScreen} />
-      <Stack.Screen name="ServicesOffered" component={ServicesOfferedScreen} />
-      <Stack.Screen name="ServiceOfferedEditor" component={ServiceOfferedEditorScreen} />
-      <Stack.Screen name="LeadList" component={LeadListScreen} />
-      <Stack.Screen name="EmailTemplates" component={EmailTemplatesScreen} />
-      <Stack.Screen name="EmailTemplateCreate" component={EmailTemplateCreateScreen} />
-      <Stack.Screen name="EmailTemplateEditor" component={EmailTemplateEditorScreen} />
-      <Stack.Screen name="EmailTemplateSettings" component={EmailTemplateSettingsScreen} />
-      <Stack.Screen
-        name="WhatsAppGenerator"
-        component={WhatsAppGeneratorScreen}
-        options={{ title: t('shell.nav.whatsappLeadGenerator') }}
-      />
-      <Stack.Screen
-        name="LeadQualitySettings"
-        component={LeadQualitySettingsScreen}
-        options={{ title: t('crm.leadQualitySettings.title') }}
-      />
-      <Stack.Screen
-        name="DynamicFields"
-        component={DynamicFieldsScreen}
-        options={{ title: t('shell.nav.dynamicFields') }}
-      />
-      <Stack.Screen name="DynamicFieldEditor" component={DynamicFieldEditorScreen} />
-      <Stack.Screen
-        name="Call"
-        component={CallScreen}
-        options={{ title: t('crmApp.call.screenTitle') }}
-      />
-      <Stack.Screen
-        name="PostCall"
-        component={PostCallScreen}
-        options={{ title: t('crmApp.postCall.title') }}
-      />
-    </Stack.Navigator>
+    <>
+      {/* White icons over the red app bar, in light and dark mode alike. */}
+      <StatusBar style="light" />
+      <Stack.Navigator screenLayout={stackScreenLayout} screenOptions={chrome.stackHeader}>
+        {/* The tab bar and the menu's own safe area already keep clear of the system bars. */}
+        <Stack.Screen
+          name="Tabs"
+          component={MainTabs}
+          layout={screenLayout}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="LeadDetail"
+          component={LeadDetailScreen}
+          options={{ title: t('crmApp.lead.overview') }}
+        />
+        <Stack.Screen
+          name="LeadEditor"
+          component={LeadEditorScreen}
+          options={{ title: t('crmApp.editor.editTitle') }}
+        />
+        <Stack.Screen
+          name="AddNote"
+          component={AddNoteScreen}
+          options={{ title: t('crmApp.note.title') }}
+        />
+        <Stack.Screen
+          name="AddReminder"
+          component={AddReminderScreen}
+          options={{ title: t('crmApp.reminder.title') }}
+        />
+        <Stack.Screen
+          name="Menu"
+          component={MenuScreen}
+          layout={screenLayout}
+          options={{
+            headerShown: false,
+            presentation: 'transparentModal',
+            animation: 'slide_from_left',
+          }}
+        />
+        <Stack.Screen
+          name="Dashboard"
+          component={DashboardScreen}
+          options={{ title: t('shell.nav.dashboard') }}
+        />
+        <Stack.Screen
+          name="UserLeads"
+          component={UserLeadsScreen}
+          options={{ title: t('shell.nav.whatsappLeads') }}
+        />
+        <Stack.Screen
+          name="LeadResearch"
+          component={LeadResearchScreen}
+          options={{ title: t('shell.nav.leadResearch') }}
+        />
+        <Stack.Screen name="Candidate" component={CandidateScreen} options={{ title: '' }} />
+        <Stack.Screen
+          name="LeadDiscovery"
+          component={LeadDiscoveryScreen}
+          options={{ title: t('crm.leadResearch.discoverTitle') }}
+        />
+        <Stack.Screen
+          name="QualityAnalytics"
+          component={QualityAnalyticsScreen}
+          options={{ title: t('shell.nav.leadQualityAnalytics') }}
+        />
+        <Stack.Screen
+          name="EmailVerifier"
+          component={EmailVerifierScreen}
+          options={{ title: t('shell.nav.emailVerifier') }}
+        />
+        <Stack.Screen
+          name="UserLeadDetail"
+          component={UserLeadDetailScreen}
+          options={{ title: '' }}
+        />
+        <Stack.Screen
+          name="UserLeadEditor"
+          component={UserLeadEditorScreen}
+          options={{ title: '' }}
+        />
+        <Stack.Screen name="ManagedOptions" component={ManagedOptionsScreen} />
+        <Stack.Screen name="CallPrompts" component={CallPromptsScreen} />
+        <Stack.Screen name="CallPromptEditor" component={CallPromptEditorScreen} />
+        <Stack.Screen name="ServicesOffered" component={ServicesOfferedScreen} />
+        <Stack.Screen name="ServiceOfferedEditor" component={ServiceOfferedEditorScreen} />
+        <Stack.Screen name="LeadList" component={LeadListScreen} />
+        <Stack.Screen name="EmailTemplates" component={EmailTemplatesScreen} />
+        <Stack.Screen name="EmailTemplateCreate" component={EmailTemplateCreateScreen} />
+        <Stack.Screen name="EmailTemplateEditor" component={EmailTemplateEditorScreen} />
+        <Stack.Screen name="EmailTemplateSettings" component={EmailTemplateSettingsScreen} />
+        <Stack.Screen
+          name="WhatsAppGenerator"
+          component={WhatsAppGeneratorScreen}
+          options={{ title: t('shell.nav.whatsappLeadGenerator') }}
+        />
+        <Stack.Screen
+          name="LeadQualitySettings"
+          component={LeadQualitySettingsScreen}
+          options={{ title: t('crm.leadQualitySettings.title') }}
+        />
+        <Stack.Screen
+          name="DynamicFields"
+          component={DynamicFieldsScreen}
+          options={{ title: t('shell.nav.dynamicFields') }}
+        />
+        <Stack.Screen name="DynamicFieldEditor" component={DynamicFieldEditorScreen} />
+        <Stack.Screen
+          name="Call"
+          component={CallScreen}
+          options={{ title: t('crmApp.call.screenTitle') }}
+        />
+        <Stack.Screen
+          name="PostCall"
+          component={PostCallScreen}
+          options={{ title: t('crmApp.postCall.title') }}
+        />
+      </Stack.Navigator>
+    </>
   );
 }

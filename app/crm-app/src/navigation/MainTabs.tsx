@@ -8,6 +8,7 @@ import { DialerScreen } from '@/screens/dialer/DialerScreen';
 import { RemindersScreen } from '@/screens/reminders/RemindersScreen';
 import { SettingsScreen } from '@/screens/settings/SettingsScreen';
 import { useConsoleChrome } from './chrome';
+import { HeaderBrand } from './HeaderBrand';
 import { MenuButton } from './MenuButton';
 import { screenLayout } from './screenLayout';
 import type { TabParamList } from './types';
@@ -42,6 +43,7 @@ export function MainTabs() {
         ...chrome.tabsHeader,
         ...chrome.tabBar,
         headerLeft: MenuButton,
+        headerTitle: ({ children }) => <HeaderBrand title={children} />,
         tabBarIcon: ({ color, size }) => (
           <MaterialIcons name={ICONS[route.name]} color={color} size={size} />
         ),

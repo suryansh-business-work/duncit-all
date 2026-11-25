@@ -62,18 +62,39 @@ internal object CrmPrefs {
     }
   }
 
+  /** A number about to be called, and whether the CRM dialer placed it. */
+  data class Dialled(val number: String, val fromCrm: Boolean)
+
   /** The CRM dialer marks a number just before it places the call. */
-  fun markOutgoing(context: Context, number: String) {
-    prefs(context).edit().putString(OUTGOING, "${System.currentTimeMillis()}|$number").apply()
+  fun markOutgoing(context: Context, number: String) = markDialled(context, number, fromCrm = true)
+
+  /**
+   * Remember the number of a call being placed. The CRM dialer marks it first;
+   * the call-redirection service then sees the same call from Android a moment
+   * later and must not erase that it came from the CRM.
+   */
+  fun markDialled(context: Context, number: String, fromCrm: Boolean) {
+    val current = peekOutgoing(context)
+    if (!fromCrm && current != null && current.fromCrm && PhoneKeys.key(current.number) == PhoneKeys.key(number)) return
+    val flag = if (fromCrm) "1" else "0"
+    prefs(context).edit().putString(OUTGOING, "${System.currentTimeMillis()}|$flag|$number").apply()
   }
 
-  /** The number the CRM dialer just called, if it was dialled in the last two minutes. */
-  fun takeOutgoing(context: Context): String? {
-    val raw = prefs(context).getString(OUTGOING, null) ?: return null
+  /** The number just dialled, if it was dialled in the last two minutes; reading it forgets it. */
+  fun takeOutgoing(context: Context): Dialled? {
+    val dialled = peekOutgoing(context)
     prefs(context).edit().remove(OUTGOING).apply()
-    val at = raw.substringBefore('|').toLongOrNull() ?: return null
+    return dialled
+  }
+
+  private fun peekOutgoing(context: Context): Dialled? {
+    val raw = prefs(context).getString(OUTGOING, null) ?: return null
+    val parts = raw.split('|', limit = 3)
+    val at = parts.firstOrNull()?.toLongOrNull() ?: return null
     if (System.currentTimeMillis() - at > OUTGOING_WINDOW_MS) return null
-    return raw.substringAfter('|').ifEmpty { null }
+    // "time|number" was written by an app version before the redirection service: always the CRM dialer.
+    val dialled = if (parts.size == 3) Dialled(parts[2], parts[1] == "1") else Dialled(parts.getOrElse(1) { "" }, true)
+    return dialled.takeIf { it.number.isNotEmpty() }
   }
 
   fun savePostCall(context: Context, json: JSONObject) {

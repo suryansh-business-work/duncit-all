@@ -1,4 +1,5 @@
 import { Modal } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack, useTheme } from 'tamagui';
 
@@ -27,60 +28,61 @@ interface Props {
 export function ActionSheet({ open, title, actions, onClose, testID }: Readonly<Props>) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const { bottom } = useSafeAreaInsets();
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
       <YStack flex={1} justifyContent="flex-end" backgroundColor="$scrim">
+        {/* The sheet's surface runs under the system navigation bar; its actions stay above it. */}
         <YStack
-          role="menu"
-          aria-label={title}
           backgroundColor="$surface"
           borderTopLeftRadius={RADII.lg}
           borderTopRightRadius={RADII.lg}
-          padding="$4"
-          gap="$1"
-          testID={testID}
+          paddingBottom={bottom}
+          testID={`${testID}-surface`}
         >
-          <Text fontWeight="700" fontSize="$5" role="heading" marginBottom="$2" numberOfLines={1}>
-            {title}
-          </Text>
-          {actions.map((action) => (
-            <XStack
-              key={action.key}
-              role="menuitem"
-              aria-label={action.label}
-              aria-disabled={Boolean(action.disabled)}
-              minHeight={48}
-              alignItems="center"
-              gap="$3"
-              paddingHorizontal="$2"
-              borderRadius={RADII.sm}
-              opacity={action.disabled ? 0.4 : 1}
-              pressStyle={{ backgroundColor: '$soft' }}
-              onPress={
-                action.disabled
-                  ? undefined
-                  : () => {
-                      onClose();
-                      action.onPress();
-                    }
-              }
-              testID={`${testID}-${action.key}`}
-            >
-              <MaterialIcons
-                name={action.icon}
-                size={20}
-                color={action.destructive ? theme.danger?.val : theme.muted?.val}
-              />
-              <Text color={action.destructive ? '$danger' : '$color'}>{action.label}</Text>
-            </XStack>
-          ))}
-          <DuncitButton
-            label={t('shell.common.cancel')}
-            onPress={onClose}
-            variant="ghost"
-            fullWidth
-            testID={`${testID}-cancel`}
-          />
+          <YStack role="menu" aria-label={title} padding="$4" gap="$1" testID={testID}>
+            <Text fontWeight="700" fontSize="$5" role="heading" marginBottom="$2" numberOfLines={1}>
+              {title}
+            </Text>
+            {actions.map((action) => (
+              <XStack
+                key={action.key}
+                role="menuitem"
+                aria-label={action.label}
+                aria-disabled={Boolean(action.disabled)}
+                minHeight={48}
+                alignItems="center"
+                gap="$3"
+                paddingHorizontal="$2"
+                borderRadius={RADII.sm}
+                opacity={action.disabled ? 0.4 : 1}
+                pressStyle={{ backgroundColor: '$soft' }}
+                onPress={
+                  action.disabled
+                    ? undefined
+                    : () => {
+                        onClose();
+                        action.onPress();
+                      }
+                }
+                testID={`${testID}-${action.key}`}
+              >
+                <MaterialIcons
+                  name={action.icon}
+                  size={20}
+                  color={action.destructive ? theme.danger?.val : theme.muted?.val}
+                />
+                <Text color={action.destructive ? '$danger' : '$color'}>{action.label}</Text>
+              </XStack>
+            ))}
+            <DuncitButton
+              label={t('shell.common.cancel')}
+              onPress={onClose}
+              variant="ghost"
+              fullWidth
+              testID={`${testID}-cancel`}
+            />
+          </YStack>
         </YStack>
       </YStack>
     </Modal>

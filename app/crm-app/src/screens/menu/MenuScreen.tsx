@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Image, ScrollView } from 'react-native';
 import { useNavigation, useNavigationState, type NavigationProp } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Separator, Text, XStack, YStack, useTheme } from 'tamagui';
+import { Separator, Text, XStack, YStack, useTheme, useThemeName } from 'tamagui';
 
+import { RADII } from '@/constants/design';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CRM_NAV, navPath, type NavItem } from '@/navigation/crmNav';
 import type { AppStackParamList } from '@/navigation/types';
@@ -12,7 +14,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { NavTree } from './NavTree';
 import { activeNavKey, goTo, type RouteLike } from './menuRoutes';
 
-const LOGO = require('../../../assets/duncit-logo.png');
+const LOGO = require('../../../assets/duncit-crm-logo.png');
 
 /**
  * The side menu: the CRM portal's sidebar on the phone, every group and page
@@ -23,6 +25,7 @@ const LOGO = require('../../../assets/duncit-logo.png');
 export function MenuScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
+  const dark = String(useThemeName()).startsWith('dark');
   const navigation = useNavigation<NavigationProp<AppStackParamList>>();
   const user = useAuthStore((s) => s.user);
   // The screen the menu opened over is the route just below it.
@@ -50,6 +53,8 @@ export function MenuScreen() {
 
   return (
     <XStack flex={1}>
+      {/* The menu is the surface colour, not the red bar: icons follow the mode while it is open. */}
+      <StatusBar style={dark ? 'light' : 'dark'} />
       <YStack
         width="84%"
         maxWidth={340}
@@ -61,7 +66,7 @@ export function MenuScreen() {
           <XStack alignItems="center" gap="$3" padding="$4">
             <Image
               source={LOGO}
-              style={{ width: 36, height: 36 }}
+              style={{ width: 36, height: 36, borderRadius: RADII.sm }}
               resizeMode="contain"
               accessible={false}
             />

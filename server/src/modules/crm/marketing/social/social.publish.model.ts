@@ -4,6 +4,7 @@ import {
   SOCIAL_IDEA_STATUSES,
   SOCIAL_MEDIA_TYPES,
   SOCIAL_PLATFORMS,
+  SOCIAL_POST_TYPES,
   SOCIAL_PUBLISH_STATUSES,
   SOCIAL_TARGET_STATUSES,
 } from './social.types';
@@ -20,6 +21,19 @@ const targetSchema = new Schema(
     permalink: { type: String, default: '' },
     error: { type: String, default: '' },
     published_at: { type: Date, default: null },
+    /** Sends tried so far; a passing failure (rate limit, network) is tried again until MAX_ATTEMPTS. Absent: none yet. */
+    attempts: { type: Number },
+    /** The post went out but its Instagram first comment did not; why. Absent when it went, or there was none. */
+    first_comment_error: { type: String },
+  },
+  { _id: false }
+);
+
+/** One network's own caption, in place of the post's text there. */
+const captionSchema = new Schema(
+  {
+    platform: { type: String, enum: SOCIAL_PLATFORMS, required: true },
+    text: { type: String, required: true },
   },
   { _id: false }
 );
@@ -29,6 +43,10 @@ const mediaSchema = new Schema(
   {
     url: { type: String, required: true },
     type: { type: String, enum: SOCIAL_MEDIA_TYPES, required: true },
+    // What the composer measured, for the shape and length rules; absent when it could not.
+    width: { type: Number },
+    height: { type: Number },
+    duration_s: { type: Number },
   },
   { _id: false }
 );
@@ -60,6 +78,12 @@ const scheduledPostSchema = new Schema(
     pod_id: { type: String, default: '', index: true },
     /** Instagram usernames invited as collaborators (Instagram only, at most 3). */
     collaborators: { type: [String], default: [] },
+    /** FEED, REEL or STORY; absent on posts written before post types, which are feed posts. */
+    post_type: { type: String, enum: SOCIAL_POST_TYPES },
+    /** Per-network captions in place of `text`; absent when every network gets the same text. */
+    captions: { type: [captionSchema], default: undefined },
+    /** Posted under the Instagram feed post or reel once it is out; absent when there is none. */
+    first_comment: { type: String },
     /** A reviewer must say yes before it goes out; once they have, it stays true as the record of that. */
     needs_approval: { type: Boolean, default: false },
     /** Why the reviewer sent it back; shown to the author on the draft. */

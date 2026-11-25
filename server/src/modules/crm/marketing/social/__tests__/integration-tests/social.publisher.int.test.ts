@@ -24,7 +24,9 @@ import { SocialScheduledPostModel } from '../../social.publish.model';
 import type { PublishMedia } from '../../social.types';
 import { MarketingRunModel, type MarketingRunDecision } from '../../../runs/marketingRun.model';
 import { marketingRunService } from '../../../runs/marketingRun.service';
-import { publishDue, publishNow, requeueFailed } from '../../social.publisher';
+import { MAX_ATTEMPTS, isPassingFailure, publishDue, publishNow, requeueFailed } from '../../social.publisher';
+import { SocialApiError } from '../../providers/http';
+import { GraphQLError } from 'graphql';
 
 const igPublish = PUBLISHERS.INSTAGRAM.publish as jest.Mock;
 const threadsPublish = PUBLISHERS.THREADS.publish as jest.Mock;
@@ -481,5 +483,108 @@ describe('requeueFailed', () => {
 
     expect(await requeueFailed(String(post._id))).toBe(false);
     expect(await requeueFailed('nope')).toBe(false);
+  });
+});
+
+describe('isPassingFailure', () => {
+  it('counts a rate limit, a 5xx and an unreachable network as passing, and a refusal or a dead token as final', () => {
+    expect(isPassingFailure(new SocialApiError('Instagram', 429, 'Application request limit reached', false))).toBe(true);
+    expect(isPassingFailure(new SocialApiError('Threads', 503, 'Service unavailable', false))).toBe(true);
+    expect(isPassingFailure(new GraphQLError('Instagram is unreachable', { extensions: { code: 'BAD_GATEWAY' } }))).toBe(true);
+    expect(isPassingFailure(new SocialApiError('Instagram', 400, 'The aspect ratio is not supported', false))).toBe(false);
+    expect(isPassingFailure(new SocialApiError('Instagram', 500, 'Session expired', true))).toBe(false);
+    expect(isPassingFailure(new GraphQLError('Bad input', { extensions: { code: 'BAD_USER_INPUT' } }))).toBe(false);
+    expect(isPassingFailure(new Error('rate limited'))).toBe(false);
+  });
+});
+
+describe('automatic retries of a passing failure', () => {
+  it('puts the target back in the queue 5, then 15 minutes later, keeping the reason, and fails it for good after the last try', async () => {
+    const ig = await account('INSTAGRAM', 'Duncit Pune');
+    const th = await account('THREADS', 'Duncit Threads');
+    threadsPublish.mockRejectedValue(new SocialApiError('Threads', 503, 'Service unavailable', false));
+    const post = await duePost([
+      { account_id: String(ig._id), platform: 'INSTAGRAM' },
+      { account_id: String(th._id), platform: 'THREADS' },
+    ]);
+
+    const before = Date.now();
+    await publishDue();
+    let queued = await stored(post._id);
+    expect(queued?.status).toBe('SCHEDULED');
+    expect(queued?.published_at).not.toBeNull();
+    expect(queued?.targets.map((t) => [t.platform, t.status, t.attempts, t.error])).toEqual([
+      ['INSTAGRAM', 'PUBLISHED', 1, ''],
+      ['THREADS', 'PENDING', 1, 'Threads: Service unavailable'],
+    ]);
+    const wait = (queued?.scheduled_at?.getTime() ?? 0) - before;
+    expect(wait).toBeGreaterThanOrEqual(5 * 60_000);
+    expect(wait).toBeLessThan(6 * 60_000);
+
+    // The next two passes: the second try waits 15 minutes, the third is the last.
+    await SocialScheduledPostModel.updateOne({ _id: post._id }, { $set: { scheduled_at: new Date(Date.now() - 1000) } });
+    const second = Date.now();
+    await publishDue();
+    queued = await stored(post._id);
+    expect(queued?.targets[1]).toMatchObject({ status: 'PENDING', attempts: 2 });
+    expect((queued?.scheduled_at?.getTime() ?? 0) - second).toBeGreaterThanOrEqual(15 * 60_000);
+
+    await SocialScheduledPostModel.updateOne({ _id: post._id }, { $set: { scheduled_at: new Date(Date.now() - 1000) } });
+    await publishDue();
+    const done = await stored(post._id);
+    expect(done?.status).toBe('PARTIAL');
+    expect(done?.targets[1]).toMatchObject({ status: 'FAILED', attempts: MAX_ATTEMPTS, error: 'Threads: Service unavailable' });
+    // The network that took the post was sent to once.
+    expect(igPublish).toHaveBeenCalledTimes(1);
+    expect(threadsPublish).toHaveBeenCalledTimes(MAX_ATTEMPTS);
+  });
+
+  it('fails a refusal at once, without another try', async () => {
+    const ig = await account('INSTAGRAM', 'Duncit Pune');
+    igPublish.mockRejectedValue(new SocialApiError('Instagram', 400, 'The aspect ratio is not supported', false));
+    const post = await duePost([{ account_id: String(ig._id), platform: 'INSTAGRAM' }]);
+    await publishDue();
+    const done = await stored(post._id);
+    expect(done?.status).toBe('FAILED');
+    expect(done?.targets[0]).toMatchObject({ status: 'FAILED', attempts: 1, error: 'Instagram: The aspect ratio is not supported' });
+  });
+
+  it('starts a fresh round of tries when a person presses Retry', async () => {
+    const post = await duePost([{ account_id: 'b', platform: 'THREADS', status: 'FAILED', error: 'x' }], { status: 'FAILED' });
+    await SocialScheduledPostModel.updateOne({ _id: post._id }, { $set: { 'targets.0.attempts': MAX_ATTEMPTS } });
+    expect(await requeueFailed(String(post._id))).toBe(true);
+    expect((await stored(post._id))?.targets[0]).toMatchObject({ status: 'PENDING', attempts: 0 });
+  });
+});
+
+describe('per-network captions, the post type and the first comment', () => {
+  it('sends each network its own caption and the post type, and keeps why a first comment did not go', async () => {
+    const ig = await account('INSTAGRAM', 'Duncit Pune');
+    const th = await account('THREADS', 'Duncit Threads');
+    igPublish.mockResolvedValue({ external_id: 'ig-1', permalink: 'https://instagram.com/p/1', first_comment_error: 'Instagram: comments are off' });
+    const post = await duePost(
+      [
+        { account_id: String(ig._id), platform: 'INSTAGRAM' },
+        { account_id: String(th._id), platform: 'THREADS' },
+      ],
+      { captions: [{ platform: 'THREADS', text: 'Sunday, Pune. Bring the dog.' }], first_comment: 'Book at duncit.com' }
+    );
+
+    await publishDue();
+
+    expect(igPublish.mock.calls[0][1]).toMatchObject({ text: TEXT, first_comment: 'Book at duncit.com' });
+    expect(threadsPublish.mock.calls[0][1]).toMatchObject({ text: 'Sunday, Pune. Bring the dog.' });
+    const sent = await stored(post._id);
+    expect(sent?.status).toBe('PUBLISHED');
+    expect(sent?.targets[0]).toMatchObject({ status: 'PUBLISHED', first_comment_error: 'Instagram: comments are off' });
+    expect(sent?.targets[1]).not.toHaveProperty('first_comment_error');
+  });
+
+  it('holds a story bound for a network that has none, and says why', async () => {
+    const th = await account('THREADS', 'Duncit Threads');
+    const post = await duePost([{ account_id: String(th._id), platform: 'THREADS' }], { post_type: 'STORY' });
+    await publishDue();
+    expect(threadsPublish).not.toHaveBeenCalled();
+    expect((await stored(post._id))?.targets[0]).toMatchObject({ status: 'FAILED', error: 'Threads takes no stories from Duncit — post it to Instagram only' });
   });
 });

@@ -417,3 +417,55 @@ describe('instagramPublisher', () => {
     });
   });
 });
+
+describe('instagramPublisher — post types and the first comment', () => {
+  const IMAGE = 'https://ik.imagekit.io/duncit/posts/a.png';
+  const VIDEO = 'https://ik.imagekit.io/duncit/posts/reel.mp4';
+  const PERMALINK = 'https://www.instagram.com/p/abc/';
+
+  /** Every Graph call answered by its path; a comment answers `comment` (a refusal when its status is not 2xx). */
+  const arrange = (comment: { body: unknown; status: number } = { body: { id: 'comment-1' }, status: 200 }) => {
+    mockFetch.mockImplementation(async (_service: string, url: string) => {
+      const { pathname } = new URL(url);
+      if (pathname.endsWith('/media')) return reply({ id: 'container-1' });
+      if (pathname.endsWith('/container-1')) return reply({ status_code: 'FINISHED' });
+      if (pathname.endsWith('/media_publish')) return reply({ id: 'media-9' });
+      if (pathname.endsWith('/comments')) return reply(comment.body, comment.status);
+      return reply({ permalink: PERMALINK });
+    });
+  };
+  const callTo = (suffix: string) => mockFetch.mock.calls.findIndex((call) => new URL(call[1]).pathname.endsWith(suffix));
+
+  it('posts a picture story as a STORIES container, without its caption or collaborators, and no first comment', async () => {
+    arrange();
+    const content = { ...publishContent('Not shown on a story', [{ url: IMAGE, type: 'IMAGE' as const }]), post_type: 'STORY' as const, collaborators: ['meera'], first_comment: 'Link in bio' };
+    await expect(instagramPublisher.publish(viaFacebook, content, CREDS)).resolves.toEqual({ external_id: 'media-9', permalink: PERMALINK });
+    expect(formOf(callTo('/media'))).toEqual({ media_type: 'STORIES', image_url: `${IMAGE}?tr=f-jpg`, access_token: 'facebook-tok' });
+    expect(callTo('/comments')).toBe(-1);
+  });
+
+  it('posts a video story as a STORIES video', async () => {
+    arrange();
+    const content = { ...publishContent('', [{ url: VIDEO, type: 'VIDEO' as const }]), post_type: 'STORY' as const };
+    await instagramPublisher.publish(viaFacebook, content, CREDS);
+    expect(formOf(callTo('/media'))).toEqual({ media_type: 'STORIES', video_url: `${VIDEO}?tr=orig-true`, access_token: 'facebook-tok' });
+  });
+
+  it('posts a reel with its caption, then its first comment under the published media', async () => {
+    arrange();
+    const content = { ...publishContent('New reel', [{ url: VIDEO, type: 'VIDEO' as const }]), post_type: 'REEL' as const, first_comment: '  Book at duncit.com  ' };
+    await expect(instagramPublisher.publish(viaFacebook, content, CREDS)).resolves.toEqual({ external_id: 'media-9', permalink: PERMALINK });
+    expect(formOf(callTo('/media'))).toEqual({ media_type: 'REELS', video_url: `${VIDEO}?tr=orig-true`, caption: 'New reel', access_token: 'facebook-tok' });
+    const comment = callTo('/comments');
+    expect(new URL(urlOf(comment)).pathname).toBe('/v21.0/media-9/comments');
+    expect(formOf(comment)).toEqual({ message: 'Book at duncit.com', access_token: 'facebook-tok' });
+  });
+
+  it('still counts the post as out when only its first comment is refused, and says why', async () => {
+    arrange({ body: { error: { message: 'Comments are turned off for this media', code: 100 } }, status: 400 });
+    const content = { ...publishContent('Hello', [{ url: IMAGE, type: 'IMAGE' as const }]), first_comment: 'First!' };
+    const out = await instagramPublisher.publish(viaFacebook, content, CREDS);
+    expect(out).toMatchObject({ external_id: 'media-9', permalink: PERMALINK });
+    expect(out.first_comment_error).toContain('Comments are turned off for this media');
+  });
+});

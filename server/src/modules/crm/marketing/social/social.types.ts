@@ -85,6 +85,10 @@ export type SocialTargetStatus = (typeof SOCIAL_TARGET_STATUSES)[number];
 export const SOCIAL_MEDIA_TYPES = ['IMAGE', 'VIDEO'] as const;
 export type SocialMediaType = (typeof SOCIAL_MEDIA_TYPES)[number];
 
+/** How a post shows: in the feed (two or more media make a carousel), as a Reel, or as a 24-hour Story. */
+export const SOCIAL_POST_TYPES = ['FEED', 'REEL', 'STORY'] as const;
+export type SocialPostType = (typeof SOCIAL_POST_TYPES)[number];
+
 export const SOCIAL_IDEA_STATUSES = ['NEW', 'USED', 'DISMISSED'] as const;
 export type SocialIdeaStatus = (typeof SOCIAL_IDEA_STATUSES)[number];
 
@@ -192,6 +196,10 @@ export interface SocialConnector {
 export interface PublishMedia {
   url: string;
   type: SocialMediaType;
+  /** Pixels and seconds the composer measured; absent (or null) when it could not, and then no shape rule applies. */
+  width?: number | null;
+  height?: number | null;
+  duration_s?: number | null;
 }
 
 /**
@@ -207,11 +215,19 @@ export interface PublishContent {
   media_type: SocialMediaType | null;
   /** Instagram usernames invited as collaborators; only Instagram uses them (social.rules maxCollaborators). */
   collaborators?: string[];
+  /** FEED when absent — every post stored before post types. */
+  post_type?: SocialPostType;
+  /** A network's own caption in place of `text` there; a network without one gets `text`. */
+  captions?: Partial<Record<SocialPlatform, string>>;
+  /** Posted as the first comment under an Instagram feed post or reel, once it is out. */
+  first_comment?: string;
 }
 
 export interface PublishResult {
   external_id: string;
   permalink: string;
+  /** The post went out but its first comment did not; why. Absent when it went, or there was none. */
+  first_comment_error?: string;
 }
 
 /** The writing half of a platform. */

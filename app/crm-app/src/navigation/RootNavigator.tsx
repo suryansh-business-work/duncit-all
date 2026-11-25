@@ -13,6 +13,7 @@ import { AddReminderScreen } from '@/screens/reminders/AddReminderScreen';
 import { PostCallScreen } from '@/screens/post-call/PostCallScreen';
 import { MenuScreen } from '@/screens/menu/MenuScreen';
 import { PortalPageScreen } from '@/screens/portal/PortalPageScreen';
+import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
 import { MainTabs } from './MainTabs';
 import { screenLayout } from './screenLayout';
 import type { AppStackParamList } from './types';
@@ -81,6 +82,11 @@ export function RootNavigator() {
         }}
       />
       <Stack.Screen name="PortalPage" component={PortalPageScreen} options={{ title: '' }} />
+      <Stack.Screen
+        name="Dashboard"
+        component={DashboardScreen}
+        options={{ title: t('shell.nav.dashboard') }}
+      />
       <Stack.Screen
         name="PostCall"
         component={PostCallScreen}

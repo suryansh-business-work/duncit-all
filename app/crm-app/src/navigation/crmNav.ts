@@ -16,6 +16,7 @@ export type NavIcon =
  */
 export type NavTarget =
   | { type: 'tab'; tab: 'Home' | 'Reminders' }
+  | { type: 'screen'; screen: 'Dashboard' }
   | { type: 'leads'; kind: LeadKind }
   | { type: 'portal'; path: string };
 
@@ -42,7 +43,12 @@ const leads = (kind: LeadKind): NavTarget => ({ type: 'leads', kind });
  * A change to the portal's sidebar must be made here too (CLAUDE.md parity rule).
  */
 export const CRM_NAV: readonly NavItem[] = [
-  { key: 'dashboard', labelKey: 'shell.nav.dashboard', icon: m('dashboard'), target: portal('/') },
+  {
+    key: 'dashboard',
+    labelKey: 'shell.nav.dashboard',
+    icon: m('dashboard'),
+    target: { type: 'screen', screen: 'Dashboard' },
+  },
   {
     key: 'leads',
     labelKey: 'shell.nav.leads',

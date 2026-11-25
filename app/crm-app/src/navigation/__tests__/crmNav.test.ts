@@ -71,6 +71,7 @@ describe('activeNavKey — "you are here"', () => {
     );
     expect(activeNavKey(tabs('Leads', { kind: 'HOST_LEAD' }))).toBe('hostLeads');
     expect(activeNavKey(tabs('Reminders'))).toBe('reminders');
+    expect(activeNavKey({ name: 'Dashboard' })).toBe('dashboard');
   });
 
   it('marks nothing for screens the portal has no page for, or an unfiltered lead list', () => {
@@ -88,6 +89,8 @@ describe('goTo', () => {
 
   it('closes the menu, then opens a tab, a kind of lead or a portal page', () => {
     const nav = navigation();
+    goTo(nav as never, item('dashboard'));
+    expect(nav.navigate).toHaveBeenLastCalledWith('Dashboard');
     goTo(nav as never, item('reminders'));
     expect(nav.goBack).toHaveBeenCalled();
     expect(nav.navigate).toHaveBeenLastCalledWith('Tabs', { screen: 'Reminders' });

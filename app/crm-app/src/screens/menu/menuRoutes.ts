@@ -24,6 +24,8 @@ export function activeNavKey(route: RouteLike | undefined): string | null {
     const path = param(route, 'path');
     return findNavKey(CRM_NAV, (t) => t.type === 'portal' && t.path === path);
   }
+  if (route.name === 'Dashboard')
+    return findNavKey(CRM_NAV, (t) => t.type === 'screen' && t.screen === 'Dashboard');
   if (route.name !== 'Tabs') return null;
   const tabs = route.state;
   const tab = tabs?.routes[tabs.index ?? 0];
@@ -42,7 +44,8 @@ export function goTo(navigation: NavigationProp<AppStackParamList>, item: NavIte
   const target = item.target;
   if (!target) return;
   navigation.goBack();
-  if (target.type === 'tab') navigation.navigate('Tabs', { screen: target.tab });
+  if (target.type === 'screen') navigation.navigate(target.screen);
+  else if (target.type === 'tab') navigation.navigate('Tabs', { screen: target.tab });
   else if (target.type === 'leads')
     navigation.navigate('Tabs', { screen: 'Leads', params: { kind: target.kind } });
   else navigation.navigate('PortalPage', { path: target.path, titleKey: item.labelKey });

@@ -21,6 +21,8 @@ export type AppStackParamList = {
   PostCall: undefined;
   /** The side menu: the CRM portal's sidebar, every item. */
   Menu: undefined;
+  /** The portal's Dashboard: KPIs and charts for venue and host leads. */
+  Dashboard: undefined;
   /** A portal page the app does not have yet: what it is, and a way to open it in the portal. */
   PortalPage: { path: string; titleKey: string };
 };

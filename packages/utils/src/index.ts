@@ -2474,3 +2474,22 @@ export {
   type SolutionCategoryGroup,
   type SolutionItem,
 } from './solutions';
+// CRM dashboard numbers (CRM portal Dashboard + Duncit CRM app).
+export {
+  CRM_DASHBOARD_RANGES,
+  crmAggregatePriorities,
+  crmAggregateServices,
+  crmAggregateStages,
+  crmAggregateSuperCategories,
+  crmAggregateTotals,
+  crmIsInWindow,
+  crmLeadsInWindow,
+  crmRangeToWindow,
+  crmServiceLabel,
+  type CrmDashboardLead,
+  type CrmDashboardRange,
+  type CrmDateWindow,
+  type CrmServiceCount,
+  type CrmStageCount,
+  type CrmSuperCategoryCount,
+} from './crm-dashboard';

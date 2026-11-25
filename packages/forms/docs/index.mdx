@@ -1300,6 +1300,45 @@ CRM › AI Call Prompts › Static Content, in the CRM portal and the Duncit CRM
 10–5000 characters, all trimmed; a language is required) and `CALL_PROMPT_LANGUAGES` (`auto` first, then
 the Indian languages the AI agent speaks, each with its label key). Messages are `crm.callPrompts.*`.
 
+### CRM lead pages — `nearby-leads`, `lead-evidence`
+
+Shared by the CRM portal and the Duncit CRM app. `makeNearbyLeadsSchema(t)` with `NEARBY_RADIUS`
+(min, max, default and the 0.5 km step) and `nearbyLeadsDefaults`: a search around my location or a
+city / area within the radius. `makeLeadEvidenceSchema(t)` with `LEAD_EVIDENCE_STATUSES`, the text
+and URL limits, `leadEvidenceDefaults` and `leadEvidenceDecision`: what a person records against a
+Quality Score criterion (a source link or a note, and whether it is verified).
+
+### CRM settings — `lead-quality-config`, `lead-quality-issues`, `dynamic-field`
+
+`leadQualityEditor(rules)` binds the Lead Quality Score form (Zod schema, conversions to and from
+the stored config, the live check and blank rows) to the generated copy of the server rules the
+client passes in: the portal's `src/lib/generated/lead-quality-rules.ts`, or the app's, written by
+its codegen (`node scripts/generate-lead-quality-rules.mjs --out …`). `lead-quality-issues` maps each
+rules issue to its form field and copy key and reads a refused save (`leadQualityFailure`).
+`makeDynamicFieldSchema(t)` checks a custom field (label, at least one lead type, options for a
+Select) in the portal's order of messages; `deriveDynamicFieldName`, `toDynamicFieldInput` and
+`moveDynamicFieldRow` (the app's up / down reorder) build what is saved.
+
+### Media names — `media-name`
+
+`makeMediaNameSchema(t)` with `MEDIA_NAME_MAX`: the name given to an uploaded image or file on a CRM
+lead's Logos & Images tab and in the Email Templates library (trimmed, required, capped).
+
+### Email Templates — `email-template`, `email-theme`, `email-prompt`
+
+CRM › Email Templates in the portal and the app. `email-template`: `makeEmailTemplateCreateSchema(t)`
+(target, name, slug) with `toEmailTemplateCreateInput`, `makeEmailTestSendSchema(t)` (a valid address,
+the shared email rule) and `makeEmailAiRequestSchema(t)` for the AI writer. `email-theme`:
+`makeEmailThemeSchema(t)` with the colour fields, `EMAIL_THEME_RANGES`, the field copy and
+`emailThemeToValues`. `email-prompt`: `makeEmailPromptSchema(t)` with `EMAIL_PROMPT_MAX` and the
+placeholders a prompt may use.
+
+### WhatsApp gateway — `wa-gateway`
+
+CRM › Tools › WhatsApp Lead Generator, step 1 in the portal and the app: `makeWaGatewaySchema(t, hasKey)`
+asks for the gateway URL and an API key up to `WA_API_KEY_MAX` characters (the key may stay blank when
+one is already saved, `hasKey`).
+
 ### Console sign-in — `makeConsoleLoginSchema`
 
 The portal login card's rules, shared with the Duncit CRM app's sign-in: an e-mail address

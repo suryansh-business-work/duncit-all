@@ -428,3 +428,106 @@ export {
   makeCallPromptSchema,
   type CallPromptValues,
 } from './call-prompt';
+// CRM › Leads › Nearby leads search (CRM portal + Duncit CRM app).
+export {
+  NEARBY_RADIUS,
+  makeNearbyLeadsSchema,
+  nearbyLeadsDefaults,
+  type NearbyLeadsValues,
+} from './nearby-leads';
+// CRM lead Quality tab: record evidence for a criterion (CRM portal + Duncit CRM app).
+export {
+  LEAD_EVIDENCE_MIN,
+  LEAD_EVIDENCE_STATUSES,
+  LEAD_EVIDENCE_TEXT_MAX,
+  LEAD_EVIDENCE_URL_MAX,
+  leadEvidenceDecision,
+  leadEvidenceDefaults,
+  makeLeadEvidenceSchema,
+  type LeadEvidenceDecision,
+  type LeadEvidenceStatus,
+  type LeadEvidenceValues,
+  type RecordedLeadEvidence,
+} from './lead-evidence';
+// CRM › Settings › Lead Quality Score editor, bound to a client's generated rules copy.
+export {
+  leadQualityEditor,
+  leadQualityNumber,
+  type LeadQualityBandValues,
+  type LeadQualityBody,
+  type LeadQualityConfigInput,
+  type LeadQualityCriterionValues,
+  type LeadQualityEditor,
+  type LeadQualityFormValues,
+  type LeadQualityMode,
+  type LeadQualityRules,
+  type LeadQualityStoredConfig,
+  type LeadQualitySubCriterionValues,
+} from './lead-quality-config';
+export {
+  isLeadQualityLeaf,
+  leadQualityFailure,
+  leadQualityFieldName,
+  leadQualityFormPath,
+  leadQualityHasIssueWithin,
+  leadQualityIssueMessage,
+  leadQualityIssuesAt,
+  type LeadQualityFailure,
+  type LeadQualityIssueLike,
+} from './lead-quality-issues';
+// CRM › Settings › Dynamic Fields (CRM portal + Duncit CRM app).
+export {
+  DYNAMIC_FIELD_APPLIES,
+  DYNAMIC_FIELD_KIND_KEY,
+  DYNAMIC_FIELD_KINDS,
+  deriveDynamicFieldName,
+  dynamicFieldDefaults,
+  dynamicFieldValuesFromRow,
+  makeDynamicFieldSchema,
+  moveDynamicFieldRow,
+  toDynamicFieldInput,
+  type DynamicFieldInput,
+  type DynamicFieldKind,
+  type DynamicFieldOption,
+  type DynamicFieldRow,
+  type DynamicFieldValues,
+} from './dynamic-field';
+// CRM › Tools › WhatsApp Lead Generator: the gateway URL + API key step (CRM portal + Duncit CRM app).
+export { makeWaGatewaySchema, WA_API_KEY_MAX, type WaGatewayValues } from './wa-gateway';
+// CRM: naming an uploaded image or file (lead Logos & Images, Email Templates library).
+export { makeMediaNameSchema, MEDIA_NAME_MAX, type MediaNameValues } from './media-name';
+// CRM › Email Templates: theme, prompt injection, new template, test send, AI writer
+// (CRM portal + Duncit CRM app).
+export {
+  EMAIL_THEME_COLOR_GROUPS,
+  EMAIL_THEME_DARK_COLOR_FIELDS,
+  EMAIL_THEME_FIELD_COPY,
+  EMAIL_THEME_LIGHT_COLOR_FIELDS,
+  EMAIL_THEME_RANGES,
+  emailThemeToValues,
+  makeEmailThemeSchema,
+  type EmailThemeColorField,
+  type EmailThemeRangeField,
+  type EmailThemeSource,
+  type EmailThemeValues,
+} from './email-theme';
+export {
+  EMAIL_PROMPT_MAX,
+  emailPromptPlaceholders,
+  makeEmailPromptSchema,
+  type EmailPromptValues,
+} from './email-prompt';
+export {
+  EMAIL_TEMPLATE_TARGETS,
+  emailAiRequestDefaults,
+  emailTemplateCreateDefaults,
+  emailTestSendDefaults,
+  makeEmailAiRequestSchema,
+  makeEmailTemplateCreateSchema,
+  makeEmailTestSendSchema,
+  toEmailTemplateCreateInput,
+  type EmailAiRequestValues,
+  type EmailTemplateCreateValues,
+  type EmailTemplateTarget,
+  type EmailTestSendValues,
+} from './email-template';

@@ -168,7 +168,8 @@ describe('LeadActivity (Communications)', () => {
     expect(screen.getByText('Zoho SMTP')).toBeOnTheScreen();
     expect(screen.getByText('Mailbox full')).toBeOnTheScreen();
     expect(screen.getByText(/^Rohit · rohit@cafe\.in · /)).toBeOnTheScreen();
-    await act(async () => fireEvent.press(await screen.findByTestId('email-status-verified')));
+    const badge = await screen.findByTestId('email-status-verified');
+    await act(async () => fireEvent.press(badge));
     expect(callsTo(CrmAppVerifyEmailDocument)[0]?.[1]).toEqual({ email: 'rohit@cafe.in' });
     expect(await screen.findByTestId('email-status-risky')).toBeOnTheScreen();
   });

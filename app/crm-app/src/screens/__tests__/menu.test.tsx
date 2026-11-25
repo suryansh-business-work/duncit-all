@@ -38,10 +38,7 @@ describe('MenuScreen', () => {
     fireEvent.press(screen.getByTestId('nav-leads'));
     fireEvent.press(screen.getByTestId('nav-ecommLeads'));
     expect(mockNav.goBack).toHaveBeenCalled();
-    expect(mockNav.navigate).toHaveBeenCalledWith('Tabs', {
-      screen: 'Leads',
-      params: { kind: 'ECOMM_LEAD' },
-    });
+    expect(mockNav.navigate).toHaveBeenCalledWith('LeadList', { kind: 'ECOMM_LEAD' });
     fireEvent.press(screen.getByTestId('nav-leads'));
     expect(screen.queryByTestId('nav-ecommLeads')).toBeNull();
   });

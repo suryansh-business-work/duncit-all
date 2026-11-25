@@ -223,7 +223,8 @@ describe('LeadQualityTab', () => {
       ]),
     );
     renderTab();
-    await act(async () => fireEvent.press(await screen.findByTestId('lead-quality-recalculate')));
+    const leadQualityRecalculate = await screen.findByTestId('lead-quality-recalculate');
+    await act(async () => fireEvent.press(leadQualityRecalculate));
     expect(callsTo(docs.CrmAppRecalculateLeadQualityDocument)[0]?.[1]).toEqual({
       entity_type: 'VENUE_LEAD',
       lead_id: 'v1',
@@ -250,7 +251,8 @@ describe('LeadQualityTab', () => {
       ]),
     );
     renderTab();
-    await act(async () => fireEvent.press(await screen.findByTestId('lead-quality-reverify')));
+    const leadQualityReverify = await screen.findByTestId('lead-quality-reverify');
+    await act(async () => fireEvent.press(leadQualityReverify));
     expect(callsTo(docs.CrmAppRecalculateLeadQualityDocument)[0]?.[1]).toMatchObject({
       external: true,
     });

@@ -118,7 +118,9 @@ describe('Theme Configuration', () => {
         expect(screen.getByTestId('theme-preview-frame').props.source.html).toBe('<p>#D92D2D</p>'),
       SLOW,
     );
-    expect(screen.getByTestId('theme-swatch-primary_color')).toBeOnTheScreen();
+    expect(
+      screen.getByTestId('theme-swatch-primary_color', { includeHiddenElements: true }),
+    ).toBeOnTheScreen();
     fireEvent.changeText(screen.getByTestId('theme-primary_color'), ' #0A7D4F ');
     await waitFor(
       () =>
@@ -127,7 +129,9 @@ describe('Theme Configuration', () => {
     );
     fireEvent.changeText(screen.getByTestId('theme-primary_color'), 'red');
     expect(await screen.findByText('Enter a hex colour like #D92D2D')).toBeOnTheScreen();
-    expect(screen.queryByTestId('theme-swatch-primary_color')).toBeNull();
+    expect(
+      screen.queryByTestId('theme-swatch-primary_color', { includeHiddenElements: true }),
+    ).toBeNull();
   });
 
   it('steps pixel values within their range, and hides the dark palette when always light', async () => {

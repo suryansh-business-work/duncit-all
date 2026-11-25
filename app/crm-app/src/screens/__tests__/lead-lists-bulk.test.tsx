@@ -88,7 +88,9 @@ describe('LeadListScreen › Fill with AI', () => {
     fireEvent.press(screen.getByTestId('lead-list-ai'));
     expect(screen.getByText('Fill venue leads with AI')).toBeOnTheScreen();
     await act(async () => fireEvent.press(screen.getByTestId('ai-parse')));
-    expect(screen.getByTestId('ai-error')).toHaveTextContent('Paste some text to parse first.');
+    expect(
+      within(screen.getByTestId('ai-error')).getByText('Paste some text to parse first.'),
+    ).toBeOnTheScreen();
     fireEvent.changeText(screen.getByTestId('ai-text'), 'Sunset Courts, Grand Hall in Pune');
     await act(async () => fireEvent.press(screen.getByTestId('ai-parse')));
     expect(request).toHaveBeenCalledWith(docs.CrmAppAiParseLeadsDocument, {
@@ -106,9 +108,11 @@ describe('LeadListScreen › Fill with AI', () => {
       city: 'Pune',
       lead_status: 'Contacted',
     });
-    expect(screen.getByTestId('ai-error')).toHaveTextContent(
-      '1 created · 1 need fixing (see the rows below).',
-    );
+    expect(
+      within(screen.getByTestId('ai-error')).getByText(
+        '1 created · 1 need fixing (see the rows below).',
+      ),
+    ).toBeOnTheScreen();
     expect(screen.getByTestId('ai-row-0-error')).toHaveTextContent('Issue: City is required');
     expect(screen.getByTestId('lead-list-status')).toHaveTextContent('Created 1 venue lead');
     createFails = true;
@@ -147,11 +151,13 @@ describe('LeadListScreen › Fill with AI', () => {
     fireEvent.press(screen.getByTestId('lead-list-ai'));
     fireEvent.changeText(screen.getByTestId('ai-text'), 'runners');
     await act(async () => fireEvent.press(screen.getByTestId('ai-parse')));
-    expect(screen.getByTestId('ai-error')).toHaveTextContent(
-      'No leads found in that text. Add more detail and retry.',
-    );
+    expect(
+      within(screen.getByTestId('ai-error')).getByText(
+        'No leads found in that text. Add more detail and retry.',
+      ),
+    ).toBeOnTheScreen();
     await act(async () => fireEvent.press(screen.getByTestId('ai-parse')));
-    expect(screen.getByTestId('ai-error')).toHaveTextContent('AI is busy');
+    expect(within(screen.getByTestId('ai-error')).getByText('AI is busy')).toBeOnTheScreen();
     await act(async () => fireEvent.press(screen.getByTestId('ai-parse')));
     expect(screen.queryByTestId('ai-row-0-full_address')).toBeNull();
     fireEvent.press(screen.getByTestId('ai-back'));
@@ -250,9 +256,11 @@ describe('LeadListScreen › Import from Excel', () => {
     expect(readFileBase64).not.toHaveBeenCalled();
     (DocumentPicker.getDocumentAsync as jest.Mock).mockResolvedValueOnce(picked);
     await act(async () => fireEvent.press(screen.getByTestId('import-choose')));
-    expect(screen.getByTestId('import-error')).toHaveTextContent(
-      'No column headers found in the first row.',
-    );
+    expect(
+      within(screen.getByTestId('import-error')).getByText(
+        'No column headers found in the first row.',
+      ),
+    ).toBeOnTheScreen();
     (DocumentPicker.getDocumentAsync as jest.Mock).mockResolvedValueOnce(picked);
     await act(async () => fireEvent.press(screen.getByTestId('import-choose')));
     await act(async () => fireEvent.press(screen.getByTestId('import-run')));
@@ -262,7 +270,9 @@ describe('LeadListScreen › Import from Excel', () => {
     fireEvent.press(screen.getByTestId('import-field-full_address-pick'));
     fireEvent.press(screen.getByTestId('import-field-full_address-Foo'));
     await act(async () => fireEvent.press(screen.getByTestId('import-run')));
-    expect(screen.getByTestId('import-error')).toHaveTextContent('Import failed on the server');
+    expect(
+      within(screen.getByTestId('import-error')).getByText('Import failed on the server'),
+    ).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('import-field-full_address-pick'));
     fireEvent.press(screen.getByTestId('import-field-full_address-ignore'));
     await act(async () => fireEvent.press(screen.getByTestId('import-run')));

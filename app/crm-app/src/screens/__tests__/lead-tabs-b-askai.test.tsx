@@ -225,7 +225,8 @@ describe('AskAiTab', () => {
     expect(screen.getByTestId('compose-to').props.value).toBe('rohit@cafe.in');
     expect(screen.getByTestId('compose-subject').props.value).toBe('Sunday slots');
     expect(screen.getByTestId('compose-message').props.value).toBe('Hi Rohit,\nSunday works.');
-    await waitFor(() => expect(callsTo(tabsA.CrmAppComposeProvidersDocument)).not.toHaveLength(0));
+    // The composer picks the default provider once the list has loaded.
+    expect(await screen.findByText(/^Zoho/)).toBeOnTheScreen();
     await act(async () => fireEvent.press(screen.getByTestId('ask-ai-email-send')));
     expect(callsTo(tabsA.CrmAppComposeVenueEmailDocument)[0]?.[1]).toMatchObject({
       id: 'v1',

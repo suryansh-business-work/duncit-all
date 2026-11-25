@@ -203,7 +203,8 @@ describe('LeadOverviewDetails — venue', () => {
     expect(ring).toHaveTextContent('72', { exact: false });
     fireEvent.press(ring);
     expect(onOpenTab).toHaveBeenCalledWith('quality');
-    await act(async () => fireEvent.press(await screen.findByTestId('email-status-verified')));
+    const emailStatusVerified = await screen.findByTestId('email-status-verified');
+    await act(async () => fireEvent.press(emailStatusVerified));
     expect(await screen.findByTestId('email-status-risky')).toHaveTextContent('Risky', {
       exact: false,
     });
@@ -247,8 +248,10 @@ describe('LeadOverviewDetails — venue', () => {
     expect(screen.queryByTestId('matched-user-box')).toBeNull();
     fireEvent.press(screen.getByTestId('lead-action-call'));
     fireEvent.press(screen.getByTestId('lead-action-whatsapp'));
+    fireEvent.press(screen.getByTestId('lead-action-email'));
     expect(mockNav.navigate).not.toHaveBeenCalled();
     expect(Linking.openURL).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('compose-email')).toBeNull();
   });
 });
 

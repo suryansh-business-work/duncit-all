@@ -102,7 +102,7 @@ describe('LeadListScreen', () => {
     expect(screen.getByText('72 · Warm')).toBeOnTheScreen();
     expect(screen.getByText('Qualified')).toBeOnTheScreen();
     expect(screen.getByText('Pune · hello@smash.example')).toBeOnTheScreen();
-    expect(screen.getByText(/^Assigned to: Asha · Follow-up: /)).toBeOnTheScreen();
+    expect(screen.getByText(/^Assigned To: Asha · Follow-up: /)).toBeOnTheScreen();
     expect(
       screen.getByText('Devices: Android, Web · Last activity: Not recorded yet'),
     ).toBeOnTheScreen();

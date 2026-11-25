@@ -207,7 +207,9 @@ describe('SurveyTab', () => {
 
   it('generates a share link and offers it, shares and revokes a live link, and deletes after confirming', async () => {
     renderTab();
-    await act(async () => fireEvent.press(await screen.findByTestId('survey-generate-link')));
+    // Find outside act: inside it, the first read's render would not flush until act ends.
+    const generate = await screen.findByTestId('survey-generate-link');
+    await act(async () => fireEvent.press(generate));
     expect(callsTo(docs.CrmAppGenerateSurveyLinkDocument)[0]?.[1]).toEqual({
       entity: 'VENUE_LEAD',
       lead_id: 'v1',

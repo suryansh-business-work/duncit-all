@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from '@testing-library/react-native';
+import { act, fireEvent, screen, within } from '@testing-library/react-native';
 
 import * as docs from '@/graphql/leadQualitySettings';
 import { gqlRequest } from '@/services/graphql.client';
@@ -227,8 +227,9 @@ describe('LeadQualitySettingsScreen with a draft', () => {
     expect(screen.getByTestId('lead-quality-draft-status')).toHaveTextContent(
       /^Draft version 4, last saved by Ravi on /,
     );
-    fireEvent.press(screen.getByTestId('lead-quality-restore-4'));
-    expect(screen.queryByText('Restore version 4 as the draft?')).toBeNull();
+    // The draft itself cannot be restored as the draft; the published version can.
+    expect(screen.getByTestId('lead-quality-restore-4')).toBeDisabled();
+    expect(screen.getByTestId('lead-quality-restore-3')).not.toBeDisabled();
     fireEvent.changeText(screen.getByTestId('lead-quality-criterion-1-weightage'), '55');
     expect(
       await screen.findByText('Allocate the remaining 5% before publishing.'),
@@ -372,6 +373,8 @@ describe('LeadQualitySettingsScreen with a draft', () => {
     expect(screen.queryByTestId('lead-quality-failure')).toBeNull();
     refusal = new Error('Network down');
     await press('lead-quality-save');
-    expect(screen.getByTestId('lead-quality-failure')).toHaveTextContent('Network down');
+    expect(
+      within(screen.getByTestId('lead-quality-failure')).getByText('Network down'),
+    ).toBeOnTheScreen();
   });
 });

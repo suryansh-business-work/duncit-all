@@ -1,6 +1,7 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-import { format } from 'date-fns';
+import { endOfWeek, format, startOfWeek } from 'date-fns';
+import { formatDate } from '@duncit/datetime';
 
 import {
   CrmAppCreateReminderDocument,
@@ -124,7 +125,9 @@ describe('RemindersScreen › calendar', () => {
     fireEvent.press(screen.getByTestId('calendar-view-year'));
     expect(screen.getByTestId('calendar-title')).toHaveTextContent(format(new Date(), 'yyyy'));
     fireEvent.press(screen.getByTestId('calendar-view-week'));
-    expect(screen.getByTestId('calendar-title')).toHaveTextContent('–');
+    expect(screen.getByTestId('calendar-title')).toHaveTextContent(
+      `${formatDate(startOfWeek(new Date()))} – ${formatDate(endOfWeek(new Date()))}`,
+    );
     fireEvent.press(screen.getByTestId('calendar-view-day'));
     fireEvent.press(screen.getByTestId('calendar-next'));
     fireEvent.press(screen.getByTestId('calendar-next'));

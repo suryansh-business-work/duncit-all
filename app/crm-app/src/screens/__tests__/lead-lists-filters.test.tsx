@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import * as Location from 'expo-location';
 
@@ -216,18 +216,22 @@ describe('LeadListScreen › Nearby leads', () => {
     await open();
     fireEvent.press(screen.getByTestId('nearby-open'));
     await act(async () => fireEvent.press(screen.getByTestId('nearby-find')));
-    expect(await screen.findByTestId('nearby-error', {}, WAIT)).toHaveTextContent(
-      'Location access is off for Duncit CRM. Allow it in Settings, or pick a city or area instead.',
-    );
+    expect(
+      within(await screen.findByTestId('nearby-error', {}, WAIT)).getByText(
+        'Location access is off for Duncit CRM. Allow it in Settings, or pick a city or area instead.',
+      ),
+    ).toBeOnTheScreen();
     (Location.requestForegroundPermissionsAsync as jest.Mock).mockResolvedValueOnce({
       granted: true,
     });
     (Location.getCurrentPositionAsync as jest.Mock).mockRejectedValueOnce(new Error('no fix'));
     fireEvent.press(screen.getByTestId('nearby-change'));
     await act(async () => fireEvent.press(screen.getByTestId('nearby-find')));
-    expect(await screen.findByTestId('nearby-error', {}, WAIT)).toHaveTextContent(
-      'Your location could not be found. Try again, or pick a city or area instead.',
-    );
+    expect(
+      within(await screen.findByTestId('nearby-error', {}, WAIT)).getByText(
+        'Your location could not be found. Try again, or pick a city or area instead.',
+      ),
+    ).toBeOnTheScreen();
     (Location.requestForegroundPermissionsAsync as jest.Mock).mockResolvedValueOnce({
       granted: true,
     });
@@ -251,9 +255,11 @@ describe('LeadListScreen › Nearby leads', () => {
     fireEvent.press(screen.getByTestId('nearby-source-place'));
     fireEvent.press(await screen.findByTestId('nearby-city-Pune', {}, WAIT));
     await act(async () => fireEvent.press(screen.getByTestId('nearby-find')));
-    expect(await screen.findByTestId('nearby-error', {}, WAIT)).toHaveTextContent(
-      'Nearby search is down',
-    );
+    expect(
+      within(await screen.findByTestId('nearby-error', {}, WAIT)).getByText(
+        'Nearby search is down',
+      ),
+    ).toBeOnTheScreen();
     expect(lastVars()?.near).toEqual({ city: 'Pune', radius_km: 5 });
   });
 });

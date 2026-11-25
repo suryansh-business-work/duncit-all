@@ -179,7 +179,8 @@ describe('LeadContactsTab', () => {
       ]),
     );
     renderTab();
-    await act(async () => fireEvent.press(await screen.findByTestId('email-status-invalid')));
+    const emailStatusInvalid = await screen.findByTestId('email-status-invalid');
+    await act(async () => fireEvent.press(emailStatusInvalid));
     expect(await screen.findByTestId('email-status-verified')).toBeOnTheScreen();
     await act(async () => fireEvent.press(screen.getByTestId('email-status-verified')));
     expect(await screen.findByTestId('lead-contacts-verify-error')).toHaveTextContent(

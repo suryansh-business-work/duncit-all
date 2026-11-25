@@ -103,9 +103,9 @@ describe('DynamicFieldsScreen', () => {
     expect(screen.getAllByText('Venue')).toHaveLength(3);
     expect(screen.getAllByText('Creator')).toHaveLength(3);
     // The first field cannot move up, nor the last one down.
-    fireEvent.press(screen.getByTestId('dynamic-field-up-region'));
-    fireEvent.press(screen.getByTestId('dynamic-field-down-zone'));
-    expect(callsTo(docs.CrmAppReorderDynamicFieldsDocument)).toHaveLength(0);
+    expect(screen.getByTestId('dynamic-field-up-region')).toBeDisabled();
+    expect(screen.getByTestId('dynamic-field-down-zone')).toBeDisabled();
+    expect(screen.getByTestId('dynamic-field-down-region')).not.toBeDisabled();
     fireEvent.press(screen.getByTestId('dynamic-field-edit-region'));
     expect(mockNav.navigate).toHaveBeenCalledWith('DynamicFieldEditor', { id: 'f2' });
     fireEvent.press(screen.getByTestId('dynamic-fields-add'));

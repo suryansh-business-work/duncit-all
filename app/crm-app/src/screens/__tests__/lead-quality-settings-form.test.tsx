@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from '@testing-library/react-native';
+import { act, fireEvent, screen, within } from '@testing-library/react-native';
 
 import { LeadQualityConfigForm } from '@/forms/lead-quality-config';
 import type { QualityConfig } from '@/features/lead-quality-settings/editor';
@@ -146,9 +146,11 @@ describe('LeadQualityConfigForm', () => {
     fireEvent.press(screen.getByTestId('lead-quality-add-band'));
     expect(value('lead-quality-band-2-label')).toBe('');
     fireEvent.press(screen.getByTestId('lead-quality-band-1-delete'));
+    // The alert's text, without its icon glyph.
+    const alert = await screen.findByTestId('lead-quality-bands-issue-BAND_ZERO_MISSING');
     expect(
-      await screen.findByTestId('lead-quality-bands-issue-BAND_ZERO_MISSING'),
-    ).toHaveTextContent('One band must start at 0 so every score has a classification.');
+      within(alert).getByText('One band must start at 0 so every score has a classification.'),
+    ).toBeOnTheScreen();
   });
 
   it('hands Save draft and Publish the exact input, publishing only a configuration that passes', async () => {

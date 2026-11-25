@@ -146,7 +146,9 @@ describe('WhatsAppGeneratorScreen — gateway step', () => {
       ]),
     );
     renderWithTheme(<WhatsAppGeneratorScreen />);
-    await act(async () => fireEvent.press(await screen.findByTestId('wa-gateway-generate')));
+    // Found outside act(): act holds back renders, so a find inside it never sees the screen load.
+    const generate = await screen.findByTestId('wa-gateway-generate');
+    await act(async () => fireEvent.press(generate));
     expect(await screen.findByText('No gateway master key')).toBeOnTheScreen();
     expect(screen.queryByTestId('wa-gateway-notice')).toBeNull();
   });

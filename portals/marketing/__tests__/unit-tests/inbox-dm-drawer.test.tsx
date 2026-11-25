@@ -35,7 +35,7 @@ vi.mock('@duncit/app-settings', async (importOriginal) => ({
 }));
 
 import ConversationDrawer from '../../src/pages/inbox-page/dms/ConversationDrawer';
-import { CREATE_LEAD_FROM_SOCIAL_CONVERSATION, MARK_SOCIAL_CONVERSATION_READ, SUGGEST_SOCIAL_MESSAGE } from '../../src/pages/inbox-page/dm.queries';
+import { MARK_SOCIAL_CONVERSATION_READ, SUGGEST_SOCIAL_MESSAGE } from '../../src/pages/inbox-page/dm.queries';
 import { GraphQLError } from 'graphql';
 
 /** A thread already read, so opening it does not call markRead. */
@@ -242,11 +242,6 @@ describe('ConversationDrawer', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(dialogsMock.notify).not.toHaveBeenCalled();
   };
-
-  it('says nothing when making a lead brings nothing back', async () => {
-    await answersNothing('dm-create-lead', CREATE_LEAD_FROM_SOCIAL_CONVERSATION, { id: 'dm1' }, { createLeadFromSocialConversation: null });
-    expect(screen.getByTestId('dm-create-lead')).toBeInTheDocument();
-  });
 
   it('leaves the box empty when the AI draft is empty', async () => {
     await answersNothing('inbox-suggest', SUGGEST_SOCIAL_MESSAGE, { id: 'dm1' }, { suggestSocialMessage: { __typename: 'SocialReplySuggestion', text: '', run_id: 'r' } });

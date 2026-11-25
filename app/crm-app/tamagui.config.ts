@@ -75,6 +75,10 @@ export function crmTheme(mode: ConsoleMode, a: Accent = accent) {
     dangerPress,
     successPress,
     primarySoft: tint(c.primary),
+    // Text and icons ON the primarySoft wash (the current tab's pill, initials badges):
+    // the accent text colour falls under 4.5:1 there, so light mode takes the
+    // deeper hover red and dark mode the ink (theme-contrast.test measures both).
+    onPrimarySoft: mode === 'light' ? c.primaryHover : c.ink,
     dangerSoft: tint(error),
     successSoft: tint(success),
     warningSoft: tint(warning),

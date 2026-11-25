@@ -60,6 +60,36 @@ internal object CallLogReader {
     return rows
   }
 
+  /** The newest calls first, at most `limit` — for the dialer's recent CRM calls. */
+  fun newest(context: Context, limit: Int): List<CallLogRow> {
+    if (!granted(context)) return emptyList()
+    val projection = arrayOf(
+      CallLog.Calls._ID,
+      CallLog.Calls.NUMBER,
+      CallLog.Calls.TYPE,
+      CallLog.Calls.DATE,
+      CallLog.Calls.DURATION,
+      CallLog.Calls.CACHED_NAME,
+    )
+    val rows = ArrayList<CallLogRow>()
+    context.contentResolver.query(CallLog.Calls.CONTENT_URI, projection, null, null, "${CallLog.Calls.DATE} DESC")
+      ?.use { cursor ->
+        while (cursor.moveToNext() && rows.size < limit) {
+          rows.add(
+            CallLogRow(
+              id = cursor.getLong(0),
+              number = cursor.getString(1).orEmpty(),
+              type = cursor.getInt(2),
+              date = cursor.getLong(3),
+              durationSeconds = cursor.getLong(4),
+              cachedName = cursor.getString(5).orEmpty(),
+            ),
+          )
+        }
+      }
+    return rows
+  }
+
   /** The number of the newest call that started at or after `startedAt`, for an outgoing call Android did not name. */
   fun latestNumberSince(context: Context, startedAt: Long): String? =
     since(context, startedAt - 5_000, 50).lastOrNull()?.number?.ifEmpty { null }

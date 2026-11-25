@@ -4,7 +4,7 @@ import { TamaguiProvider, Theme } from 'tamagui';
 
 import config, { crmTheme } from '../../../tamagui.config';
 import { AppNavigation } from '../AppNavigation';
-import { consoleChrome, navigationTheme, useConsoleChrome } from '../chrome';
+import { activeTabInk, consoleChrome, navigationTheme, useConsoleChrome } from '../chrome';
 
 jest.mock('../RootNavigator', () => {
   const { Text: MockText } = jest.requireActual('react-native');
@@ -25,30 +25,36 @@ function inMode(mode: 'light' | 'dark') {
 
 describe('consoleChrome', () => {
   it.each(['light', 'dark'] as const)(
-    'paints the %s header as the surface with ink text, never the accent',
+    'paints the %s app bar Duncit CRM red with white title and icons',
     (mode) => {
       const t = crmTheme(mode);
       const chrome = consoleChrome(mode);
-      expect(chrome.stackHeader.headerStyle.backgroundColor).toBe(t.surface);
-      expect(chrome.stackHeader.headerTintColor).toBe(t.color);
+      expect(chrome.stackHeader.headerStyle.backgroundColor).toBe(t.primary);
+      expect(chrome.stackHeader.headerTintColor).toBe(t.onPrimary);
       expect(chrome.tabsHeader.headerStyle).toMatchObject({
-        backgroundColor: t.surface,
-        borderBottomColor: t.borderColor,
+        backgroundColor: t.primary,
         elevation: 0,
+        borderBottomWidth: 0,
       });
-      expect(chrome.stackHeader.headerStyle.backgroundColor).not.toBe(t.primary);
+      expect(chrome.tabsHeader.headerTitleStyle.color).toBe(t.onPrimary);
     },
   );
 
-  it('marks the current tab in the accent readable on the mode, others muted', () => {
-    const dark = consoleChrome('dark');
-    expect(dark.tabBar.tabBarActiveTintColor).toBe(crmTheme('dark').accentText);
-    expect(dark.tabBar.tabBarInactiveTintColor).toBe(crmTheme('dark').muted);
-    expect(dark.tabBar.tabBarStyle.backgroundColor).toBe(crmTheme('dark').surface);
-    // The dark accent is lightened for text; the light one is not.
-    expect(dark.tabBar.tabBarActiveTintColor).not.toBe(
-      consoleChrome('light').tabBar.tabBarActiveTintColor,
-    );
+  it.each(['light', 'dark'] as const)(
+    'marks the current %s tab with a soft red pill, the others muted',
+    (mode) => {
+      const t = crmTheme(mode);
+      const { tabBar } = consoleChrome(mode);
+      expect(tabBar.tabBarActiveBackgroundColor).toBe(t.primarySoft);
+      expect(tabBar.tabBarActiveTintColor).toBe(activeTabInk(mode));
+      expect(tabBar.tabBarInactiveTintColor).toBe(t.muted);
+      expect(tabBar.tabBarStyle.backgroundColor).toBe(t.surface);
+    },
+  );
+
+  it('uses the deeper red for the light current tab and the ink on dark (the accent fails on the pill)', () => {
+    expect(activeTabInk('light')).toBe(crmTheme('light').primaryHover);
+    expect(activeTabInk('dark')).toBe(crmTheme('dark').color);
   });
 });
 
@@ -78,7 +84,7 @@ describe('navigationTheme', () => {
 describe('useConsoleChrome', () => {
   it.each(['light', 'dark'] as const)('follows the %s theme it renders in', (mode) => {
     const { result } = renderHook(() => useConsoleChrome(), { wrapper: inMode(mode) });
-    expect(result.current.stackHeader.headerStyle.backgroundColor).toBe(crmTheme(mode).surface);
+    expect(result.current.tabBar.tabBarActiveTintColor).toBe(activeTabInk(mode));
   });
 });
 

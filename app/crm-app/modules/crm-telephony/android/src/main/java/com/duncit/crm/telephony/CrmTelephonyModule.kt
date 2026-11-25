@@ -19,6 +19,23 @@ import org.json.JSONObject
  * app's TypeScript (tested there); this module only reads and writes.
  */
 class CrmTelephonyModule : Module() {
+  private companion object {
+    /** The longest list the dialer asks for. */
+    const val MAX_LIST = 200
+    /** Recent CRM calls are found among this many times as many phone calls. */
+    const val RECENT_SCAN_FACTOR = 5
+  }
+
+  private fun entryMap(entry: DirectoryEntry): Map<String, Any> = mapOf(
+    "entityType" to entry.entityType,
+    "leadId" to entry.leadId,
+    "leadName" to entry.leadName,
+    "contactName" to entry.contactName,
+    "status" to entry.status,
+    "city" to entry.city,
+    "assignee" to entry.assignee,
+  )
+
   private val context: Context
     get() = appContext.reactContext?.applicationContext ?: throw CodedException("ERR_NO_CONTEXT", "The app is not ready", null)
 
@@ -75,6 +92,11 @@ class CrmTelephonyModule : Module() {
 
     Function("diagnostics") { CallingDiagnostics.read(context) }
 
+    /** A dial pad key's DTMF beep, when the phone's dialling pad tones are on. */
+    Function("playDialTone") { key: String -> DialTones.play(context, key) }
+
+    OnDestroy { DialTones.release() }
+
     Function("requestRedirectionRole") { CallingDiagnostics.requestRedirectionRole(appContext.currentActivity) }
 
     Function("testCallerCard") { CallingDiagnostics.testCallerCard(context) }
@@ -96,13 +118,32 @@ class CrmTelephonyModule : Module() {
 
     AsyncFunction("lookupNumber") { number: String ->
       val match = CallerDirectory.lookup(context, number) ?: return@AsyncFunction null
-      mapOf(
-        "entityType" to match.entry.entityType,
-        "leadId" to match.entry.leadId,
-        "leadName" to match.entry.leadName,
-        "contactName" to match.entry.contactName,
-        "others" to match.others,
-      )
+      entryMap(match.entry) + ("others" to match.others)
+    }
+
+    AsyncFunction("searchDirectory") { query: String, limit: Int ->
+      CallerDirectory.search(context, query, limit.coerceIn(1, MAX_LIST)).map { entryMap(it) + ("phoneKey" to it.key) }
+    }
+
+    /**
+     * The newest calls with CRM contacts. Matching happens here, on the phone:
+     * a call with any other number never crosses to the app's screens.
+     */
+    AsyncFunction("recentCrmCalls") { limit: Int ->
+      val wanted = limit.coerceIn(1, MAX_LIST)
+      CallLogReader.newest(context, wanted * RECENT_SCAN_FACTOR).asSequence()
+        .mapNotNull { row -> CallerDirectory.lookup(context, row.number)?.let { row to it.entry } }
+        .take(wanted)
+        .map { (row, entry) ->
+          entryMap(entry) + mapOf(
+            "id" to row.id.toString(),
+            "number" to row.number,
+            "type" to row.type,
+            "date" to row.date.toDouble(),
+            "durationSeconds" to row.durationSeconds.toInt(),
+          )
+        }
+        .toList()
     }
 
     /** Sign-out: nothing about the CRM stays on the phone. */

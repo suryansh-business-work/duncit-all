@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Image, ScrollView } from 'react-native';
 import { useNavigation, useNavigationState, type NavigationProp } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Separator, Text, XStack, YStack, useTheme } from 'tamagui';
+import { Separator, Text, XStack, YStack, useTheme, useThemeName } from 'tamagui';
 
 import { RADII } from '@/constants/design';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -24,6 +25,7 @@ const LOGO = require('../../../assets/duncit-crm-logo.png');
 export function MenuScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
+  const dark = String(useThemeName()).startsWith('dark');
   const navigation = useNavigation<NavigationProp<AppStackParamList>>();
   const user = useAuthStore((s) => s.user);
   // The screen the menu opened over is the route just below it.
@@ -51,6 +53,8 @@ export function MenuScreen() {
 
   return (
     <XStack flex={1}>
+      {/* The menu is the surface colour, not the red bar: icons follow the mode while it is open. */}
+      <StatusBar style={dark ? 'light' : 'dark'} />
       <YStack
         width="84%"
         maxWidth={340}

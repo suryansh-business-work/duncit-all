@@ -14,6 +14,7 @@ const mockPhone = {
   pinDialerShortcut: jest.fn(),
   canDrawOverlays: jest.fn(() => true),
   setFeatures: jest.fn(),
+  playDialTone: jest.fn((_key: string) => true),
   // Settings › Calling & recording (covered in settings/calling/__tests__).
   diagnostics: jest.fn(() => ({
     manufacturer: 'samsung',
@@ -77,6 +78,8 @@ describe('DialerScreen', () => {
     renderWithTheme(<DialerScreen />);
     for (const key of '9811000001') fireEvent.press(screen.getByTestId(`key-${key}`));
     expect(screen.getByTestId('dialer-number').props.value).toBe('9811000001');
+    // Every key beeps with its own dial tone.
+    expect(mockPhone.playDialTone.mock.calls.map(([k]) => k).join('')).toBe('9811000001');
     expect(await screen.findByText('Run Club', {}, { timeout: 2000 })).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('dialer-open-lead'));
     expect(mockNav.navigate).toHaveBeenCalledWith('LeadDetail', { kind: 'HOST_LEAD', id: 'h1' });

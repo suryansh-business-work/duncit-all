@@ -2,10 +2,10 @@ import { z } from 'zod';
 import { mediaTypeForUrl } from '@duncit/utils';
 import type { Translate } from '@duncit/shell';
 import { PLATFORM_LABEL } from '../copy';
-import type { SocialAccount } from '../queries';
-import type { SocialPostMedia, SocialPublishMode, SocialScheduledPost, SocialScheduledPostInput } from '../publish.queries';
+import type { SocialAccount, SocialPlatform } from '../queries';
+import type { SocialPostMedia, SocialPostType, SocialPublishMode, SocialScheduledPost, SocialScheduledPostInput } from '../publish.queries';
 import { collaboratorsSchema } from '../../../components/collaborators';
-import { platformProblems } from './publish-rules';
+import { PUBLISH_RULES, platformProblems } from './publish-rules';
 
 /** A minute of grace, matching the server, so "now-ish" is not refused as the past. */
 const PAST_GRACE_MS = 60_000;
@@ -23,6 +23,12 @@ export interface SocialPostFormValues {
   needs_approval: boolean;
   /** Instagram usernames invited as collaborators; only sent when an Instagram account is picked. */
   collaborators: string[];
+  /** FEED, REEL or STORY; Reels and Stories are Instagram's. */
+  post_type: SocialPostType;
+  /** A network's own caption, by network; an empty one means the main text. */
+  captions: Record<string, string>;
+  /** Posted under the Instagram post or reel once it is out. */
+  first_comment: string;
 }
 
 export const blankSocialPostValues = (initial?: Partial<SocialPostFormValues>): SocialPostFormValues => ({
@@ -33,7 +39,29 @@ export const blankSocialPostValues = (initial?: Partial<SocialPostFormValues>): 
   mode: 'SCHEDULE',
   needs_approval: false,
   collaborators: [],
+  post_type: 'FEED',
+  captions: {},
+  first_comment: '',
   ...initial,
+});
+
+const isPlatform = (key: string): key is SocialPlatform => Object.hasOwn(PUBLISH_RULES, key);
+
+const positive = (value: number | null | undefined): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0;
+
+/** An item with only the measurements it really has — and only the fields the input takes (a row read back carries __typename). */
+export const keepMeasured = (item: SocialPostMedia): SocialPostMedia => ({
+  url: item.url,
+  type: item.type,
+  ...(positive(item.width) && positive(item.height) ? { width: item.width, height: item.height } : {}),
+  ...(positive(item.duration_s) ? { duration_s: item.duration_s } : {}),
+});
+
+/** A saved post's type, captions and first comment as the form holds them. */
+export const postOptionsOf = (post: Pick<SocialScheduledPost, 'post_type' | 'captions' | 'first_comment'>) => ({
+  post_type: post.post_type,
+  captions: Object.fromEntries(post.captions.map((caption) => [caption.platform, caption.text])),
+  first_comment: post.first_comment,
 });
 
 /** A media item for a URL nobody typed a kind for — the kind is read off the address. */
@@ -41,7 +69,7 @@ export const mediaFromUrl = (url: string): SocialPostMedia => ({ url, type: medi
 
 /** A post's media list, falling back to the single URL posts carried before carousels. */
 export function postMedia(post: Pick<SocialScheduledPost, 'media' | 'media_url' | 'media_type'>): SocialPostMedia[] {
-  if (post.media.length > 0) return post.media.map(({ url, type }) => ({ url, type }));
+  if (post.media.length > 0) return post.media.map(keepMeasured);
   if (!post.media_url) return [];
   return [{ url: post.media_url, type: post.media_type ?? mediaTypeForUrl(post.media_url) }];
 }
@@ -63,12 +91,13 @@ function addScheduleIssue(values: SocialPostFormValues, ctx: Ctx, t: Translate) 
 function addPlatformIssues(values: SocialPostFormValues, ctx: Ctx, t: Translate, accounts: SocialAccount[]) {
   const chosen = new Set(values.account_ids);
   const platforms = new Set(accounts.filter((account) => chosen.has(account.id)).map((account) => account.platform));
+  const options = { post_type: values.post_type, captions: values.captions, first_comment: values.first_comment };
   for (const platform of platforms) {
     const network = t(PLATFORM_LABEL[platform]);
-    for (const problem of platformProblems(platform, values.text, values.media)) {
+    for (const problem of platformProblems(platform, values.text, values.media, options)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: [problem.field],
+        path: problem.field.split('.'),
         message: t(problem.key, { vars: { ...problem.vars, network } }),
       });
     }
@@ -84,11 +113,22 @@ export const socialPostSchema = (t: Translate, accounts: SocialAccount[]) =>
     .object({
       account_ids: z.array(z.string()),
       text: z.string(),
-      media: z.array(z.object({ url: z.string(), type: z.enum(['IMAGE', 'VIDEO']) })),
+      media: z.array(
+        z.object({
+          url: z.string(),
+          type: z.enum(['IMAGE', 'VIDEO']),
+          width: z.number().nullish(),
+          height: z.number().nullish(),
+          duration_s: z.number().nullish(),
+        })
+      ),
       scheduled_at: z.string(),
       mode: z.enum(['DRAFT', 'SCHEDULE', 'NOW']),
       needs_approval: z.boolean(),
       collaborators: collaboratorsSchema(t),
+      post_type: z.enum(['FEED', 'REEL', 'STORY']),
+      captions: z.record(z.string(), z.string()),
+      first_comment: z.string(),
     })
     .superRefine((values, ctx) => {
       if (!values.text.trim() && values.media.length === 0) {
@@ -105,8 +145,7 @@ export const socialPostSchema = (t: Translate, accounts: SocialAccount[]) =>
 export function toSocialPostInput(values: SocialPostFormValues, ideaId: string | null, reelProjectId: string | null = null): SocialScheduledPostInput {
   return {
     text: values.text,
-    // Only the two fields the input takes — a row read back from the server also carries __typename.
-    media: values.media.map(({ url, type }) => ({ url, type })),
+    media: values.media.map(keepMeasured),
     account_ids: values.account_ids,
     mode: values.mode,
     scheduled_at: values.scheduled_at || null,
@@ -114,6 +153,12 @@ export function toSocialPostInput(values: SocialPostFormValues, ideaId: string |
     needs_approval: values.needs_approval,
     reel_project_id: reelProjectId,
     collaborators: values.collaborators,
+    post_type: values.post_type,
+    // Only networks with words of their own; the server keeps the ones the post goes to.
+    captions: Object.entries(values.captions).flatMap(([platform, text]) =>
+      isPlatform(platform) && text.trim() ? [{ platform, text: text.trim() }] : []
+    ),
+    first_comment: values.first_comment.trim(),
   };
 }
 

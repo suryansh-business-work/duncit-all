@@ -158,6 +158,7 @@ export const makeSocialPublishTarget = (over: Partial<SocialPublishTarget> = {})
   status: 'PENDING',
   permalink: null,
   error: null,
+  first_comment_error: null,
   published_at: null,
   ...over,
 });
@@ -177,6 +178,9 @@ export const makeSocialScheduledPost = (over: Partial<SocialScheduledPost> = {})
   review_note: null,
   approval_run_id: null,
   collaborators: [],
+  post_type: 'FEED',
+  captions: [],
+  first_comment: '',
   targets: [makeSocialPublishTarget()],
   ...over,
 });
@@ -185,7 +189,8 @@ export const makeSocialScheduledPost = (over: Partial<SocialScheduledPost> = {})
 export const gqlSocialScheduledPost = (post: SocialScheduledPost) => ({
   __typename: 'SocialScheduledPost',
   ...post,
-  media: post.media.map((item) => ({ __typename: 'SocialPostMedia', ...item })),
+  media: post.media.map((item) => ({ __typename: 'SocialPostMedia', width: null, height: null, duration_s: null, ...item })),
+  captions: post.captions.map((caption) => ({ __typename: 'SocialPostCaption', ...caption })),
   targets: post.targets.map((target) => ({ __typename: 'SocialPublishTarget', ...target })),
 });
 

@@ -8,6 +8,8 @@ import { PUBLISH_RULES, textLength } from './publish-rules';
 interface Props {
   platforms: SocialPlatform[];
   text: string;
+  /** A network's own caption, by network; it is counted in place of the text there. */
+  captions?: Record<string, string>;
   /** How many media items are picked; the count shows against each limit once it is a carousel. */
   mediaCount: number;
   /** How many collaborators are invited; shown against the cap of each network that has them. */
@@ -19,16 +21,16 @@ interface Props {
  * the one that bites, and it should show while typing, not on submit. Once
  * more than one item is picked, the media count joins it the same way.
  */
-export default function PlatformChecks({ platforms, text, mediaCount, collaboratorCount = 0 }: Readonly<Props>) {
+export default function PlatformChecks({ platforms, text, captions = {}, mediaCount, collaboratorCount = 0 }: Readonly<Props>) {
   const { t, locale } = useTranslation();
   if (platforms.length === 0) return null;
-  const length = textLength(text);
   const carousel = mediaCount > 1;
   return (
     <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }} aria-live="polite" data-testid="social-post-limits">
       {platforms.flatMap((platform) => {
         const rules = PUBLISH_RULES[platform];
         const network = t(PLATFORM_LABEL[platform]);
+        const length = textLength(captions[platform]?.trim() || text);
         const icon = <PlatformIcon platform={platform} fontSize="small" />;
         const chips = [
           <Chip

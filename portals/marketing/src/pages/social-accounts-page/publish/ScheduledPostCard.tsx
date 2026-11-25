@@ -8,6 +8,7 @@ import type { SocialPublishTarget, SocialScheduledPost } from '../publish.querie
 import { postMedia, sentBackNote } from '../social-post-form';
 import { MediaCountChip, MediaThumb } from './PostMediaStrip';
 import ScheduledPostActions from './ScheduledPostActions';
+import TargetNotes from './TargetNotes';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
@@ -50,7 +51,6 @@ export default function ScheduledPostCard({ post, onEdit, onRemoved }: Readonly<
   const media = postMedia(post);
   const cover = media[0];
   const reviewNote = sentBackNote(post);
-  const failures = post.targets.filter((target) => target.status === 'FAILED' && target.error);
 
   return (
     <Card variant="outlined" data-testid={`social-scheduled-${post.id}`}>
@@ -61,6 +61,9 @@ export default function ScheduledPostCard({ post, onEdit, onRemoved }: Readonly<
             <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap', mb: 0.5 }}>
               <StatusChip status={post.status} colorMap={PUBLISH_STATUS_COLORS} label={t(PUBLISH_STATUS_LABEL[post.status])} />
               {media.length > 1 && <MediaCountChip count={media.length} />}
+              {post.post_type !== 'FEED' && (
+                <Chip size="small" variant="outlined" label={post.post_type === 'REEL' ? t('marketing.social.postTypeReel') : t('marketing.social.postTypeStory')} />
+              )}
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                 {whenLine(post, t, formatDateTime)}
               </Typography>
@@ -83,11 +86,7 @@ export default function ScheduledPostCard({ post, onEdit, onRemoved }: Readonly<
                 {t('marketing.social.withCollaborators', { vars: { handles: post.collaborators.map((handle) => `@${handle}`).join(', ') } })}
               </Typography>
             )}
-            {failures.map((target) => (
-              <Typography key={target.account_id} variant="caption" component="p" sx={{ color: 'error.main', mt: 0.5 }}>
-                {`${target.account_name}: ${target.error}`}
-              </Typography>
-            ))}
+            <TargetNotes targets={post.targets} />
           </Box>
           <ScheduledPostActions post={post} onEdit={onEdit} onRemoved={onRemoved} />
         </Stack>

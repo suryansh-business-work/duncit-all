@@ -8,11 +8,23 @@ export type SocialPublishMode = 'DRAFT' | 'SCHEDULE' | 'NOW';
 export type SocialQueueView = 'QUEUE' | 'APPROVALS' | 'DRAFTS' | 'SENT';
 export type SocialIdeaStatus = 'NEW' | 'USED' | 'DISMISSED';
 export type SocialIdeaFormat = 'TEXT' | 'IMAGE' | 'VIDEO';
+/** In the feed (several media make a carousel), as a Reel, or as a Story — Reels and Stories are Instagram's. */
+export type SocialPostType = 'FEED' | 'REEL' | 'STORY';
+
+/** One network's own caption in place of the post's text there. */
+export interface SocialPostCaption {
+  platform: SocialPlatform;
+  text: string;
+}
 
 /** One item of a post's media, in the order it is shown — a carousel is several. */
 export interface SocialPostMedia {
   url: string;
   type: SocialMediaType;
+  /** What the browser measured, for the shape and length rules; null or absent when unknown. */
+  width?: number | null;
+  height?: number | null;
+  duration_s?: number | null;
 }
 
 export interface SocialPublishTarget {
@@ -22,6 +34,8 @@ export interface SocialPublishTarget {
   status: SocialTargetStatus;
   permalink: string | null;
   error: string | null;
+  /** The post went out but its Instagram first comment did not; why. */
+  first_comment_error: string | null;
   published_at: string | null;
 }
 
@@ -42,6 +56,9 @@ export interface SocialScheduledPost {
   approval_run_id: string | null;
   /** Instagram usernames invited as collaborators. */
   collaborators: string[];
+  post_type: SocialPostType;
+  captions: SocialPostCaption[];
+  first_comment: string;
   targets: SocialPublishTarget[];
 }
 
@@ -86,6 +103,10 @@ export interface SocialScheduledPostInput {
   reel_project_id?: string | null;
   /** Instagram usernames to invite as collaborators (Instagram takes at most 3). */
   collaborators: string[];
+  post_type: SocialPostType;
+  /** Only networks with a caption of their own; the server keeps those the post goes to. */
+  captions: SocialPostCaption[];
+  first_comment: string;
 }
 
 const SCHEDULED_POST_FIELDS = gql`
@@ -97,6 +118,9 @@ const SCHEDULED_POST_FIELDS = gql`
     media {
       url
       type
+      width
+      height
+      duration_s
     }
     status
     scheduled_at
@@ -106,6 +130,12 @@ const SCHEDULED_POST_FIELDS = gql`
     review_note
     approval_run_id
     collaborators
+    post_type
+    captions {
+      platform
+      text
+    }
+    first_comment
     targets {
       account_id
       account_name
@@ -113,6 +143,7 @@ const SCHEDULED_POST_FIELDS = gql`
       status
       permalink
       error
+      first_comment_error
       published_at
     }
   }

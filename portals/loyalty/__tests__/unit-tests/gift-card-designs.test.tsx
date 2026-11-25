@@ -99,7 +99,12 @@ describe('DesignEditorPage — a new design', () => {
   // timeout, so under coverage on CI the test was killed before the wait could finish.
   it('adds the design and opens it', async () => {
     asWriter();
-    editor('new', [createDesignMock(input), designMock(makeDesign({ id: 'des-new', name: 'Festive', is_default: false }))]);
+    // The server answers the create with the design it stored, and the page then reads that same
+    // design back. One record for both, as the server would send: a create answer that disagreed
+    // with the read (the default fixture's name, category and stock) gave Apollo two versions of
+    // GiftCardDesign:des-new, and the page re-read it until every mocked answer was used up.
+    const created = makeDesign({ id: 'des-new', ...input, is_default: false });
+    editor('new', [createDesignMock(input, created), designMock(created)]);
     expect(screen.getByText('New gift card design')).toBeInTheDocument();
     fill();
     await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Design added'), { timeout: 5000 });

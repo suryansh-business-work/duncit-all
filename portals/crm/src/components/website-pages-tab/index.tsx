@@ -29,6 +29,7 @@ import ScrapeDialog from './ScrapeDialog';
 import WebsitePagesTable from './WebsitePagesTable';
 import PageContentDialog from './PageContentDialog';
 import { useTranslation } from '@duncit/shell';
+import { crmUnfetchedPages } from '@duncit/utils';
 
 interface Props {
   entity: CrmEntityType;
@@ -59,12 +60,12 @@ export default function WebsitePagesTab({ entity, leadId, website }: Readonly<Pr
   const [fetchProgress, setFetchProgress] = useState<{ done: number; total: number } | null>(null);
 
   const pages = data?.crmWebsitePages ?? [];
-  const unfetched = pages.filter((p) => p.status !== 'FETCHED');
+  const unfetched = crmUnfetchedPages(pages);
 
   if (!website) {
     return (
       <Alert severity="info">
-        No website on record for this lead. Open <strong>Edit</strong> and add a website to scrape its pages.
+        {t('crm.websitePages.noWebsite')}
       </Alert>
     );
   }
@@ -124,17 +125,19 @@ export default function WebsitePagesTab({ entity, leadId, website }: Readonly<Pr
               }}>{t('crm.common.website')}</Typography>
               <ExternalLink variant="body2" href={website} />
             </Box>
-            <Chip size="small" variant="outlined" label={`${pages.length} page${pages.length === 1 ? '' : 's'} saved`} />
+            <Chip size="small" variant="outlined" label={t('crm.websitePages.savedCount', { count: pages.length })} />
             <DuncitButton
               variant="outlined"
               startIcon={fetchProgress ? <CircularProgress size={16} /> : <DownloadIcon />}
               onClick={fetchAll}
               disabled={!!fetchProgress || unfetched.length === 0}
             >
-              {fetchProgress ? `Fetching ${fetchProgress.done}/${fetchProgress.total}` : `Fetch all (${unfetched.length})`}
+              {fetchProgress
+                ? t('crm.websitePages.fetching', { vars: { done: fetchProgress.done, total: fetchProgress.total } })
+                : t('crm.websitePages.fetchAll', { vars: { count: unfetched.length } })}
             </DuncitButton>
             <DuncitButton variant="contained" startIcon={<TravelExploreIcon />} onClick={() => { setActionError(null); setScrapeOpen(true); }}>
-              Scrape pages
+              {t('crm.websitePages.scrape')}
             </DuncitButton>
           </Stack>
         </CardContent>
@@ -160,7 +163,7 @@ export default function WebsitePagesTab({ entity, leadId, website }: Readonly<Pr
                 py: 2,
                 textAlign: 'center'
               }}>
-              No pages yet. Click "Scrape pages" to discover and save this website's pages.
+              {t('crm.websitePages.empty')}
             </Typography>
           )}
           {pages.length > 0 && (
@@ -174,10 +177,10 @@ export default function WebsitePagesTab({ entity, leadId, website }: Readonly<Pr
       <ConfirmDialog
         open={!!removing}
         title={t('crm.components.deletePage')}
-        message={`Remove "${removing?.url ?? ''}" from the saved pages?`}
+        message={t('crm.websitePages.deleteMessage', { vars: { url: removing?.url ?? '' } })}
         confirmLabel={t('shell.common.delete')}
         destructive
-        busyLabel="Working…"
+        busyLabel={t('crm.common.working')}
         loading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setRemoving(null)}

@@ -118,7 +118,7 @@ export default function RemindersTab({ entity, leadId }: Readonly<Props>) {
       <ConfirmDialog
         open={!!removing}
         title={t('crm.components.deleteReminder')}
-        message={`Delete "${removing?.title ?? ''}"?`}
+        message={t('crm.calendar.deleteMessage', { vars: { title: removing?.title ?? '' } })}
         confirmLabel={t('shell.common.delete')}
         destructive
         busyLabel="Working…"

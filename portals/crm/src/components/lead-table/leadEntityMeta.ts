@@ -19,22 +19,22 @@ export const leadEntityMeta = (t: Translate): Record<CrmLeadEntity, EntityMeta> 
   host: {
     tableId: 'crm-host-leads',
     nameField: 'host_name',
-    nameHeader: 'Host',
+    nameHeader: t('crm.common.host'),
     extra: { field: 'host_type', headerName: t('shell.common.type') },
-    emptyText: 'No host leads yet. Click "New Host Lead" to create the first one.',
+    emptyText: t('crm.hostLeads.emptyText'),
   },
   venue: {
     tableId: 'crm-venue-leads',
     nameField: 'venue_name',
     nameHeader: t('crm.common.venue'),
-    emptyText: 'No venue leads yet. Click "New Venue Lead" to create the first one.',
+    emptyText: t('crm.venueLeads.emptyText'),
   },
   ecomm: {
     tableId: 'crm-ecomm-leads',
     nameField: 'seller_name',
-    nameHeader: 'Seller',
+    nameHeader: t('crm.ecommLeads.seller'),
     extra: { field: 'brand_name', headerName: t('crm.common.brand') },
-    emptyText: 'No ecomm leads yet. Click "New Ecomm Lead" to create the first one.',
+    emptyText: t('crm.ecommLeads.emptyText'),
   },
   creator: {
     tableId: 'crm-creator-leads',

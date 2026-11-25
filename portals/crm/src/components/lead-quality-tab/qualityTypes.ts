@@ -1,3 +1,4 @@
+import { crmEvidenceByKey, crmItemNamesOf } from '@duncit/utils';
 import type { LeadQualityDetails } from '../../api/leadQuality.gql';
 
 /** The calculated score every view of a lead reads (ring, breakdown, qualification). */
@@ -9,9 +10,7 @@ export type QualityItemResult = QualityCriterion['items'][number];
 export type QualityEvidence = LeadQualityDetails['evidence'][number];
 
 /** Evidence by the item key it was recorded against. */
-export const evidenceByKey = (evidence: readonly QualityEvidence[]): ReadonlyMap<string, QualityEvidence> =>
-  new Map(evidence.map((row) => [row.item_key, row]));
+export const evidenceByKey = (evidence: readonly QualityEvidence[]): ReadonlyMap<string, QualityEvidence> => crmEvidenceByKey(evidence);
 
 /** Item names by key, for the history (it stores keys, the breakdown knows names). */
-export const itemNamesOf = (result: QualityResult | null | undefined): ReadonlyMap<string, string> =>
-  new Map((result?.criteria ?? []).flatMap((criterion) => criterion.items.map((item) => [item.key, item.name] as const)));
+export const itemNamesOf = (result: QualityResult | null | undefined): ReadonlyMap<string, string> => crmItemNamesOf(result);

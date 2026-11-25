@@ -163,7 +163,7 @@ export function buildLeadColumns<T extends CrmLeadRowBase>(
       options: options.assigneeOptions,
       valueGetter: (row) => row.assigned_to || '—',
     },
-    { field: 'next_follow_up_date', headerName: 'Follow-up', minWidth: 140, type: 'date', valueGetter: followUpValue },
+    { field: 'next_follow_up_date', headerName: t('crm.leadList.followUp'), minWidth: 140, type: 'date', valueGetter: followUpValue },
     dateColumn<T>({ formatDate: fmtDateObj }),
     actionsColumn<T>({
       onEdit: options.onEdit,

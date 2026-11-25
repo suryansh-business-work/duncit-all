@@ -1,6 +1,7 @@
 import { Stack, Tooltip, Typography } from '@mui/material';
 import type { DuncitColumn } from '@duncit/table';
 import type { useTranslation } from '@duncit/shell';
+import { CRM_GEO_PRECISION_KEY, crmFormatKm } from '@duncit/utils';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
@@ -10,14 +11,8 @@ export interface NearbyRowFields {
   geo_precision?: string | null;
 }
 
-const PRECISION_KEYS: Record<string, { short: string; long: string }> = {
-  PIN: { short: 'crm.nearby.precisionPinShort', long: 'crm.nearby.precisionPin' },
-  AREA: { short: 'crm.nearby.precisionAreaShort', long: 'crm.nearby.precisionArea' },
-  CITY: { short: 'crm.nearby.precisionCityShort', long: 'crm.nearby.precisionCity' },
-};
-
-/** One decimal under 10 km, whole kilometres beyond. */
-export const formatKm = (km: number) => (km < 10 ? km.toFixed(1) : String(Math.round(km)));
+/** One decimal under 10 km, whole kilometres beyond (@duncit/utils, shared with the Duncit CRM app). */
+export const formatKm = crmFormatKm;
 
 /**
  * The Distance column a nearby search adds: kilometres from the search centre
@@ -35,7 +30,7 @@ export function distanceColumn<T extends NearbyRowFields>(t: Translate): DuncitC
     minWidth: 120,
     valueGetter: (row) => row.distance_km ?? null,
     cellRenderer: (row) => {
-      const keys = row.geo_precision ? PRECISION_KEYS[row.geo_precision] : undefined;
+      const keys = row.geo_precision ? CRM_GEO_PRECISION_KEY[row.geo_precision] : undefined;
       return (
         <Tooltip title={keys ? t(keys.long) : ''}>
           <Stack component="span" sx={{ lineHeight: 1.2 }}>

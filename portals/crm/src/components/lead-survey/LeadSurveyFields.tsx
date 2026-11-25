@@ -25,7 +25,7 @@ export default function LeadSurveyFields({ entity, leadId, survey, initialAnswer
     setError(null);
     try {
       await save({ variables: { entity, lead_id: leadId, survey_id: survey.id, answers } });
-      setSnack('Survey saved');
+      setSnack(t('crm.leadSurvey.saved'));
       onSaved();
     } catch (e) {
       setError(parseApiError(e));

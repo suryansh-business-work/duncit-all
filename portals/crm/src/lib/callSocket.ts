@@ -1,19 +1,14 @@
 import { io, type Socket } from 'socket.io-client';
 import { urlConfigs } from '../config/url-configs';
 import { getToken } from './session';
+import { crmIsTerminalCallStatus, type CrmCallStatus } from '@duncit/utils';
 import type { CrmLeadEntityType } from '../api/crm.types';
 
 /** Server-emitted call lifecycle event name (matches server CRM_CALL_EVENT). */
 export const CRM_CALL_EVENT = 'crm_call_status';
 
-export type CallStatus =
-  | 'INITIATED'
-  | 'RINGING'
-  | 'IN_PROGRESS'
-  | 'COMPLETED'
-  | 'NO_ANSWER'
-  | 'BUSY'
-  | 'FAILED';
+/** The call statuses, shared with the Duncit CRM app (@duncit/utils). */
+export type CallStatus = CrmCallStatus;
 
 export interface CallStatusPayload {
   log_id?: string | null;
@@ -47,8 +42,7 @@ export interface CallTranscriptPayload {
   at: string | null;
 }
 
-const TERMINAL = new Set<CallStatus>(['COMPLETED', 'NO_ANSWER', 'BUSY', 'FAILED']);
-export const isTerminalCallStatus = (status: CallStatus) => TERMINAL.has(status);
+export const isTerminalCallStatus = crmIsTerminalCallStatus;
 
 /** socket.io server lives at the API origin (graphqlUrl minus the /graphql path). */
 const serverOrigin = urlConfigs.graphqlUrl.replace(/\/graphql\/?$/, '');

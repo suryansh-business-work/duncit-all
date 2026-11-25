@@ -4,7 +4,7 @@ import PhoneInTalkIcon from '@mui/icons-material/PhoneInTalk';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import SubtitlesIcon from '@mui/icons-material/Subtitles';
 import { DuncitButton } from '@duncit/buttons';
-import { parseApiError } from '@duncit/utils';
+import { crmCanStartCall, parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 import { fireAndForget, logs } from '@duncit/logs';
 import { CRM_CALL_SETUP, type CallSetup } from '../../api/call.gql';
@@ -24,9 +24,8 @@ function NumberRow({ label, value, missing }: Readonly<{ label: string; value: s
   );
 }
 
-/** True when everything a portal call needs is in place. */
-export const canStartCall = (setup: CallSetup | undefined, to: string | undefined) =>
-  !!setup?.configured && !!setup.from_number && !!setup.agent_number && !!to?.trim();
+/** True when everything a portal call needs is in place — shared with the CRM app. */
+export const canStartCall = crmCanStartCall;
 
 /**
  * Before the call: Call From (or "No Number Configured"), the contact's

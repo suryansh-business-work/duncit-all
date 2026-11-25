@@ -2510,3 +2510,17 @@ export {
   CRM_QUALIFICATION_TONE,
   type CrmTone,
 } from './crm-quality-labels';
+// CRM call line: statuses, transcript and clock (CRM portal call window + Duncit CRM app).
+export {
+  CRM_CALL_STATUSES,
+  crmCallStatusView,
+  crmCanStartCall,
+  crmElapsedSeconds,
+  crmFilterSegments,
+  crmFormatDuration,
+  crmIsTerminalCallStatus,
+  crmMergeSegment,
+  crmToCallStatus,
+  type CrmCallStatus,
+  type CrmCallStatusView,
+} from './crm-call';

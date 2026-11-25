@@ -3,6 +3,7 @@ import { Box, Chip, InputAdornment, Stack, TextField, Typography } from '@mui/ma
 import SearchIcon from '@mui/icons-material/Search';
 import SubtitlesIcon from '@mui/icons-material/Subtitles';
 import { formatTime } from '@duncit/app-settings';
+import { crmFilterSegments } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 import type { TranscriptSegment } from '../../api/call.gql';
 
@@ -12,12 +13,8 @@ interface Props {
   enabled: boolean;
 }
 
-/** Segments whose text contains the query, case-insensitively. */
-export function filterSegments(segments: TranscriptSegment[], query: string): TranscriptSegment[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return segments;
-  return segments.filter((s) => s.text.toLowerCase().includes(q));
-}
+/** Segments whose text contains the query, case-insensitively — shared with the CRM app. */
+export const filterSegments = crmFilterSegments;
 
 /**
  * The call as it is spoken: who said it (you or the contact), when, and what,

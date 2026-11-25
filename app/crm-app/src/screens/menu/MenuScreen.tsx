@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Separator, Text, XStack, YStack, useTheme } from 'tamagui';
 
+import { RADII } from '@/constants/design';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CRM_NAV, navPath, type NavItem } from '@/navigation/crmNav';
 import type { AppStackParamList } from '@/navigation/types';
@@ -12,7 +13,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { NavTree } from './NavTree';
 import { activeNavKey, goTo, type RouteLike } from './menuRoutes';
 
-const LOGO = require('../../../assets/duncit-logo.png');
+const LOGO = require('../../../assets/duncit-crm-logo.png');
 
 /**
  * The side menu: the CRM portal's sidebar on the phone, every group and page
@@ -61,7 +62,7 @@ export function MenuScreen() {
           <XStack alignItems="center" gap="$3" padding="$4">
             <Image
               source={LOGO}
-              style={{ width: 36, height: 36 }}
+              style={{ width: 36, height: 36, borderRadius: RADII.sm }}
               resizeMode="contain"
               accessible={false}
             />

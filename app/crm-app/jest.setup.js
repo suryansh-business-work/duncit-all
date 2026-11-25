@@ -63,6 +63,39 @@ jest.mock('@react-native-community/datetimepicker', () => {
   };
 });
 
+// The launch video: a player whose events a spec can fire (`__emit`), and a
+// plain View for the video surface that keeps its props.
+jest.mock('expo-video', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  const listeners = new Map();
+  const player = {
+    muted: false,
+    loop: false,
+    status: 'idle',
+    play: jest.fn(),
+    pause: jest.fn(),
+    addListener: jest.fn((event, listener) => {
+      listeners.set(event, listener);
+      return { remove: () => listeners.delete(event) };
+    }),
+  };
+  return {
+    useVideoPlayer: jest.fn((_source, setup) => {
+      setup?.(player);
+      return player;
+    }),
+    VideoView: (props) => React.createElement(View, { ...props, testID: 'video-view' }),
+    __player: player,
+    __emit: (event, payload) => listeners.get(event)?.(payload),
+  };
+});
+
+jest.mock('expo-splash-screen', () => ({
+  preventAutoHideAsync: jest.fn().mockResolvedValue(true),
+  hideAsync: jest.fn().mockResolvedValue(true),
+}));
+
 jest.mock('react-native-webview', () => {
   const React = require('react');
   const { View } = require('react-native');

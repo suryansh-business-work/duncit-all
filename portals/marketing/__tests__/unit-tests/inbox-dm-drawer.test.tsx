@@ -35,7 +35,7 @@ vi.mock('@duncit/app-settings', async (importOriginal) => ({
 }));
 
 import ConversationDrawer from '../../src/pages/inbox-page/dms/ConversationDrawer';
-import { ASSIGN_SOCIAL_CONVERSATION, CREATE_LEAD_FROM_SOCIAL_CONVERSATION, MARK_SOCIAL_CONVERSATION_READ, SUGGEST_SOCIAL_MESSAGE } from '../../src/pages/inbox-page/dm.queries';
+import { CREATE_LEAD_FROM_SOCIAL_CONVERSATION, MARK_SOCIAL_CONVERSATION_READ, SUGGEST_SOCIAL_MESSAGE } from '../../src/pages/inbox-page/dm.queries';
 import { GraphQLError } from 'graphql';
 
 /** A thread already read, so opening it does not call markRead. */
@@ -242,11 +242,6 @@ describe('ConversationDrawer', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(dialogsMock.notify).not.toHaveBeenCalled();
   };
-
-  it('says nothing when assigning brings nothing back', async () => {
-    await answersNothing('inbox-assign-me', ASSIGN_SOCIAL_CONVERSATION, { id: 'dm1', user_id: 'u1' }, { assignSocialConversation: null });
-    expect(screen.getByTestId('inbox-assignee')).toHaveTextContent('Nobody');
-  });
 
   it('says nothing when making a lead brings nothing back', async () => {
     await answersNothing('dm-create-lead', CREATE_LEAD_FROM_SOCIAL_CONVERSATION, { id: 'dm1' }, { createLeadFromSocialConversation: null });

@@ -17,6 +17,7 @@ import {
   makeInboxItem,
   makeThread,
   markReadMock,
+  setConversationStatusMock,
   setSocialCommentStatusMock,
 } from '../mocks';
 import { __setTableRows } from './table-mock';
@@ -137,17 +138,26 @@ describe('InboxPage — the All tab', () => {
 });
 
 describe('InboxPage — the other tabs', () => {
-  it('says when the DM counts cannot be read, and refreshes only them after an action on a conversation', async () => {
+  it('says when the DM counts cannot be read, and reads only them again after an action on a conversation', async () => {
     __setTableRows([makeConversation({ unread_count: 0 })]);
     const thread = makeThread({}, { unread_count: 0 });
-    renderPage('/social/inbox?channel=dms', [dmSummaryErrorMock('DM counts down'), inboxSetupMock(), conversationMock(thread)]);
+    const done = makeThread({}, { unread_count: 0, status: 'DONE' });
+    renderPage('/social/inbox?channel=dms', [
+      dmSummaryErrorMock('DM counts down'),
+      inboxSetupMock(),
+      conversationMock(thread),
+      setConversationStatusMock('dm1', 'DONE', done),
+      conversationMock(done),
+      dmSummaryMock(),
+    ]);
     expect(await screen.findByText('DM counts down')).toBeInTheDocument();
+    expect(screen.getByTestId('inbox-card-OPEN')).toHaveTextContent('—');
     fireEvent.click(await screen.findByRole('button', { name: 'rowclick-0' }));
     const drawer = await screen.findByTestId('dm-drawer');
     fireEvent.click(await within(drawer).findByTestId('inbox-done'));
-    // No mock is left for the status change or the DM counts: both refusals are said, and nothing asks for comment counts.
-    await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalled());
-    expect(screen.getByTestId('inbox-card-OPEN')).toHaveTextContent('—');
+    await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Status saved.', 'success'));
+    // The refresh reads the DM counts again (the only summary mock left) and never asks for comment counts.
+    await waitFor(() => expect(screen.getByTestId('inbox-card-OPEN')).toHaveTextContent('4'));
   });
 
   it('reads the DM queue on the DMs tab, with only DM counts on the cards', async () => {

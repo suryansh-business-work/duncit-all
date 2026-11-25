@@ -300,6 +300,7 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
     },
     call: {
       screenTitle: 'Call',
+      recording: 'Recording',
       recordedCall: 'Call with recording',
       simCall: 'Call from this phone instead',
       simHint: 'Duncit does not record a call made from this phone. If your phone’s own call recorder is on, Duncit CRM attaches that recording after the call.',

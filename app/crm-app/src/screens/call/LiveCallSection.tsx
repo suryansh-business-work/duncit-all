@@ -13,6 +13,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { AuthAlert } from '@/screens/auth/AuthAlert';
 import { CallControls } from './CallControls';
 import { CallTranscript } from './CallTranscript';
+import { RecordingIndicator } from './RecordingIndicator';
 
 const SCOPE = 'crm-app/LiveCallSection';
 
@@ -30,6 +31,8 @@ export function LiveCallSection({
   const theme = useTheme();
   const seconds = useCallClock(call.answeredAt, call.live);
   const view = crmCallStatusView(call.status, call.onHold);
+  // Twilio records from the moment the contact is joined in, until the call ends.
+  const recording = call.live && call.status === 'IN_PROGRESS' && !!setup?.recording_enabled;
   const control = (action: ControlAction) =>
     fireAndForget(call.control(action), logs.mobileApp, SCOPE, action);
 
@@ -55,6 +58,7 @@ export function LiveCallSection({
           {to}
         </Text>
         <ToneChip label={t(view.labelKey)} tone={view.tone} testID="call-status" />
+        {recording ? <RecordingIndicator /> : null}
         <Text color="$muted" testID="call-duration">
           {`${t('crm.call.duration')} ${crmFormatDuration(seconds)}`}
         </Text>

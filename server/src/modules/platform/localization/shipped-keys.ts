@@ -8385,6 +8385,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "crmApp.analytics.weekDescription": "Week of {week}: {leads} leads, average score {score}",
   "crmApp.analytics.weekLabel": "Week of {week} · average {score}",
   "crmApp.call.recordedCall": "Call with recording",
+  "crmApp.call.recording": "Recording",
   "crmApp.call.screenTitle": "Call",
   "crmApp.call.simCall": "Call from this phone instead",
   "crmApp.call.simHint": "Duncit does not record a call made from this phone. If your phone’s own call recorder is on, Duncit CRM attaches that recording after the call.",

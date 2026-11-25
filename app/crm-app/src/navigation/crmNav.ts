@@ -27,11 +27,15 @@ export type NavTarget =
         | 'QualityAnalytics'
         | 'LeadResearch'
         | 'CallPrompts'
-        | 'ServicesOffered';
+        | 'ServicesOffered'
+        | 'LeadQualitySettings'
+        | 'DynamicFields'
+        | 'WhatsAppGenerator'
+        | 'EmailTemplates'
+        | 'EmailTemplateSettings';
     }
   | { type: 'leads'; kind: LeadKind }
-  | { type: 'options'; group: ManagedOptionGroup }
-  | { type: 'portal'; path: string };
+  | { type: 'options'; group: ManagedOptionGroup };
 
 export interface NavItem {
   key: string;
@@ -44,7 +48,6 @@ export interface NavItem {
 
 const m = (name: keyof typeof MaterialIcons.glyphMap): NavIcon => ({ set: 'material', name });
 const WHATSAPP: NavIcon = { set: 'community', name: 'whatsapp' };
-const portal = (path: string): NavTarget => ({ type: 'portal', path });
 const leads = (kind: LeadKind): NavTarget => ({ type: 'leads', kind });
 
 /**
@@ -116,7 +119,7 @@ export const CRM_NAV: readonly NavItem[] = [
             key: 'leadQualityScore',
             labelKey: 'shell.nav.leadQualityScore',
             icon: m('tune'),
-            target: portal('/settings/lead-quality'),
+            target: { type: 'screen', screen: 'LeadQualitySettings' },
           },
         ],
       },
@@ -144,7 +147,7 @@ export const CRM_NAV: readonly NavItem[] = [
         key: 'whatsappLeadGenerator',
         labelKey: 'shell.nav.whatsappLeadGenerator',
         icon: WHATSAPP,
-        target: portal('/tools/whatsapp'),
+        target: { type: 'screen', screen: 'WhatsAppGenerator' },
       },
       {
         key: 'emailVerifier',
@@ -201,13 +204,13 @@ export const CRM_NAV: readonly NavItem[] = [
         key: 'templates',
         labelKey: 'shell.nav.templates',
         icon: m('email'),
-        target: portal('/email-templates'),
+        target: { type: 'screen', screen: 'EmailTemplates' },
       },
       {
         key: 'emailTemplateSettings',
         labelKey: 'shell.nav.emailTemplateSettings',
         icon: m('settings'),
-        target: portal('/email-templates/settings'),
+        target: { type: 'screen', screen: 'EmailTemplateSettings' },
       },
     ],
   },
@@ -233,7 +236,7 @@ export const CRM_NAV: readonly NavItem[] = [
         key: 'dynamicFields',
         labelKey: 'shell.nav.dynamicFields',
         icon: m('analytics'),
-        target: portal('/settings/dynamic-fields'),
+        target: { type: 'screen', screen: 'DynamicFields' },
       },
     ],
   },

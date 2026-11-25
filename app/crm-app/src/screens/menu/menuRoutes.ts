@@ -15,14 +15,15 @@ const param = (route: RouteLike, key: string): unknown =>
   (route.params as Record<string, unknown> | undefined)?.[key];
 
 /**
- * Which menu item the screen under the menu belongs to: a portal page by its
- * path, the Leads tab by its kind, the Reminders tab — or none (Home, Dialer…).
+ * Which menu item the screen under the menu belongs to: the page's own screen,
+ * a managed list by its group, a kind's lead list (or the Leads tab filtered to
+ * it), the Reminders tab — or none (Home, Dialer…).
  */
 export function activeNavKey(route: RouteLike | undefined): string | null {
   if (!route) return null;
-  if (route.name === 'PortalPage') {
-    const path = param(route, 'path');
-    return findNavKey(CRM_NAV, (t) => t.type === 'portal' && t.path === path);
+  if (route.name === 'LeadList') {
+    const kind = param(route, 'kind');
+    return findNavKey(CRM_NAV, (t) => t.type === 'leads' && t.kind === kind);
   }
   if (route.name === 'ManagedOptions') {
     const group = param(route, 'group');
@@ -51,9 +52,6 @@ export function goTo(navigation: NavigationProp<AppStackParamList>, item: NavIte
   navigation.goBack();
   if (target.type === 'screen') navigation.navigate(target.screen);
   else if (target.type === 'tab') navigation.navigate('Tabs', { screen: target.tab });
-  else if (target.type === 'leads')
-    navigation.navigate('Tabs', { screen: 'Leads', params: { kind: target.kind } });
-  else if (target.type === 'options')
-    navigation.navigate('ManagedOptions', { group: target.group });
-  else navigation.navigate('PortalPage', { path: target.path, titleKey: item.labelKey });
+  else if (target.type === 'leads') navigation.navigate('LeadList', { kind: target.kind });
+  else navigation.navigate('ManagedOptions', { group: target.group });
 }

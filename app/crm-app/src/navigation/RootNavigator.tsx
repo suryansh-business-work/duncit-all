@@ -17,8 +17,16 @@ import { CallPromptsScreen } from '@/screens/call-prompts/CallPromptsScreen';
 import { CallPromptEditorScreen } from '@/screens/call-prompts/CallPromptEditorScreen';
 import { ServicesOfferedScreen } from '@/screens/services-offered/ServicesOfferedScreen';
 import { ServiceOfferedEditorScreen } from '@/screens/services-offered/ServiceOfferedEditorScreen';
+import { LeadListScreen } from '@/screens/leads/LeadListScreen';
+import { WhatsAppGeneratorScreen } from '@/screens/whatsapp-generator/WhatsAppGeneratorScreen';
+import { EmailTemplatesScreen } from '@/screens/email-templates/EmailTemplatesScreen';
+import { EmailTemplateCreateScreen } from '@/screens/email-templates/EmailTemplateCreateScreen';
+import { EmailTemplateEditorScreen } from '@/screens/email-templates/EmailTemplateEditorScreen';
+import { EmailTemplateSettingsScreen } from '@/screens/email-templates/EmailTemplateSettingsScreen';
+import { LeadQualitySettingsScreen } from '@/screens/settings-lead-quality/LeadQualitySettingsScreen';
+import { DynamicFieldsScreen } from '@/screens/dynamic-fields/DynamicFieldsScreen';
+import { DynamicFieldEditorScreen } from '@/screens/dynamic-fields/DynamicFieldEditorScreen';
 import { MenuScreen } from '@/screens/menu/MenuScreen';
-import { PortalPageScreen } from '@/screens/portal/PortalPageScreen';
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
 import { UserLeadsScreen } from '@/screens/user-leads/UserLeadsScreen';
 import { EmailVerifierScreen } from '@/screens/email-verifier/EmailVerifierScreen';
@@ -90,7 +98,6 @@ export function RootNavigator() {
           animation: 'slide_from_left',
         }}
       />
-      <Stack.Screen name="PortalPage" component={PortalPageScreen} options={{ title: '' }} />
       <Stack.Screen
         name="Dashboard"
         component={DashboardScreen}
@@ -137,6 +144,27 @@ export function RootNavigator() {
       <Stack.Screen name="CallPromptEditor" component={CallPromptEditorScreen} />
       <Stack.Screen name="ServicesOffered" component={ServicesOfferedScreen} />
       <Stack.Screen name="ServiceOfferedEditor" component={ServiceOfferedEditorScreen} />
+      <Stack.Screen name="LeadList" component={LeadListScreen} />
+      <Stack.Screen name="EmailTemplates" component={EmailTemplatesScreen} />
+      <Stack.Screen name="EmailTemplateCreate" component={EmailTemplateCreateScreen} />
+      <Stack.Screen name="EmailTemplateEditor" component={EmailTemplateEditorScreen} />
+      <Stack.Screen name="EmailTemplateSettings" component={EmailTemplateSettingsScreen} />
+      <Stack.Screen
+        name="WhatsAppGenerator"
+        component={WhatsAppGeneratorScreen}
+        options={{ title: t('shell.nav.whatsappLeadGenerator') }}
+      />
+      <Stack.Screen
+        name="LeadQualitySettings"
+        component={LeadQualitySettingsScreen}
+        options={{ title: t('crm.leadQualitySettings.title') }}
+      />
+      <Stack.Screen
+        name="DynamicFields"
+        component={DynamicFieldsScreen}
+        options={{ title: t('shell.nav.dynamicFields') }}
+      />
+      <Stack.Screen name="DynamicFieldEditor" component={DynamicFieldEditorScreen} />
       <Stack.Screen
         name="Call"
         component={CallScreen}

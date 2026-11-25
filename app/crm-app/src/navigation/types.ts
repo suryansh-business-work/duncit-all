@@ -1,6 +1,7 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
 import type { ManagedOptionGroup } from '@/features/data/useManagedOptions';
+import type { EmailSettingsTab } from '@/screens/email-templates/routes';
 import type { EditableService } from '@/features/services-offered/serviceOffered';
 import type { LeadKind } from '@/features/leads/leadKinds';
 
@@ -16,6 +17,8 @@ export type TabParamList = {
 export type AppStackParamList = {
   Tabs: NavigatorScreenParams<TabParamList> | undefined;
   LeadDetail: { kind: LeadKind; id: string };
+  /** One kind's full listing (the portal's Venue / Host / … Leads page). */
+  LeadList: { kind: LeadKind };
   /** No id = a new lead of this kind. */
   LeadEditor: { kind: LeadKind; id?: string };
   AddNote: { kind: LeadKind; id: string; name: string };
@@ -50,6 +53,16 @@ export type AppStackParamList = {
   ServiceOfferedEditor: { service?: EditableService };
   /** CRM › Data › Venues › Amenities or Event Suitability. */
   ManagedOptions: { group: ManagedOptionGroup };
-  /** A portal page the app does not have yet: what it is, and a way to open it in the portal. */
-  PortalPage: { path: string; titleKey: string };
+  /** CRM › Email Templates: the list, a new template, one template's editor, and Settings. */
+  EmailTemplates: undefined;
+  EmailTemplateCreate: undefined;
+  EmailTemplateEditor: { id: string };
+  EmailTemplateSettings: { tab?: EmailSettingsTab } | undefined;
+  /** CRM › Tools › WhatsApp Lead Generator. */
+  WhatsAppGenerator: undefined;
+  /** CRM › Settings › Lead Quality Score, opened on one lead type or the first. */
+  LeadQualitySettings: { leadType?: LeadKind } | undefined;
+  /** CRM › Settings › Dynamic Fields, and adding (no id) or editing one field. */
+  DynamicFields: undefined;
+  DynamicFieldEditor: { id?: string };
 };

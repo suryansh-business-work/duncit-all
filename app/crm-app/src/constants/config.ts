@@ -34,6 +34,7 @@ export function portalOrigin(apiUrl: string, consoleKey = 'crm'): string {
 
 export const config = {
   apiUrl: resolveApiUrl(process.env.EXPO_PUBLIC_API_URL),
+  /** The CRM portal, which hosts the public survey page a lead's survey link opens. */
   portalUrl: portalOrigin(resolveApiUrl(process.env.EXPO_PUBLIC_API_URL)),
   /** The Tech portal, where Twilio (the CRM call line) is configured. */
   techUrl: portalOrigin(resolveApiUrl(process.env.EXPO_PUBLIC_API_URL), 'tech'),

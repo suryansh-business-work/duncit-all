@@ -31,7 +31,7 @@ describe('CRM_NAV — the portal sidebar', () => {
     expect(new Set(pages.map((page) => page.key)).size).toBe(pages.length);
   });
 
-  it('sends the five lead pages to the Leads tab on their own kind', () => {
+  it('sends the five lead pages to their own kind’s lead list', () => {
     const kinds = leaves(CRM_NAV).flatMap((page) =>
       page.target?.type === 'leads' ? [page.target.kind] : [],
     );
@@ -61,10 +61,12 @@ describe('activeNavKey — "you are here"', () => {
     state: { index: 0, routes: [{ name, params }] },
   });
 
-  it('marks a portal page by its path, a lead page by its kind, and Reminders', () => {
-    expect(activeNavKey({ name: 'PortalPage', params: { path: '/settings/dynamic-fields' } })).toBe(
-      'dynamicFields',
-    );
+  it('marks a page by its screen, a lead page by its kind, and Reminders', () => {
+    expect(activeNavKey({ name: 'EmailTemplates' })).toBe('templates');
+    expect(activeNavKey({ name: 'WhatsAppGenerator' })).toBe('whatsappLeadGenerator');
+    expect(activeNavKey({ name: 'DynamicFields' })).toBe('dynamicFields');
+    expect(activeNavKey({ name: 'LeadQualitySettings' })).toBe('leadQualityScore');
+    expect(activeNavKey({ name: 'LeadList', params: { kind: 'VENUE_LEAD' } })).toBe('venueLeads');
     expect(activeNavKey({ name: 'CallPrompts' })).toBe('staticContent');
     expect(activeNavKey(tabs('Leads', { kind: 'HOST_LEAD' }))).toBe('hostLeads');
     expect(activeNavKey(tabs('Reminders'))).toBe('reminders');
@@ -88,7 +90,7 @@ describe('goTo', () => {
   const navigation = () => ({ goBack: jest.fn(), navigate: jest.fn() });
   const item = (key: string) => leaves(CRM_NAV).find((page) => page.key === key) as NavItem;
 
-  it('closes the menu, then opens a tab, a kind of lead, a managed list or a portal page', () => {
+  it('closes the menu, then opens a screen, a tab, a kind of lead or a managed list', () => {
     const nav = navigation();
     goTo(nav as never, item('dashboard'));
     expect(nav.navigate).toHaveBeenLastCalledWith('Dashboard');
@@ -96,17 +98,11 @@ describe('goTo', () => {
     expect(nav.goBack).toHaveBeenCalled();
     expect(nav.navigate).toHaveBeenLastCalledWith('Tabs', { screen: 'Reminders' });
     goTo(nav as never, item('creatorLeads'));
-    expect(nav.navigate).toHaveBeenLastCalledWith('Tabs', {
-      screen: 'Leads',
-      params: { kind: 'CREATOR_LEAD' },
-    });
+    expect(nav.navigate).toHaveBeenLastCalledWith('LeadList', { kind: 'CREATOR_LEAD' });
     goTo(nav as never, item('amenities'));
     expect(nav.navigate).toHaveBeenLastCalledWith('ManagedOptions', { group: 'AMENITY' });
     goTo(nav as never, item('templates'));
-    expect(nav.navigate).toHaveBeenLastCalledWith('PortalPage', {
-      path: '/email-templates',
-      titleKey: 'shell.nav.templates',
-    });
+    expect(nav.navigate).toHaveBeenLastCalledWith('EmailTemplates');
   });
 
   it('does nothing for a group', () => {

@@ -1,10 +1,8 @@
 import { fireEvent, screen } from '@testing-library/react-native';
-import { Linking } from 'react-native';
 
 import { renderWithTheme } from '@/test-utils';
 import { useAuthStore } from '@/stores/auth.store';
 import { MenuScreen } from '../menu/MenuScreen';
-import { PortalPageScreen } from '../portal/PortalPageScreen';
 
 jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
 const mockNav = { navigate: jest.fn(), goBack: jest.fn(), setOptions: jest.fn() };
@@ -60,17 +58,5 @@ describe('MenuScreen', () => {
     fireEvent.press(screen.getByTestId('menu-close'));
     fireEvent.press(screen.getByTestId('menu-scrim'));
     expect(mockNav.goBack).toHaveBeenCalledTimes(2);
-  });
-});
-
-describe('PortalPageScreen', () => {
-  it('names the page, says it is not in the app yet, and opens it in the staging portal', () => {
-    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
-    mockParams = { path: '/lead-research', titleKey: 'shell.nav.leadResearch' };
-    renderWithTheme(<PortalPageScreen />);
-    expect(mockNav.setOptions).toHaveBeenCalledWith({ title: 'Lead Research' });
-    expect(screen.getByText(/is not in the app yet/)).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('portal-page-open'));
-    expect(openURL).toHaveBeenCalledWith('https://staging.crm.duncit.com/lead-research');
   });
 });

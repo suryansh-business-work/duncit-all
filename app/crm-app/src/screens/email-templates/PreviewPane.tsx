@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { HtmlPreview } from '@/components/email-templates/HtmlPreview';
 import { IconButton } from '@/components/email-templates/IconButton';
 import { Notice } from '@/components/email-templates/Notice';
+import { ModalPage } from '@/components/ModalPage';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
@@ -41,11 +42,7 @@ export function PreviewPane({ name, html, errors }: Readonly<Props>) {
         testID="preview-frame"
       />
       <Modal visible={fullscreen} animationType="slide" onRequestClose={() => setFullscreen(false)}>
-        <YStack
-          flex={1}
-          backgroundColor="$background"
-          aria-label={t('crm.emailTemplates.fullScreenPreview')}
-        >
+        <ModalPage label={t('crm.emailTemplates.fullScreenPreview')}>
           <XStack
             alignItems="center"
             paddingLeft="$4"
@@ -72,7 +69,7 @@ export function PreviewPane({ name, html, errors }: Readonly<Props>) {
               testID="preview-frame-fullscreen"
             />
           </YStack>
-        </YStack>
+        </ModalPage>
       </Modal>
     </YStack>
   );

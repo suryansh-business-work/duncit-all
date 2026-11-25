@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Modal, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { RADII } from '@/constants/design';
@@ -34,6 +35,7 @@ export function TabSheet({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const close = busy ? undefined : onClose;
+  const { bottom } = useSafeAreaInsets();
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={close}>
       <YStack flex={1} justifyContent="flex-end" backgroundColor="$scrim">
@@ -46,6 +48,7 @@ export function TabSheet({
           borderWidth={1}
           borderColor="$borderColor"
           maxHeight="90%"
+          paddingBottom={bottom}
           testID={testID}
         >
           <XStack alignItems="center" gap="$2" padding="$4" paddingBottom="$2">

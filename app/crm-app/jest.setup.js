@@ -43,6 +43,13 @@ jest.mock('expo-task-manager', () => ({
 
 jest.mock('expo-crypto', () => ({ randomUUID: jest.fn(() => 'install-uuid') }));
 
+// The library's own mock: no system bars unless a spec wraps the tree in a
+// SafeAreaProvider with the insets it wants to test.
+jest.mock(
+  'react-native-safe-area-context',
+  () => require('react-native-safe-area-context/jest/mock').default,
+);
+
 // The date/time picker and the web view are native views: a plain View that
 // keeps its props, so a spec can fire onChange or read the html it was given.
 jest.mock('@react-native-community/datetimepicker', () => {

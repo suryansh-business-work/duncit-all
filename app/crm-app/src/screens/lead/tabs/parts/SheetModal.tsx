@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Modal, ScrollView } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack, useTheme } from 'tamagui';
 
@@ -33,6 +34,7 @@ export function SheetModal({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   return (
     <Modal
       visible={open}
@@ -41,8 +43,11 @@ export function SheetModal({
       onRequestClose={busy ? undefined : onClose}
     >
       <KeyboardAvoidingView behavior="height" style={{ flex: 1 }}>
+        {/* Android draws the sheet edge to edge; an iOS page sheet already starts below the status bar. */}
         <YStack
           flex={1}
+          paddingTop={Platform.OS === 'ios' ? 0 : insets.top}
+          paddingBottom={insets.bottom}
           backgroundColor="$background"
           role="dialog"
           aria-label={title}

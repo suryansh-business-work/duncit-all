@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack, useTheme } from 'tamagui';
 
 import { DuncitButton } from '@/components/DuncitButton';
+import { ModalPage } from '@/components/ModalPage';
 import { StateView } from '@/components/StateView';
 import { SURFACE } from '@/components/surface';
 import { waDisplayName, waNumberLine } from '@/features/whatsapp-generator/format';
@@ -66,7 +67,7 @@ export function GroupMembersSheet({ group, onClose }: Readonly<Props>) {
   };
   return (
     <Modal visible={!!group} animationType="slide" onRequestClose={onClose}>
-      <YStack flex={1} backgroundColor="$background" testID="wa-members-sheet">
+      <ModalPage testID="wa-members-sheet">
         <XStack alignItems="center" gap="$2" paddingHorizontal="$4" paddingVertical="$3">
           <Text flex={1} fontWeight="700" fontSize="$6" role="heading" numberOfLines={2}>
             {group?.name || t('crm.tools.members')}
@@ -93,7 +94,7 @@ export function GroupMembersSheet({ group, onClose }: Readonly<Props>) {
           />
         </YStack>
         {group ? <MembersList key={group.jid} group={group} /> : null}
-      </YStack>
+      </ModalPage>
     </Modal>
   );
 }

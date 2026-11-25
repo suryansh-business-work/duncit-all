@@ -5,6 +5,7 @@ import { crmImageMeta } from '@duncit/utils';
 
 import { DuncitButton } from '@/components/DuncitButton';
 import { IconButton } from '@/components/email-templates/IconButton';
+import { ModalPage } from '@/components/ModalPage';
 import type { BrandAsset } from '@/features/email-templates/useEmailSettings';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -17,7 +18,7 @@ function PreviewBody({ asset, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const label = asset.name || t('crm.media.untitled');
   return (
-    <YStack flex={1} backgroundColor="$background" aria-label={label}>
+    <ModalPage label={label}>
       <XStack
         alignItems="center"
         paddingLeft="$4"
@@ -62,7 +63,7 @@ function PreviewBody({ asset, onClose }: Readonly<Props>) {
           testID="brand-preview-open"
         />
       </YStack>
-    </YStack>
+    </ModalPage>
   );
 }
 

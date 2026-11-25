@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 import { Modal, ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack, useTheme } from 'tamagui';
+import { Text, XStack, useTheme } from 'tamagui';
 
+import { ModalPage } from '@/components/ModalPage';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
@@ -25,7 +26,7 @@ export function LeadListSheet({ open, title, onClose, busy, children, testID }: 
   const theme = useTheme();
   return (
     <Modal visible={open} animationType="slide" onRequestClose={busy ? undefined : onClose}>
-      <YStack flex={1} backgroundColor="$background" testID={testID}>
+      <ModalPage testID={testID}>
         <XStack
           alignItems="center"
           gap="$2"
@@ -55,7 +56,7 @@ export function LeadListSheet({ open, title, onClose, busy, children, testID }: 
         >
           {children}
         </ScrollView>
-      </YStack>
+      </ModalPage>
     </Modal>
   );
 }

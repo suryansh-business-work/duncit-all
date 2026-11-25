@@ -38,7 +38,7 @@ import { UserLeadDetailScreen } from '@/screens/user-leads/UserLeadDetailScreen'
 import { UserLeadEditorScreen } from '@/screens/user-leads/UserLeadEditorScreen';
 import { useConsoleChrome } from './chrome';
 import { MainTabs } from './MainTabs';
-import { screenLayout } from './screenLayout';
+import { screenLayout, stackScreenLayout } from './screenLayout';
 import type { AppStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
@@ -67,8 +67,14 @@ export function RootNavigator() {
   if (status === 'security') return <SecurityVerificationScreen />;
 
   return (
-    <Stack.Navigator screenLayout={screenLayout} screenOptions={chrome.stackHeader}>
-      <Stack.Screen name="Tabs" component={MainTabs} options={{ headerShown: false }} />
+    <Stack.Navigator screenLayout={stackScreenLayout} screenOptions={chrome.stackHeader}>
+      {/* The tab bar and the menu's own safe area already keep clear of the system bars. */}
+      <Stack.Screen
+        name="Tabs"
+        component={MainTabs}
+        layout={screenLayout}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen
         name="LeadDetail"
         component={LeadDetailScreen}
@@ -92,6 +98,7 @@ export function RootNavigator() {
       <Stack.Screen
         name="Menu"
         component={MenuScreen}
+        layout={screenLayout}
         options={{
           headerShown: false,
           presentation: 'transparentModal',

@@ -10,7 +10,7 @@
     "start:main": "cross-env NODE_OPTIONS=--max-old-space-size=8192 EXPO_PUBLIC_API_URL=https://server.duncit.com expo start --port 2023",
     "android": "cross-env NODE_OPTIONS=--max-old-space-size=8192 expo run:android --port 2023",
     "prebuild": "expo prebuild --platform android",
-    "codegen": "graphql-codegen --config codegen.ts",
+    "codegen": "graphql-codegen --config codegen.ts && node ../../scripts/generate-lead-quality-rules.mjs --out app/crm-app/src/generated/lead-quality-rules.ts",
     "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "typecheck": "tsc --noEmit",

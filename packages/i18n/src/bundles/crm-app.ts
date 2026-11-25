@@ -98,10 +98,6 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
       open: 'Open menu',
       close: 'Close menu',
     },
-    portalPage: {
-      body: '{page} is not in the app yet. Open it in the CRM portal, where you sign in with the same account.',
-      open: 'Open in CRM portal',
-    },
     otp: {
       or: 'or',
       open: 'Login with OTP',
@@ -272,6 +268,12 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
       saved: 'Note saved',
     },
     reminder: {
+      details: 'Details for {title}',
+      pickExact: 'Or pick an exact date and time',
+      dayEvents: {
+        one: '{day}: 1 event',
+        other: '{day}: {count} events',
+      },
       title: 'New reminder',
       titleLabel: 'Title',
       titleRequired: 'Give the reminder a title',
@@ -367,6 +369,64 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
       dialer: 'Dialer',
       search: 'Search leads',
       reminders: 'Reminders',
+    },
+    leadList: {
+      openList: 'Filters, sort and tools',
+      myLocationHint: 'Your phone will ask to share your location. It is used for this search only.',
+      geoDenied: 'Location access is off for Duncit CRM. Allow it in Settings, or pick a city or area instead.',
+      searchCities: 'Search cities',
+      anyArea: 'Any area',
+      radiusLess: 'Smaller radius',
+      radiusMore: 'Larger radius',
+      sortBy: 'Sort by',
+      order: 'Order',
+      ascending: 'Ascending',
+      descending: 'Descending',
+      searchPeople: 'Search people',
+      searchCategories: 'Search categories',
+      scoreRange: 'Enter a score from {min} to {max}',
+      rangeOrder: 'The first value cannot be after the second',
+      distanceInvalid: 'Enter a distance above 0 km',
+      distanceHint: 'Only leads this close to the search centre',
+      aiPartial: '{created} created · {failed} need fixing (see the rows below).',
+      aiFound: {
+        one: '1 record found. Edit any field, then Confirm & save.',
+        other: '{count} records found. Edit any field, then Confirm & save.',
+      },
+    },
+    compose: {
+      toRequired: 'Enter the email address to send it to.',
+      subjectRequired: 'Enter a subject.',
+      messageRequired: 'Write a message.',
+      templateRequired: 'Pick a template.',
+      templateNotReady: 'The template is still being prepared. Try Send again in a moment.',
+    },
+    dynamicFields: {
+      intro: 'Define custom fields shown on venue & host forms. Use the arrows to reorder — order is saved automatically.',
+      notFound: 'This field was not found. It may have been deleted.',
+    },
+    leadQualitySettings: {
+      publishedRescoring: 'Version {version} is live. Every lead of this type is being rescored in the background.',
+    },
+    whatsappGenerator: {
+      results: {
+        one: '{count} result',
+        other: '{count} results',
+      },
+    },
+    survey: {
+      step: 'Step {step} of {total}',
+      shareLink: 'Share link',
+    },
+    manualLogs: {
+      bodyRequired: 'Write something in the log before saving.',
+      tooLong: 'This log is too long. Split it into two logs.',
+    },
+    emailTemplates: {
+      shareVariable: 'Share {{ {key} }}',
+      shareUrl: 'Share URL',
+      decrease: 'Decrease {name}',
+      increase: 'Increase {name}',
     },
   },
 };

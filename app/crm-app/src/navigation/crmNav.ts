@@ -16,7 +16,7 @@ export type NavIcon =
  */
 export type NavTarget =
   | { type: 'tab'; tab: 'Home' | 'Reminders' }
-  | { type: 'screen'; screen: 'Dashboard' | 'UserLeads' }
+  | { type: 'screen'; screen: 'Dashboard' | 'UserLeads' | 'EmailVerifier' }
   | { type: 'leads'; kind: LeadKind }
   | { type: 'portal'; path: string };
 
@@ -139,7 +139,7 @@ export const CRM_NAV: readonly NavItem[] = [
         key: 'emailVerifier',
         labelKey: 'shell.nav.emailVerifier',
         icon: m('mark-email-read'),
-        target: portal('/tools/email-verifier'),
+        target: { type: 'screen', screen: 'EmailVerifier' },
       },
     ],
   },

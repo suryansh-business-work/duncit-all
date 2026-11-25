@@ -27,6 +27,8 @@ export type AppStackParamList = {
   UserLeads: undefined;
   UserLeadDetail: { id: string };
   UserLeadEditor: { id?: string };
+  /** CRM › Tools › Email Verifier. */
+  EmailVerifier: undefined;
   /** A portal page the app does not have yet: what it is, and a way to open it in the portal. */
   PortalPage: { path: string; titleKey: string };
 };

@@ -400,3 +400,5 @@ export {
   userLeadDefaults,
   type UserLeadValues,
 } from './user-lead';
+// One address to check now (CRM portal + Duncit CRM app Email Verifier).
+export { emailVerifyDefaults, makeEmailVerifySchema, type EmailVerifyValues } from './email-verify';

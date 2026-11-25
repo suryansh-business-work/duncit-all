@@ -67,6 +67,14 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
       cleanMessage: 'Removes invalid numbers, duplicates and contacts that are not leads. This cannot be undone.',
       cleaned: 'Removed {invalid} invalid, {duplicates} duplicates and {contacts} contacts; {remaining} leads remain.',
     },
+    emailVerifier: {
+      email: 'E-mail address',
+      check: 'Check address',
+      failed: 'This address could not be checked. Please try again.',
+      history: 'Checked addresses',
+      search: 'Search addresses',
+      empty: 'No addresses checked yet.',
+    },
     menu: {
       open: 'Open menu',
       close: 'Close menu',

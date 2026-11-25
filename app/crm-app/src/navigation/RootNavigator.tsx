@@ -15,6 +15,7 @@ import { MenuScreen } from '@/screens/menu/MenuScreen';
 import { PortalPageScreen } from '@/screens/portal/PortalPageScreen';
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
 import { UserLeadsScreen } from '@/screens/user-leads/UserLeadsScreen';
+import { EmailVerifierScreen } from '@/screens/email-verifier/EmailVerifierScreen';
 import { UserLeadDetailScreen } from '@/screens/user-leads/UserLeadDetailScreen';
 import { UserLeadEditorScreen } from '@/screens/user-leads/UserLeadEditorScreen';
 import { MainTabs } from './MainTabs';
@@ -94,6 +95,11 @@ export function RootNavigator() {
         name="UserLeads"
         component={UserLeadsScreen}
         options={{ title: t('shell.nav.whatsappLeads') }}
+      />
+      <Stack.Screen
+        name="EmailVerifier"
+        component={EmailVerifierScreen}
+        options={{ title: t('shell.nav.emailVerifier') }}
       />
       <Stack.Screen
         name="UserLeadDetail"

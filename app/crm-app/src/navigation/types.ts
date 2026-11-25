@@ -31,6 +31,10 @@ export type AppStackParamList = {
   EmailVerifier: undefined;
   /** CRM › Leads › Quality Analytics. */
   QualityAnalytics: undefined;
+  /** CRM › Leads › Lead Research, one candidate, and Discover leads. */
+  LeadResearch: undefined;
+  Candidate: { id: string };
+  LeadDiscovery: undefined;
   /** A portal page the app does not have yet: what it is, and a way to open it in the portal. */
   PortalPage: { path: string; titleKey: string };
 };

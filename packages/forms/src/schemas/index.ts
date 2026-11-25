@@ -402,3 +402,14 @@ export {
 } from './user-lead';
 // One address to check now (CRM portal + Duncit CRM app Email Verifier).
 export { emailVerifyDefaults, makeEmailVerifySchema, type EmailVerifyValues } from './email-verify';
+// CRM Lead Research › Discover leads (CRM portal + Duncit CRM app).
+export {
+  DISCOVERY_LEAD_TYPES,
+  DISCOVERY_LIMITS,
+  DISCOVERY_SOURCES,
+  leadDiscoveryDefaults,
+  makeLeadDiscoverySchema,
+  toLeadDiscoveryInput,
+  type LeadDiscoveryInput,
+  type LeadDiscoveryValues,
+} from './lead-discovery';

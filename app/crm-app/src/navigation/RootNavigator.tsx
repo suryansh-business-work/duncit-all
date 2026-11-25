@@ -17,6 +17,9 @@ import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
 import { UserLeadsScreen } from '@/screens/user-leads/UserLeadsScreen';
 import { EmailVerifierScreen } from '@/screens/email-verifier/EmailVerifierScreen';
 import { QualityAnalyticsScreen } from '@/screens/quality-analytics/QualityAnalyticsScreen';
+import { LeadResearchScreen } from '@/screens/lead-research/LeadResearchScreen';
+import { CandidateScreen } from '@/screens/lead-research/CandidateScreen';
+import { LeadDiscoveryScreen } from '@/screens/lead-research/LeadDiscoveryScreen';
 import { UserLeadDetailScreen } from '@/screens/user-leads/UserLeadDetailScreen';
 import { UserLeadEditorScreen } from '@/screens/user-leads/UserLeadEditorScreen';
 import { MainTabs } from './MainTabs';
@@ -96,6 +99,17 @@ export function RootNavigator() {
         name="UserLeads"
         component={UserLeadsScreen}
         options={{ title: t('shell.nav.whatsappLeads') }}
+      />
+      <Stack.Screen
+        name="LeadResearch"
+        component={LeadResearchScreen}
+        options={{ title: t('shell.nav.leadResearch') }}
+      />
+      <Stack.Screen name="Candidate" component={CandidateScreen} options={{ title: '' }} />
+      <Stack.Screen
+        name="LeadDiscovery"
+        component={LeadDiscoveryScreen}
+        options={{ title: t('crm.leadResearch.discoverTitle') }}
       />
       <Stack.Screen
         name="QualityAnalytics"

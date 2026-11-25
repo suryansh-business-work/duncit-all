@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Modal } from 'react-native';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -13,6 +14,8 @@ interface Props {
   /** A destructive action (delete, clean) gets the danger colour. */
   danger?: boolean;
   busy?: boolean;
+  /** Extra choices for the action (a note, an option), shown under the message. */
+  children?: ReactNode;
   /** Why the action failed, shown in the dialog so it can be tried again. */
   error?: string | null;
   onConfirm: () => void;
@@ -34,6 +37,7 @@ export function ConfirmDialog({
   danger,
   busy,
   error,
+  children,
   onConfirm,
   onCancel,
   testID,
@@ -61,6 +65,7 @@ export function ConfirmDialog({
             {title}
           </Text>
           <Text color="$muted">{message}</Text>
+          {children}
           {error ? (
             <Text color="$danger" role="alert" testID={`${testID}-error`}>
               {error}

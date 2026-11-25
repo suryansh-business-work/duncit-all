@@ -81,6 +81,11 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
       cityDetail: '{leads} leads · {qualified} qualified · average {score}',
       conversionDetail: '{won} won of {leads} leads',
     },
+    research: {
+      notFound: 'This candidate was not found.',
+      score: 'Score {score} · {label}',
+      category: 'Category',
+    },
     menu: {
       open: 'Open menu',
       close: 'Close menu',

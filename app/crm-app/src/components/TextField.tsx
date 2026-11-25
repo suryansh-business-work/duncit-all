@@ -21,10 +21,27 @@ interface Props<T extends FieldValues> {
    */
   variant?: 'boxed' | 'pill';
   icon?: keyof typeof MaterialIcons.glyphMap;
+  /**
+   * A number field: the value is a number (NaN while unreadable, so the schema's
+   * message shows), or null when emptied if `nullable`.
+   */
+  numeric?: { nullable?: boolean };
   /** A control inside the field's end, e.g. show/hide password. */
   trailing?: ReactNode;
   testID?: string;
 }
+
+/** What a field shows for its value: text as is, a number as digits, nothing for none. */
+const fieldText = (value: unknown): string => {
+  if (typeof value === 'string') return value;
+  return typeof value === 'number' && !Number.isNaN(value) ? String(value) : '';
+};
+
+/** Typed digits to a number: blank is null (when allowed) or NaN, so a required number is refused. */
+const toNumber = (text: string, nullable?: boolean): number | null => {
+  if (text.trim() === '') return nullable ? null : Number.NaN;
+  return Number(text);
+};
 
 /**
  * A react-hook-form text box with its label, hint and field error — announced
@@ -43,6 +60,7 @@ export function TextField<T extends FieldValues>({
   variant = 'boxed',
   icon,
   trailing,
+  numeric,
   testID,
 }: Readonly<Props<T>>) {
   const theme = useTheme();
@@ -52,8 +70,10 @@ export function TextField<T extends FieldValues>({
   const pill = variant === 'pill';
   const shared = {
     id,
-    value: typeof field.value === 'string' ? field.value : '',
-    onChangeText: field.onChange,
+    value: fieldText(field.value),
+    onChangeText: numeric
+      ? (text: string) => field.onChange(toNumber(text, numeric.nullable))
+      : field.onChange,
     onBlur: field.onBlur,
     placeholder: pill ? label : placeholder,
     // The theme's muted text: still 4.5:1 on the field in light and dark mode.

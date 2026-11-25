@@ -16,7 +16,10 @@ export type NavIcon =
  */
 export type NavTarget =
   | { type: 'tab'; tab: 'Home' | 'Reminders' }
-  | { type: 'screen'; screen: 'Dashboard' | 'UserLeads' | 'EmailVerifier' | 'QualityAnalytics' }
+  | {
+      type: 'screen';
+      screen: 'Dashboard' | 'UserLeads' | 'EmailVerifier' | 'QualityAnalytics' | 'LeadResearch';
+    }
   | { type: 'leads'; kind: LeadKind }
   | { type: 'portal'; path: string };
 
@@ -88,7 +91,7 @@ export const CRM_NAV: readonly NavItem[] = [
         key: 'leadResearch',
         labelKey: 'shell.nav.leadResearch',
         icon: m('person-search'),
-        target: portal('/lead-research'),
+        target: { type: 'screen', screen: 'LeadResearch' },
       },
       {
         key: 'leadQualityAnalytics',

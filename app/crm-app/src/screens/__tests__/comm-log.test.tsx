@@ -4,6 +4,8 @@ import { renderWithTheme } from '@/test-utils';
 import { CallDetails } from '../lead/CallDetails';
 import { CommLogItem, type CommLog } from '../lead/CommLogItem';
 
+jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
+
 const mockPlayer = { play: jest.fn(), pause: jest.fn() };
 let mockPlaying = false;
 jest.mock('expo-audio', () => ({
@@ -19,13 +21,26 @@ const call = (over: Partial<CommLog> = {}): CommLog => ({
   direction: 'OUTBOUND',
   status: 'COMPLETED',
   subject: '',
+  provider_name: null,
+  error_message: null,
+  from_number: null,
   contact_name: 'Rohit',
   contact_value: '9811000001',
   duration_seconds: 0,
   recording_url: 'https://cdn.duncit.com/r.m4a',
   transcript: '',
   transcript_status: 'PENDING',
-  summary: { status: 'PENDING', text: '', key_points: [], follow_ups: [] },
+  transcript_segments: [],
+  summary: {
+    status: 'PENDING',
+    text: '',
+    key_points: [],
+    follow_ups: [],
+    sentiment: null,
+    outcome: '',
+    reminder_id: null,
+    error: '',
+  },
   created_at: '2026-11-24T10:00:00.000Z',
   ...over,
 });

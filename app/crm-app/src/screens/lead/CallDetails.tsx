@@ -1,8 +1,17 @@
+import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { Text, XStack, YStack, useTheme } from 'tamagui';
+import { fireAndForget, logs } from '@duncit/logs';
+import { crmCallHasTranscript } from '@duncit/utils';
 
+import { CrmAppRequestTranscriptDocument, CrmAppSummarizeCallDocument } from '@/graphql/leadTabsB';
 import { useTranslation } from '@/hooks/useTranslation';
+import { gqlRequest } from '@/services/graphql.client';
+import { errorMessage } from '@/utils/errors';
+import { CommsSummary } from './tabs/CommsSummary';
+import { CommsTranscript, CommsTranscriptState } from './tabs/CommsTranscript';
+import { TabAlert } from './tabs/TabAlert';
 import type { CommLog } from './CommLogItem';
 
 function Recording({ url }: Readonly<{ url: string }>) {
@@ -30,38 +39,70 @@ function Recording({ url }: Readonly<{ url: string }>) {
   );
 }
 
-/** A call's recording, where its transcript stands, its AI summary and its transcript. */
-export function CallDetails({ log }: Readonly<{ log: CommLog }>) {
+type Busy = 'transcript' | 'summary' | null;
+
+/**
+ * A call's caller-ID number, its recording, its transcript (by speaker when
+ * transcribed live) or where the transcript stands with Get / Retry, and its
+ * AI summary with Generate / Retry — the portal's call log details.
+ */
+export function CallDetails({
+  log,
+  onChanged,
+}: Readonly<{ log: CommLog; onChanged?: () => void }>) {
   const { t } = useTranslation();
-  const summary = log.summary?.status === 'READY' ? log.summary : null;
+  const [busy, setBusy] = useState<Busy>(null);
+  const [error, setError] = useState<string | null>(null);
+  // Logs from before live transcription carry no segments.
+  const segments = log.transcript_segments ?? [];
+  const hasTranscript = crmCallHasTranscript({ ...log, transcript_segments: segments });
+
+  const run = async (kind: Exclude<Busy, null>) => {
+    setBusy(kind);
+    setError(null);
+    try {
+      const vars = { id: log.id };
+      await (kind === 'transcript'
+        ? gqlRequest(CrmAppRequestTranscriptDocument, vars)
+        : gqlRequest(CrmAppSummarizeCallDocument, vars));
+      onChanged?.();
+    } catch (err) {
+      setError(errorMessage(err, t('crmApp.common.saveFailed')));
+    } finally {
+      setBusy(null);
+    }
+  };
+  const start = (kind: Exclude<Busy, null>) =>
+    fireAndForget(run(kind), logs.mobileApp, 'crm-app/CallDetails', kind);
+
   return (
     <YStack gap="$2">
+      {log.from_number ? (
+        <Text color="$muted" fontSize="$2">
+          {t('crm.call.fromNumber', { vars: { number: log.from_number } })}
+        </Text>
+      ) : null}
       {log.recording_url ? <Recording url={log.recording_url} /> : null}
-      {log.transcript_status === 'PENDING' && log.recording_url ? (
-        <Text color="$muted">{t('crmApp.activity.transcribing')}</Text>
-      ) : null}
-      {log.transcript_status === 'FAILED' ? (
-        <Text color="$danger">{t('crmApp.activity.transcriptFailed')}</Text>
-      ) : null}
-      {summary?.text ? (
-        <YStack gap="$1">
-          <Text fontWeight="700">{t('crmApp.activity.summary')}</Text>
-          <Text>{summary.text}</Text>
-          {summary.key_points.map((point) => (
-            <XStack key={point} gap="$2" alignItems="center">
-              <MaterialIcons name="fiber-manual-record" size={8} accessibilityElementsHidden />
-              <Text color="$muted" flex={1}>
-                {point}
-              </Text>
-            </XStack>
-          ))}
-        </YStack>
-      ) : null}
-      {log.transcript ? (
-        <YStack gap="$1">
-          <Text fontWeight="700">{t('crmApp.activity.transcript')}</Text>
-          <Text selectable>{log.transcript}</Text>
-        </YStack>
+      {hasTranscript ? (
+        <CommsTranscript transcript={log.transcript} segments={segments} />
+      ) : (
+        <CommsTranscriptState
+          transcriptStatus={log.transcript_status}
+          recordingUrl={log.recording_url}
+          busy={busy === 'transcript'}
+          onRequest={() => start('transcript')}
+        />
+      )}
+      <CommsSummary
+        summary={log.summary}
+        canSummarize={hasTranscript}
+        busy={busy === 'summary'}
+        onSummarize={() => start('summary')}
+      />
+      {error ? (
+        <TabAlert tone="danger" onClose={() => setError(null)} testID="comm-error">
+          {error}
+        </TabAlert>
       ) : null}
     </YStack>
   );

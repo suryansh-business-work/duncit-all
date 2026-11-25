@@ -30878,6 +30878,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "ui.errorBoundary.retry": "Retry",
   "ui.errorBoundary.title": "Something went wrong",
   "ui.guide.back": "Back",
+  "ui.guide.dismiss": "Hide this note",
   "ui.guide.done": "Done",
   "ui.guide.helpTipLabel": "More about this",
   "ui.guide.hideSteps": "Hide steps",

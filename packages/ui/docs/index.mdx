@@ -1229,7 +1229,9 @@ Every console page explains itself the same way, with the same four pieces.
   "How this works" heading, the numbered steps a person takes there. The fold is remembered per page
   in `localStorage` under `duncit.guide.<id>` (or `storageKey`): a first visit opens the steps, and a
   person who folded them stays folded. Every read and write tolerates a blocked store. Pass
-  `onStartTour` and a "Start tour" button appears.
+  `onStartTour` and a "Start tour" button appears. Pass `dismissible` and a close button ("Hide this
+  note") appears; a closed intro stays closed on later visits, remembered under
+  `<storageKey>.dismissed`. Use it where the page's room matters more than the reminder (Reel Studio).
 - **`HelpTip`** is the info glyph beside a heading or a field label — a small icon button whose
   sentence opens on hover, on keyboard focus and on the first tap. Its accessible name is the
   button's own ("More about this", or `label`); the sentence becomes its description while open.

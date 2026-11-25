@@ -158,6 +158,7 @@ export const UI_BUNDLE: NestedCatalogue = {
       howThisWorks: 'How this works',
       showSteps: 'Show steps',
       hideSteps: 'Hide steps',
+      dismiss: 'Hide this note',
       startTour: 'Start tour',
       stepOf: 'Step {current} of {total}',
       back: 'Back',

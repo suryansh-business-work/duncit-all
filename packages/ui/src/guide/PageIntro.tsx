@@ -1,11 +1,12 @@
 import { Children, useId, useState, type ReactNode } from 'react';
-import { Box, Collapse, Paper, Stack, Typography } from '@mui/material';
+import { Box, Collapse, Paper, Stack, Tooltip, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
+import CloseIcon from '@mui/icons-material/Close';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import TourOutlinedIcon from '@mui/icons-material/TourOutlined';
-import { DuncitButton } from '@duncit/buttons';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
 import { mergeSx } from '../mergeSx';
 import { readGuideFlag, writeGuideFlag } from './guideStorage';
@@ -21,11 +22,18 @@ export interface PageIntroProps {
   onStartTour?: () => void;
   /** Defaults to `duncit.guide.<id>`. */
   storageKey?: string;
+  /**
+   * Adds a close button. A closed intro stays closed on later visits
+   * (remembered under `<storageKey>.dismissed`), so give it to pages whose
+   * room matters more than the reminder.
+   */
+  dismissible?: boolean;
   sx?: SxProps<Theme>;
 }
 
 const COLLAPSED = '0';
 const EXPANDED = '1';
+const DISMISSED = '1';
 
 /**
  * The block at the top of a console page that says what the page is for and,
@@ -33,11 +41,13 @@ const EXPANDED = '1';
  * page: a first visit opens them, and a person who has folded them away is
  * not shown them again on every visit.
  */
-export function PageIntro({ id, summary, steps, onStartTour, storageKey, sx }: Readonly<PageIntroProps>) {
+export function PageIntro({ id, summary, steps, onStartTour, storageKey, dismissible = false, sx }: Readonly<PageIntroProps>) {
   const { t } = useTranslation();
   const stepsId = useId();
   const key = storageKey ?? `duncit.guide.${id}`;
+  const dismissedKey = `${key}.dismissed`;
   const [expanded, setExpanded] = useState(() => readGuideFlag(key) !== COLLAPSED);
+  const [dismissed, setDismissed] = useState(() => dismissible && readGuideFlag(dismissedKey) === DISMISSED);
   const hasSteps = steps !== undefined && steps.length > 0;
 
   const toggle = () => {
@@ -45,6 +55,13 @@ export function PageIntro({ id, summary, steps, onStartTour, storageKey, sx }: R
     setExpanded(next);
     writeGuideFlag(key, next ? EXPANDED : COLLAPSED);
   };
+
+  const dismiss = () => {
+    setDismissed(true);
+    writeGuideFlag(dismissedKey, DISMISSED);
+  };
+
+  if (dismissed) return null;
 
   return (
     <Paper variant="outlined" data-testid="page-intro" sx={mergeSx({ p: 2, borderRadius: 2 }, sx)}>
@@ -90,6 +107,13 @@ export function PageIntro({ id, summary, steps, onStartTour, storageKey, sx }: R
             </Collapse>
           )}
         </Box>
+        {dismissible && (
+          <Tooltip title={t('ui.guide.dismiss')}>
+            <DuncitIconButton size="small" aria-label={t('ui.guide.dismiss')} onClick={dismiss} sx={{ mt: -0.5, mr: -0.5 }} data-testid="page-intro-dismiss">
+              <CloseIcon fontSize="small" />
+            </DuncitIconButton>
+          </Tooltip>
+        )}
       </Stack>
     </Paper>
   );

@@ -5,6 +5,9 @@ import { DuncitButton } from '@duncit/buttons';
 import { EmptyState, HelpTip, PageHeader, PageIntro, PortalTour } from '@duncit/ui';
 import { defineDemo } from '../../types';
 
+/** Where the demo's intro remembers its fold and whether it was closed. */
+const INTRO_STORAGE = 'duncit.guide.docs-demo';
+
 interface GuideKitMock {
   page_title: string;
   help: string;
@@ -24,6 +27,12 @@ interface GuideKitMock {
 function GuideKitDemo({ mock }: Readonly<{ mock: GuideKitMock }>) {
   const [tourOpen, setTourOpen] = useState(false);
   const [cleared, setCleared] = useState(false);
+  // A new key remounts the intro, so it reads the cleared flag and shows again.
+  const [introKey, setIntroKey] = useState(0);
+  const showIntroAgain = () => {
+    globalThis.localStorage.removeItem(`${INTRO_STORAGE}.dismissed`);
+    setIntroKey((value) => value + 1);
+  };
   const venues = cleared ? [] : mock.venues;
   return (
     <Stack spacing={2}>
@@ -36,12 +45,19 @@ function GuideKitDemo({ mock }: Readonly<{ mock: GuideKitMock }>) {
       />
       <Box data-tour="guide-demo-intro">
         <PageIntro
+          key={introKey}
           id="guide-demo"
-          storageKey="duncit.guide.docs-demo"
+          storageKey={INTRO_STORAGE}
           summary={mock.summary}
           steps={mock.steps}
           onStartTour={() => setTourOpen(true)}
+          dismissible
         />
+      </Box>
+      <Box>
+        <DuncitButton variant="text" size="small" onClick={showIntroAgain}>
+          Show the intro again
+        </DuncitButton>
       </Box>
       <Paper variant="outlined" data-tour="guide-demo-list" sx={{ borderRadius: 2, overflow: 'hidden' }}>
         {venues.length === 0 ? (
@@ -95,7 +111,7 @@ export const guideKitDemo = defineDemo<GuideKitMock>({
   id: 'guide-kit',
   title: 'Guide kit — PageIntro, HelpTip, EmptyState and PortalTour on one console page',
   note:
-    'Hover or tab to the info glyph beside the title. Fold the steps and reload the page: the fold is remembered. Press Start tour and the spotlight walks the intro and the list — Escape skips it. Clear the list to see the empty state, with the action that fills it again. Edit steps to add or remove one.',
+    'Hover or tab to the info glyph beside the title. Fold the steps and reload the page: the fold is remembered. Close the intro with its close button and it stays closed on reload; Show the intro again brings it back. Press Start tour and the spotlight walks the intro and the list — Escape skips it. Clear the list to see the empty state, with the action that fills it again. Edit steps to add or remove one.',
   mock: {
     page_title: 'Venue payouts',
     help: 'A payout is released once the pod has completed and its door attendance is settled.',

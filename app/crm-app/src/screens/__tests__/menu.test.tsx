@@ -48,7 +48,7 @@ describe('MenuScreen', () => {
   });
 
   it('opens on the current page with its groups expanded and the page marked', () => {
-    mockBelow = { name: 'PortalPage', params: { path: '/data/venues/amenities' } };
+    mockBelow = { name: 'ManagedOptions', params: { group: 'AMENITY' } };
     renderWithTheme(<MenuScreen />);
     expect(screen.getByTestId('nav-amenities')).toBeSelected();
     expect(screen.getByTestId('nav-servicesOffered')).not.toBeSelected();

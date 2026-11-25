@@ -22,7 +22,7 @@ const SCRIM_ALPHA = 0.74;
 const GLASS_ALPHA = 0.92;
 
 /** One mode's keys: the shared palette, with the CRM accent as the action colour. */
-export function crmTheme(m: ModeColors, a: Accent) {
+export function crmTheme(m: ModeColors, a: Accent, mode: 'light' | 'dark' = 'light') {
   const primary = a.active;
   return {
     background: m.bg,
@@ -54,6 +54,13 @@ export function crmTheme(m: ModeColors, a: Accent) {
     warningSoft: withAlpha(m.warning, SOFT_ALPHA),
     scrim: withAlpha(m.bg, SCRIM_ALPHA),
     glass: withAlpha(m.surface, GLASS_ALPHA),
+    // The login card's "ink" call-to-action: this mode's ink under its surface colour,
+    // so the round submit and the tagline bar stand out on a light AND a dark card.
+    ink: m.ink,
+    onInk: m.surface,
+    // Accent-coloured TEXT on a surface (the CRM chip): the deep indigo on light,
+    // the pale indigo on dark, where the deep one would not read.
+    accentText: mode === 'dark' ? a.light : a.active,
     onDanger: m.onSemantic,
     onSuccess: m.onSemantic,
     ...pressThemeKeys({ primary, primaryActive: a.hover, danger: m.error, success: m.success }),
@@ -66,7 +73,7 @@ export const config = createTamagui({
   themes: {
     ...defaultConfig.themes,
     light: { ...defaultConfig.themes.light, ...crmTheme(light, accent) },
-    dark: { ...defaultConfig.themes.dark, ...crmTheme(dark, accent) },
+    dark: { ...defaultConfig.themes.dark, ...crmTheme(dark, accent, 'dark') },
   },
 });
 

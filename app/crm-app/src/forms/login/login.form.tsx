@@ -4,7 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack, useTheme } from 'tamagui';
 
 import { TextField } from '@/components/TextField';
-import { INK, RADII } from '@/constants/design';
+import { RADII } from '@/constants/design';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formResolver } from '@/utils/form-resolver';
 import { loginDefaults, makeLoginSchema, type LoginFormValues } from './login.types';
@@ -100,16 +100,16 @@ export function LoginForm({ onSubmit }: Readonly<Props>) {
           width={SUBMIT_SIZE}
           height={SUBMIT_SIZE}
           borderRadius={RADII.pill}
-          backgroundColor={INK.fill}
+          backgroundColor="$ink"
           alignItems="center"
           justifyContent="center"
           pressStyle={{ opacity: 0.85 }}
           testID="login-submit"
         >
           {busy ? (
-            <Spinner color={INK.on} />
+            <Spinner color="$onInk" />
           ) : (
-            <MaterialIcons name="arrow-forward" size={24} color={INK.on} />
+            <MaterialIcons name="arrow-forward" size={24} color={theme.onInk?.val} />
           )}
         </XStack>
       </XStack>

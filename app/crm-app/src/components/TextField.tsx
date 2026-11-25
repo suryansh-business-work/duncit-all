@@ -56,6 +56,8 @@ export function TextField<T extends FieldValues>({
     onChangeText: field.onChange,
     onBlur: field.onBlur,
     placeholder: pill ? label : placeholder,
+    // The theme's muted text: still 4.5:1 on the field in light and dark mode.
+    placeholderTextColor: '$muted',
     'aria-label': label,
     'aria-invalid': Boolean(error),
     testID,

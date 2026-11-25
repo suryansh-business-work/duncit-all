@@ -25,12 +25,12 @@ export function AuthCardHeader() {
       </XStack>
       <XStack
         borderWidth={1}
-        borderColor="$primary"
+        borderColor="$accentText"
         borderRadius={RADII.pill}
         paddingHorizontal="$2.5"
         paddingVertical="$1"
       >
-        <Text color="$primary" fontSize="$2" fontWeight="700">
+        <Text color="$accentText" fontSize="$2" fontWeight="700">
           {t('crmApp.login.portal')}
         </Text>
       </XStack>

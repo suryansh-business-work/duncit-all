@@ -1,10 +1,12 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, ScrollView } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, useColorScheme } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { INK, RADII } from '@/constants/design';
+import { RADII } from '@/constants/design';
 import { useTranslation } from '@/hooks/useTranslation';
+import { resolveColorMode, useAppearanceStore } from '@/stores/appearance.store';
 import { AuthBackdrop } from './AuthBackdrop';
 import { AuthCardHeader } from './AuthCardHeader';
 import { AuthLegalLinks } from './AuthLegalLinks';
@@ -24,8 +26,14 @@ interface Props {
  */
 export function AuthLayout({ title, subtitle, children }: Readonly<Props>) {
   const { t } = useTranslation();
+  const mode = resolveColorMode(
+    useAppearanceStore((s) => s.mode),
+    useColorScheme(),
+  );
   return (
     <AuthBackdrop>
+      {/* Dark icons on the light page, light on the dark one (the app's header bar wants light). */}
+      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
       <SafeAreaView style={{ flex: 1 }}>
         <XStack justifyContent="flex-end" paddingHorizontal="$3" paddingTop="$2">
           <ColorModeToggle />
@@ -47,7 +55,6 @@ export function AuthLayout({ title, subtitle, children }: Readonly<Props>) {
                 shadowOpacity={0.18}
                 shadowRadius={30}
                 shadowOffset={{ width: 0, height: 20 }}
-                elevation={6}
               >
                 <AuthCardHeader />
                 <Text fontSize="$9" fontWeight="800" role="heading">
@@ -58,13 +65,13 @@ export function AuthLayout({ title, subtitle, children }: Readonly<Props>) {
                 <AuthLegalLinks />
               </YStack>
               <YStack
-                backgroundColor={INK.fill}
+                backgroundColor="$ink"
                 borderRadius={RADII.lg}
                 paddingHorizontal="$4"
                 paddingVertical="$3"
                 testID="auth-tagline"
               >
-                <Text color={INK.on} fontWeight="700" textAlign="center">
+                <Text color="$onInk" fontWeight="700" textAlign="center">
                   {t('shell.portal.crm.tagline')}
                 </Text>
               </YStack>

@@ -47,7 +47,7 @@ export default function DriveEntryRow({ entry, added, onEnter, onAdd }: Readonly
   const addLabel = t('ai.reels.sources.addFile', { vars: { name: entry.name } });
   const action = added ? (
     <Tooltip title={t('ai.reels.sources.alreadyAdded')}>
-      <CheckIcon fontSize="small" role="img" aria-label={t('ai.reels.sources.alreadyAdded')} sx={{ color: 'text.secondary', mx: 1 }} />
+      <CheckIcon fontSize="small" titleAccess={t('ai.reels.sources.alreadyAdded')} sx={{ color: 'text.secondary', mx: 1 }} />
     </Tooltip>
   ) : (
     <Tooltip title={t('ai.reels.sources.add')}>

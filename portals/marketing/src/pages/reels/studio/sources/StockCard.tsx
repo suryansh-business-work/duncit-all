@@ -34,7 +34,7 @@ export default function StockCard({ item, added, busy, onAdd }: Readonly<Props>)
   const addLabel = t('ai.reels.stock.addNamed', { vars: { name } });
   const action = added ? (
     <Tooltip title={t('ai.reels.sources.alreadyAdded')}>
-      <CheckIcon fontSize="small" role="img" aria-label={t('ai.reels.sources.alreadyAdded')} sx={{ color: 'common.white', mx: 1 }} />
+      <CheckIcon fontSize="small" titleAccess={t('ai.reels.sources.alreadyAdded')} sx={{ color: 'common.white', mx: 1 }} />
     </Tooltip>
   ) : (
     <Tooltip title={t('ai.reels.sources.add')}>

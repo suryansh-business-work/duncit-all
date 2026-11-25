@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { REEL_MEDIA_SEARCH } from '../../src/pages/reels/queries';
 import MusicTab from '../../src/pages/reels/studio/sources/MusicTab';
 import MusicTrackRow from '../../src/pages/reels/studio/sources/MusicTrackRow';
@@ -72,8 +72,9 @@ describe('MusicTab', () => {
     searchFor(' upbeat ');
     expect(queryOptions.get(REEL_MEDIA_SEARCH)?.variables).toEqual({ query: 'upbeat', kind: 'AUDIO', orientation: 'PORTRAIT', page: 1, provider: 'JAMENDO' });
     expect(screen.getByTestId('reel-music-item-jamendo-9')).toHaveTextContent('1:01 · CC BY 3.0');
-    // Already in the reel: a tick instead of the add button.
+    // Already in the reel: a tick instead of the add button, announced to a screen reader.
     expect(screen.queryByTestId('reel-music-add-jamendo-10')).not.toBeInTheDocument();
+    expect(within(screen.getByTestId('reel-music-item-jamendo-10')).getByRole('img', { name: 'Already in the reel' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('reel-music-add-jamendo-9'));
     await waitFor(() => expect(studio.addStockItems).toHaveBeenCalledWith([toStockInput(track())]));

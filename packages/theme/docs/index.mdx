@@ -6,6 +6,7 @@ zeroDeps: true
 frameworkFree: false
 coverageGate: true
 consumers:
+  - 'app/crm-app'
   - 'packages/shell'
   - 'portals/admin'
   - 'portals/ads-portal'
@@ -41,6 +42,7 @@ exports:
   - 'AccentColors'
   - 'ColorMode'
   - 'ThemeCtx'
+  - 'modeColors (@duncit/theme/mode-colors)'
 ---
 
 ## Why this exists
@@ -416,6 +418,31 @@ This is the **console** design system. mWeb and the public Astro websites are de
 consumers — mWeb has its own MUI theme, and the native app uses Tamagui (rule 29). Do not
 import `@duncit/theme` into either; the token values are tuned for dense admin surfaces, not
 for the member-facing product.
+
+### A console on a phone: `@duncit/theme/mode-colors`
+
+The Duncit CRM Android app (`app/crm-app`) is the CRM portal on a phone, so it paints with the
+console's colours, not the member app's. It cannot take the main entry (that pulls in MUI), so
+two MUI-free files are exported on their own:
+
+| Subpath | What it gives |
+| --- | --- |
+| `@duncit/theme/mode-colors` | `modeColors(mode, accent)` — the colours `buildThemeCtx` is built from: `primary` (accent as text, lightened on dark), `primaryFill` and its hover/active steps, `ink`, `muted`, `border`, `inputBorder`, `bg`, `surface`, `soft`, `raised`, `semantic`, `onSemantic`. |
+| `@duncit/theme/tokens` | `tokens` — radii, state tints and sizes, the same object the portals read. |
+
+`buildThemeCtx` spreads `modeColors` into its context, so a portal and the app can never drift
+apart on a colour. The CRM app maps it onto Tamagui keys in `app/crm-app/tamagui.config.ts`
+(filled buttons on `primaryFill` under white, outline/ghost text and the active tab on
+`primary`). It resolves the subpaths through its tsconfig `paths`, Metro and Jest maps, because
+it is a standalone npm project and does not install this workspace package.
+
+```ts
+import { modeColors } from '@duncit/theme/mode-colors';
+
+const dark = modeColors('dark', { light: '#a5b4fc', main: '#6366f1', hover: '#4f46e5', active: '#4338ca' });
+dark.primary;     // '#7678f3' — the CRM indigo lightened to 4.5:1 on every dark ground
+dark.primaryFill; // '#6164ec' — the fill under white text, the same in both modes
+```
 
 ## Coverage
 

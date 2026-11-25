@@ -28,7 +28,7 @@ function Action({ icon, label, onPress, testID }: Readonly<ActionProps>) {
       hitSlop={6}
       testID={testID}
     >
-      <MaterialIcons name={icon} size={22} color={theme.primary?.val} />
+      <MaterialIcons name={icon} size={22} color={theme.accentText?.val} />
     </XStack>
   );
 }

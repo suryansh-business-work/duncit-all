@@ -21,7 +21,7 @@ export function StateView({ loading, error, empty, onRetry }: Readonly<Props>) {
   if (loading) {
     return (
       <YStack padding="$5" alignItems="center" gap="$2" aria-busy>
-        <Spinner color="$primary" />
+        <Spinner color="$accentText" />
         <Text color="$muted">{t('crmApp.common.loading')}</Text>
       </YStack>
     );

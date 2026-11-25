@@ -73,7 +73,7 @@ export function ReminderRow({ reminder, onChanged }: Readonly<Props>) {
         <MaterialIcons
           name={done ? 'check-circle' : 'radio-button-unchecked'}
           size={26}
-          color={theme.primary?.val}
+          color={theme.accentText?.val}
         />
       </XStack>
       <YStack flex={1} onPress={openLead} role={openLead ? 'link' : undefined}>

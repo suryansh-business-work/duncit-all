@@ -54,7 +54,6 @@ export function NavTree({
         const group = Boolean(item.children?.length);
         const open = group && expanded.has(item.key);
         const active = item.key === activeKey;
-        const tint = active ? theme.accentText?.val : theme.color?.val;
         return (
           <YStack key={item.key} gap="$1">
             <XStack
@@ -69,17 +68,13 @@ export function NavTree({
               paddingVertical="$2"
               paddingRight="$3"
               paddingLeft={12 + depth * INDENT}
-              borderRadius={RADII.md}
-              backgroundColor={active ? '$primarySoft' : 'transparent'}
-              pressStyle={{ backgroundColor: '$soft' }}
+              borderRadius={RADII.sm}
+              backgroundColor={active ? '$navSelected' : 'transparent'}
+              pressStyle={{ backgroundColor: active ? '$navSelected' : '$hover' }}
               testID={`nav-${item.key}`}
             >
-              <Icon icon={item.icon} color={active ? tint : theme.muted?.val} />
-              <Text
-                flex={1}
-                color={active ? '$accentText' : '$color'}
-                fontWeight={active || group ? '700' : '500'}
-              >
+              <Icon icon={item.icon} color={active ? theme.accentText?.val : theme.muted?.val} />
+              <Text flex={1} color="$color" fontWeight={active ? '600' : '500'}>
                 {t(item.labelKey)}
               </Text>
               {group ? (

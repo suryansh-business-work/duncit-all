@@ -71,6 +71,7 @@ export function ChoiceField<T extends FieldValues>({
           onChangeText={setFilter}
           placeholder={searchLabel}
           aria-label={searchLabel}
+          placeholderTextColor="$muted"
           borderColor="$inputBorder"
           testID={testID ? `${testID}-search` : undefined}
         />

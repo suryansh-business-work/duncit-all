@@ -1,69 +1,90 @@
 import { defaultConfig } from '@tamagui/config/v4';
 import { createTamagui } from 'tamagui';
-import { dark, light, type ModeColors } from '@duncit/auth-tokens';
-import { pressThemeKeys, SOFT_ALPHA, withAlpha } from '@duncit/buttons-native';
+import { modeColors, type ConsoleMode } from '@duncit/theme/mode-colors';
+import { tokens } from '@duncit/theme/tokens';
+import { pressThemeKeys, withAlpha } from '@duncit/buttons-native';
 
 import accent from './crm-accent.json';
 
 /**
- * The Duncit CRM theme: the shared Duncit tokens (@duncit/auth-tokens — every
- * text/fill pair WCAG AA) with the CRM portal's indigo accent in place of the
- * member app's red, so staff can tell the work app from the member app at a
- * glance. The accent is crm-accent.json, the same values the CRM portal uses.
+ * The Duncit CRM theme: the console design system the CRM portal is painted
+ * with (@duncit/theme). `modeColors` is the same derivation the portal's MUI
+ * theme runs, so every surface, text, border and accent step here is the
+ * portal's own value for the mode — including the accent lightened for text
+ * on the dark grounds, where the portal's indigo would not read.
  */
 type Accent = typeof accent;
 
 /**
- * The portal login screen's layers over its photo: a scrim of the page colour
- * that keeps text readable, and a near-opaque card (the portal's frosted glass;
+ * The login screen's layers over its photo: a scrim of the page colour that
+ * keeps text readable, and a near-opaque card (the portal's frosted glass;
  * React Native draws no backdrop blur, so the card carries more of its colour).
  */
 const SCRIM_ALPHA = 0.74;
 const GLASS_ALPHA = 0.92;
 
-/** One mode's keys: the shared palette, with the CRM accent as the action colour. */
-export function crmTheme(m: ModeColors, a: Accent, mode: 'light' | 'dark' = 'light') {
-  const primary = a.active;
+/** One mode's keys, named for what the app's components read. */
+export function crmTheme(mode: ConsoleMode, a: Accent = accent) {
+  const c = modeColors(mode, a);
+  const { state } = tokens;
+  const tint = (color: string) => withAlpha(color, state.tint[mode]);
+  const { error, success, warning, info } = c.semantic;
+  const { dangerPress, successPress } = pressThemeKeys({
+    primary: c.primaryFill,
+    primaryActive: c.primaryActive,
+    danger: error,
+    success,
+  });
   return {
-    background: m.bg,
-    backgroundHover: m.soft,
-    backgroundPress: m.soft,
-    backgroundFocus: m.soft,
-    color: m.ink,
-    colorHover: m.ink,
-    colorPress: m.ink,
-    colorFocus: m.ink,
-    borderColor: m.border,
-    borderColorHover: m.border,
-    placeholderColor: m.muted,
-    inputBorder: m.inputBorder,
-    surface: m.surface,
-    soft: m.soft,
-    muted: m.muted,
-    accent: primary,
+    background: c.bg,
+    backgroundHover: c.soft,
+    backgroundPress: c.soft,
+    backgroundFocus: c.soft,
+    color: c.ink,
+    colorHover: c.ink,
+    colorPress: c.ink,
+    colorFocus: c.ink,
+    borderColor: c.border,
+    borderColorHover: c.border,
+    placeholderColor: c.muted,
+    inputBorder: c.inputBorder,
+    surface: c.surface,
+    soft: c.soft,
+    raised: c.raised,
+    muted: c.muted,
+    // Ink tints the portal marks a pressed control and a selected row with.
+    hover: withAlpha(c.ink, state.hover),
+    selected: withAlpha(c.ink, state.selected),
+    // The selected side-menu row: the accent wash of the portal's ListItemButton.
+    navSelected: withAlpha(c.primary, state.selected + state.hover),
+    // Filled buttons paint the accent under white text, the same in both modes.
+    primary: c.primaryFill,
+    primaryHover: c.primaryHover,
+    primaryPress: c.primaryActive,
+    onPrimary: c.white,
+    // The accent as TEXT (outline and ghost buttons, links, the active tab).
+    accent: c.primary,
+    accentText: c.primary,
     brand: a.main,
-    primary,
-    primaryHover: a.hover,
-    primaryPress: a.hover,
-    onPrimary: m.onPrimary,
-    danger: m.error,
-    success: m.success,
-    warning: m.warning,
-    info: m.info,
-    infoSoft: withAlpha(m.info, SOFT_ALPHA),
-    warningSoft: withAlpha(m.warning, SOFT_ALPHA),
-    scrim: withAlpha(m.bg, SCRIM_ALPHA),
-    glass: withAlpha(m.surface, GLASS_ALPHA),
-    // The login card's "ink" call-to-action: this mode's ink under its surface colour,
-    // so the round submit and the tagline bar stand out on a light AND a dark card.
-    ink: m.ink,
-    onInk: m.surface,
-    // Accent-coloured TEXT on a surface (the CRM chip): the deep indigo on light,
-    // the pale indigo on dark, where the deep one would not read.
-    accentText: mode === 'dark' ? a.light : a.active,
-    onDanger: m.onSemantic,
-    onSuccess: m.onSemantic,
-    ...pressThemeKeys({ primary, primaryActive: a.hover, danger: m.error, success: m.success }),
+    danger: error,
+    success,
+    warning,
+    info,
+    onDanger: c.onSemantic,
+    onSuccess: c.onSemantic,
+    dangerPress,
+    successPress,
+    primarySoft: tint(c.primary),
+    dangerSoft: tint(error),
+    successSoft: tint(success),
+    warningSoft: tint(warning),
+    infoSoft: tint(info),
+    scrim: withAlpha(c.bg, SCRIM_ALPHA),
+    glass: withAlpha(c.surface, GLASS_ALPHA),
+    // The login card's "ink" call-to-action: this mode's ink under its surface
+    // colour, so the round submit and the tagline bar stand out in both modes.
+    ink: c.ink,
+    onInk: c.surface,
   };
 }
 
@@ -72,8 +93,8 @@ export const config = createTamagui({
   settings: { ...defaultConfig.settings, onlyAllowShorthands: false, allowedStyleValues: false },
   themes: {
     ...defaultConfig.themes,
-    light: { ...defaultConfig.themes.light, ...crmTheme(light, accent) },
-    dark: { ...defaultConfig.themes.dark, ...crmTheme(dark, accent, 'dark') },
+    light: { ...defaultConfig.themes.light, ...crmTheme('light') },
+    dark: { ...defaultConfig.themes.dark, ...crmTheme('dark') },
   },
 });
 

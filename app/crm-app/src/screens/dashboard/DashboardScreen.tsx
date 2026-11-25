@@ -27,7 +27,7 @@ export function DashboardScreen() {
     uncategorised: t('crmApp.dashboard.uncategorised'),
     loadFailed: t('crmApp.common.loadFailed'),
   });
-  const venueColor = theme.primary?.val ?? '';
+  const venueColor = theme.accentText?.val ?? '';
   const hostColor = theme.info?.val ?? '';
   const legend = [
     { label: t('crmApp.dashboard.venue'), color: venueColor },

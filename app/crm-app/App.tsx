@@ -1,7 +1,5 @@
 import { useEffect } from 'react';
 import { Platform, useColorScheme } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TamaguiProvider, Theme } from 'tamagui';
@@ -10,9 +8,7 @@ import { configureLogs, detectEnvironment, fireAndForget, httpTransport, logs } 
 import config from './tamagui.config';
 import { config as appConfig } from '@/constants/config';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { linking } from '@/navigation/linking';
-import { navigationRef } from '@/navigation/navigationRef';
-import { RootNavigator } from '@/navigation/RootNavigator';
+import { AppNavigation } from '@/navigation/AppNavigation';
 import { peekToken } from '@/services/session';
 import { useAppSession } from '@/hooks/useAppSession';
 import { resolveColorMode, useAppearanceStore } from '@/stores/appearance.store';
@@ -51,10 +47,7 @@ export default function App() {
         <SafeAreaProvider>
           <TamaguiProvider config={config} defaultTheme={scheme}>
             <Theme name={scheme}>
-              <NavigationContainer ref={navigationRef} linking={linking}>
-                <RootNavigator />
-              </NavigationContainer>
-              <StatusBar style="light" />
+              <AppNavigation dark={scheme === 'dark'} />
             </Theme>
           </TamaguiProvider>
         </SafeAreaProvider>

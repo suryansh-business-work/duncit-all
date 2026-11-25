@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { RADII } from '@/constants/design';
+import { AUTH_RADII } from '@/constants/design';
 import { useTranslation } from '@/hooks/useTranslation';
 import { resolveColorMode, useAppearanceStore } from '@/stores/appearance.store';
 import { AuthBackdrop } from './AuthBackdrop';
@@ -46,7 +46,7 @@ export function AuthLayout({ title, subtitle, children }: Readonly<Props>) {
             <YStack gap="$3" width="100%" maxWidth={420} alignSelf="center">
               <YStack
                 backgroundColor="$glass"
-                borderRadius={RADII.lg}
+                borderRadius={AUTH_RADII.card}
                 borderWidth={1}
                 borderColor="$borderColor"
                 padding="$5"
@@ -66,7 +66,7 @@ export function AuthLayout({ title, subtitle, children }: Readonly<Props>) {
               </YStack>
               <YStack
                 backgroundColor="$ink"
-                borderRadius={RADII.lg}
+                borderRadius={AUTH_RADII.bar}
                 paddingHorizontal="$4"
                 paddingVertical="$3"
                 testID="auth-tagline"

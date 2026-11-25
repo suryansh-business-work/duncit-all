@@ -44,7 +44,7 @@ export function OtpLoginPanel({ onRequestCode, onSubmitCode, error }: Readonly<P
           label={t('crmApp.otp.open')}
           onPress={() => setOpen(true)}
           variant="outline"
-          icon={<MaterialIcons name="mail-outline" size={18} color={theme.primary?.val} />}
+          icon={<MaterialIcons name="mail-outline" size={18} color={theme.accentText?.val} />}
           fullWidth
           testID="continue-with-otp"
         />

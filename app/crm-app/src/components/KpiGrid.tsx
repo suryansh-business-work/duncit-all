@@ -24,7 +24,7 @@ export function KpiGrid({ items }: Readonly<{ items: Kpi[] }>) {
           flexGrow={1}
           gap="$1"
           padding="$3"
-          borderRadius={RADII.lg}
+          borderRadius={RADII.md}
           borderWidth={1}
           borderColor="$borderColor"
           backgroundColor="$surface"

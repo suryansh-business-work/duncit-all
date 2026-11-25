@@ -1,5 +1,5 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Spinner, YStack, useTheme } from 'tamagui';
+import { Spinner, YStack } from 'tamagui';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuthStore } from '@/stores/auth.store';
@@ -22,6 +22,7 @@ import { CandidateScreen } from '@/screens/lead-research/CandidateScreen';
 import { LeadDiscoveryScreen } from '@/screens/lead-research/LeadDiscoveryScreen';
 import { UserLeadDetailScreen } from '@/screens/user-leads/UserLeadDetailScreen';
 import { UserLeadEditorScreen } from '@/screens/user-leads/UserLeadEditorScreen';
+import { useConsoleChrome } from './chrome';
 import { MainTabs } from './MainTabs';
 import { screenLayout } from './screenLayout';
 import type { AppStackParamList } from './types';
@@ -31,7 +32,7 @@ const Stack = createNativeStackNavigator<AppStackParamList>();
 /** Signed out → the sign-in steps; signed in → the app. The auth store decides which. */
 export function RootNavigator() {
   const { t } = useTranslation();
-  const theme = useTheme();
+  const chrome = useConsoleChrome();
   const status = useAuthStore((s) => s.status);
 
   if (status === 'loading') {
@@ -43,7 +44,7 @@ export function RootNavigator() {
         backgroundColor="$background"
         aria-busy
       >
-        <Spinner size="large" color="$primary" />
+        <Spinner size="large" color="$accentText" />
       </YStack>
     );
   }
@@ -52,13 +53,7 @@ export function RootNavigator() {
   if (status === 'security') return <SecurityVerificationScreen />;
 
   return (
-    <Stack.Navigator
-      screenLayout={screenLayout}
-      screenOptions={{
-        headerStyle: { backgroundColor: theme.primary?.val },
-        headerTintColor: theme.onPrimary?.val,
-      }}
-    >
+    <Stack.Navigator screenLayout={screenLayout} screenOptions={chrome.stackHeader}>
       <Stack.Screen name="Tabs" component={MainTabs} options={{ headerShown: false }} />
       <Stack.Screen
         name="LeadDetail"

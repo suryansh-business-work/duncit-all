@@ -10,6 +10,7 @@ import {
 } from '@react-navigation/native';
 import { Input, Text, XStack, YStack } from 'tamagui';
 
+import { SURFACE } from '@/components/surface';
 import { DuncitButton } from '@/components/DuncitButton';
 import { StateView } from '@/components/StateView';
 import { LEAD_KINDS, isLeadKind, type LeadKind } from '@/features/leads/leadKinds';
@@ -43,6 +44,7 @@ export function LeadsScreen() {
           onChangeText={setSearch}
           placeholder={t('crmApp.leads.search')}
           aria-label={t('crmApp.leads.search')}
+          placeholderTextColor="$muted"
           borderColor="$inputBorder"
           autoCorrect={false}
           testID="leads-search"
@@ -90,9 +92,7 @@ export function LeadsScreen() {
               if (isLeadKind(item.entity_type))
                 navigation.navigate('LeadDetail', { kind: item.entity_type, id: item.id });
             }}
-            backgroundColor="$surface"
-            borderRadius="$3"
-            padding="$3"
+            {...SURFACE}
             marginBottom="$2"
             pressStyle={{ backgroundColor: '$soft' }}
             testID={`lead-row-${item.id}`}

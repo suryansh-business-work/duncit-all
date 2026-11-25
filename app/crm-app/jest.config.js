@@ -18,6 +18,8 @@ module.exports = {
     '^date-fns-tz$': '<rootDir>/node_modules/date-fns-tz/dist/cjs/index.js',
     '^@duncit/utils$': '<rootDir>/../../packages/utils/src/index.ts',
     '^@duncit/datetime$': '<rootDir>/../../packages/datetime/src/index.ts',
+    // The portal's console colours, from @duncit/theme's MUI-free files.
+    '^@duncit/theme/(mode-colors|tokens)$': '<rootDir>/../../packages/theme/src/$1.ts',
     '^zod$': '<rootDir>/node_modules/zod',
   },
   collectCoverageFrom: [

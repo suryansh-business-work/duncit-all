@@ -62,7 +62,7 @@ export function AuthLegalLinks() {
           {t('session.login.supportPrefix')}{' '}
           <Text
             role="link"
-            color="$primary"
+            color="$accentText"
             fontWeight="600"
             onPress={() => open(`mailto:${branding.support_email}`)}
             testID="login-support-email"

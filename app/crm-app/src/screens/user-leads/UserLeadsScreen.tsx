@@ -4,6 +4,7 @@ import { useFocusEffect, useNavigation, type NavigationProp } from '@react-navig
 import { Input, Text, XStack, YStack } from 'tamagui';
 import { fireAndForget, logs } from '@duncit/logs';
 
+import { SURFACE } from '@/components/surface';
 import { DuncitButton } from '@/components/DuncitButton';
 import { KpiGrid } from '@/components/KpiGrid';
 import { StateView } from '@/components/StateView';
@@ -144,9 +145,7 @@ export function UserLeadsScreen() {
             role="button"
             aria-label={item.name || item.phone}
             onPress={() => navigation.navigate('UserLeadDetail', { id: item.id })}
-            backgroundColor="$surface"
-            borderRadius="$3"
-            padding="$3"
+            {...SURFACE}
             pressStyle={{ backgroundColor: '$soft' }}
             testID={`user-lead-row-${item.id}`}
           >

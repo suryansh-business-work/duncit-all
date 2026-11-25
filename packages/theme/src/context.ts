@@ -1,6 +1,6 @@
 import { alpha } from '@mui/material/styles';
 import { tokens } from './tokens';
-import { darkerThan, ensureContrast, fillForWhite, textOn } from './contrast';
+import { modeColors } from './mode-colors';
 import type { AccentColors, ColorMode, ElevationShadows, ThemeCtx } from './types';
 
 /**
@@ -35,42 +35,16 @@ const transition = (props: readonly string[], ms: number = tokens.motion.base): 
  */
 export function buildThemeCtx(mode: ColorMode, accent: AccentColors): ThemeCtx {
   const isDark = mode === 'dark';
-  const { white, black } = tokens.common;
-  const { dark, surface: light } = tokens;
-  const ink = isDark ? dark.ink : tokens.neutral[900];
-
-  const primary = isDark
-    ? ensureContrast(accent.main, white, [dark.bg, dark.surface, dark.soft, dark.raised])
-    : ensureContrast(accent.main, black, [light.paper, light.bg, light.soft]);
-  const primaryFill = fillForWhite(accent.main);
-  const primaryHover = darkerThan(accent.hover, primaryFill);
-  const primaryActive = darkerThan(accent.active, primaryHover);
-
+  const colors = modeColors(mode, accent);
   return {
     mode,
     isDark,
     accent,
-    primary,
-    onPrimary: textOn(primary, tokens.neutral[900]),
-    primaryFill,
-    primaryLight: accent.light,
-    primaryHover,
-    primaryActive,
-    ink,
-    muted: isDark ? dark.muted : light.muted,
-    border: isDark ? dark.border : light.border,
-    inputBorder: isDark ? dark.inputBorder : light.inputBorder,
-    bg: isDark ? dark.bg : light.bg,
-    surface: isDark ? dark.surface : light.paper,
-    soft: isDark ? dark.soft : light.soft,
-    raised: isDark ? dark.raised : light.raised,
-    hover: alpha(ink, tokens.state.hover),
-    selected: alpha(ink, tokens.state.selected),
+    ...colors,
+    hover: alpha(colors.ink, tokens.state.hover),
+    selected: alpha(colors.ink, tokens.state.selected),
     shadow: shadowsFor(isDark),
     transition,
-    semantic: isDark ? dark.semantic : tokens.semantic,
-    onSemantic: isDark ? tokens.neutral[900] : white,
-    white,
     t: tokens,
   };
 }

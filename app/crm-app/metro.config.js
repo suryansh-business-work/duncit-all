@@ -21,8 +21,12 @@ config.resolver.extraNodeModules = {
 
 // graphql-request@6's ESM build trips Metro's ESM/CJS interop on cross-fetch;
 // its CommonJS build does not (the member app pins it the same way).
+// The portal's console colours come from @duncit/theme's MUI-free files; the
+// package's main entry pulls in MUI, which this app does not install.
 const cjsPins = {
   'graphql-request': path.resolve(__dirname, 'node_modules/graphql-request/build/cjs/index.js'),
+  '@duncit/theme/mode-colors': path.resolve(__dirname, '../../packages/theme/src/mode-colors.ts'),
+  '@duncit/theme/tokens': path.resolve(__dirname, '../../packages/theme/src/tokens.ts'),
 };
 const baseResolveRequest = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, moduleName, platform) => {

@@ -4,6 +4,7 @@ import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { Text, XStack, YStack, useTheme } from 'tamagui';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
+import { SURFACE } from '@/components/surface';
 import { CrmAppCommLogsDocument } from '@/graphql/comms';
 import { displayDateTime } from '@/features/reminders/reminderTime';
 import { formatCallDuration } from '@/features/calls/duration';
@@ -29,7 +30,7 @@ function Recording({ url }: Readonly<{ url: string }>) {
       <MaterialIcons
         name={status.playing ? 'pause-circle' : 'play-circle'}
         size={30}
-        color={theme.primary?.val}
+        color={theme.accentText?.val}
       />
       <Text color="$accent">{label}</Text>
     </XStack>
@@ -53,13 +54,7 @@ export function CommLogItem({ log }: Readonly<{ log: CommLog }>) {
   ].filter(Boolean);
 
   return (
-    <YStack
-      backgroundColor="$surface"
-      borderRadius="$3"
-      padding="$3"
-      gap="$2"
-      testID={`comm-${log.id}`}
-    >
+    <YStack {...SURFACE} gap="$2" testID={`comm-${log.id}`}>
       <XStack
         role="button"
         aria-expanded={open}

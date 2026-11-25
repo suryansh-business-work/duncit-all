@@ -57,6 +57,7 @@ export function DialerScreen() {
             onChangeText={(text) => setNumber(dialable(text))}
             placeholder={t('crmApp.dialer.placeholder')}
             aria-label={t('crmApp.dialer.placeholder')}
+            placeholderTextColor="$muted"
             keyboardType="phone-pad"
             fontSize="$8"
             textAlign="center"

@@ -4,6 +4,7 @@ import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { Input, Text, XStack, YStack } from 'tamagui';
 import { CRM_CANDIDATE_STATUS_KEY, CRM_CANDIDATE_STATUS_TONE, crmFormatScore } from '@duncit/utils';
 
+import { SURFACE } from '@/components/surface';
 import { DuncitButton } from '@/components/DuncitButton';
 import { StateView } from '@/components/StateView';
 import { ToneChip } from '@/components/ToneChip';
@@ -126,9 +127,7 @@ export function ReviewQueue({ jobId, onClearJob }: Readonly<Props>) {
           onPress={() => navigation.navigate('Candidate', { id: item.id })}
           alignItems="center"
           gap="$2"
-          backgroundColor="$surface"
-          borderRadius="$3"
-          padding="$3"
+          {...SURFACE}
           pressStyle={{ backgroundColor: '$soft' }}
           testID={`candidate-row-${item.id}`}
         >

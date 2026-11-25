@@ -3,6 +3,7 @@ import { FlatList } from 'react-native';
 import { Input, Text, XStack, YStack } from 'tamagui';
 import { fireAndForget, logs } from '@duncit/logs';
 
+import { SURFACE } from '@/components/surface';
 import { Card } from '@/components/Card';
 import { StateView } from '@/components/StateView';
 import { displayDateTime } from '@/features/reminders/reminderTime';
@@ -106,14 +107,7 @@ export function EmailVerifierScreen() {
         </YStack>
       }
       renderItem={({ item }) => (
-        <XStack
-          alignItems="center"
-          gap="$2"
-          backgroundColor="$surface"
-          borderRadius="$3"
-          padding="$3"
-          testID={`email-row-${item.id}`}
-        >
+        <XStack alignItems="center" gap="$2" {...SURFACE} testID={`email-row-${item.id}`}>
           <YStack flex={1}>
             <Text fontWeight="600" numberOfLines={1}>
               {item.email}

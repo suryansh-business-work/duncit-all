@@ -12,7 +12,7 @@ import { todayWindow } from '@/features/reminders/reminderTime';
 import { useGqlQuery } from '@/hooks/useGqlQuery';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AppStackParamList } from '@/navigation/types';
-import { readPermissions } from '@/services/permissions';
+import { hasPhoneFeatures, readPermissions } from '@/services/permissions';
 import { useAuthStore } from '@/stores/auth.store';
 import { ReminderRow } from '@/screens/reminders/ReminderRow';
 
@@ -35,6 +35,8 @@ export function HomeScreen() {
   const [phoneReady, setPhoneReady] = useState(true);
 
   useEffect(() => {
+    // An iPhone has no call features to set up, so nothing to nudge about.
+    if (!hasPhoneFeatures()) return;
     readPermissions()
       .then((p) => setPhoneReady(p.phone && p.call))
       .catch(() => setPhoneReady(false));

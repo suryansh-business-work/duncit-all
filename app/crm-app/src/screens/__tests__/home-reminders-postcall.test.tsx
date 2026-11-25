@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { gqlRequest } from '@/services/graphql.client';
 import { syncDeviceCalls } from '@/services/call-sync';
-import { readPermissions } from '@/services/permissions';
+import { hasPhoneFeatures, readPermissions } from '@/services/permissions';
 import { renderWithTheme } from '@/test-utils';
 import { useAuthStore } from '@/stores/auth.store';
 import { usePostCallStore } from '@/stores/postCall.store';
@@ -13,7 +13,10 @@ import { PostCallScreen } from '../post-call/PostCallScreen';
 jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
 jest.mock('@/services/call-sync', () => ({ syncDeviceCalls: jest.fn() }));
-jest.mock('@/services/permissions', () => ({ readPermissions: jest.fn() }));
+jest.mock('@/services/permissions', () => ({
+  readPermissions: jest.fn(),
+  hasPhoneFeatures: jest.fn(),
+}));
 const mockNav = {
   navigate: jest.fn(),
   goBack: jest.fn(),
@@ -43,6 +46,7 @@ const reminder = (over: Record<string, unknown> = {}) => ({
 
 beforeEach(() => {
   jest.clearAllMocks();
+  (hasPhoneFeatures as jest.Mock).mockReturnValue(true);
   (readPermissions as jest.Mock).mockResolvedValue({
     phone: true,
     call: true,
@@ -70,6 +74,16 @@ describe('HomeScreen', () => {
     expect(screen.getByText('Nothing due today.')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('home-dialer'));
     expect(mockNav.navigate).toHaveBeenCalledWith('Tabs', { screen: 'Dialer' });
+  });
+
+  it('on an iPhone never asks for the Android phone permissions or nudges about them', async () => {
+    (hasPhoneFeatures as jest.Mock).mockReturnValue(false);
+    request.mockResolvedValue({ crmReminders: [] });
+    renderWithTheme(<HomeScreen />);
+    expect(await screen.findByText('Nothing due today.')).toBeOnTheScreen();
+    expect(readPermissions).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('home-setup')).toBeNull();
+    expect(screen.getByTestId('home-dialer')).toBeOnTheScreen();
   });
 });
 

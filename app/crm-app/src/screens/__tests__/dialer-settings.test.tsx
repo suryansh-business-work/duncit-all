@@ -15,9 +15,11 @@ const mockPhone = {
   canDrawOverlays: jest.fn(() => true),
   setFeatures: jest.fn(),
 };
+/** The native call module: present on Android, null on an iPhone. */
+let mockPhoneModule: typeof mockPhone | null = mockPhone;
 jest.mock('crm-telephony', () => ({
   get CrmTelephony() {
-    return mockPhone;
+    return mockPhoneModule;
   },
 }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
@@ -39,6 +41,7 @@ const request = gqlRequest as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockPhoneModule = mockPhone;
   mockRouteParams = undefined;
 });
 
@@ -123,6 +126,20 @@ describe('SettingsScreen', () => {
     expect(screen.getByText('Confirm on your home screen to add the icon.')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('settings-pin-dialer'));
     expect(screen.getByText(/cannot add icons from apps/)).toBeOnTheScreen();
+  });
+
+  it('on an iPhone keeps the account and the CRM call line, and leaves out the Android call features', () => {
+    mockPhoneModule = null;
+    renderWithTheme(<SettingsScreen />);
+    expect(screen.getByText('Asha Rao')).toBeOnTheScreen();
+    expect(screen.getByTestId('settings-sign-out')).toBeOnTheScreen();
+    expect(screen.getByTestId('settings-call-line')).toBeOnTheScreen();
+    expect(screen.queryByTestId('feature-caller-id')).toBeNull();
+    expect(screen.queryByTestId('feature-auto-log')).toBeNull();
+    expect(screen.queryByTestId('settings-pin-dialer')).toBeNull();
+    expect(screen.queryByTestId('perm-phone')).toBeNull();
+    expect(screen.queryByTestId('perm-phone-ok')).toBeNull();
+    expect(screen.queryByTestId('settings-sync')).toBeNull();
   });
 
   it('signs out', async () => {

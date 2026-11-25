@@ -4,19 +4,23 @@ import { logs } from '@duncit/logs';
 
 import { syncDeviceCalls } from '@/services/call-sync';
 import { isDirectoryStale, readDirectoryStatus, syncDirectory } from '@/services/directory-sync';
+import { hasPhoneFeatures } from '@/services/permissions';
 import { getToken, needsSecurityVerification } from '@/services/session';
 import { useFeaturesStore } from '@/stores/features.store';
 
 /**
  * The work Android runs with the app closed (WorkManager, at most every 15
  * minutes): refresh a stale caller directory, then send any new calls with
- * CRM contacts. The same run happens on app open and after every call.
+ * CRM contacts. The same run happens on app open and after every call. An
+ * iPhone has no call log to read, so there it neither runs nor is scheduled.
  */
 export const BACKGROUND_SYNC_TASK = 'duncit-crm-sync';
 const MIN_INTERVAL_MINUTES = 15;
 
 /** Directory first (so a lead made today is matched), then calls. Never throws. */
 export async function runSync(): Promise<boolean> {
+  // Nothing to sync: the caller directory and the call log are Android only.
+  if (!hasPhoneFeatures()) return true;
   const token = await getToken();
   if (!token || needsSecurityVerification(token)) return false;
   try {
@@ -43,6 +47,7 @@ export function defineBackgroundSync(): void {
 }
 
 export async function registerBackgroundSync(): Promise<void> {
+  if (!hasPhoneFeatures()) return;
   try {
     await BackgroundTask.registerTaskAsync(BACKGROUND_SYNC_TASK, {
       minimumInterval: MIN_INTERVAL_MINUTES,

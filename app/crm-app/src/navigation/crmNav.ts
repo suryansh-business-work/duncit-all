@@ -39,8 +39,6 @@ export interface NavItem {
   icon: NavIcon;
   target?: NavTarget;
   children?: NavItem[];
-  /** Kept at the foot of the menu, as the portal pins it to the sidebar's bottom. */
-  pinBottom?: boolean;
 }
 
 const m = (name: keyof typeof MaterialIcons.glyphMap): NavIcon => ({ set: 'material', name });
@@ -235,26 +233,6 @@ export const CRM_NAV: readonly NavItem[] = [
         labelKey: 'shell.nav.dynamicFields',
         icon: m('analytics'),
         target: portal('/settings/dynamic-fields'),
-      },
-    ],
-  },
-  {
-    key: 'crmMobileApp',
-    labelKey: 'shell.nav.crmMobileApp',
-    icon: m('android'),
-    pinBottom: true,
-    children: [
-      {
-        key: 'downloadCrmApp',
-        labelKey: 'shell.nav.downloadCrmApp',
-        icon: m('android'),
-        target: portal('/download-app'),
-      },
-      {
-        key: 'crmAppSettings',
-        labelKey: 'shell.nav.settings',
-        icon: m('settings'),
-        target: portal('/download-app/settings'),
       },
     ],
   },

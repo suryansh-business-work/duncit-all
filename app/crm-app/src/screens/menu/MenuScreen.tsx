@@ -13,12 +13,11 @@ import { NavTree } from './NavTree';
 import { activeNavKey, goTo, type RouteLike } from './menuRoutes';
 
 const LOGO = require('../../../assets/duncit-logo.png');
-const MAIN = CRM_NAV.filter((item) => !item.pinBottom);
-const PINNED = CRM_NAV.filter((item) => item.pinBottom);
 
 /**
  * The side menu: the CRM portal's sidebar on the phone, every group and page
- * in the portal's order. It slides in from the left over the screen; tapping
+ * in the portal's order — except the portal's "CRM Mobile App" download pages,
+ * which have no place inside the app itself. It slides in from the left over the screen; tapping
  * the dimmed edge or the close button puts it away.
  */
 export function MenuScreen() {
@@ -89,12 +88,8 @@ export function MenuScreen() {
           </XStack>
           <Separator />
           <ScrollView contentContainerStyle={{ padding: 8 }} testID="menu-list">
-            <NavTree items={MAIN} {...tree} />
+            <NavTree items={CRM_NAV} {...tree} />
           </ScrollView>
-          <Separator />
-          <YStack padding="$2">
-            <NavTree items={PINNED} {...tree} />
-          </YStack>
         </SafeAreaView>
       </YStack>
       <YStack

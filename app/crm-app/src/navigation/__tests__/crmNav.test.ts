@@ -8,7 +8,7 @@ const leaves = (items: readonly NavItem[]): NavItem[] =>
   items.flatMap((item) => (item.children ? leaves(item.children) : [item]));
 
 describe('CRM_NAV — the portal sidebar', () => {
-  it('has the portal’s groups in the portal’s order, with CRM Mobile App pinned at the foot', () => {
+  it('has the portal’s groups in the portal’s order, without the portal’s CRM Mobile App download pages', () => {
     expect(CRM_NAV.map((item) => item.key)).toEqual([
       'dashboard',
       'leads',
@@ -18,16 +18,12 @@ describe('CRM_NAV — the portal sidebar', () => {
       'emailTemplates',
       'aiCallPrompts',
       'settings',
-      'crmMobileApp',
-    ]);
-    expect(CRM_NAV.filter((item) => item.pinBottom).map((item) => item.key)).toEqual([
-      'crmMobileApp',
     ]);
   });
 
   it('gives every page a destination and a shell.nav label, each page once', () => {
     const pages = leaves(CRM_NAV);
-    expect(pages).toHaveLength(22);
+    expect(pages).toHaveLength(20);
     for (const page of pages) {
       expect(page.target).toBeDefined();
       expect(page.labelKey).toMatch(/^shell\.nav\./);

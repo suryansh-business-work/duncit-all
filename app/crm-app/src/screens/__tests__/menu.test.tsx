@@ -30,7 +30,8 @@ describe('MenuScreen', () => {
     renderWithTheme(<MenuScreen />);
     expect(screen.getByText('Asha Rao')).toBeOnTheScreen();
     expect(screen.getByTestId('nav-leads')).toBeOnTheScreen();
-    expect(screen.getByTestId('nav-crmMobileApp')).toBeOnTheScreen();
+    expect(screen.getByTestId('nav-settings')).toBeOnTheScreen();
+    expect(screen.queryByTestId('nav-crmMobileApp')).toBeNull();
     expect(screen.queryByTestId('nav-venueLeads')).toBeNull();
   });
 

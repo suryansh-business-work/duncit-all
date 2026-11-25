@@ -132,12 +132,12 @@ export const setConversationStatusMock = (id: string, status: SocialInboxStatus,
   result: { data: { setSocialConversationStatus: gqlThread(thread) } },
 });
 
-export const createLeadMock = (id: string, thread: SocialConversationThread, merged = false): MockedResponse => ({
+export const createConversationLeadMock = (id: string, thread: SocialConversationThread, merged = false): MockedResponse => ({
   request: { query: CREATE_LEAD_FROM_SOCIAL_CONVERSATION, variables: { id } },
   result: { data: { createLeadFromSocialConversation: { __typename: 'SocialConversationLead', lead_id: 'lead1', merged, thread: gqlThread(thread) } } },
 });
 
-export const createLeadErrorMock = (id: string, message: string): MockedResponse => ({
+export const createConversationLeadErrorMock = (id: string, message: string): MockedResponse => ({
   request: { query: CREATE_LEAD_FROM_SOCIAL_CONVERSATION, variables: { id } },
   ...rejection(message),
 });

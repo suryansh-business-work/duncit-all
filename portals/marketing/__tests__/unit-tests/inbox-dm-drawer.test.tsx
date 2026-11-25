@@ -7,8 +7,8 @@ import {
   assignConversationMock,
   conversationErrorMock,
   conversationMock,
-  createLeadErrorMock,
-  createLeadMock,
+  createConversationLeadErrorMock,
+  createConversationLeadMock,
   makeDmMessage,
   makeThread,
   markReadMock,
@@ -127,7 +127,7 @@ describe('ConversationDrawer', () => {
 
   it('creates a lead from the conversation, or says it matched one, or why it could not', async () => {
     const linked = read({}, { marketing_lead_id: 'lead1' });
-    renderDrawer([conversationMock(read()), createLeadMock('dm1', linked), conversationMock(linked)]);
+    renderDrawer([conversationMock(read()), createConversationLeadMock('dm1', linked), conversationMock(linked)]);
     const drawer = await screen.findByTestId('dm-drawer');
     fireEvent.click(await within(drawer).findByTestId('dm-create-lead'));
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Lead created.', 'success'));
@@ -135,7 +135,7 @@ describe('ConversationDrawer', () => {
   });
 
   it('says a matched lead was linked, and shows a lead refusal', async () => {
-    renderDrawer([conversationMock(read({}, { ig_lead_id: 'ig1' })), createLeadMock('dm1', read(), true), conversationMock(read()), createLeadErrorMock('dm1', 'No name yet')]);
+    renderDrawer([conversationMock(read({}, { ig_lead_id: 'ig1' })), createConversationLeadMock('dm1', read(), true), conversationMock(read()), createConversationLeadErrorMock('dm1', 'No name yet')]);
     const drawer = await screen.findByTestId('dm-drawer');
     expect(await within(drawer).findByTestId('dm-ig-lead')).toHaveTextContent('Instagram lead');
     fireEvent.click(within(drawer).getByTestId('dm-create-lead'));
@@ -233,21 +233,28 @@ describe('ConversationDrawer', () => {
     expect(dialogsMock.notify).not.toHaveBeenCalledWith(expect.stringContaining('mock'), 'error');
   });
 
-  it('does nothing when an action or a draft brings nothing back', async () => {
-    renderDrawer([
-      conversationMock(read()),
-      { request: { query: ASSIGN_SOCIAL_CONVERSATION, variables: { id: 'dm1', user_id: 'u1' } }, result: { data: { assignSocialConversation: null } } },
-      { request: { query: CREATE_LEAD_FROM_SOCIAL_CONVERSATION, variables: { id: 'dm1' } }, result: { data: { createLeadFromSocialConversation: null } } },
-      { request: { query: SUGGEST_SOCIAL_MESSAGE, variables: { id: 'dm1' } }, result: { data: { suggestSocialMessage: { __typename: 'SocialReplySuggestion', text: '', run_id: 'r' } } } },
-    ]);
-    const settle = () => new Promise((resolve) => setTimeout(resolve, 50));
-    fireEvent.click(await screen.findByTestId('inbox-assign-me'));
-    await settle();
-    fireEvent.click(screen.getByTestId('dm-create-lead'));
-    await settle();
-    fireEvent.click(screen.getByTestId('inbox-suggest'));
-    await settle();
+  /** One action whose answer carries nothing: once the mock has answered, nothing is said and nothing changes. */
+  const answersNothing = async (testId: string, query: MockedResponse['request']['query'], variables: Record<string, unknown>, data: Record<string, unknown>) => {
+    const answered = vi.fn(() => ({ data }));
+    renderDrawer([conversationMock(read()), { request: { query, variables }, result: answered }]);
+    fireEvent.click(await screen.findByTestId(testId));
+    await waitFor(() => expect(answered).toHaveBeenCalledTimes(1));
+    await new Promise((resolve) => setTimeout(resolve, 0));
     expect(dialogsMock.notify).not.toHaveBeenCalled();
+  };
+
+  it('says nothing when assigning brings nothing back', async () => {
+    await answersNothing('inbox-assign-me', ASSIGN_SOCIAL_CONVERSATION, { id: 'dm1', user_id: 'u1' }, { assignSocialConversation: null });
+    expect(screen.getByTestId('inbox-assignee')).toHaveTextContent('Nobody');
+  });
+
+  it('says nothing when making a lead brings nothing back', async () => {
+    await answersNothing('dm-create-lead', CREATE_LEAD_FROM_SOCIAL_CONVERSATION, { id: 'dm1' }, { createLeadFromSocialConversation: null });
+    expect(screen.getByTestId('dm-create-lead')).toBeInTheDocument();
+  });
+
+  it('leaves the box empty when the AI draft is empty', async () => {
+    await answersNothing('inbox-suggest', SUGGEST_SOCIAL_MESSAGE, { id: 'dm1' }, { suggestSocialMessage: { __typename: 'SocialReplySuggestion', text: '', run_id: 'r' } });
     expect(screen.getByRole('textbox', { name: 'Reply' })).toHaveValue('');
   });
 });

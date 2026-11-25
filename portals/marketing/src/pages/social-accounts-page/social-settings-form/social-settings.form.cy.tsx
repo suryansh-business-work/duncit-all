@@ -72,7 +72,7 @@ describe('SocialSettingsForm', () => {
     const onSubmit = renderForm();
     fireEvent.change(screen.getByRole('spinbutton', { name: /Sync every/ }), { target: { value: '6' } });
     fireEvent.change(screen.getByRole('textbox', { name: 'Stop keywords' }), { target: { value: 'stop, quit' } });
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Auto-replies on' }));
+    fireEvent.click(screen.getByLabelText('Auto-replies on'));
     fireEvent.click(screen.getByTestId('social-settings-save'));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ sync_every_hours: 6, opt_out_keywords: ['STOP', 'QUIT'], auto_reply_enabled: true })));
   });

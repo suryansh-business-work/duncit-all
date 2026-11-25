@@ -2,7 +2,7 @@ import { GraphQLError } from 'graphql';
 import { isValidObjectId } from 'mongoose';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { resolvePrompt } from '@modules/ai/prompt/prompt.service';
-import { claudeDefaultModel } from '@services/anthropic/anthropic.client';
+import { claudeDefaultModel, isClaudeModel } from '@services/anthropic/anthropic.client';
 import { openaiChat } from '@services/openai/openai.client';
 import { recordPlanCost } from '../agents/agent.cost';
 import { userActor, withRun, type RunLinks } from '../runs/marketingRun.service';
@@ -41,11 +41,17 @@ export function parseDraft(content: string, limit: number): string {
   }
 }
 
-/** The model a draft runs on: pinned in the AI Library, else Claude with a key, else '' (the OpenAI default). */
+/**
+ * The model a draft runs on. A model the AI Library pins wins, unless it is a
+ * Claude model and no Anthropic key is set — then, like an unpinned prompt
+ * without the key, the draft goes to the OpenAI default ('') rather than
+ * failing. With the key, an unpinned prompt runs on Claude's default.
+ */
 export async function draftModel(pinned: string): Promise<string> {
-  if (pinned) return pinned;
+  if (pinned && !isClaudeModel(pinned)) return pinned;
   const anthropicKey = (await getRuntimeEnvValue('ANTHROPIC_API_KEY')).trim();
-  return anthropicKey ? claudeDefaultModel() : '';
+  if (!anthropicKey) return '';
+  return pinned || claudeDefaultModel();
 }
 
 /** The system turn with the team's own guidelines, when Settings has any. */

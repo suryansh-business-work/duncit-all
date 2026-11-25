@@ -28,7 +28,7 @@ import { SocialApiError } from '../../providers/http';
 import { socialCredentials } from '../../social.credentials';
 import { SocialAccountModel, SocialCommentModel, SocialPostModel } from '../../social.model';
 import { migrateSocialInbox, socialInbox, viewFilter } from '../../social.inbox';
-import { parseDraft, suggestDirectMessage, suggestReply } from '../../social.inbox.ai';
+import { draftModel, parseDraft, suggestDirectMessage, suggestReply } from '../../social.inbox.ai';
 import * as runtimeEnv from '@config/runtimeEnv';
 import { SocialConversationModel, SocialMessageModel } from '../../social.conversation.model';
 import { SocialSettingsModel, resetSocialSettingsCache } from '../../social.settings';
@@ -414,6 +414,17 @@ describe('suggestReply', () => {
     expect(call.model).toBe('');
     expect(call.messages[0].content).toContain('Warm, no emojis.');
     resetSocialSettingsCache();
+  });
+
+  it('keeps a pinned non-Claude model, and pins Claude only while an Anthropic key is set', async () => {
+    expect(await draftModel('gemini-2.5-flash')).toBe('gemini-2.5-flash');
+    expect(await draftModel('gpt-4.1-mini')).toBe('gpt-4.1-mini');
+    expect(await draftModel('claude-opus-5-5')).toBe('');
+    expect(await draftModel('')).toBe('');
+    const spy = withAnthropicKey();
+    expect(await draftModel('claude-sonnet-5-5')).toBe('claude-sonnet-5-5');
+    expect(await draftModel('')).toMatch(/^claude-/);
+    spy.mockRestore();
   });
 
   it("drafts a direct message from the conversation's latest messages, within the DM limit", async () => {

@@ -1,8 +1,7 @@
 import { useMemo, type ReactNode, type RefObject } from 'react';
-import { useApolloClient } from '@apollo/client/react';
-import { DuncitTable, useApolloTableFetch } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
 import { getInboxColumns } from './inboxColumns';
+import InboxQueueTable from './InboxQueueTable';
 import { SOCIAL_INBOX_TABLE, type InboxAccount, type InboxComment, type SocialInboxView } from './queries';
 
 const getRowId = (row: InboxComment) => row.id;
@@ -17,26 +16,24 @@ interface Props {
   toolbarActions?: ReactNode;
 }
 
-/** The queue, server-paged, newest first, on the slice the URL names; a row opens the comment. */
+/** The comment queue, newest first, on the slice the URL names; a row opens the comment. */
 export default function InboxTable({ view, channel, accounts, onOpen, refetchRef, toolbarActions }: Readonly<Props>) {
   const { t } = useTranslation();
-  const client = useApolloClient();
-  const fetchRows = useApolloTableFetch<InboxComment>(client, SOCIAL_INBOX_TABLE, 'socialInboxTable', { extraVariables: { view, channel } }, [view, channel]);
   const columns = useMemo(() => getInboxColumns(accounts, t), [accounts, t]);
-
   return (
-    <DuncitTable<InboxComment>
-      key={`${view}-${channel}`}
-      ariaLabel={t('marketing.inbox.tableLabel')}
+    <InboxQueueTable<InboxComment>
+      query={SOCIAL_INBOX_TABLE}
+      field="socialInboxTable"
+      variables={{ view, channel }}
       tableId={channel === 'THREADS_REPLIES' ? 'marketing-inbox-threads' : 'marketing-inbox'}
-      columns={columns}
-      fetchRows={fetchRows}
-      getRowId={getRowId}
-      onRowClick={onOpen}
-      refetchRef={refetchRef}
-      toolbarActions={toolbarActions}
+      ariaLabel={t('marketing.inbox.tableLabel')}
       emptyText={t('marketing.inbox.empty')}
       searchPlaceholder={t('marketing.inbox.search')}
+      columns={columns}
+      getRowId={getRowId}
+      onOpen={onOpen}
+      refetchRef={refetchRef}
+      toolbarActions={toolbarActions}
       defaultSort={{ field: 'published_at', dir: 'desc' }}
     />
   );

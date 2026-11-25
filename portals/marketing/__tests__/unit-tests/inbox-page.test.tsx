@@ -103,15 +103,20 @@ describe('InboxPage — the All tab', () => {
     await waitFor(() => expect(screen.queryByTestId('dm-drawer')).not.toBeInTheDocument());
   });
 
-  it('opens a comment row by reading the comment first, and says so when it cannot', async () => {
-    const comment = makeInboxComment();
-    __setTableRows([makeInboxItem({ id: 'c1', kind: 'COMMENT' }), makeInboxItem({ id: 'gone', kind: 'COMMENT' })]);
-    renderPage('/social/inbox', [inboxSummaryMock(), dmSummaryMock(), inboxSetupMock(), inboxCommentMock(comment), inboxCommentErrorMock('gone', 'Comment not found')]);
+  it('opens a comment row by reading the comment first', async () => {
+    __setTableRows([makeInboxItem({ id: 'c1', kind: 'COMMENT' })]);
+    renderPage('/social/inbox', [inboxSummaryMock(), dmSummaryMock(), inboxSetupMock(), inboxCommentMock(makeInboxComment())]);
     fireEvent.click(await screen.findByRole('button', { name: 'rowclick-0' }));
     const drawer = await screen.findByTestId('inbox-drawer');
     expect(within(drawer).getByRole('heading', { level: 2, name: 'Ravi' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'rowclick-1' }));
+  });
+
+  it('says so when a comment row cannot be read', async () => {
+    __setTableRows([makeInboxItem({ id: 'gone', kind: 'COMMENT' })]);
+    renderPage('/social/inbox', [inboxSummaryMock(), dmSummaryMock(), inboxSetupMock(), inboxCommentErrorMock('gone', 'Comment not found')]);
+    fireEvent.click(await screen.findByRole('button', { name: 'rowclick-0' }));
     await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Comment not found', 'error'));
+    expect(screen.queryByTestId('inbox-drawer')).not.toBeInTheDocument();
   });
 
   it('does nothing for a comment row that comes back empty', async () => {

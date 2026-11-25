@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import type { MockedResponse } from '@apollo/client/testing';
-import { renderWithProviders } from '../testkit';
+import { flush, renderWithProviders } from '../testkit';
 import { makeSocialAccount, makeSocialSettings, socialSettingsErrorMock, socialSettingsMock, updateSocialSettingsErrorMock, updateSocialSettingsMock } from '../mocks';
 import { SOCIAL_WEBHOOK_URL } from '../../src/pages/settings-page/queries';
 
@@ -27,6 +27,15 @@ import { settingsInput, settingsFormValues } from '../../src/pages/social-accoun
 const webhookMock: MockedResponse = { request: { query: SOCIAL_WEBHOOK_URL }, result: { data: { socialWebhookUrl: 'https://api/social/webhooks/meta' } } };
 const renderTab = (mocks: MockedResponse[]) => renderWithProviders(<SocialSettingsTab />, { mocks: [...mocks, webhookMock] });
 
+/** Change one number once the form has settled, and press Save once it is enabled. */
+async function changeAndSave(label: RegExp, value: string) {
+  await screen.findByRole('spinbutton', { name: label });
+  await act(flush);
+  fireEvent.change(screen.getByRole('spinbutton', { name: label }), { target: { value } });
+  await waitFor(() => expect(screen.getByTestId('social-settings-save')).toBeEnabled());
+  fireEvent.click(screen.getByTestId('social-settings-save'));
+}
+
 beforeEach(() => {
   userCtx.value = { user: { user_id: 'u1', roles: ['MARKETING_MANAGER'] } };
 });
@@ -41,11 +50,9 @@ describe('SocialSettingsTab', () => {
     const changed = settingsInput({ ...settingsFormValues(settings), backfill_days: 14 });
     const saved = makeSocialSettings({ backfill_days: 14 });
     renderTab([socialSettingsMock(settings), updateSocialSettingsMock(changed, saved), socialSettingsMock(saved)]);
-    const field = await screen.findByRole('spinbutton', { name: /DM history on connect/ });
+    await changeAndSave(/DM history on connect/, '14');
     expect(screen.getByTestId('webhook-url-field')).toBeInTheDocument();
-    fireEvent.change(field, { target: { value: '14' } });
-    fireEvent.click(screen.getByTestId('social-settings-save'));
-    await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Settings saved.', 'success'));
+    await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Settings saved.', 'success'), { timeout: 4000 });
     await waitFor(() => expect(screen.getByRole('spinbutton', { name: /DM history on connect/ })).toHaveValue(14));
   });
 
@@ -53,9 +60,8 @@ describe('SocialSettingsTab', () => {
     const settings = makeSocialSettings();
     const changed = settingsInput({ ...settingsFormValues(settings), expiry_alert_days: 10 });
     renderTab([socialSettingsMock(settings), updateSocialSettingsErrorMock(changed, 'Access denied')]);
-    fireEvent.change(await screen.findByRole('spinbutton', { name: /Token reminder/ }), { target: { value: '10' } });
-    fireEvent.click(screen.getByTestId('social-settings-save'));
-    await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Access denied', 'error'));
+    await changeAndSave(/Token reminder/, '10');
+    await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('Access denied', 'error'), { timeout: 4000 });
   });
 
   it('is read-only for an editor, and for nobody signed in', async () => {

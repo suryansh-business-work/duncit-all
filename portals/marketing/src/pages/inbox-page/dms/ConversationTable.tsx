@@ -1,8 +1,7 @@
 import { useMemo, type ReactNode, type RefObject } from 'react';
-import { useApolloClient } from '@apollo/client/react';
-import { DuncitTable, useApolloTableFetch } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
 import { SOCIAL_CONVERSATIONS_TABLE, type SocialConversation } from '../dm.queries';
+import InboxQueueTable from '../InboxQueueTable';
 import type { InboxAccount, SocialInboxView } from '../queries';
 import { getConversationColumns } from './conversationColumns';
 
@@ -16,26 +15,24 @@ interface Props {
   toolbarActions?: ReactNode;
 }
 
-/** The DM queue, server-paged, latest message first, on the slice the URL names; a row opens the conversation. */
+/** The DM queue, latest message first, on the slice the URL names; a row opens the conversation. */
 export default function ConversationTable({ view, accounts, onOpen, refetchRef, toolbarActions }: Readonly<Props>) {
   const { t } = useTranslation();
-  const client = useApolloClient();
-  const fetchRows = useApolloTableFetch<SocialConversation>(client, SOCIAL_CONVERSATIONS_TABLE, 'socialConversationsTable', { extraVariables: { view } }, [view]);
   const columns = useMemo(() => getConversationColumns(accounts, t), [accounts, t]);
-
   return (
-    <DuncitTable<SocialConversation>
-      key={view}
-      ariaLabel={t('marketing.inbox.dmTableLabel')}
+    <InboxQueueTable<SocialConversation>
+      query={SOCIAL_CONVERSATIONS_TABLE}
+      field="socialConversationsTable"
+      variables={{ view }}
       tableId="marketing-inbox-dms"
-      columns={columns}
-      fetchRows={fetchRows}
-      getRowId={getRowId}
-      onRowClick={onOpen}
-      refetchRef={refetchRef}
-      toolbarActions={toolbarActions}
+      ariaLabel={t('marketing.inbox.dmTableLabel')}
       emptyText={t('marketing.inbox.dmEmpty')}
       searchPlaceholder={t('marketing.inbox.dmSearch')}
+      columns={columns}
+      getRowId={getRowId}
+      onOpen={onOpen}
+      refetchRef={refetchRef}
+      toolbarActions={toolbarActions}
       defaultSort={{ field: 'last_message_at', dir: 'desc' }}
     />
   );

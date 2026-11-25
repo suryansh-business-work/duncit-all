@@ -13,6 +13,8 @@ interface Props {
   messages: readonly AskAiMessage[];
   /** The question on its way, shown until the saved pair comes back. */
   pending: string | null;
+  /** The saved thread has loaded: until then there is nothing to start from (and a question asked now would be overwritten). */
+  ready: boolean;
   onSuggestion: (text: string) => void;
   /** The proposals under one assistant message. */
   renderActions: (message: AskAiMessage) => ReactNode;
@@ -49,11 +51,17 @@ function UserText({ text }: Readonly<{ text: string }>) {
 }
 
 /** The conversation: starter questions while it is empty, then each turn with its proposals. */
-export function AskAiMessages({ messages, pending, onSuggestion, renderActions }: Readonly<Props>) {
+export function AskAiMessages({
+  messages,
+  pending,
+  ready,
+  onSuggestion,
+  renderActions,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   return (
     <YStack gap="$3" role="log" aria-live="polite">
-      {messages.length === 0 && !pending ? (
+      {ready && messages.length === 0 && !pending ? (
         <YStack gap="$2">
           <Text color="$muted">{t('crm.components.askAnythingAboutThisLeadTry')}</Text>
           {CRM_LEAD_AI_SUGGESTIONS.map((key) => (

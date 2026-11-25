@@ -39,6 +39,25 @@ export function LeadContactActions({ kind, id, name, lead, leadValues }: Readonl
   const mobile = primary?.mobile_number ?? '';
   const email = primary?.email ?? '';
   const waDigits = crmWhatsappDigits(primary?.whatsapp_number, mobile);
+  // Each action refuses on its own without its detail, not only through the disabled button.
+  const call = () => {
+    if (mobile)
+      navigation.navigate('Call', { kind, id, to: mobile, leadName: name, contactName: name });
+  };
+  const openWhatsapp = () => {
+    if (!waDigits) return;
+    fireAndForget(
+      Linking.openURL(whatsappUrl(waDigits)),
+      logs.mobileApp,
+      'crm-app/LeadContactActions',
+      'whatsapp',
+    );
+  };
+  const compose = () => {
+    if (!email) return;
+    setResult(null);
+    setComposing({ displayName: name, email });
+  };
   const icon = (glyph: 'phone' | 'email') => (
     <MaterialIcons name={glyph} size={16} color={theme.accentText?.val} />
   );
@@ -51,9 +70,7 @@ export function LeadContactActions({ kind, id, name, lead, leadValues }: Readonl
           accessibilityLabel={
             mobile ? t('crm.leadDetail.callNumber', { vars: { number: mobile } }) : undefined
           }
-          onPress={() =>
-            navigation.navigate('Call', { kind, id, to: mobile, leadName: name, contactName: name })
-          }
+          onPress={call}
           variant="outline"
           size="sm"
           disabled={!mobile}
@@ -62,14 +79,7 @@ export function LeadContactActions({ kind, id, name, lead, leadValues }: Readonl
         />
         <DuncitButton
           label={t('crm.leadDetail.whatsapp')}
-          onPress={() =>
-            fireAndForget(
-              Linking.openURL(whatsappUrl(waDigits)),
-              logs.mobileApp,
-              'crm-app/LeadContactActions',
-              'whatsapp',
-            )
-          }
+          onPress={openWhatsapp}
           variant="outline"
           size="sm"
           disabled={!waDigits}
@@ -81,10 +91,7 @@ export function LeadContactActions({ kind, id, name, lead, leadValues }: Readonl
           accessibilityLabel={
             email ? t('crm.leadDetail.emailAddress', { vars: { email } }) : undefined
           }
-          onPress={() => {
-            setResult(null);
-            setComposing({ displayName: name, email });
-          }}
+          onPress={compose}
           variant="outline"
           size="sm"
           disabled={!email}

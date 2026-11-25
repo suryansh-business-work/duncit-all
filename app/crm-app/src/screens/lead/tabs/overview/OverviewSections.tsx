@@ -28,7 +28,7 @@ export function OverviewSections({ sections }: Readonly<{ sections: readonly Sec
           key={section.key}
           title={section.title}
           icon={section.icon}
-          testID={`lead-overview-${section.key}`}
+          testID={`lead-overview-card-${section.key}`}
         >
           {section.rows.map((row) => (
             <DetailRow key={row.label} label={row.label} value={row.value} />

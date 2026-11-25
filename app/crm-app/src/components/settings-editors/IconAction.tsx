@@ -28,6 +28,7 @@ export function IconAction({
       role="button"
       aria-label={label}
       aria-disabled={disabled}
+      disabled={disabled}
       onPress={disabled ? undefined : onPress}
       opacity={disabled ? 0.4 : 1}
       padding="$2"

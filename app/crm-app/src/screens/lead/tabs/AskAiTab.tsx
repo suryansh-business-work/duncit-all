@@ -62,6 +62,7 @@ export function AskAiTab({ kind, id, lead, onChanged }: Readonly<LeadTabProps>) 
       <AskAiMessages
         messages={thread.messages}
         pending={thread.pending}
+        ready={!thread.loadingThread}
         onSuggestion={(text) => run(thread.ask(text), 'ask')}
         renderActions={(m) =>
           actions
@@ -92,7 +93,8 @@ export function AskAiTab({ kind, id, lead, onChanged }: Readonly<LeadTabProps>) 
           {error}
         </TabAlert>
       ) : null}
-      <AskAiComposer busy={thread.asking} onSend={thread.ask} />
+      {/* Questions wait for the saved thread, so a late load cannot replace a fresh answer. */}
+      <AskAiComposer busy={thread.asking || thread.loadingThread} onSend={thread.ask} />
       <AskAiEmailSheet
         kind={kind}
         id={id}

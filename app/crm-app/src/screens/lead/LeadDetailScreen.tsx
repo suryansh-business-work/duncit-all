@@ -1,6 +1,12 @@
 import { useCallback, useLayoutEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
-import { useFocusEffect, useNavigation, useRoute, type NavigationProp, type RouteProp } from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+  type NavigationProp,
+  type RouteProp,
+} from '@react-navigation/native';
 import { Text, XStack, YStack } from 'tamagui';
 import { fireAndForget, logs } from '@duncit/logs';
 
@@ -34,20 +40,38 @@ function LeadDetail({ kind, id }: Readonly<{ kind: LeadKind; id: string }>) {
   }, [lead, navigation]);
 
   if (!lead) {
-    return <StateView loading={loading || (!error && !lead)} error={error ?? null} onRetry={refetch} />;
+    return (
+      <StateView loading={loading || (!error && !lead)} error={error ?? null} onRetry={refetch} />
+    );
   }
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-      <YStack>
-        <Text fontSize="$8" fontWeight="800" role="heading">
-          {lead.name}
-        </Text>
-        <Text color="$muted">{t(`crmApp.kind.${kind}`)}</Text>
-      </YStack>
+      <XStack alignItems="center" gap="$2">
+        <YStack flex={1}>
+          <Text fontSize="$8" fontWeight="800" role="heading">
+            {lead.name}
+          </Text>
+          <Text color="$muted">{t(`crmApp.kind.${kind}`)}</Text>
+        </YStack>
+        <DuncitButton
+          label={t('crmApp.editor.edit')}
+          onPress={() => navigation.navigate('LeadEditor', { kind, id })}
+          variant="outline"
+          size="sm"
+          testID="lead-edit"
+        />
+      </XStack>
       <XStack gap="$2" role="tablist">
         {TABS.map((key) => (
           <YStack key={key} flex={1}>
-            <DuncitButton label={t(`crmApp.lead.${key}`)} onPress={() => setTab(key)} variant={tab === key ? 'solid' : 'outline'} size="sm" fullWidth testID={`lead-tab-${key}`} />
+            <DuncitButton
+              label={t(`crmApp.lead.${key}`)}
+              onPress={() => setTab(key)}
+              variant={tab === key ? 'solid' : 'outline'}
+              size="sm"
+              fullWidth
+              testID={`lead-tab-${key}`}
+            />
           </YStack>
         ))}
       </XStack>
@@ -69,6 +93,7 @@ export function LeadDetailScreen() {
   const { t } = useTranslation();
   const { params } = useRoute<RouteProp<AppStackParamList, 'LeadDetail'>>();
   // The deep link carries the kind as text; anything the API does not know is "not found".
-  if (!isLeadKind(params.kind) || !params.id) return <StateView error={t('crmApp.lead.notFound')} />;
+  if (!isLeadKind(params.kind) || !params.id)
+    return <StateView error={t('crmApp.lead.notFound')} />;
   return <LeadDetail kind={params.kind} id={params.id} />;
 }

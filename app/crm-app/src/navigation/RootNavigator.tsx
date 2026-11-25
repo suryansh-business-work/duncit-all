@@ -8,6 +8,7 @@ import { TwoFactorScreen } from '@/screens/auth/TwoFactorScreen';
 import { SecurityVerificationScreen } from '@/screens/auth/SecurityVerificationScreen';
 import { LeadDetailScreen } from '@/screens/lead/LeadDetailScreen';
 import { AddNoteScreen } from '@/screens/lead/AddNoteScreen';
+import { LeadEditorScreen } from '@/screens/lead/LeadEditorScreen';
 import { AddReminderScreen } from '@/screens/reminders/AddReminderScreen';
 import { PostCallScreen } from '@/screens/post-call/PostCallScreen';
 import { MainTabs } from './MainTabs';
@@ -24,7 +25,13 @@ export function RootNavigator() {
 
   if (status === 'loading') {
     return (
-      <YStack flex={1} alignItems="center" justifyContent="center" backgroundColor="$background" aria-busy>
+      <YStack
+        flex={1}
+        alignItems="center"
+        justifyContent="center"
+        backgroundColor="$background"
+        aria-busy
+      >
         <Spinner size="large" color="$primary" />
       </YStack>
     );
@@ -36,13 +43,37 @@ export function RootNavigator() {
   return (
     <Stack.Navigator
       screenLayout={screenLayout}
-      screenOptions={{ headerStyle: { backgroundColor: theme.primary?.val }, headerTintColor: theme.onPrimary?.val }}
+      screenOptions={{
+        headerStyle: { backgroundColor: theme.primary?.val },
+        headerTintColor: theme.onPrimary?.val,
+      }}
     >
       <Stack.Screen name="Tabs" component={MainTabs} options={{ headerShown: false }} />
-      <Stack.Screen name="LeadDetail" component={LeadDetailScreen} options={{ title: t('crmApp.lead.overview') }} />
-      <Stack.Screen name="AddNote" component={AddNoteScreen} options={{ title: t('crmApp.note.title') }} />
-      <Stack.Screen name="AddReminder" component={AddReminderScreen} options={{ title: t('crmApp.reminder.title') }} />
-      <Stack.Screen name="PostCall" component={PostCallScreen} options={{ title: t('crmApp.postCall.title') }} />
+      <Stack.Screen
+        name="LeadDetail"
+        component={LeadDetailScreen}
+        options={{ title: t('crmApp.lead.overview') }}
+      />
+      <Stack.Screen
+        name="LeadEditor"
+        component={LeadEditorScreen}
+        options={{ title: t('crmApp.editor.editTitle') }}
+      />
+      <Stack.Screen
+        name="AddNote"
+        component={AddNoteScreen}
+        options={{ title: t('crmApp.note.title') }}
+      />
+      <Stack.Screen
+        name="AddReminder"
+        component={AddReminderScreen}
+        options={{ title: t('crmApp.reminder.title') }}
+      />
+      <Stack.Screen
+        name="PostCall"
+        component={PostCallScreen}
+        options={{ title: t('crmApp.postCall.title') }}
+      />
     </Stack.Navigator>
   );
 }

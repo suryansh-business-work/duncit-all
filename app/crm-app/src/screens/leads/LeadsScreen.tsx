@@ -9,6 +9,7 @@ import { LEAD_KINDS, isLeadKind, type LeadKind } from '@/features/leads/leadKind
 import { useLeadSearch } from '@/features/leads/useLeadSearch';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AppStackParamList } from '@/navigation/types';
+import { NewLeadPicker } from './NewLeadPicker';
 
 /** Every lead the CRM holds, searchable by name, city, phone or email, filterable by kind. */
 export function LeadsScreen() {
@@ -21,6 +22,7 @@ export function LeadsScreen() {
   return (
     <YStack flex={1} backgroundColor="$background">
       <YStack padding="$3" gap="$2">
+        <NewLeadPicker onPick={(k) => navigation.navigate('LeadEditor', { kind: k })} />
         <Input
           value={search}
           onChangeText={setSearch}
@@ -32,9 +34,22 @@ export function LeadsScreen() {
         />
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <XStack gap="$2" role="radiogroup">
-            <DuncitButton label={t('crmApp.leads.all')} onPress={() => setKind(null)} size="sm" variant={kind ? 'outline' : 'solid'} testID="leads-kind-all" />
+            <DuncitButton
+              label={t('crmApp.leads.all')}
+              onPress={() => setKind(null)}
+              size="sm"
+              variant={kind ? 'outline' : 'solid'}
+              testID="leads-kind-all"
+            />
             {LEAD_KINDS.map((k) => (
-              <DuncitButton key={k} label={t(`crmApp.kind.${k}`)} onPress={() => setKind(k)} size="sm" variant={kind === k ? 'solid' : 'outline'} testID={`leads-kind-${k}`} />
+              <DuncitButton
+                key={k}
+                label={t(`crmApp.kind.${k}`)}
+                onPress={() => setKind(k)}
+                size="sm"
+                variant={kind === k ? 'solid' : 'outline'}
+                testID={`leads-kind-${k}`}
+              />
             ))}
           </XStack>
         </ScrollView>
@@ -57,7 +72,8 @@ export function LeadsScreen() {
             role="button"
             aria-label={item.name}
             onPress={() => {
-              if (isLeadKind(item.entity_type)) navigation.navigate('LeadDetail', { kind: item.entity_type, id: item.id });
+              if (isLeadKind(item.entity_type))
+                navigation.navigate('LeadDetail', { kind: item.entity_type, id: item.id });
             }}
             backgroundColor="$surface"
             borderRadius="$3"
@@ -68,12 +84,19 @@ export function LeadsScreen() {
           >
             <Text fontWeight="700">{item.name}</Text>
             <Text color="$muted" fontSize="$2">
-              {[t(`crmApp.kind.${item.entity_type}`), item.city, item.lead_status].filter(Boolean).join(' · ')}
+              {[t(`crmApp.kind.${item.entity_type}`), item.city, item.lead_status]
+                .filter(Boolean)
+                .join(' · ')}
             </Text>
           </YStack>
         )}
         ListEmptyComponent={
-          <StateView loading={leads.loading} error={leads.error} empty={t('crmApp.leads.empty')} onRetry={leads.refresh} />
+          <StateView
+            loading={leads.loading}
+            error={leads.error}
+            empty={t('crmApp.leads.empty')}
+            onRetry={leads.refresh}
+          />
         }
         ListFooterComponent={leads.rows.length > 0 && leads.loading ? <StateView loading /> : null}
       />

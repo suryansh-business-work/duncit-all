@@ -363,3 +363,27 @@ export {
   makeAskDuncitHandoverSchema,
   type AskDuncitHandoverValues,
 } from './ask-duncit-handover';
+// The CRM lead forms (CRM portal + Duncit CRM Android app).
+export {
+  contactSchema,
+  contactsSchemaFor,
+  DUPLICATE_CHECK_DEBOUNCE_MS,
+  duplicateCheckKey,
+  emptyCrmContact,
+  isWebUrl,
+  makeCommunityLeadSchema,
+  makeCreatorLeadSchema,
+  makeEcommLeadSchema,
+  makeHostLeadSchema,
+  makeVenueLeadSchema,
+  numeric,
+  phone,
+  serviceOfferedSchema,
+  SOCIAL_LINK_MAX,
+  SOCIAL_NAME_MAX,
+  socialLinksSchema,
+  urlish,
+  withSocialLinks,
+  type CrmContactValues,
+  type DuplicateCheckValues,
+} from './crm-leads';

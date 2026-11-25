@@ -1248,3 +1248,32 @@ const schema = makeAskDuncitHandoverSchema(t);
 schema.parse({ ...askDuncitHandoverDefaults, summary: 'Refund for a cancelled pod' });
 // { team: 'SUPPORT', summary: 'Refund for a cancelled pod' }
 ```
+
+### CRM lead forms — `crm-leads`
+
+The CRM portal's lead forms (`portals/crm/src/forms/*-lead`) and the Duncit CRM Android app's lead
+editor (`app/crm-app/src/forms/lead`) validate with the same rules, so a lead the phone saves is one
+the portal would accept, with the same sentences. One factory per kind:
+`makeVenueLeadSchema`, `makeHostLeadSchema`, `makeEcommLeadSchema`, `makeCreatorLeadSchema`,
+`makeCommunityLeadSchema`. They share the field rules `contactsSchemaFor(t)` (every contact row
+optional; a phone, by its last ten digits, or an email repeated on the same lead is refused with
+`crm.duplicates.phoneRepeated` / `crm.duplicates.emailRepeated`), `numeric`, `phone`, `urlish`,
+`serviceOfferedSchema` and `socialLinksSchema` / `withSocialLinks` (at most `SOCIAL_LINK_MAX` (20)
+links, names up to `SOCIAL_NAME_MAX` (60) characters).
+
+The live duplicate check across leads is the server's `crmLeadDuplicates`; `duplicateCheckKey(contacts,
+website)` decides what both surfaces send it: phones with 7 or more digits, emails with an `@`, and
+the website, as a stable string (`''` when nothing could match), debounced by
+`DUPLICATE_CHECK_DEBOUNCE_MS` (500 ms).
+
+```ts
+import { duplicateCheckKey, emptyCrmContact, makeEcommLeadSchema } from '@duncit/forms/schemas';
+
+makeEcommLeadSchema(t).safeParse({
+  super_category_id: 'c1', seller_name: 'Paws Co', brand_name: '', gst_number: '', website: '',
+  instagram_link: '', services_offered: [], contacts: [emptyCrmContact], lead_status: 'New', priority: 'Medium',
+}).success; // true
+
+duplicateCheckKey([{ mobile_number: '98110 00001', email: '' }], '');
+// '{"contacts":[{"mobile_number":"98110 00001","email":""}],"website":""}'
+```

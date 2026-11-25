@@ -13,6 +13,8 @@ export type TabParamList = {
 export type AppStackParamList = {
   Tabs: NavigatorScreenParams<TabParamList> | undefined;
   LeadDetail: { kind: LeadKind; id: string };
+  /** No id = a new lead of this kind. */
+  LeadEditor: { kind: LeadKind; id?: string };
   AddNote: { kind: LeadKind; id: string; name: string };
   AddReminder: { kind?: LeadKind; id?: string; name?: string; title?: string };
   PostCall: undefined;

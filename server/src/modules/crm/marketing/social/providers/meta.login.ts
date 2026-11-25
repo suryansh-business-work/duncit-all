@@ -62,6 +62,8 @@ interface IssuedToken {
 
 /** What Meta says about a token: what it may do, on which assets, and until when (0 = never expires). */
 export interface TokenDebug {
+  /** False once Meta has revoked the token (password change, removed app, lapsed). */
+  is_valid?: boolean;
   scopes?: string[];
   granular_scopes?: { scope: string; target_ids?: string[] }[];
   expires_at?: number;

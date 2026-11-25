@@ -12,7 +12,8 @@ jest.mock('@modules/access/user/user.model', () => ({ UserModel: { findById: jes
 jest.mock('../../social.model', () => ({
   SocialAccountModel: { findById: jest.fn(), findOneAndUpdate: jest.fn(), updateOne: jest.fn(), find: jest.fn() },
 }));
-jest.mock('../../providers', () => ({ READERS: { X: { profile: jest.fn() }, YOUTUBE: { profile: jest.fn() } } }));
+jest.mock('../../providers', () => ({ READERS: { X: { profile: jest.fn() }, YOUTUBE: { profile: jest.fn() }, INSTAGRAM: { profile: jest.fn() } } }));
+jest.mock('../../providers/meta.login', () => ({ debugToken: jest.fn() }));
 jest.mock('../../social.credentials', () => ({ socialCredentials: jest.fn() }));
 jest.mock('../../social.sync', () => ({ freshHandle: jest.fn() }));
 jest.mock('../../social.settings', () => ({ SOCIAL_SETTINGS_DEFAULTS: { expiry_alert_days: 7 }, loadSocialSettings: jest.fn() }));
@@ -24,6 +25,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { SocialAccountModel } from '../../social.model';
 import { READERS } from '../../providers';
 import { SocialApiError } from '../../providers/http';
+import { debugToken } from '../../providers/meta.login';
 import { socialCredentials } from '../../social.credentials';
 import { freshHandle } from '../../social.sync';
 import { SOCIAL_SETTINGS_DEFAULTS, loadSocialSettings } from '../../social.settings';
@@ -83,6 +85,8 @@ beforeEach(() => {
     UserModel.findById,
     READERS.X.profile,
     READERS.YOUTUBE.profile,
+    READERS.INSTAGRAM.profile,
+    debugToken,
     socialCredentials,
     freshHandle,
     sendHtmlEmail,
@@ -139,9 +143,11 @@ describe('checkAccountHealth', () => {
       expired: false,
       message: '',
       expires_in_days: null,
+      messaging_missing_permission: null,
       checked_at: new Date(NOW),
     });
     expect(sendHtmlEmail).not.toHaveBeenCalled();
+    expect(debugToken).not.toHaveBeenCalled();
   });
 
   it('flips the account to EXPIRED on a dead token and emails the owner to reconnect', async () => {
@@ -241,6 +247,55 @@ describe('checkAccountHealth', () => {
     arrange(account({ token_expires_at: new Date(NOW + (EXPIRY_ALERT_DAYS + 1) * DAY) }));
     expect((await checkAccountHealth('acc-1', NOW))?.expires_in_days).toBe(EXPIRY_ALERT_DAYS + 1);
     expect(sendHtmlEmail).not.toHaveBeenCalled();
+  });
+});
+
+describe('checkAccountHealth for a Facebook Login token (the account doctor)', () => {
+  const meta = (over: Record<string, unknown> = {}) =>
+    account({ provider: 'INSTAGRAM', platform: 'INSTAGRAM', meta: { login: 'FACEBOOK', page_id: 'p1' }, scopes: ['instagram_basic'], ...over });
+  const setOf = () => m(SocialAccountModel.findOneAndUpdate).mock.calls[0][1].$set;
+
+  beforeEach(() => {
+    m(READERS.INSTAGRAM.profile).mockResolvedValue({ name: 'Duncit IG', handle: 'duncit', avatar_url: '', followers: 1 });
+  });
+
+  it('keeps the permissions and expiry Meta reports, and clears the messaging flag once the permission is there', async () => {
+    arrange(meta());
+    m(debugToken).mockResolvedValue({ is_valid: true, scopes: ['instagram_basic', 'instagram_manage_messages'], expires_at: Math.floor((NOW + 20 * DAY) / 1000) });
+    const health = await checkAccountHealth('acc-1', NOW);
+    expect(debugToken).toHaveBeenCalledWith(CREDS, 'fresh');
+    expect(setOf()).toMatchObject({ health_ok: true, scopes: ['instagram_basic', 'instagram_manage_messages'], token_expires_at: new Date(Math.floor((NOW + 20 * DAY) / 1000) * 1000) });
+    expect(health).toMatchObject({ ok: true, expires_in_days: 20, messaging_missing_permission: null });
+  });
+
+  it('flags a healthy account whose token lacks the messaging permission, and reads a never-expiring token as no expiry', async () => {
+    arrange(meta());
+    m(debugToken).mockResolvedValue({ is_valid: true, scopes: ['instagram_basic'], expires_at: 0 });
+    const health = await checkAccountHealth('acc-1', NOW);
+    expect(setOf()).toMatchObject({ scopes: ['instagram_basic'], token_expires_at: null });
+    expect(health).toMatchObject({ ok: true, expires_in_days: null, messaging_missing_permission: 'instagram_manage_messages' });
+  });
+
+  it('catches a revoked token even while the profile still reads, and flips the account to EXPIRED', async () => {
+    arrange(meta());
+    m(debugToken).mockResolvedValue({ is_valid: false, scopes: [] });
+    const health = await checkAccountHealth('acc-1', NOW);
+    expect(setOf()).toMatchObject({ health_ok: false, status: 'EXPIRED', last_error: expect.stringContaining('no longer valid') });
+    expect(setOf()).not.toHaveProperty('scopes');
+    expect(health).toMatchObject({ ok: false, expired: true });
+  });
+
+  it('keeps the stored permissions when Meta lists none, and stays healthy when the token cannot be read from Meta', async () => {
+    arrange(meta());
+    m(debugToken).mockResolvedValueOnce({ is_valid: true, expires_at: 0 });
+    await checkAccountHealth('acc-1', NOW);
+    expect(setOf()).not.toHaveProperty('scopes');
+    m(SocialAccountModel.findOneAndUpdate).mockClear();
+    m(debugToken).mockRejectedValueOnce(new Error('Invalid OAuth access token - Cannot parse access token'));
+    const health = await checkAccountHealth('acc-1', NOW);
+    expect(setOf()).toEqual({ health_ok: true, health_message: '', health_checked_at: new Date(NOW) });
+    expect(health).toMatchObject({ ok: true, messaging_missing_permission: 'instagram_manage_messages' });
+    expect(logs.server.warn).toHaveBeenCalledWith('social-accounts', 'debugToken', expect.objectContaining({ account_id: 'acc-1' }));
   });
 });
 

@@ -5,10 +5,13 @@ import { sendHtmlEmail } from '@services/email/email.service';
 import { SocialAccountModel } from './social.model';
 import { READERS } from './providers';
 import { SocialApiError } from './providers/http';
+import { usesFacebookGraph } from './providers/instagram';
+import { debugToken } from './providers/meta.login';
 import { socialCredentials } from './social.credentials';
 import { SOCIAL_SETTINGS_DEFAULTS, loadSocialSettings } from './social.settings';
 import { freshHandle, type AccountWithTokens } from './social.sync';
-import type { SocialAccountStatus, SocialPlatform } from './social.types';
+import type { SocialAccountStatus, SocialAppCredentials, SocialPlatform } from './social.types';
+import { DM_PERMISSION, missingDmPermission } from './social.window';
 
 /**
  * The daily health check behind Marketing → Social Accounts.
@@ -19,7 +22,11 @@ import type { SocialAccountStatus, SocialPlatform } from './social.types';
  * (health_ok, health_message, health_checked_at), a dead token flips the
  * account to EXPIRED the way a failed sync would, and the owner is emailed
  * when the token is within the Settings' reminder window (a week by default) — before the account goes quiet,
- * not after.
+ * not after. For a Facebook Login token it also asks Meta about the token
+ * itself (debug_token): a revoked token is caught even while the profile still
+ * reads, and the permissions and expiry Meta reports are kept on the row, so an
+ * account without the messaging permission is flagged. Instagram and Threads
+ * tokens are renewed by the fresh handle a week before they lapse.
  */
 const DAY_MS = 86_400_000;
 /** Accounts whose token lapses within this many days are worth a reminder, until Settings says otherwise (expiry_alert_days). */
@@ -49,6 +56,8 @@ export interface AccountHealth {
   message: string;
   /** Null for a token that does not expire. */
   expires_in_days: number | null;
+  /** The messaging permission a Meta account lacks (DMs and private replies need it); null when it has it or the network has no DMs here. */
+  messaging_missing_permission: string | null;
   checked_at: Date;
 }
 
@@ -66,6 +75,29 @@ interface Verdict {
   ok: boolean;
   expired: boolean;
   message: string;
+  /** What Meta said about a Facebook Login token; absent for every other token. */
+  token?: { scopes: string[] | null; expires_at: Date | null };
+}
+
+const REVOKED = 'Meta says this token is no longer valid — reconnect the account.';
+
+const HEALTHY: Verdict = { ok: true, expired: false, message: '' };
+
+/**
+ * A Facebook Login token as Meta sees it: still valid, which permissions, and
+ * when it lapses (0: never). The profile already read, so a failure here is the
+ * app's credentials talking, not this token: logged, and the account stays healthy.
+ */
+async function tokenVerdict(accountId: string, creds: SocialAppCredentials, accessToken: string): Promise<Verdict> {
+  try {
+    const debug = await debugToken(creds, accessToken);
+    if (debug.is_valid === false) return { ok: false, expired: true, message: REVOKED };
+    const expiresAt = debug.expires_at ? new Date(debug.expires_at * 1000) : null;
+    return { ...HEALTHY, token: { scopes: debug.scopes?.length ? debug.scopes : null, expires_at: expiresAt } };
+  } catch (error) {
+    logs.server.warn('social-accounts', 'debugToken', { error, account_id: accountId, msg: 'could not read the token from Meta' });
+    return HEALTHY;
+  }
 }
 
 /** One profile read, and what it says about the token. */
@@ -76,7 +108,8 @@ async function verdictOf(doc: AccountWithTokens): Promise<Verdict> {
     const reader = READERS[doc.platform];
     const handle = await freshHandle(doc, reader, creds);
     await reader.profile(handle, creds);
-    return { ok: true, expired: false, message: '' };
+    if (usesFacebookGraph(handle)) return await tokenVerdict(String(doc._id), creds, handle.access_token);
+    return HEALTHY;
   } catch (error) {
     const expired = error instanceof SocialApiError && error.expired;
     const message = (error instanceof Error ? error.message : String(error)).slice(0, 500);
@@ -87,6 +120,7 @@ async function verdictOf(doc: AccountWithTokens): Promise<Verdict> {
 interface HealthRow {
   _id: unknown;
   platform: SocialPlatform;
+  scopes?: string[] | null;
   name?: string;
   status: SocialAccountStatus;
   token_expires_at?: Date | null;
@@ -107,6 +141,7 @@ export function accountHealthOf(doc: HealthRow, verdict: Verdict, now = Date.now
     expired: verdict.expired,
     message: verdict.message,
     expires_in_days: tokenExpiresInDays(doc.token_expires_at ?? null, now),
+    messaging_missing_permission: DM_PERMISSION[doc.platform] ? missingDmPermission(doc) : null,
     checked_at: doc.health_checked_at ?? new Date(now),
   };
 }
@@ -189,6 +224,11 @@ export async function checkAccountHealth(accountId: string, now = Date.now()): P
   if (verdict.expired) {
     set.status = 'EXPIRED';
     set.last_error = verdict.message;
+  }
+  if (verdict.token) {
+    // Meta's own word on what the token holds, so the messaging flag and the expiry are current.
+    if (verdict.token.scopes) set.scopes = verdict.token.scopes;
+    set.token_expires_at = verdict.token.expires_at;
   }
   // The row after the write: a refresh inside the read may have moved token_expires_at.
   const after = await SocialAccountModel.findOneAndUpdate({ _id: doc._id }, { $set: set }, { returnDocument: 'after' }).lean<HealthRow>();

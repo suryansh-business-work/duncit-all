@@ -4,7 +4,7 @@ import { act, fireEvent, renderHook, screen, waitFor, within } from '@testing-li
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import { MY_REEL_STUDIO_LAYOUT, RESET_REEL_STUDIO_LAYOUT, SAVE_REEL_STUDIO_LAYOUT } from '../../src/pages/reels/queries';
 import LayoutMenu from '../../src/pages/reels/studio/layout/LayoutMenu';
-import { defaultLayout, withMode, type PaneId, type StudioLayout } from '../../src/pages/reels/studio/layout/layoutModel';
+import { defaultLayout, withMode, withRect, type PaneId, type StudioLayout } from '../../src/pages/reels/studio/layout/layoutModel';
 import SplitDivider from '../../src/pages/reels/studio/layout/SplitDivider';
 import StudioWorkspace, { type PaneContent } from '../../src/pages/reels/studio/layout/StudioWorkspace';
 import { useStudioLayout, type StudioLayoutState } from '../../src/pages/reels/studio/layout/useStudioLayout';
@@ -22,12 +22,19 @@ vi.mock('@duncit/dialogs', async (importOriginal) => ({
   notifySuccess: vi.fn(),
 }));
 
+/** What the next drag reports instead of one size per pane, when a test needs the split to come back short. */
+const split = vi.hoisted(() => ({ reported: null as number[] | null }));
+
 /** jsdom has no layout, so the split library would measure zero and draw nothing; this stands in with its contract. */
 vi.mock('react-split-pane', () => ({
   SplitPane: ({ children, direction, onResizeEnd }: { children: ReactNode; direction: string; onResizeEnd?: (sizes: number[]) => void }) => (
     <div data-testid={`split-${direction}`}>
       {children}
-      <button type="button" data-testid={`end-drag-${direction}`} onClick={() => onResizeEnd?.(Children.toArray(children).map((_, index) => 300 + index * 100))} />
+      <button
+        type="button"
+        data-testid={`end-drag-${direction}`}
+        onClick={() => onResizeEnd?.(split.reported ?? Children.toArray(children).map((_, index) => 300 + index * 100))}
+      />
     </div>
   ),
   Pane: ({ children, defaultSize, maxSize }: { children: ReactNode; defaultSize?: number; maxSize?: number }) => (
@@ -73,7 +80,10 @@ function wideScreen(matches: boolean) {
 }
 
 beforeEach(() => resetApollo());
-afterEach(() => wideScreen(false));
+afterEach(() => {
+  wideScreen(false);
+  split.reported = null;
+});
 
 describe('StudioWorkspace on a wide screen', () => {
   beforeEach(() => wideScreen(true));
@@ -119,6 +129,29 @@ describe('StudioWorkspace on a wide screen', () => {
     expect(layout.setMode).toHaveBeenCalledWith('SIDE', 'DOCKED');
   });
 
+  it('remembers where a popped pane was dragged to, once the drag ends', async () => {
+    // A small window well inside the screen, so the drag is not clamped at an edge.
+    const layout = state(withRect(withMode(defaultLayout(), 'SIDE', 'POPPED'), 'SIDE', { x: 40, y: 40, width: 400, height: 300 }));
+    renderWithProviders(<StudioWorkspace state={layout} panes={panes} />);
+    const window = await screen.findByRole('dialog', { name: TITLES.SIDE });
+    const bar = within(window).getByText(TITLES.SIDE);
+    fireEvent.pointerDown(bar, { clientX: 200, clientY: 200, pointerId: 1 });
+    fireEvent.pointerMove(bar, { clientX: 260, clientY: 230, pointerId: 1 });
+    expect(layout.setRect).not.toHaveBeenCalled();
+    fireEvent.pointerUp(bar, { clientX: 260, clientY: 230, pointerId: 1 });
+    expect(layout.setRect).toHaveBeenCalledTimes(1);
+    expect(layout.setRect).toHaveBeenCalledWith('SIDE', { x: 100, y: 70, width: 400, height: 300 });
+  });
+
+  it('keeps the timeline at its saved height when a drag reports no size for it', async () => {
+    const layout = state();
+    renderWithProviders(<StudioWorkspace state={layout} panes={panes} />);
+    await screen.findByTestId('split-vertical');
+    split.reported = [520];
+    fireEvent.click(screen.getByTestId('end-drag-vertical'));
+    expect(layout.setSize).toHaveBeenCalledWith('TIMELINE', defaultLayout().TIMELINE.size);
+  });
+
   it('shows a lone docked pane without a split, and the timeline alone when the row is gone', async () => {
     let layout = defaultLayout();
     for (const id of ['SOURCES', 'SIDE'] as const) layout = withMode(layout, id, 'CLOSED');
@@ -145,6 +178,12 @@ describe('StudioWorkspace on a wide screen', () => {
 });
 
 describe('StudioWorkspace on a narrow screen', () => {
+  it('leaves the timeline out of the stack when it is not docked', () => {
+    renderWithProviders(<StudioWorkspace state={state(withMode(defaultLayout(), 'TIMELINE', 'CLOSED'))} panes={panes} />);
+    const stacked = screen.getByTestId('reel-workspace-stacked');
+    expect(within(stacked).getAllByRole('region').map((pane) => pane.getAttribute('aria-label'))).toEqual(['Footage', 'Player', 'Chat, Create and Edit']);
+  });
+
   it('stacks the docked panes so the page scrolls, with no splits', () => {
     renderWithProviders(<StudioWorkspace state={state(withMode(defaultLayout(), 'SOURCES', 'CLOSED'))} panes={panes} />);
     const stacked = screen.getByTestId('reel-workspace-stacked');

@@ -17,24 +17,22 @@ import { isLeadKind, type LeadKind } from '@/features/leads/leadKinds';
 import { useLead } from '@/features/leads/useLead';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AppStackParamList } from '@/navigation/types';
-import { LeadActivity } from './LeadActivity';
-import { LeadOverview } from './LeadOverview';
-import { LeadReminders } from './LeadReminders';
+import { LeadOverviewTab } from './LeadOverviewTab';
+import { leadPaneFor, leadTabLabel, leadTabsFor } from './leadTabs';
 
-const TABS = ['overview', 'activity', 'reminders'] as const;
+const SCOPE = 'crm-app/LeadDetailScreen';
 
 function LeadDetail({ kind, id }: Readonly<{ kind: LeadKind; id: string }>) {
   const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp<AppStackParamList>>();
   const [tab, setTab] = useState<string>('overview');
   const { lead, loading, error, refetch } = useLead(kind, id, t('crmApp.common.loadFailed'));
+  const reload = useCallback(() => {
+    fireAndForget(refetch(), logs.mobileApp, SCOPE, 'refetch');
+  }, [refetch]);
 
-  // Re-read on return from Add note / Add reminder, so the new entry is there.
-  useFocusEffect(
-    useCallback(() => {
-      fireAndForget(refetch(), logs.mobileApp, 'crm-app/LeadDetailScreen', 'refetch');
-    }, [refetch]),
-  );
+  // Re-read on return from Add note / Add reminder / Edit, so the change is there.
+  useFocusEffect(reload);
   useLayoutEffect(() => {
     if (lead) navigation.setOptions({ title: lead.name });
   }, [lead, navigation]);
@@ -42,6 +40,8 @@ function LeadDetail({ kind, id }: Readonly<{ kind: LeadKind; id: string }>) {
   if (!lead) {
     return <StateView loading={loading || !error} error={error ?? null} onRetry={refetch} />;
   }
+  const props = { kind, id, lead, onChanged: reload };
+  const Pane = leadPaneFor(kind, tab);
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
       {/* The header already carries the lead's name; this row says what kind it is. */}
@@ -58,28 +58,26 @@ function LeadDetail({ kind, id }: Readonly<{ kind: LeadKind; id: string }>) {
         />
       </XStack>
       <TabBar
-        tabs={TABS.map((key) => ({ key, label: t(`crmApp.lead.${key}`) }))}
-        active={tab}
+        tabs={leadTabsFor(kind).map((key) => ({ key, label: leadTabLabel(key, t, lead) }))}
+        active={Pane ? tab : 'overview'}
         onChange={setTab}
         testID="lead-tab"
       />
-      {tab === 'overview' ? (
-        <LeadOverview
-          lead={lead}
+      {Pane ? (
+        <Pane {...props} />
+      ) : (
+        <LeadOverviewTab
+          {...props}
+          onOpenTab={setTab}
           onAddNote={() => navigation.navigate('AddNote', { kind, id, name: lead.name })}
-          onCall={(to, contactName) =>
-            navigation.navigate('Call', { kind, id, to, leadName: lead.name, contactName })
-          }
           onAddReminder={() => navigation.navigate('AddReminder', { kind, id, name: lead.name })}
         />
-      ) : null}
-      {tab === 'activity' ? <LeadActivity kind={kind} id={id} /> : null}
-      {tab === 'reminders' ? <LeadReminders kind={kind} id={id} /> : null}
+      )}
     </ScrollView>
   );
 }
 
-/** A lead, opened from search, a reminder, the dialer or the caller ID card. */
+/** A lead, opened from a list, search, a reminder, the dialer or the caller ID card. */
 export function LeadDetailScreen() {
   const { t } = useTranslation();
   const { params } = useRoute<RouteProp<AppStackParamList, 'LeadDetail'>>();

@@ -8,6 +8,8 @@ import { AddReminderScreen } from '../reminders/AddReminderScreen';
 
 jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
+// The hero and overview cards have their own tests; here the page around them is under test.
+jest.mock('../lead/tabs/LeadOverviewDetails', () => ({ LeadOverviewDetails: () => null }));
 const mockNav = {
   navigate: jest.fn(),
   goBack: jest.fn(),
@@ -80,30 +82,56 @@ beforeEach(() => {
 });
 
 describe('LeadDetailScreen', () => {
-  it('shows the lead, its contacts and notes, and titles the screen with its name', async () => {
+  it('titles the screen with the lead and shows the venue page’s tabs, as the portal orders them', async () => {
     request.mockResolvedValue({ venue });
     renderWithTheme(<LeadDetailScreen />);
-    expect(await screen.findByText('Rohit')).toBeOnTheScreen();
-    expect(screen.getByText('Contacted')).toBeOnTheScreen();
-    expect(screen.getByText('Liked the turf')).toBeOnTheScreen();
+    expect(await screen.findByText('Contacts (1)')).toBeOnTheScreen();
     expect(mockNav.setOptions).toHaveBeenCalledWith({ title: 'Smash Arena' });
     expect(request.mock.calls[0][1]).toMatchObject({ id: 'v1', venue: true, host: false });
+    const tabs = screen.getAllByTestId(/^lead-tab-/).map((tab) => tab.props.testID);
+    expect(tabs).toEqual(
+      [
+        'overview',
+        'quality',
+        'contacts',
+        'commercial',
+        'social',
+        'services',
+        'media',
+        'survey',
+        'website',
+        'reminders',
+        'linked-hosts',
+        'custom-fields',
+        'manual-logs',
+        'communications',
+        'ask-ai',
+      ].map((key) => `lead-tab-${key}`),
+    );
+    expect(screen.getByText('Logos & Images')).toBeOnTheScreen();
+    expect(screen.getByText('Ask AI')).toBeOnTheScreen();
   });
 
-  it('opens the call screen for a contact, with the lead it belongs to', async () => {
-    request.mockResolvedValue({ venue });
+  it('gives a host lead Plans & Timeline, and no Commercial or Linked hosts', async () => {
+    mockRouteParams = { kind: 'HOST_LEAD', id: 'h1' };
+    request.mockResolvedValue({ host: { ...venue, id: 'h1', name: 'Run Club' } });
     renderWithTheme(<LeadDetailScreen />);
-    fireEvent.press(await screen.findByTestId('contact-call-0'));
-    expect(mockNav.navigate).toHaveBeenCalledWith('Call', {
-      kind: 'VENUE_LEAD',
-      id: 'v1',
-      to: '9811000001',
-      leadName: 'Smash Arena',
-      contactName: 'Rohit',
-    });
+    expect(await screen.findByText('Plans & Timeline')).toBeOnTheScreen();
+    expect(screen.queryByText('Commercial')).toBeNull();
+    expect(screen.queryByText('Linked hosts')).toBeNull();
   });
 
-  it('opens Add note and Add reminder for this lead', async () => {
+  it('gives an ecomm lead no Social, Survey or Website tab', async () => {
+    mockRouteParams = { kind: 'ECOMM_LEAD', id: 'e1' };
+    request.mockResolvedValue({ ecomm: { ...venue, id: 'e1', name: 'Kraft Co' } });
+    renderWithTheme(<LeadDetailScreen />);
+    expect(await screen.findByText('Custom Fields')).toBeOnTheScreen();
+    expect(screen.queryByText('Social')).toBeNull();
+    expect(screen.queryByText('Survey')).toBeNull();
+    expect(screen.queryByText('Website')).toBeNull();
+  });
+
+  it('opens Add note and Add reminder for this lead from Overview', async () => {
     request.mockResolvedValue({ venue });
     renderWithTheme(<LeadDetailScreen />);
     fireEvent.press(await screen.findByTestId('lead-add-note'));
@@ -118,15 +146,18 @@ describe('LeadDetailScreen', () => {
       id: 'v1',
       name: 'Smash Arena',
     });
+    fireEvent.press(screen.getByTestId('lead-edit'));
+    expect(mockNav.navigate).toHaveBeenCalledWith('LeadEditor', { kind: 'VENUE_LEAD', id: 'v1' });
   });
 
-  it('shows calls with their AI summary and transcript on the Activity tab', async () => {
+  it('shows calls with their AI summary and transcript on the Communications tab', async () => {
     request.mockImplementation(async (_doc: unknown, vars: { filter?: unknown }) =>
       vars.filter ? { communicationLogs: { total: 1, items: [commLog] } } : { venue },
     );
     renderWithTheme(<LeadDetailScreen />);
-    fireEvent.press(await screen.findByTestId('lead-tab-activity'));
+    fireEvent.press(await screen.findByTestId('lead-tab-communications'));
     expect(await screen.findByText('Incoming call')).toBeOnTheScreen();
+    expect(screen.queryByTestId('lead-add-note')).toBeNull();
     fireEvent.press(screen.getByText('Incoming call'));
     expect(screen.getByText('Wants Sunday slots')).toBeOnTheScreen();
     expect(screen.getByText('Budget 5k')).toBeOnTheScreen();
@@ -143,7 +174,7 @@ describe('LeadDetailScreen', () => {
     request.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce({ venue });
     renderWithTheme(<LeadDetailScreen />);
     fireEvent.press(await screen.findByTestId('state-retry'));
-    expect(await screen.findByText('Rohit')).toBeOnTheScreen();
+    expect(await screen.findByText('Contacts (1)')).toBeOnTheScreen();
   });
 });
 

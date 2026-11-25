@@ -88,6 +88,15 @@ describe('SourcesPanel', () => {
     expect(screen.queryByTestId('reel-drive-tab')).not.toBeInTheDocument();
   });
 
+  it('lists every shelf without a tab search box, so the six shelves stay one strip', () => {
+    configured();
+    renderWithProviders(<SourcesPanel project={reelProject()} actions={actions()} onEditDetails={vi.fn()} />);
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Google Drive', 'Stock', 'Pixabay', 'Music', 'Upload', 'Voice']);
+    // Portal strips of five or more tabs get the box unless they opt out.
+    expect(screen.queryByTestId('reel-sources-tabs-search')).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('Search tabs')).not.toBeInTheDocument();
+  });
+
   it('asks before removing the voiceover or the watermark, since the reel plays them', async () => {
     configured();
     confirm.mockResolvedValue(false);

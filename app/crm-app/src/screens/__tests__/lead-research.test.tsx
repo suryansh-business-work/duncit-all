@@ -77,7 +77,7 @@ const serve = (overrides: Map<unknown, Handler> = new Map()) =>
       return {
         crmLeadDiscoveryJobs: [
           JOB,
-          { ...JOB, id: 'j2', status: 'FAILED', error_message: 'Search quota used up' },
+          { ...JOB, id: 'j2', status: 'FAILED', succeeded: 0, error_message: 'Search quota used up' },
         ],
       };
     throw new Error('unexpected operation');
@@ -157,7 +157,8 @@ describe('LeadResearchScreen', () => {
     );
     renderWithTheme(<LeadResearchScreen />);
     fireEvent.press(screen.getByTestId('research-tab-discoveries'));
-    await act(async () => fireEvent.press(await screen.findByTestId('job-cancel-j1')));
+    const cancel = await screen.findByTestId('job-cancel-j1');
+    await act(async () => fireEvent.press(cancel));
     expect(screen.getByTestId('discovery-action-error')).toBeOnTheScreen();
   });
 });

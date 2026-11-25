@@ -110,13 +110,21 @@ describe('aggregations', () => {
     expect(crmServiceLabel({ service: null })).toBe('');
   });
 
-  it('breaks leads down by super category, with unknown ones under the given label', () => {
+  it('names an unnamed "Other" service "Other", and lists services seen equally often by name', () => {
+    const leads = [lead({ services_offered: [{ service: 'Yoga' }, { service: 'Other', custom_name: null }] })];
+    expect(crmAggregateServices(leads, []).services).toEqual([
+      { label: 'Other', count: 1 },
+      { label: 'Yoga', count: 1 },
+    ]);
+  });
+
+  it('breaks leads down by super category, most leads first and ties by name, unknown ones under the given label', () => {
     const counts = crmAggregateSuperCategories([{ id: 'c1', name: 'Sports' }, { id: 'c2', name: 'Arts' }], venue, host, 'Uncategorised');
     expect(counts).toEqual([
-      { super_category_id: '__none__', label: 'Uncategorised', venue: 0, host: 1, total: 1 },
       { super_category_id: 'gone', label: 'Archived', venue: 1, host: 0, total: 1 },
-      { super_category_id: 'gone2', label: 'Uncategorised', venue: 0, host: 1, total: 1 },
       { super_category_id: 'c1', label: 'Sports', venue: 1, host: 0, total: 1 },
+      { super_category_id: '__none__', label: 'Uncategorised', venue: 0, host: 1, total: 1 },
+      { super_category_id: 'gone2', label: 'Uncategorised', venue: 0, host: 1, total: 1 },
       { super_category_id: 'c2', label: 'Arts', venue: 0, host: 0, total: 0 },
     ]);
   });

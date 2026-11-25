@@ -100,10 +100,10 @@ describe('goTo', () => {
       screen: 'Leads',
       params: { kind: 'CREATOR_LEAD' },
     });
-    goTo(nav as never, item('emailVerifier'));
+    goTo(nav as never, item('templates'));
     expect(nav.navigate).toHaveBeenLastCalledWith('PortalPage', {
-      path: '/tools/email-verifier',
-      titleKey: 'shell.nav.emailVerifier',
+      path: '/email-templates',
+      titleKey: 'shell.nav.templates',
     });
   });
 

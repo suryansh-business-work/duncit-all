@@ -11,6 +11,8 @@ interface Props {
   lead: Lead;
   onAddNote: () => void;
   onAddReminder: () => void;
+  /** Open the call screen for this number (the CRM call line, recorded). */
+  onCall: (to: string, contactName?: string) => void;
 }
 
 function Fact({ label, value }: Readonly<{ label: string; value?: string | null }>) {
@@ -26,7 +28,7 @@ function Fact({ label, value }: Readonly<{ label: string; value?: string | null 
 }
 
 /** The lead at a glance: where it stands, who to call, and the notes so far. */
-export function LeadOverview({ lead, onAddNote, onAddReminder }: Readonly<Props>) {
+export function LeadOverview({ lead, onAddNote, onAddReminder, onCall }: Readonly<Props>) {
   const { t } = useTranslation();
   const contacts: readonly Lead['contacts'][number][] = lead.contacts;
   const notes = notesOf(lead);
@@ -46,6 +48,7 @@ export function LeadOverview({ lead, onAddNote, onAddReminder }: Readonly<Props>
             key={`${contact.mobile_number ?? ''}-${index}`}
             contact={contact}
             index={index}
+            onCall={onCall}
           />
         ))}
       </Card>

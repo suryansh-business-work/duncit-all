@@ -290,6 +290,12 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
       unavailable: 'Calling is not available on this device.',
       openedDialer: 'Your phone’s dialer opened. Allow phone calls in Settings to call straight from Duncit CRM.',
     },
+    call: {
+      screenTitle: 'Call',
+      recordedCall: 'Call with recording',
+      simCall: 'Call from this phone instead',
+      simHint: 'Duncit does not record a call made from this phone. If your phone’s own call recorder is on, Duncit CRM attaches that recording after the call.',
+    },
     postCall: {
       title: 'Call ended',
       with: 'Call with {name}',
@@ -310,6 +316,8 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
       autoLogHint: 'Calls with CRM contacts are saved to the lead’s communication log. Personal calls never leave your phone.',
       recordings: 'Attach call recordings',
       recordingsHint: 'Duncit CRM uses your phone’s own call recorder; turn on call recording in your phone’s dialer. Recordings are transcribed and summarised in the CRM.',
+      callLine: 'Recorded calls (CRM call line)',
+      callLineHint: 'Calls you start from a lead, or from the dialer for a CRM contact, go through the CRM call line: it rings this phone, joins the contact in, and records and transcribes the call.',
       permissions: 'Permissions',
       permPhone: 'Phone and call log',
       permCall: 'Place calls',

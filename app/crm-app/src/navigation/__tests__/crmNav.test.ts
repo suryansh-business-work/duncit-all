@@ -121,4 +121,11 @@ describe('portalOrigin', () => {
     );
     expect(portalOrigin('https://server.duncit.com')).toBe('https://crm.duncit.com');
   });
+
+  it('names another console the same way (the Tech portal, where Twilio is set up)', () => {
+    expect(portalOrigin('https://staging.server.duncit.com', 'tech')).toBe(
+      'https://staging.tech.duncit.com',
+    );
+    expect(portalOrigin('https://server.duncit.com', 'tech')).toBe('https://tech.duncit.com');
+  });
 });

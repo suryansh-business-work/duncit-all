@@ -18,7 +18,8 @@ import { Keypad } from './Keypad';
 
 /**
  * The Duncit CRM dialer: type or paste a number, see at once whether it is a
- * CRM contact, and place a normal SIM call. Opened from the tab, the widget,
+ * CRM contact, and place a normal SIM call — or, for a CRM contact, a recorded
+ * call on the CRM call line. Opened from the tab, the widget,
  * the home-screen Dialer icon, the app shortcut, or any tapped phone number.
  */
 export function DialerScreen() {
@@ -106,6 +107,27 @@ export function DialerScreen() {
                 variant="ghost"
                 size="sm"
                 testID="dialer-open-lead"
+              />
+              <DuncitButton
+                label={t('crmApp.call.recordedCall')}
+                onPress={() =>
+                  navigation.navigate('Call', {
+                    kind: lookup.owner.kind,
+                    id: lookup.owner.leadId,
+                    to: number,
+                    leadName: lookup.owner.leadName,
+                    contactName: lookup.owner.contactName || undefined,
+                  })
+                }
+                icon={
+                  <MaterialIcons
+                    name="fiber-manual-record"
+                    size={18}
+                    color={theme.onPrimary?.val}
+                  />
+                }
+                size="sm"
+                testID="dialer-recorded-call"
               />
             </YStack>
           ) : null}

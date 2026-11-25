@@ -15,19 +15,21 @@ export function resolveApiUrl(raw: string | undefined): string {
 }
 
 /**
- * The CRM portal for the server this build talks to (staging.crm… for the
- * staging server, crm… otherwise) — worked out from the API origin, so no
- * extra build setting can point the two at different environments.
+ * A console for the server this build talks to (staging.<console>… for the
+ * staging server, <console>… otherwise) — worked out from the API origin, so
+ * no extra build setting can point the two at different environments.
  */
-export function portalOrigin(apiUrl: string): string {
+export function portalOrigin(apiUrl: string, consoleKey = 'crm'): string {
   // Not URL().hostname: React Native's URL does not implement it on every version.
   const staging = (apiUrl.split('//')[1] ?? '').startsWith('staging.');
-  return staging ? 'https://staging.crm.duncit.com' : 'https://crm.duncit.com';
+  return `https://${staging ? 'staging.' : ''}${consoleKey}.duncit.com`;
 }
 
 export const config = {
   apiUrl: resolveApiUrl(process.env.EXPO_PUBLIC_API_URL),
   portalUrl: portalOrigin(resolveApiUrl(process.env.EXPO_PUBLIC_API_URL)),
+  /** The Tech portal, where Twilio (the CRM call line) is configured. */
+  techUrl: portalOrigin(resolveApiUrl(process.env.EXPO_PUBLIC_API_URL), 'tech'),
   /** Per-attempt timeout for a GraphQL request. */
   requestTimeoutMs: 20_000,
   /** The console key the CRM portal signs in with: same gate, same Security Verification. */

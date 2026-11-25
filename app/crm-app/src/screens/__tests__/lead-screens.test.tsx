@@ -90,6 +90,19 @@ describe('LeadDetailScreen', () => {
     expect(request.mock.calls[0][1]).toMatchObject({ id: 'v1', venue: true, host: false });
   });
 
+  it('opens the call screen for a contact, with the lead it belongs to', async () => {
+    request.mockResolvedValue({ venue });
+    renderWithTheme(<LeadDetailScreen />);
+    fireEvent.press(await screen.findByTestId('contact-call-0'));
+    expect(mockNav.navigate).toHaveBeenCalledWith('Call', {
+      kind: 'VENUE_LEAD',
+      id: 'v1',
+      to: '9811000001',
+      leadName: 'Smash Arena',
+      contactName: 'Rohit',
+    });
+  });
+
   it('opens Add note and Add reminder for this lead', async () => {
     request.mockResolvedValue({ venue });
     renderWithTheme(<LeadDetailScreen />);

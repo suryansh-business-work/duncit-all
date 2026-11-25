@@ -79,6 +79,9 @@ function LeadDetail({ kind, id }: Readonly<{ kind: LeadKind; id: string }>) {
         <LeadOverview
           lead={lead}
           onAddNote={() => navigation.navigate('AddNote', { kind, id, name: lead.name })}
+          onCall={(to, contactName) =>
+            navigation.navigate('Call', { kind, id, to, leadName: lead.name, contactName })
+          }
           onAddReminder={() => navigation.navigate('AddReminder', { kind, id, name: lead.name })}
         />
       ) : null}

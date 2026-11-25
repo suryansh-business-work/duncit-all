@@ -57,6 +57,15 @@ describe('DialerScreen', () => {
     expect(await screen.findByText('Run Club', {}, { timeout: 2000 })).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('dialer-open-lead'));
     expect(mockNav.navigate).toHaveBeenCalledWith('LeadDetail', { kind: 'HOST_LEAD', id: 'h1' });
+    // A CRM contact can be called on the recorded CRM call line instead.
+    fireEvent.press(screen.getByTestId('dialer-recorded-call'));
+    expect(mockNav.navigate).toHaveBeenCalledWith('Call', {
+      kind: 'HOST_LEAD',
+      id: 'h1',
+      to: '9811000001',
+      leadName: 'Run Club',
+      contactName: 'Rohit',
+    });
   });
 
   it('asks the server when the number is not in the phone’s directory, and says when nobody has it', async () => {

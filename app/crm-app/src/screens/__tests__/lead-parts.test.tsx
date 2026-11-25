@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from '@testing-library/react-native';
+import { fireEvent, screen } from '@testing-library/react-native';
 import { Linking } from 'react-native';
 
 import { dialNumber } from '@/services/dialer';
@@ -36,25 +36,31 @@ beforeEach(() => {
 });
 
 describe('ContactRow', () => {
-  it('calls the number and says nothing more when the call was placed', async () => {
-    dial.mockResolvedValue('called');
-    renderWithTheme(<ContactRow contact={contact()} index={0} />);
-    await act(async () => fireEvent.press(screen.getByTestId('contact-call-0')));
-    expect(dial).toHaveBeenCalledWith('98110 00001');
-    expect(screen.queryByText(/dialer opened/)).toBeNull();
+  it('opens the call screen for the number and the contact, without dialling from here', () => {
+    const onCall = jest.fn();
+    renderWithTheme(<ContactRow contact={contact()} index={0} onCall={onCall} />);
+    fireEvent.press(screen.getByTestId('contact-call-0'));
+    expect(onCall).toHaveBeenCalledWith('98110 00001', 'Rohit');
+    expect(dial).not.toHaveBeenCalled();
   });
 
-  it('explains when the phone dialer opened instead, or calling is unavailable', async () => {
-    dial.mockResolvedValueOnce('dialer').mockResolvedValueOnce('unavailable');
-    renderWithTheme(<ContactRow contact={contact()} index={0} />);
-    await act(async () => fireEvent.press(screen.getByTestId('contact-call-0')));
-    expect(screen.getByText(/Your phone’s dialer opened/)).toBeOnTheScreen();
-    await act(async () => fireEvent.press(screen.getByTestId('contact-call-0')));
-    expect(screen.getByText('Calling is not available on this device.')).toBeOnTheScreen();
+  it('calls the WhatsApp number when there is no mobile, and leaves an unnamed contact unnamed', () => {
+    const onCall = jest.fn();
+    renderWithTheme(
+      <ContactRow
+        contact={contact({ name: '', mobile_number: null, whatsapp_number: '98110 00002' })}
+        index={1}
+        onCall={onCall}
+      />,
+    );
+    fireEvent.press(screen.getByTestId('contact-call-1'));
+    expect(onCall).toHaveBeenCalledWith('98110 00002', undefined);
   });
 
   it('opens WhatsApp on the mobile number when there is no WhatsApp number, and email', () => {
-    renderWithTheme(<ContactRow contact={contact({ email: 'r@cafe.in' })} index={2} />);
+    renderWithTheme(
+      <ContactRow contact={contact({ email: 'r@cafe.in' })} index={2} onCall={jest.fn()} />,
+    );
     fireEvent.press(screen.getByTestId('contact-whatsapp-2'));
     expect(Linking.openURL).toHaveBeenCalledWith('https://wa.me/9811000001');
     fireEvent.press(screen.getByTestId('contact-email-2'));
@@ -66,6 +72,7 @@ describe('ContactRow', () => {
       <ContactRow
         contact={contact({ name: '', mobile_number: null, email: 'x@y.in' })}
         index={0}
+        onCall={jest.fn()}
       />,
     );
     expect(screen.getByText('Contact')).toBeOnTheScreen();
@@ -86,7 +93,14 @@ describe('LeadOverview', () => {
       contacts: [],
       activity_log: [],
     } as unknown as Lead;
-    renderWithTheme(<LeadOverview lead={lead} onAddNote={jest.fn()} onAddReminder={jest.fn()} />);
+    renderWithTheme(
+      <LeadOverview
+        lead={lead}
+        onAddNote={jest.fn()}
+        onAddReminder={jest.fn()}
+        onCall={jest.fn()}
+      />,
+    );
     expect(screen.getByText('No contacts on this lead.')).toBeOnTheScreen();
     expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(4);
   });

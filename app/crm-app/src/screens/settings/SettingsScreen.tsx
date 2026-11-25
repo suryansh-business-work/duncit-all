@@ -8,12 +8,13 @@ import { appVersion } from '@/services/feedback';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuthStore } from '@/stores/auth.store';
 import { useFeaturesStore } from '@/stores/features.store';
+import { CallLineCard } from './CallLineCard';
 import { HomeScreenCard } from './HomeScreenCard';
 import { PermissionsCard } from './PermissionsCard';
 import { SyncCard } from './SyncCard';
 import { ToggleRow } from './ToggleRow';
 
-/** The account, the call features, permissions, the home-screen dialer icon and the caller-ID sync. */
+/** The account, the call features, the CRM call line, permissions, the home-screen dialer icon and the caller-ID sync. */
 export function SettingsScreen() {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
@@ -80,6 +81,7 @@ export function SettingsScreen() {
           }
         />
       </Card>
+      <CallLineCard />
       <HomeScreenCard />
       <PermissionsCard />
       <SyncCard />

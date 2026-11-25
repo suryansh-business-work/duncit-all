@@ -1,11 +1,10 @@
-import { useState } from 'react';
 import { Linking } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack, useTheme } from 'tamagui';
 import { fireAndForget, logs } from '@duncit/logs';
 
 import type { LeadContact } from '@/features/leads/useLead';
-import { dialNumber, whatsappUrl } from '@/services/dialer';
+import { whatsappUrl } from '@/services/dialer';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface ActionProps {
@@ -33,20 +32,19 @@ function Action({ icon, label, onPress, testID }: Readonly<ActionProps>) {
   );
 }
 
-/** A lead contact with one-tap Call (the CRM dialer: a normal SIM call), WhatsApp and Email. */
-export function ContactRow({ contact, index }: Readonly<{ contact: LeadContact; index: number }>) {
+interface Props {
+  contact: LeadContact;
+  index: number;
+  /** Opens the call screen: the CRM call line (recorded), or a call from this phone. */
+  onCall: (to: string, contactName?: string) => void;
+}
+
+/** A lead contact with one-tap Call (the portal's call window), WhatsApp and Email. */
+export function ContactRow({ contact, index, onCall }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [note, setNote] = useState<string | null>(null);
   const name = contact.name || t('crmApp.lead.contact');
   const phone = contact.mobile_number || contact.whatsapp_number || '';
   const whatsapp = contact.whatsapp_number || contact.mobile_number || '';
-
-  const call = async () => {
-    const result = await dialNumber(phone);
-    if (result === 'dialer') setNote(t('crmApp.dialer.openedDialer'));
-    else if (result === 'unavailable') setNote(t('crmApp.dialer.unavailable'));
-    else setNote(null);
-  };
 
   return (
     <YStack paddingVertical="$2" gap="$1">
@@ -61,7 +59,7 @@ export function ContactRow({ contact, index }: Readonly<{ contact: LeadContact; 
           <Action
             icon="call"
             label={t('crmApp.lead.call', { vars: { name } })}
-            onPress={() => fireAndForget(call(), logs.mobileApp, 'crm-app/ContactRow', 'call')}
+            onPress={() => onCall(phone, contact.name || undefined)}
             testID={`contact-call-${index}`}
           />
         ) : null}
@@ -96,11 +94,6 @@ export function ContactRow({ contact, index }: Readonly<{ contact: LeadContact; 
           />
         ) : null}
       </XStack>
-      {note ? (
-        <Text color="$muted" fontSize="$2" aria-live="polite">
-          {note}
-        </Text>
-      ) : null}
     </YStack>
   );
 }

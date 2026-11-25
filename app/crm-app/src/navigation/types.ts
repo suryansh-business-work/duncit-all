@@ -19,6 +19,11 @@ export type AppStackParamList = {
   AddNote: { kind: LeadKind; id: string; name: string };
   AddReminder: { kind?: LeadKind; id?: string; name?: string; title?: string };
   PostCall: undefined;
+  /**
+   * A call on the CRM call line, as the portal's call window runs it: Twilio
+   * rings this phone, joins the contact in, records and transcribes.
+   */
+  Call: { kind: LeadKind; id: string; to: string; leadName: string; contactName?: string };
   /** The side menu: the CRM portal's sidebar, every item. */
   Menu: undefined;
   /** The portal's Dashboard: KPIs and charts for venue and host leads. */

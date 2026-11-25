@@ -9,8 +9,13 @@ import { FACEBOOK_SERVICE, graphGet, graphPost, graphTime, isFacebookLogin } fro
  * a Page (`meta.page_id`, stored at connect — meta.login.ts).
  */
 
-/** The fields a Page is subscribed to, so its DMs and comments reach the webhook. */
-export const PAGE_WEBHOOK_FIELDS = ['messages', 'messaging_postbacks', 'message_reactions', 'messaging_seen', 'feed'];
+/**
+ * The fields a Page is subscribed to, so its DMs and comments reach the
+ * webhook. Only Page field names belong here: Meta refuses the whole call over
+ * one it does not know (`messaging_seen` is an Instagram webhook field; the
+ * Page's read receipts are `message_reads`, which nothing here reads).
+ */
+export const PAGE_WEBHOOK_FIELDS = ['messages', 'messaging_postbacks', 'message_reactions', 'feed'];
 
 /** The Page whose `/messages` an account sends from, or null when it has none. */
 export function messagingPageOf(account: Pick<SocialAccountHandle, 'platform' | 'external_id' | 'meta' | 'provider'>): string | null {

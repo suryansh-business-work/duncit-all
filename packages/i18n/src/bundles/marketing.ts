@@ -110,6 +110,7 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       engagement: 'Engagement',
       engagementByNetwork: 'Engagement by network',
       everyAccountHealthy: 'Every account is healthy',
+      noAccountsConnected: 'No accounts connected yet',
       leadsByStage: 'Leads by stage',
       leadsFound: 'Leads found',
       leadsQualified: '{qualified} scored {score} or more',

@@ -20,6 +20,13 @@ interface KpiDeps {
 
 const n = (value: number) => value.toLocaleString();
 
+/** Nothing connected is not "healthy": say there is nothing yet, then whether any account needs a look. */
+const accountsHint = (social: MarketingDashboard['social'], t: KpiDeps['t']) => {
+  if (social.connected === 0) return t('marketing.dashboard.noAccountsConnected');
+  if (social.attention > 0) return t('marketing.dashboard.accountsNeedAttention', { vars: { count: social.attention } });
+  return t('marketing.dashboard.everyAccountHealthy');
+};
+
 /** The eight headline KPI widgets, one per tile so each can be dragged on its own. */
 export function buildKpiWidgets({ board, t, go }: Readonly<KpiDeps>): DashboardWidget[] {
   const { links, campaigns, ads, social, leads } = board;
@@ -95,11 +102,7 @@ export function buildKpiWidgets({ board, t, go }: Readonly<KpiDeps>): DashboardW
       <KpiCard
         label={t('marketing.dashboard.connectedAccounts')}
         value={n(social.connected)}
-        hint={
-          social.attention > 0
-            ? t('marketing.dashboard.accountsNeedAttention', { vars: { count: social.attention } })
-            : t('marketing.dashboard.everyAccountHealthy')
-        }
+        hint={accountsHint(social, t)}
         icon={<ShareIcon />}
         onOpen={go('/social/accounts')}
       />,

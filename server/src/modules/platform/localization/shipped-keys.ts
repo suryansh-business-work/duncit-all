@@ -14769,6 +14769,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "marketing.dashboard.leadsQualified": "{qualified} scored {score} or more",
   "marketing.dashboard.linkClicks": "Link clicks",
   "marketing.dashboard.liveAds": "Live ads",
+  "marketing.dashboard.noAccountsConnected": "No accounts connected yet",
   "marketing.dashboard.noClicksRecordedYet": "No clicks recorded yet.",
   "marketing.dashboard.noEngagementYet": "No engagement recorded yet.",
   "marketing.dashboard.noLeadsYet": "No leads found yet.",

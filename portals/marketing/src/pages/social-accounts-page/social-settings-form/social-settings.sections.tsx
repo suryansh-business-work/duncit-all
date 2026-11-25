@@ -95,9 +95,10 @@ function AssigneeField({ control, disabled, savedId, savedName, canPick }: Reado
           title={t('marketing.socialSettings.assigneeTitle')}
           busy={false}
           onClose={() => setPicking(false)}
-          onSave={async (userId) => {
+          onSave={(userId) => {
+            // Only the form changes here; the choice is saved with the rest on Save.
             field.onChange(userId);
-            return true;
+            return Promise.resolve(true);
           }}
         />
       )}

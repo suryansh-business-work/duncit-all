@@ -1,4 +1,5 @@
 import { logs } from '@observability/log';
+import { inSequence } from '@utils/in-sequence';
 import { READERS } from './providers';
 import { participantProfile } from './providers/meta.messaging';
 import { analyzePendingComments } from './social.ai';
@@ -106,16 +107,17 @@ async function triage(): Promise<void> {
 }
 
 export async function processMetaWebhook(payload: unknown): Promise<{ dms: number; comments: number }> {
-  let dms = 0;
-  let comments = 0;
-  for (const event of parseMetaWebhook(payload)) {
+  // In the order Meta sent them: two messages from one person in one delivery must be stored oldest first.
+  const handled = await inSequence(parseMetaWebhook(payload), async (event) => {
     try {
-      if (event.kind === 'DM' && (await handleDm(event))) dms += 1;
-      if (event.kind === 'COMMENT' && (await handleComment(event))) comments += 1;
+      return (event.kind === 'DM' ? await handleDm(event) : await handleComment(event)) ? event.kind : null;
     } catch (error) {
       logs.server.error(COMPONENT, 'event', { error, kind: event.kind, platform: event.platform, external_id: event.external_id });
+      return null;
     }
-  }
+  });
+  const dms = handled.filter((kind) => kind === 'DM').length;
+  const comments = handled.filter((kind) => kind === 'COMMENT').length;
   if (comments > 0 && (await loadSocialSettings()).auto_triage) {
     triage().catch((error: unknown) => logs.server.error(COMPONENT, 'triage', { error }));
   }

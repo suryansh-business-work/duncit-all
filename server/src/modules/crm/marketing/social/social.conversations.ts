@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { isValidObjectId } from 'mongoose';
+import { isValidObjectId, type Types } from 'mongoose';
 import { logs } from '@observability/log';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { marketingLeadService } from '../leads/marketingLead.service';
@@ -35,7 +35,7 @@ const CONVERSATION_TABLE: TableEntityConfig = {
 const THREAD_MESSAGES = 200;
 
 const iso = (value: unknown) => (value instanceof Date ? value.toISOString() : null);
-const idOrNull = (value: unknown) => (value ? String(value) : null);
+const idOrNull = (value: Types.ObjectId | string | null | undefined) => (value ? String(value) : null);
 
 function notFound(): never {
   throw new GraphQLError('Conversation not found', { extensions: { code: 'NOT_FOUND' } });

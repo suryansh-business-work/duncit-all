@@ -144,24 +144,22 @@ function pageComment(accountId: string, change: RawChange): CommentEvent | null 
 /** The webhook object each platform's events come under. */
 const OBJECT_PLATFORM: Readonly<Record<string, SocialPlatform>> = { instagram: 'INSTAGRAM', page: 'FACEBOOK' };
 
+/** The DMs and comments one entry (one account) carries, DMs first as Meta lists them. */
+function entryEvents(platform: SocialPlatform, raw: RawEntry): WebhookEvent[] {
+  const accountId = str(raw?.id);
+  if (!accountId) return [];
+  const dms = (raw.messaging ?? []).map((item) => dmOf(platform, accountId, item));
+  const comments = (raw.changes ?? []).map((change) =>
+    platform === 'INSTAGRAM' ? instagramComment(accountId, change, raw.time) : pageComment(accountId, change)
+  );
+  return [...dms, ...comments].filter((event): event is WebhookEvent => event !== null);
+}
+
 export function parseMetaWebhook(payload: unknown): WebhookEvent[] {
   const body = record(payload);
   const object = str(body.object);
   // Own keys only: a payload naming "constructor" must not reach Object's prototype.
   const platform = Object.hasOwn(OBJECT_PLATFORM, object) ? OBJECT_PLATFORM[object] : null;
   if (!platform || !Array.isArray(body.entry)) return [];
-  const events: WebhookEvent[] = [];
-  for (const raw of body.entry as RawEntry[]) {
-    const accountId = str(raw?.id);
-    if (!accountId) continue;
-    for (const item of raw.messaging ?? []) {
-      const dm = dmOf(platform, accountId, item);
-      if (dm) events.push(dm);
-    }
-    for (const change of raw.changes ?? []) {
-      const comment = platform === 'INSTAGRAM' ? instagramComment(accountId, change, raw.time) : pageComment(accountId, change);
-      if (comment) events.push(comment);
-    }
-  }
-  return events;
+  return (body.entry as RawEntry[]).flatMap((raw) => entryEvents(platform, raw));
 }

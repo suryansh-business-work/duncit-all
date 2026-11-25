@@ -1358,7 +1358,7 @@ export const TECH_BUNDLE: NestedCatalogue = {
       accessCodeInvalid: 'Enter the 6-digit code from the email.',
       accessVerify: 'Verify and open',
       accessSent: 'Code sent to {email}',
-      accessUnlocked: 'Unlocked for this session until {time}',
+      accessUnlockedAcross: 'Unlocked until {time} for your portals on this network. Lock now locks them all.',
       accessLockNow: 'Lock now',
       accessLocked: 'Environment Variables are locked',
       accessStatusError: 'Could not check your access to Environment Variables.',

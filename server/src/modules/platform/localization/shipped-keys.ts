@@ -28533,7 +28533,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "tech.environment.accessStatusError": "Could not check your access to Environment Variables.",
   "tech.environment.accessSubtitle": "A one-time code is needed for every session, even when you are already signed in. It is emailed to the root admin at {email}.",
   "tech.environment.accessTitle": "Verify to open Environment Variables",
-  "tech.environment.accessUnlocked": "Unlocked for this session until {time}",
+  "tech.environment.accessUnlockedAcross": "Unlocked until {time} for your portals on this network. Lock now locks them all.",
   "tech.environment.accessVerify": "Verify and open",
   "tech.environment.active": "Active",
   "tech.environment.allCategories": "All categories",

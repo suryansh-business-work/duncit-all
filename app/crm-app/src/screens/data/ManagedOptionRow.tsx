@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Switch, Text, XStack, YStack, useTheme } from 'tamagui';
+import { Text, XStack, YStack, useTheme } from 'tamagui';
 
+import { Toggle } from '@/components/Toggle';
 import { SURFACE } from '@/components/surface';
 import { ToneChip } from '@/components/ToneChip';
 import type { ManagedOption } from '@/features/data/useManagedOptions';
@@ -57,18 +58,15 @@ export function ManagedOptionRow({
           {t('crm.data.optionOrder', { vars: { order: row.sort_order } })}
         </Text>
       </YStack>
-      <Switch
-        size="$3"
+      <Toggle
         checked={row.is_active}
-        onCheckedChange={onToggle}
+        onChange={onToggle}
         disabled={busy}
-        aria-label={t('shell.a11y.fieldOf', {
+        label={t('shell.a11y.fieldOf', {
           vars: { field: t('crm.common.active'), name: row.name },
         })}
         testID={`option-active-${row.id}`}
-      >
-        <Switch.Thumb />
-      </Switch>
+      />
       {action(
         'edit',
         t('shell.a11y.editNamed', { vars: { name: row.name } }),

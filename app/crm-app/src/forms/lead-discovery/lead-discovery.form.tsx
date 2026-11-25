@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Switch, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
+import { Toggle } from '@/components/Toggle';
 import { ChoiceField } from '@/components/ChoiceField';
 import { DuncitButton } from '@/components/DuncitButton';
 import { TextField } from '@/components/TextField';
@@ -120,15 +121,12 @@ export function LeadDiscoveryForm({
         name="ai_evidence"
         render={({ field }) => (
           <XStack alignItems="center" gap="$3">
-            <Switch
-              size="$3"
+            <Toggle
               checked={field.value}
-              onCheckedChange={field.onChange}
-              aria-label={t('crm.leadResearch.aiEvidence')}
+              onChange={field.onChange}
+              label={t('crm.leadResearch.aiEvidence')}
               testID="discovery-ai"
-            >
-              <Switch.Thumb />
-            </Switch>
+            />
             <YStack flex={1}>
               <Text fontWeight="600">{t('crm.leadResearch.aiEvidence')}</Text>
               <Text color="$muted" fontSize="$2">

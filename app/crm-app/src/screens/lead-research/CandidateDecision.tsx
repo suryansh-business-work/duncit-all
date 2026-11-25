@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
-import { Input, Switch, Text, XStack, YStack } from 'tamagui';
+import { Input, Text, XStack, YStack } from 'tamagui';
 import { fireAndForget, logs } from '@duncit/logs';
 
+import { Toggle } from '@/components/Toggle';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { DuncitButton } from '@/components/DuncitButton';
 import {
@@ -108,15 +109,12 @@ export function CandidateDecision({ candidateId, onDecided }: Readonly<Props>) {
         testID="approve-dialog"
       >
         <XStack alignItems="center" gap="$3">
-          <Switch
-            size="$3"
+          <Toggle
             checked={allowUnqualified}
-            onCheckedChange={setAllowUnqualified}
-            aria-label={t('crm.leadResearch.allowUnqualified')}
+            onChange={setAllowUnqualified}
+            label={t('crm.leadResearch.allowUnqualified')}
             testID="allow-unqualified"
-          >
-            <Switch.Thumb />
-          </Switch>
+          />
           <YStack flex={1}>
             <Text fontWeight="600">{t('crm.leadResearch.allowUnqualified')}</Text>
             <Text color="$muted" fontSize="$2">

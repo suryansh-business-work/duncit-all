@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Switch, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
+import { Toggle } from '@/components/Toggle';
 import { ChoiceField } from '@/components/ChoiceField';
 import { DuncitButton } from '@/components/DuncitButton';
 import { TextField } from '@/components/TextField';
@@ -67,15 +68,12 @@ export function CallPromptForm({ values, submitLabel, onSubmit }: Readonly<Props
         name="is_active"
         render={({ field }) => (
           <XStack alignItems="center" gap="$3">
-            <Switch
-              size="$3"
+            <Toggle
               checked={field.value}
-              onCheckedChange={field.onChange}
-              aria-label={t('crm.common.active')}
+              onChange={field.onChange}
+              label={t('crm.common.active')}
               testID="prompt-active"
-            >
-              <Switch.Thumb />
-            </Switch>
+            />
             <Text>{t('crm.common.active')}</Text>
           </XStack>
         )}

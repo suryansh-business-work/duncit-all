@@ -1,4 +1,5 @@
-import { Label, Switch, Text, XStack, YStack } from 'tamagui';
+import { Label, Text, XStack, YStack } from 'tamagui';
+import { Toggle } from '@/components/Toggle';
 
 interface Props {
   id: string;
@@ -20,16 +21,7 @@ export function ToggleRow({ id, label, hint, value, onChange }: Readonly<Props>)
           {hint}
         </Text>
       </YStack>
-      <Switch
-        id={id}
-        checked={value}
-        onCheckedChange={onChange}
-        aria-label={label}
-        testID={id}
-        size="$3"
-      >
-        <Switch.Thumb />
-      </Switch>
+      <Toggle checked={value} onChange={onChange} label={label} testID={id} />
     </XStack>
   );
 }

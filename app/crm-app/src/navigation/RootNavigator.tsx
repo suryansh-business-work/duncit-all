@@ -11,6 +11,8 @@ import { AddNoteScreen } from '@/screens/lead/AddNoteScreen';
 import { LeadEditorScreen } from '@/screens/lead/LeadEditorScreen';
 import { AddReminderScreen } from '@/screens/reminders/AddReminderScreen';
 import { PostCallScreen } from '@/screens/post-call/PostCallScreen';
+import { MenuScreen } from '@/screens/menu/MenuScreen';
+import { PortalPageScreen } from '@/screens/portal/PortalPageScreen';
 import { MainTabs } from './MainTabs';
 import { screenLayout } from './screenLayout';
 import type { AppStackParamList } from './types';
@@ -69,6 +71,16 @@ export function RootNavigator() {
         component={AddReminderScreen}
         options={{ title: t('crmApp.reminder.title') }}
       />
+      <Stack.Screen
+        name="Menu"
+        component={MenuScreen}
+        options={{
+          headerShown: false,
+          presentation: 'transparentModal',
+          animation: 'slide_from_left',
+        }}
+      />
+      <Stack.Screen name="PortalPage" component={PortalPageScreen} options={{ title: '' }} />
       <Stack.Screen
         name="PostCall"
         component={PostCallScreen}

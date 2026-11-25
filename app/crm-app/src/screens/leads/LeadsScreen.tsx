@@ -1,6 +1,13 @@
 import { useState } from 'react';
 import { FlatList, ScrollView } from 'react-native';
-import { useNavigation, type NavigationProp } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import {
+  useNavigation,
+  useRoute,
+  type CompositeNavigationProp,
+  type NavigationProp,
+  type RouteProp,
+} from '@react-navigation/native';
 import { Input, Text, XStack, YStack } from 'tamagui';
 
 import { DuncitButton } from '@/components/DuncitButton';
@@ -8,15 +15,23 @@ import { StateView } from '@/components/StateView';
 import { LEAD_KINDS, isLeadKind, type LeadKind } from '@/features/leads/leadKinds';
 import { useLeadSearch } from '@/features/leads/useLeadSearch';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { AppStackParamList } from '@/navigation/types';
+import type { AppStackParamList, TabParamList } from '@/navigation/types';
 import { NewLeadPicker } from './NewLeadPicker';
 
 /** Every lead the CRM holds, searchable by name, city, phone or email, filterable by kind. */
 export function LeadsScreen() {
   const { t } = useTranslation();
-  const navigation = useNavigation<NavigationProp<AppStackParamList>>();
+  const navigation =
+    useNavigation<
+      CompositeNavigationProp<
+        BottomTabNavigationProp<TabParamList, 'Leads'>,
+        NavigationProp<AppStackParamList>
+      >
+    >();
   const [search, setSearch] = useState('');
-  const [kind, setKind] = useState<LeadKind | null>(null);
+  // The kind lives in the route, so the side menu's per-kind pages and the chips agree.
+  const kind: LeadKind | null = useRoute<RouteProp<TabParamList, 'Leads'>>().params?.kind ?? null;
+  const setKind = (next: LeadKind | null) => navigation.setParams({ kind: next ?? undefined });
   const leads = useLeadSearch(search, kind, t('crmApp.common.loadFailed'));
 
   return (

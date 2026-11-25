@@ -34,6 +34,14 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
       domain: 'duncit.com',
       portal: 'CRM',
     },
+    menu: {
+      open: 'Open menu',
+      close: 'Close menu',
+    },
+    portalPage: {
+      body: '{page} is not in the app yet. Open it in the CRM portal, where you sign in with the same account.',
+      open: 'Open in CRM portal',
+    },
     otp: {
       or: 'or',
       open: 'Login with OTP',

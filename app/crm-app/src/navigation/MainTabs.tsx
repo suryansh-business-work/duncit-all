@@ -8,6 +8,7 @@ import { LeadsScreen } from '@/screens/leads/LeadsScreen';
 import { DialerScreen } from '@/screens/dialer/DialerScreen';
 import { RemindersScreen } from '@/screens/reminders/RemindersScreen';
 import { SettingsScreen } from '@/screens/settings/SettingsScreen';
+import { MenuButton } from './MenuButton';
 import { screenLayout } from './screenLayout';
 import type { TabParamList } from './types';
 
@@ -43,6 +44,7 @@ export function MainTabs() {
         tabBarStyle: { backgroundColor: theme.surface?.val },
         headerStyle: { backgroundColor: theme.primary?.val },
         headerTintColor: theme.onPrimary?.val,
+        headerLeft: () => <MenuButton tint={theme.onPrimary?.val} />,
         tabBarIcon: ({ color, size }) => (
           <MaterialIcons name={ICONS[route.name]} color={color} size={size} />
         ),

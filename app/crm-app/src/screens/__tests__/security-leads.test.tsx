@@ -12,8 +12,18 @@ import { LeadsScreen } from '../leads/LeadsScreen';
 
 jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
-const mockNav = { navigate: jest.fn() };
-jest.mock('@react-navigation/native', () => ({ useNavigation: () => mockNav }));
+// The Leads tab keeps its kind filter in the route; setParams updates it as react-navigation would.
+let mockRouteParams: Record<string, unknown> = {};
+const mockNav = {
+  navigate: jest.fn(),
+  setParams: jest.fn((next: Record<string, unknown>) => {
+    mockRouteParams = { ...mockRouteParams, ...next };
+  }),
+};
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => mockNav,
+  useRoute: () => ({ params: mockRouteParams }),
+}));
 
 const request = gqlRequest as jest.Mock;
 const challenge = {
@@ -146,6 +156,21 @@ describe('SecurityVerificationScreen', () => {
 });
 
 describe('LeadsScreen', () => {
+  beforeEach(() => {
+    mockRouteParams = {};
+  });
+
+  it('opens on the kind the side menu chose', async () => {
+    mockRouteParams = { kind: 'HOST_LEAD' };
+    request.mockResolvedValue({ searchCrmLeads: { total: 0, page: 1, page_size: 25, rows: [] } });
+    renderWithTheme(<LeadsScreen />);
+    await waitFor(() =>
+      expect(request.mock.calls.at(-1)?.[1].input).toMatchObject({ entity_types: ['HOST_LEAD'] }),
+    );
+    fireEvent.press(screen.getByTestId('leads-kind-all'));
+    expect(mockNav.setParams).toHaveBeenCalledWith({ kind: undefined });
+  });
+
   it('searches every kind, narrows to one, and opens a lead', async () => {
     request.mockResolvedValue({
       searchCrmLeads: {
@@ -168,6 +193,7 @@ describe('LeadsScreen', () => {
     expect(await screen.findByText('Riya Runs', {}, { timeout: 2000 })).toBeOnTheScreen();
     expect(screen.getByText('1 lead')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('leads-kind-CREATOR_LEAD'));
+    expect(mockNav.setParams).toHaveBeenCalledWith({ kind: 'CREATOR_LEAD' });
     fireEvent.changeText(screen.getByTestId('leads-search'), 'riya');
     await waitFor(
       () =>

@@ -79,6 +79,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "expo-splash-screen", range: "~57.0.9", kind: "dependencies" },
       { name: "expo-status-bar", range: "~57.0.1", kind: "dependencies" },
       { name: "expo-task-manager", range: "~57.0.0", kind: "dependencies" },
+      { name: "expo-video", range: "~57.0.5", kind: "dependencies" },
       { name: "graphql", range: "^16.14.2", kind: "dependencies" },
       { name: "graphql-request", range: "^6.1.0", kind: "dependencies" },
       { name: "react", range: "19.2.3", kind: "dependencies" },

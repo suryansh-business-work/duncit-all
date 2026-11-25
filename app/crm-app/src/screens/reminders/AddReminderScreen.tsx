@@ -4,7 +4,7 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import { Text } from 'tamagui';
 
 import { CrmAppCreateReminderDocument } from '@/graphql/reminders';
-import { ReminderForm, dueAt, type ReminderValues } from '@/forms/reminder';
+import { ReminderForm, reminderDueDate, type ReminderValues } from '@/forms/reminder';
 import { gqlRequest } from '@/services/graphql.client';
 import { useTranslation } from '@/hooks/useTranslation';
 import { errorMessage } from '@/utils/errors';
@@ -25,7 +25,7 @@ export function AddReminderScreen() {
           entity_type: params.kind ?? 'GENERAL',
           lead_id: params.id ?? null,
           title: values.title,
-          due_at: dueAt(values.due).toISOString(),
+          due_at: reminderDueDate(values).toISOString(),
           notes: values.notes || null,
         },
       });

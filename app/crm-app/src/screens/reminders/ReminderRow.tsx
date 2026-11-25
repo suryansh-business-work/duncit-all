@@ -3,9 +3,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { Text, XStack, YStack, useTheme } from 'tamagui';
 import { fireAndForget, logs } from '@duncit/logs';
+import { crmDueUrgency, type CrmDueUrgency } from '@duncit/utils';
 
 import { CrmAppToggleReminderDocument } from '@/graphql/reminders';
-import { displayDateTime, isOverdue } from '@/features/reminders/reminderTime';
+import { displayDateTime } from '@/features/reminders/reminderTime';
 import { isLeadKind } from '@/features/leads/leadKinds';
 import { gqlRequest } from '@/services/graphql.client';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -21,9 +22,23 @@ export interface ReminderItem {
   status: string;
 }
 
+/**
+ * How a due time reads, by urgency (@duncit/utils, the portal calendar's
+ * rule): overdue in red, due within a day in amber — in words too, so the
+ * colour is never the only cue.
+ */
+const URGENCY: Record<CrmDueUrgency, { color: string; key: string | null }> = {
+  overdue: { color: '$danger', key: 'crmApp.reminder.overdue' },
+  soon: { color: '$warning', key: 'crm.a11y.dueSoon' },
+  later: { color: '$muted', key: null },
+  done: { color: '$muted', key: null },
+};
+
 interface Props {
   reminder: ReminderItem;
   onChanged: () => void;
+  /** Opens the reminder's details (edit, delete, done) — the calendar's drawer. */
+  onDetails?: () => void;
 }
 
 /** The round tick: marks the reminder done, or pending again. */
@@ -58,13 +73,14 @@ function ReminderCheck({
 }
 
 /** One reminder: tick it done (or not), open its lead. */
-export function ReminderRow({ reminder, onChanged }: Readonly<Props>) {
+export function ReminderRow({ reminder, onChanged, onDetails }: Readonly<Props>) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const navigation = useNavigation<NavigationProp<AppStackParamList>>();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const done = reminder.status === 'DONE';
-  const overdue = isOverdue(reminder);
+  const urgency = URGENCY[crmDueUrgency(new Date(reminder.due_at), done)];
 
   const toggle = async () => {
     setBusy(true);
@@ -98,8 +114,8 @@ export function ReminderRow({ reminder, onChanged }: Readonly<Props>) {
         <Text fontWeight="600" textDecorationLine={done ? 'line-through' : 'none'}>
           {reminder.title}
         </Text>
-        <Text color={overdue ? '$danger' : '$muted'} fontSize="$2">
-          {overdue ? `${t('crmApp.reminder.overdue')} · ` : ''}
+        <Text color={urgency.color} fontSize="$2">
+          {urgency.key ? `${t(urgency.key)} · ` : ''}
           {displayDateTime(reminder.due_at)}
         </Text>
         {failed ? (
@@ -108,6 +124,18 @@ export function ReminderRow({ reminder, onChanged }: Readonly<Props>) {
           </Text>
         ) : null}
       </YStack>
+      {onDetails ? (
+        <XStack
+          role="button"
+          aria-label={t('crmApp.reminder.details', { vars: { title: reminder.title } })}
+          onPress={onDetails}
+          padding="$2"
+          hitSlop={8}
+          testID={`reminder-details-${reminder.id}`}
+        >
+          <MaterialIcons name="more-vert" size={22} color={theme.muted?.val} />
+        </XStack>
+      ) : null}
     </XStack>
   );
 }

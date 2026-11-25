@@ -1,64 +1,127 @@
-import { useCallback, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { FlatList } from 'react-native';
-import { useFocusEffect, useNavigation, type NavigationProp } from '@react-navigation/native';
-import { YStack } from 'tamagui';
-import { fireAndForget, logs } from '@duncit/logs';
+import { useNavigation, type NavigationProp } from '@react-navigation/native';
+import { format, isSameDay, isSameMonth, startOfMonth } from 'date-fns';
+import { useTheme } from 'tamagui';
 
-import { DuncitButton } from '@/components/DuncitButton';
 import { StateView } from '@/components/StateView';
-import { CrmAppRemindersDocument } from '@/graphql/reminders';
-import { useGqlQuery } from '@/hooks/useGqlQuery';
+import {
+  agendaDays,
+  type CalendarEvent,
+  type CalendarView,
+} from '@/features/reminders/calendarView';
+import { useRemindersCalendar } from '@/features/reminders/useRemindersCalendar';
+import { isLeadKind } from '@/features/leads/leadKinds';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AppStackParamList } from '@/navigation/types';
-import { ReminderRow } from './ReminderRow';
+import type { ReminderItem } from './ReminderRow';
+import { RemindersDayGroup } from './RemindersDayGroup';
+import { RemindersEventSheet } from './RemindersEventSheet';
+import { RemindersHeader } from './RemindersHeader';
+import { RemindersMonthGrid } from './RemindersMonthGrid';
 
-/** Every pending reminder, soonest first — the portal's Reminders, as a list. */
+type Event = CalendarEvent<ReminderItem>;
+
+/**
+ * CRM › Reminders — the portal's calendar of reminders and lead follow-ups:
+ * Day, Week, Month, Year and Upcoming views, filtered by type and status,
+ * coloured by urgency (overdue red, due soon amber, later green). Tick a
+ * reminder done, open its lead, or open its details to edit or delete it.
+ */
 export function RemindersScreen() {
   const { t } = useTranslation();
+  const theme = useTheme();
   const navigation = useNavigation<NavigationProp<AppStackParamList>>();
-  const variables = useMemo(() => ({ filter: { status: 'PENDING' as const } }), []);
-  const { data, loading, error, refetch } = useGqlQuery(CrmAppRemindersDocument, variables, {
-    fallbackError: t('crmApp.common.loadFailed'),
-    skip: true,
-  });
-  // Loaded each time the tab is shown, so a reminder added elsewhere is already here.
-  useFocusEffect(
-    useCallback(() => {
-      fireAndForget(refetch(), logs.mobileApp, 'crm-app/RemindersScreen', 'refetch');
-    }, [refetch]),
-  );
-  const rows = useMemo(
-    () => [...(data?.crmReminders ?? [])].sort((a, b) => a.due_at.localeCompare(b.due_at)),
-    [data],
+  const calendar = useRemindersCalendar(t);
+  const { view, cursor, events } = calendar;
+  const [selectedDay, setSelectedDay] = useState(() => new Date());
+  const [selected, setSelected] = useState<Event | null>(null);
+
+  // The month view lists the picked day; every other view lists its days.
+  const groups = useMemo(
+    () =>
+      view === 'month'
+        ? agendaDays(
+            events.filter((e) => isSameDay(e.date, selectedDay)),
+            'day',
+            selectedDay,
+          )
+        : agendaDays(events, view, cursor),
+    [events, view, cursor, selectedDay],
   );
 
+  const changeView = (next: CalendarView) => {
+    calendar.setView(next);
+    if (next === 'month') setSelectedDay(cursor);
+  };
+  const changeCursor = (next: Date) => {
+    calendar.setCursor(next);
+    // In the month view, paging keeps a day of the shown month picked.
+    if (view === 'month' && !isSameMonth(next, selectedDay))
+      setSelectedDay(isSameMonth(next, new Date()) ? new Date() : startOfMonth(next));
+  };
+  const openLead = (event: Event) => {
+    const kind = event.entity;
+    const id = event.leadId;
+    if (isLeadKind(kind) && id) navigation.navigate('LeadDetail', { kind, id });
+  };
+
   return (
-    <YStack flex={1} backgroundColor="$background">
+    <>
       <FlatList
-        data={rows}
-        keyExtractor={(r) => r.id}
-        contentContainerStyle={{ padding: 16 }}
-        refreshing={loading && data !== null}
-        onRefresh={refetch}
-        renderItem={({ item }) => <ReminderRow reminder={item} onChanged={refetch} />}
+        style={{ flex: 1, backgroundColor: theme.background?.val }}
+        data={groups}
+        keyExtractor={(group) => format(group.day, 'yyyy-MM-dd')}
+        contentContainerStyle={{ padding: 16, gap: 8 }}
+        refreshing={calendar.loading && calendar.loaded}
+        onRefresh={calendar.refresh}
         ListHeaderComponent={
-          <YStack paddingBottom="$3">
-            <DuncitButton
-              label={t('crmApp.reminder.title')}
-              onPress={() => navigation.navigate('AddReminder', {})}
-              testID="reminders-add"
+          <>
+            <RemindersHeader
+              view={view}
+              cursor={cursor}
+              entity={calendar.entity}
+              status={calendar.status}
+              followUpsError={calendar.followUpsError}
+              onView={changeView}
+              onCursor={changeCursor}
+              onEntity={calendar.setEntity}
+              onStatus={calendar.setStatus}
+              onAdd={() => navigation.navigate('AddReminder', {})}
             />
-          </YStack>
+            {view === 'month' ? (
+              <RemindersMonthGrid
+                cursor={cursor}
+                events={events}
+                selected={selectedDay}
+                onSelect={setSelectedDay}
+              />
+            ) : null}
+          </>
         }
+        renderItem={({ item }) => (
+          <RemindersDayGroup
+            group={item}
+            onChanged={calendar.refetchReminders}
+            onDetails={setSelected}
+            onOpenLead={openLead}
+          />
+        )}
         ListEmptyComponent={
           <StateView
-            loading={!data && !error}
-            error={error}
-            empty={data ? t('crmApp.reminder.empty') : null}
-            onRetry={refetch}
+            loading={!calendar.loaded && !calendar.error}
+            error={calendar.error}
+            empty={calendar.loaded ? t('crm.calendar.nothingScheduled') : null}
+            onRetry={calendar.refresh}
           />
         }
       />
-    </YStack>
+      <RemindersEventSheet
+        event={selected}
+        onClose={() => setSelected(null)}
+        onChanged={calendar.refresh}
+        onOpenLead={openLead}
+      />
+    </>
   );
 }

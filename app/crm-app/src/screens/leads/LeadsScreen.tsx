@@ -8,7 +8,8 @@ import {
   type NavigationProp,
   type RouteProp,
 } from '@react-navigation/native';
-import { Input, Text, XStack, YStack } from 'tamagui';
+import { MaterialIcons } from '@expo/vector-icons';
+import { Input, Text, XStack, YStack, useTheme } from 'tamagui';
 
 import { SURFACE } from '@/components/surface';
 import { DuncitButton } from '@/components/DuncitButton';
@@ -22,6 +23,7 @@ import { NewLeadPicker } from './NewLeadPicker';
 /** Every lead the CRM holds, searchable by name, city, phone or email, filterable by kind. */
 export function LeadsScreen() {
   const { t } = useTranslation();
+  const theme = useTheme();
   const navigation =
     useNavigation<
       CompositeNavigationProp<
@@ -37,19 +39,26 @@ export function LeadsScreen() {
 
   return (
     <YStack flex={1} backgroundColor="$background">
-      <YStack padding="$3" gap="$2">
-        <NewLeadPicker onPick={(k) => navigation.navigate('LeadEditor', { kind: k })} />
-        <Input
-          value={search}
-          onChangeText={setSearch}
-          placeholder={t('crmApp.leads.search')}
-          aria-label={t('crmApp.leads.search')}
-          placeholderTextColor="$muted"
-          borderColor="$inputBorder"
-          autoCorrect={false}
-          testID="leads-search"
-        />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <YStack paddingTop="$4" paddingBottom="$3" gap="$2">
+        <YStack paddingHorizontal="$4" gap="$2">
+          <NewLeadPicker onPick={(k) => navigation.navigate('LeadEditor', { kind: k })} />
+          <Input
+            value={search}
+            onChangeText={setSearch}
+            placeholder={t('crmApp.leads.search')}
+            aria-label={t('crmApp.leads.search')}
+            placeholderTextColor="$muted"
+            borderColor="$inputBorder"
+            autoCorrect={false}
+            testID="leads-search"
+          />
+        </YStack>
+        {/* The chips scroll under the screen edges, starting in line with the content. */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+        >
           <XStack gap="$2" role="radiogroup">
             <DuncitButton
               label={t('crmApp.leads.all')}
@@ -70,11 +79,23 @@ export function LeadsScreen() {
             ))}
           </XStack>
         </ScrollView>
-        {leads.total > 0 ? (
-          <Text color="$muted" fontSize="$2" aria-live="polite">
-            {t('crmApp.leads.count', { count: leads.total })}
-          </Text>
-        ) : null}
+        <YStack paddingHorizontal="$4" gap="$2">
+          {kind ? (
+            <DuncitButton
+              label={t('crmApp.leadList.openList')}
+              onPress={() => navigation.navigate('LeadList', { kind })}
+              variant="outline"
+              size="sm"
+              icon={<MaterialIcons name="tune" size={18} color={theme.accentText?.val} />}
+              testID="leads-open-list"
+            />
+          ) : null}
+          {leads.total > 0 ? (
+            <Text color="$muted" fontSize="$2" aria-live="polite">
+              {t('crmApp.leads.count', { count: leads.total })}
+            </Text>
+          ) : null}
+        </YStack>
       </YStack>
       <FlatList
         data={leads.rows}
@@ -83,7 +104,7 @@ export function LeadsScreen() {
         onEndReachedThreshold={0.4}
         refreshing={false}
         onRefresh={leads.refresh}
-        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 24 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, gap: 8 }}
         renderItem={({ item }) => (
           <YStack
             role="button"
@@ -93,7 +114,6 @@ export function LeadsScreen() {
                 navigation.navigate('LeadDetail', { kind: item.entity_type, id: item.id });
             }}
             {...SURFACE}
-            marginBottom="$2"
             pressStyle={{ backgroundColor: '$soft' }}
             testID={`lead-row-${item.id}`}
           >

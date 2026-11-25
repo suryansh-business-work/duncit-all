@@ -25,20 +25,39 @@ export function dueAt(choice: DueChoice, now: Date = new Date()): Date {
   }
 }
 
+/** A due time picked on the calendar instead of a quick choice. */
+export const CUSTOM_DUE = 'custom';
+
 export const makeReminderSchema = (t: Translate) =>
-  z.object({
-    title: z
-      .string()
-      .trim()
-      .min(1, t('crmApp.reminder.titleRequired'))
-      .max(REMINDER_TITLE_MAX, t('crmApp.note.tooLong', { vars: { max: REMINDER_TITLE_MAX } })),
-    due: z.enum(DUE_CHOICES, { error: t('crmApp.reminder.dueRequired') }),
-    notes: z
-      .string()
-      .trim()
-      .max(REMINDER_NOTES_MAX, t('crmApp.note.tooLong', { vars: { max: REMINDER_NOTES_MAX } })),
-  });
+  z
+    .object({
+      title: z
+        .string()
+        .trim()
+        .min(1, t('crmApp.reminder.titleRequired'))
+        .max(REMINDER_TITLE_MAX, t('crmApp.note.tooLong', { vars: { max: REMINDER_TITLE_MAX } })),
+      due: z.enum([...DUE_CHOICES, CUSTOM_DUE], { error: t('crmApp.reminder.dueRequired') }),
+      /** The picked date and time, when the due choice is custom. */
+      at: z.date().nullable().optional(),
+      notes: z
+        .string()
+        .trim()
+        .max(REMINDER_NOTES_MAX, t('crmApp.note.tooLong', { vars: { max: REMINDER_NOTES_MAX } })),
+    })
+    .refine((v) => v.due !== CUSTOM_DUE || Boolean(v.at), {
+      path: ['at'],
+      message: t('crm.components.pickAValidDueDateAnd'),
+    });
 
 export type ReminderValues = z.infer<ReturnType<typeof makeReminderSchema>>;
 
-export const reminderDefaults: ReminderValues = { title: '', due: 'tomorrow', notes: '' };
+export const reminderDefaults: ReminderValues = { title: '', due: 'tomorrow', at: null, notes: '' };
+
+/** When the reminder is due: the picked date and time, or the quick choice from now. */
+export function reminderDueDate(
+  values: Pick<ReminderValues, 'due' | 'at'>,
+  now: Date = new Date(),
+): Date {
+  if (values.due === CUSTOM_DUE) return values.at ?? now;
+  return dueAt(values.due, now);
+}

@@ -17,7 +17,10 @@ export interface UploadFile {
  * stores it with the server's own credentials. Returns the stored file's URL.
  */
 export async function uploadFile(file: UploadFile, folder: string): Promise<string> {
-  const { getImagekitAuth } = await gqlRequest(CrmAppUploadTicketDocument, { folder, surface: 'MOBILE' });
+  const { getImagekitAuth } = await gqlRequest(CrmAppUploadTicketDocument, {
+    folder,
+    surface: 'MOBILE',
+  });
   const form = new FormData();
   // React Native's FormData streams a { uri, name, type } part from disk.
   form.append('file', file as unknown as Blob);

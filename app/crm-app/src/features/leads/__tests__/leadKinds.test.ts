@@ -3,7 +3,13 @@ import { notesOf } from '../useLead';
 
 describe('lead kinds', () => {
   it('knows exactly the five kinds the API has', () => {
-    expect(LEAD_KINDS).toEqual(['VENUE_LEAD', 'HOST_LEAD', 'ECOMM_LEAD', 'CREATOR_LEAD', 'COMMUNITY_LEAD']);
+    expect(LEAD_KINDS).toEqual([
+      'VENUE_LEAD',
+      'HOST_LEAD',
+      'ECOMM_LEAD',
+      'CREATOR_LEAD',
+      'COMMUNITY_LEAD',
+    ]);
     expect(isLeadKind('HOST_LEAD')).toBe(true);
     expect(isLeadKind('USER_LEAD')).toBe(false);
     expect(isLeadKind(undefined)).toBe(false);

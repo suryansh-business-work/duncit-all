@@ -3,7 +3,13 @@
  * CrmEntityType). One list for the search filter, the deep links, the caller
  * directory and the call log, so they cannot disagree about what a kind is.
  */
-export const LEAD_KINDS = ['VENUE_LEAD', 'HOST_LEAD', 'ECOMM_LEAD', 'CREATOR_LEAD', 'COMMUNITY_LEAD'] as const;
+export const LEAD_KINDS = [
+  'VENUE_LEAD',
+  'HOST_LEAD',
+  'ECOMM_LEAD',
+  'CREATOR_LEAD',
+  'COMMUNITY_LEAD',
+] as const;
 
 export type LeadKind = (typeof LEAD_KINDS)[number];
 
@@ -22,7 +28,10 @@ export function leadQueryFlags(kind: LeadKind) {
 }
 
 /** The key the CrmAppLead query answers this kind under. */
-export const LEAD_QUERY_FIELD: Record<LeadKind, 'venue' | 'host' | 'ecomm' | 'creator' | 'community'> = {
+export const LEAD_QUERY_FIELD: Record<
+  LeadKind,
+  'venue' | 'host' | 'ecomm' | 'creator' | 'community'
+> = {
   VENUE_LEAD: 'venue',
   HOST_LEAD: 'host',
   ECOMM_LEAD: 'ecomm',

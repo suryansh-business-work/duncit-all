@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useNavigation, useRoute, type NavigationProp, type RouteProp } from '@react-navigation/native';
+import {
+  useNavigation,
+  useRoute,
+  type NavigationProp,
+  type RouteProp,
+} from '@react-navigation/native';
 import { Input, Text, XStack, YStack, useTheme } from 'tamagui';
 import { fireAndForget, logs } from '@duncit/logs';
 
@@ -37,7 +42,13 @@ export function DialerScreen() {
   };
 
   return (
-    <YStack flex={1} backgroundColor="$background" padding="$4" gap="$4" justifyContent="space-between">
+    <YStack
+      flex={1}
+      backgroundColor="$background"
+      padding="$4"
+      gap="$4"
+      justifyContent="space-between"
+    >
       <YStack gap="$2" alignItems="center">
         <XStack alignItems="center" gap="$2" width="100%">
           <Input
@@ -55,23 +66,42 @@ export function DialerScreen() {
             testID="dialer-number"
           />
           {number ? (
-            <XStack role="button" aria-label={t('crmApp.dialer.backspace')} onPress={() => setNumber((n) => n.slice(0, -1))} padding="$2" testID="dialer-backspace">
+            <XStack
+              role="button"
+              aria-label={t('crmApp.dialer.backspace')}
+              onPress={() => setNumber((n) => n.slice(0, -1))}
+              padding="$2"
+              testID="dialer-backspace"
+            >
               <MaterialIcons name="backspace" size={26} color={theme.muted?.val} />
             </XStack>
           ) : null}
         </XStack>
         <YStack minHeight={48} alignItems="center" aria-live="polite">
-          {lookup.status === 'looking' ? <Text color="$muted">{t('crmApp.dialer.lookingUp')}</Text> : null}
-          {lookup.status === 'none' ? <Text color="$muted">{t('crmApp.dialer.notInCrm')}</Text> : null}
+          {lookup.status === 'looking' ? (
+            <Text color="$muted">{t('crmApp.dialer.lookingUp')}</Text>
+          ) : null}
+          {lookup.status === 'none' ? (
+            <Text color="$muted">{t('crmApp.dialer.notInCrm')}</Text>
+          ) : null}
           {lookup.status === 'found' ? (
             <YStack alignItems="center" testID="dialer-owner">
               <Text fontWeight="700" fontSize="$6">
                 {lookup.owner.leadName}
               </Text>
-              <Text color="$muted">{[lookup.owner.contactName, t(`crmApp.kind.${lookup.owner.kind}`)].filter(Boolean).join(' · ')}</Text>
+              <Text color="$muted">
+                {[lookup.owner.contactName, t(`crmApp.kind.${lookup.owner.kind}`)]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </Text>
               <DuncitButton
                 label={t('crmApp.dialer.openLead', { vars: { name: lookup.owner.leadName } })}
-                onPress={() => navigation.navigate('LeadDetail', { kind: lookup.owner.kind, id: lookup.owner.leadId })}
+                onPress={() =>
+                  navigation.navigate('LeadDetail', {
+                    kind: lookup.owner.kind,
+                    id: lookup.owner.leadId,
+                  })
+                }
                 variant="ghost"
                 size="sm"
                 testID="dialer-open-lead"

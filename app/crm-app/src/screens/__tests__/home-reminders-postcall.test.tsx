@@ -1,16 +1,5 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
-jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
-jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
-jest.mock('@/services/call-sync', () => ({ syncDeviceCalls: jest.fn() }));
-jest.mock('@/services/permissions', () => ({ readPermissions: jest.fn() }));
-const mockNav = { navigate: jest.fn(), goBack: jest.fn(), canGoBack: jest.fn(() => true), setOptions: jest.fn() };
-jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => mockNav,
-  useRoute: () => ({ params: {} }),
-  useFocusEffect: (fn: () => void) => require('react').useEffect(fn, [fn]),
-}));
-
 import { gqlRequest } from '@/services/graphql.client';
 import { syncDeviceCalls } from '@/services/call-sync';
 import { readPermissions } from '@/services/permissions';
@@ -21,14 +10,46 @@ import { HomeScreen } from '../home/HomeScreen';
 import { RemindersScreen } from '../reminders/RemindersScreen';
 import { PostCallScreen } from '../post-call/PostCallScreen';
 
+jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
+jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
+jest.mock('@/services/call-sync', () => ({ syncDeviceCalls: jest.fn() }));
+jest.mock('@/services/permissions', () => ({ readPermissions: jest.fn() }));
+const mockNav = {
+  navigate: jest.fn(),
+  goBack: jest.fn(),
+  canGoBack: jest.fn(() => true),
+  setOptions: jest.fn(),
+};
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => mockNav,
+  useRoute: () => ({ params: {} }),
+  useFocusEffect: (fn: () => void) =>
+    jest.requireActual<typeof import('react')>('react').useEffect(fn, [fn]),
+}));
+
 const request = gqlRequest as jest.Mock;
 const future = new Date(Date.now() + 3_600_000).toISOString();
 const past = new Date(Date.now() - 3_600_000).toISOString();
-const reminder = (over: Record<string, unknown> = {}) => ({ id: 'r1', entity_type: 'VENUE_LEAD', lead_id: 'v1', title: 'Call Rohit', due_at: future, notes: null, status: 'PENDING', ...over });
+const reminder = (over: Record<string, unknown> = {}) => ({
+  id: 'r1',
+  entity_type: 'VENUE_LEAD',
+  lead_id: 'v1',
+  title: 'Call Rohit',
+  due_at: future,
+  notes: null,
+  status: 'PENDING',
+  ...over,
+});
 
 beforeEach(() => {
   jest.clearAllMocks();
-  (readPermissions as jest.Mock).mockResolvedValue({ phone: true, call: true, overlay: true, notifications: true, audio: true });
+  (readPermissions as jest.Mock).mockResolvedValue({
+    phone: true,
+    call: true,
+    overlay: true,
+    notifications: true,
+    audio: true,
+  });
 });
 
 describe('HomeScreen', () => {
@@ -55,7 +76,14 @@ describe('HomeScreen', () => {
 describe('RemindersScreen', () => {
   it('lists pending reminders soonest first, flags overdue, and ticks one done', async () => {
     request.mockImplementation(async (_doc: unknown, vars: { id?: string }) =>
-      vars.id ? { toggleCrmReminderDone: { id: vars.id, status: 'DONE' } } : { crmReminders: [reminder({ id: 'r2', title: 'Later' }), reminder({ id: 'r1', title: 'Overdue one', due_at: past })] },
+      vars.id
+        ? { toggleCrmReminderDone: { id: vars.id, status: 'DONE' } }
+        : {
+            crmReminders: [
+              reminder({ id: 'r2', title: 'Later' }),
+              reminder({ id: 'r1', title: 'Overdue one', due_at: past }),
+            ],
+          },
     );
     renderWithTheme(<RemindersScreen />);
     const titles = await screen.findAllByText(/Later|Overdue one/);
@@ -76,7 +104,17 @@ describe('RemindersScreen', () => {
 });
 
 describe('PostCallScreen', () => {
-  const ended = { number: '9811000001', direction: 'INBOUND' as const, answered: true, startedAt: 0, endedAt: 134_000, entityType: 'VENUE_LEAD', leadId: 'v1', leadName: 'Smash Arena', contactName: 'Rohit' };
+  const ended = {
+    number: '9811000001',
+    direction: 'INBOUND' as const,
+    answered: true,
+    startedAt: 0,
+    endedAt: 134_000,
+    entityType: 'VENUE_LEAD',
+    leadId: 'v1',
+    leadName: 'Smash Arena',
+    contactName: 'Rohit',
+  };
 
   it('saves the call and offers a note, a reminder and the lead', async () => {
     usePostCallStore.setState({ pending: ended });
@@ -86,13 +124,28 @@ describe('PostCallScreen', () => {
     expect(screen.getByText('Lasted 2:14')).toBeOnTheScreen();
     expect(await screen.findByText('Call saved to the CRM')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('post-call-note'));
-    expect(mockNav.navigate).toHaveBeenCalledWith('AddNote', { kind: 'VENUE_LEAD', id: 'v1', name: 'Smash Arena' });
+    expect(mockNav.navigate).toHaveBeenCalledWith('AddNote', {
+      kind: 'VENUE_LEAD',
+      id: 'v1',
+      name: 'Smash Arena',
+    });
     fireEvent.press(screen.getByTestId('post-call-reminder'));
-    expect(mockNav.navigate).toHaveBeenCalledWith('AddReminder', expect.objectContaining({ title: 'Call with Smash Arena' }));
+    expect(mockNav.navigate).toHaveBeenCalledWith(
+      'AddReminder',
+      expect.objectContaining({ title: 'Call with Smash Arena' }),
+    );
   });
 
   it('says when the call could not be saved, and Done clears it', async () => {
-    usePostCallStore.setState({ pending: { ...ended, answered: false, entityType: undefined, leadId: undefined, leadName: undefined } });
+    usePostCallStore.setState({
+      pending: {
+        ...ended,
+        answered: false,
+        entityType: undefined,
+        leadId: undefined,
+        leadName: undefined,
+      },
+    });
     (syncDeviceCalls as jest.Mock).mockResolvedValue({ failed: true });
     renderWithTheme(<PostCallScreen />);
     expect(screen.getByText('Not answered')).toBeOnTheScreen();

@@ -7,7 +7,10 @@ import type { CodegenConfig } from '@graphql-codegen/cli';
  */
 const config: CodegenConfig = {
   overwrite: true,
-  schema: ['../../server/src/modules/**/*.schema.ts', '../../server/src/microservices/**/*.schema.ts'],
+  schema: [
+    '../../server/src/modules/**/*.schema.ts',
+    '../../server/src/microservices/**/*.schema.ts',
+  ],
   ignoreNoDocuments: true,
   generates: {
     './src/generated/graphql/': {

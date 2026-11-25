@@ -32,10 +32,17 @@ export function useLeadSearch(search: string, kind: LeadKind | null, fallbackErr
       setError(null);
       try {
         const { searchCrmLeads } = await gqlRequest(CrmAppLeadSearchDocument, {
-          input: { search: search.trim() || null, entity_types: kind ? [kind] : null, page: nextPage, page_size: PAGE_SIZE },
+          input: {
+            search: search.trim() || null,
+            entity_types: kind ? [kind] : null,
+            page: nextPage,
+            page_size: PAGE_SIZE,
+          },
         });
         if (id !== request.current) return;
-        setRows((current) => (nextPage === 1 ? searchCrmLeads.rows : [...current, ...searchCrmLeads.rows]));
+        setRows((current) =>
+          nextPage === 1 ? searchCrmLeads.rows : [...current, ...searchCrmLeads.rows],
+        );
         setTotal(searchCrmLeads.total);
         setPage(nextPage);
       } catch (err) {
@@ -48,13 +55,17 @@ export function useLeadSearch(search: string, kind: LeadKind | null, fallbackErr
   );
 
   useEffect(() => {
-    const timer = setTimeout(() => fireAndForget(load(1), logs.mobileApp, 'crm-app/useLeadSearch', 'load'), SEARCH_DEBOUNCE_MS);
+    const timer = setTimeout(
+      () => fireAndForget(load(1), logs.mobileApp, 'crm-app/useLeadSearch', 'load'),
+      SEARCH_DEBOUNCE_MS,
+    );
     return () => clearTimeout(timer);
   }, [load]);
 
   const hasMore = rows.length < total;
   const loadMore = useCallback(() => {
-    if (!loading && hasMore) fireAndForget(load(page + 1), logs.mobileApp, 'crm-app/useLeadSearch', 'load');
+    if (!loading && hasMore)
+      fireAndForget(load(page + 1), logs.mobileApp, 'crm-app/useLeadSearch', 'load');
   }, [loading, hasMore, load, page]);
 
   return { rows, total, loading, error, hasMore, loadMore, refresh: () => load(1) };

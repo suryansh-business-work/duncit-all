@@ -3,12 +3,22 @@ import { createTranslator, type Translator } from '@duncit/i18n';
 import { CRM_FALLBACK_FLAT } from '@/i18n/fallback';
 import { useLocaleStore } from '@/stores/locale.store';
 
-let shared: { locale: string; catalogue: Record<string, string>; translator: Translator } | null = null;
+let shared: { locale: string; catalogue: Record<string, string>; translator: Translator } | null =
+  null;
 
 /** One translator per (locale, catalogue) for the whole app, so `t` keeps its identity across components. */
-export function translatorFor(locale: string, isRtl: boolean, catalogue: Record<string, string>): Translator {
+export function translatorFor(
+  locale: string,
+  isRtl: boolean,
+  catalogue: Record<string, string>,
+): Translator {
   if (shared?.locale === locale && shared.catalogue === catalogue) return shared.translator;
-  const translator = createTranslator({ locale, isRtl, fallback: CRM_FALLBACK_FLAT, server: catalogue });
+  const translator = createTranslator({
+    locale,
+    isRtl,
+    fallback: CRM_FALLBACK_FLAT,
+    server: catalogue,
+  });
   shared = { locale, catalogue, translator };
   return translator;
 }

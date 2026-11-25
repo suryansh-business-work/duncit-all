@@ -25,9 +25,27 @@ export function NoteForm({ onSubmit, error }: Readonly<Props>) {
   });
   return (
     <YStack gap="$3">
-      <TextField control={control} name="summary" label={t('crmApp.note.summary')} hint={t('crmApp.note.summaryHint')} testID="note-summary" />
-      <TextField control={control} name="body" label={t('crmApp.note.body')} multiline testID="note-body" />
-      <DuncitButton label={t('crmApp.note.save')} onPress={handleSubmit(onSubmit)} loading={formState.isSubmitting} fullWidth testID="note-save" />
+      <TextField
+        control={control}
+        name="summary"
+        label={t('crmApp.note.summary')}
+        hint={t('crmApp.note.summaryHint')}
+        testID="note-summary"
+      />
+      <TextField
+        control={control}
+        name="body"
+        label={t('crmApp.note.body')}
+        multiline
+        testID="note-body"
+      />
+      <DuncitButton
+        label={t('crmApp.note.save')}
+        onPress={handleSubmit(onSubmit)}
+        loading={formState.isSubmitting}
+        fullWidth
+        testID="note-save"
+      />
       {error ? (
         <Text color="$danger" role="alert">
           {error}

@@ -17,7 +17,8 @@ export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
 
 export const readValue = (key: StorageKey): Promise<string | null> => SecureStore.getItemAsync(key);
 
-export const writeValue = (key: StorageKey, value: string): Promise<void> => SecureStore.setItemAsync(key, value);
+export const writeValue = (key: StorageKey, value: string): Promise<void> =>
+  SecureStore.setItemAsync(key, value);
 
 export const removeValue = (key: StorageKey): Promise<void> => SecureStore.deleteItemAsync(key);
 

@@ -33,18 +33,28 @@ export function callKey(raw: string | null | undefined): string {
 /** Voicemail and blocked calls are not conversations with a lead. */
 export function directionOf(type: number): CallDirection | null {
   if (type === CALL_TYPE.OUTGOING) return 'OUTBOUND';
-  if (type === CALL_TYPE.INCOMING || type === CALL_TYPE.MISSED || type === CALL_TYPE.REJECTED) return 'INBOUND';
+  if (type === CALL_TYPE.INCOMING || type === CALL_TYPE.MISSED || type === CALL_TYPE.REJECTED)
+    return 'INBOUND';
   return null;
 }
 
 /** A call that ran is COMPLETED; one that never connected was not answered. */
 export function outcomeOf(entry: Pick<CallLogEntry, 'type' | 'durationSeconds'>): CallOutcome {
-  if (entry.durationSeconds > 0 && entry.type !== CALL_TYPE.MISSED && entry.type !== CALL_TYPE.REJECTED) return 'COMPLETED';
+  if (
+    entry.durationSeconds > 0 &&
+    entry.type !== CALL_TYPE.MISSED &&
+    entry.type !== CALL_TYPE.REJECTED
+  )
+    return 'COMPLETED';
   return 'NO_ANSWER';
 }
 
 /** The report for one call log row with a CRM contact, or null when it is not one to report. */
-export function planCall(entry: CallLogEntry, lead: DirectoryMatch | null, installId: string): PlannedCall | null {
+export function planCall(
+  entry: CallLogEntry,
+  lead: DirectoryMatch | null,
+  installId: string,
+): PlannedCall | null {
   if (!lead || !isLeadKind(lead.entityType) || !callKey(entry.number)) return null;
   const direction = directionOf(entry.type);
   if (!direction) return null;

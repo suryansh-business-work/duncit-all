@@ -27,9 +27,28 @@ export function TwoFactorForm({ onSubmit, onBack, error }: Readonly<Props>) {
   return (
     <YStack gap="$3">
       <Text color="$muted">{t('crmApp.twoFactor.hint')}</Text>
-      <TextField control={control} name="code" label={t('crmApp.twoFactor.code')} keyboardType="number-pad" autoComplete="one-time-code" testID="two-factor-code" />
-      <DuncitButton label={t('crmApp.twoFactor.verify')} onPress={handleSubmit(onSubmit)} loading={formState.isSubmitting} fullWidth testID="two-factor-submit" />
-      <DuncitButton label={t('crmApp.twoFactor.back')} onPress={onBack} variant="ghost" fullWidth testID="two-factor-back" />
+      <TextField
+        control={control}
+        name="code"
+        label={t('crmApp.twoFactor.code')}
+        keyboardType="number-pad"
+        autoComplete="one-time-code"
+        testID="two-factor-code"
+      />
+      <DuncitButton
+        label={t('crmApp.twoFactor.verify')}
+        onPress={handleSubmit(onSubmit)}
+        loading={formState.isSubmitting}
+        fullWidth
+        testID="two-factor-submit"
+      />
+      <DuncitButton
+        label={t('crmApp.twoFactor.back')}
+        onPress={onBack}
+        variant="ghost"
+        fullWidth
+        testID="two-factor-back"
+      />
       {error ? (
         <Text color="$danger" role="alert" testID="two-factor-error">
           {error}

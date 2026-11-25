@@ -16,7 +16,11 @@ export const CrmAppSubmitFeedbackDocument = gql(`
 export const appVersion = (): string => Constants.expoConfig?.version ?? '';
 
 /** File a support feedback row (Report an Issue on the error screen). */
-export async function submitFeedback(category: string, message: string, sourceScreen: string): Promise<void> {
+export async function submitFeedback(
+  category: string,
+  message: string,
+  sourceScreen: string,
+): Promise<void> {
   const input = buildAppFeedbackInput({
     category,
     message,

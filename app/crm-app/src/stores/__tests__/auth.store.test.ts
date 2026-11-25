@@ -1,3 +1,9 @@
+import * as SecureStore from 'expo-secure-store';
+import { gqlRequest } from '@/services/graphql.client';
+import { getToken, resetTokenCache } from '@/services/session';
+import { ApiError } from '@/utils/errors';
+import { NoCrmAccessError, useAuthStore } from '../auth.store';
+
 const mockPhone = { clearAll: jest.fn() };
 jest.mock('crm-telephony', () => ({
   get CrmTelephony() {
@@ -6,12 +12,6 @@ jest.mock('crm-telephony', () => ({
 }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
 jest.mock('@/services/background-sync', () => ({ unregisterBackgroundSync: jest.fn() }));
-
-import * as SecureStore from 'expo-secure-store';
-import { gqlRequest } from '@/services/graphql.client';
-import { getToken, resetTokenCache } from '@/services/session';
-import { ApiError } from '@/utils/errors';
-import { NoCrmAccessError, useAuthStore } from '../auth.store';
 
 /** Signing in: the CRM portal's steps, and its role gate, on the phone. */
 
@@ -31,9 +31,18 @@ beforeEach(() => {
 
 describe('signIn', () => {
   it('signs in with the CRM portal key and lets a CRM manager in', async () => {
-    request.mockResolvedValueOnce({ login: { token: VERIFIED } }).mockResolvedValueOnce({ me: crmUser });
+    request
+      .mockResolvedValueOnce({ login: { token: VERIFIED } })
+      .mockResolvedValueOnce({ me: crmUser });
     await useAuthStore.getState().signIn('asha@duncit.com', 'longenough');
-    expect(request.mock.calls[0][1]).toEqual({ input: { channel: 'EMAIL', email: 'asha@duncit.com', password: 'longenough', portal_key: 'crm' } });
+    expect(request.mock.calls[0][1]).toEqual({
+      input: {
+        channel: 'EMAIL',
+        email: 'asha@duncit.com',
+        password: 'longenough',
+        portal_key: 'crm',
+      },
+    });
     expect(useAuthStore.getState()).toMatchObject({ status: 'signedIn', user: crmUser });
     expect(await getToken()).toBe(VERIFIED);
   });
@@ -45,14 +54,20 @@ describe('signIn', () => {
   });
 
   it('asks a 2FA account for its code, holding the challenge', async () => {
-    request.mockRejectedValueOnce(new ApiError('2FA', 401, { code: 'TWO_FACTOR_REQUIRED', challenge_token: 'ch-1' }));
+    request.mockRejectedValueOnce(
+      new ApiError('2FA', 401, { code: 'TWO_FACTOR_REQUIRED', challenge_token: 'ch-1' }),
+    );
     await useAuthStore.getState().signIn('asha@duncit.com', 'longenough');
     expect(useAuthStore.getState()).toMatchObject({ status: 'twoFactor', challengeToken: 'ch-1' });
   });
 
   it('refuses an account without CRM access, as the portal does, and leaves nothing behind', async () => {
-    request.mockResolvedValueOnce({ login: { token: VERIFIED } }).mockResolvedValueOnce({ me: { ...crmUser, roles: ['USER'] } });
-    await expect(useAuthStore.getState().signIn('a@b.co', 'longenough')).rejects.toBeInstanceOf(NoCrmAccessError);
+    request
+      .mockResolvedValueOnce({ login: { token: VERIFIED } })
+      .mockResolvedValueOnce({ me: { ...crmUser, roles: ['USER'] } });
+    await expect(useAuthStore.getState().signIn('a@b.co', 'longenough')).rejects.toBeInstanceOf(
+      NoCrmAccessError,
+    );
     expect(useAuthStore.getState().status).toBe('signedOut');
     expect(await getToken()).toBeNull();
     expect(mockPhone.clearAll).toHaveBeenCalled();
@@ -60,18 +75,28 @@ describe('signIn', () => {
 
   it('maps the server’s portal refusal to no-access and passes other errors on', async () => {
     request.mockRejectedValueOnce(new ApiError('no', 403, { code: 'FORBIDDEN' }));
-    await expect(useAuthStore.getState().signIn('a@b.co', 'longenough')).rejects.toBeInstanceOf(NoCrmAccessError);
-    request.mockRejectedValueOnce(new ApiError('Invalid credentials', 401, { code: 'UNAUTHENTICATED' }));
-    await expect(useAuthStore.getState().signIn('a@b.co', 'longenough')).rejects.toThrow('Invalid credentials');
+    await expect(useAuthStore.getState().signIn('a@b.co', 'longenough')).rejects.toBeInstanceOf(
+      NoCrmAccessError,
+    );
+    request.mockRejectedValueOnce(
+      new ApiError('Invalid credentials', 401, { code: 'UNAUTHENTICATED' }),
+    );
+    await expect(useAuthStore.getState().signIn('a@b.co', 'longenough')).rejects.toThrow(
+      'Invalid credentials',
+    );
   });
 });
 
 describe('completeTwoFactor', () => {
   it('trades the challenge and code for a session', async () => {
     useAuthStore.setState({ status: 'twoFactor', challengeToken: 'ch-1' });
-    request.mockResolvedValueOnce({ completeTwoFactorLogin: { token: VERIFIED } }).mockResolvedValueOnce({ me: crmUser });
+    request
+      .mockResolvedValueOnce({ completeTwoFactorLogin: { token: VERIFIED } })
+      .mockResolvedValueOnce({ me: crmUser });
     await useAuthStore.getState().completeTwoFactor('123456');
-    expect(request.mock.calls[0][1]).toEqual({ input: { challenge_token: 'ch-1', code: '123456' } });
+    expect(request.mock.calls[0][1]).toEqual({
+      input: { challenge_token: 'ch-1', code: '123456' },
+    });
     expect(useAuthStore.getState().status).toBe('signedIn');
   });
 

@@ -1,7 +1,13 @@
 import { CALL_TYPE, type RecordingFile } from 'crm-telephony';
 
 import { planCall, type PlannedCall } from '../callPlan';
-import { audioContentType, MAX_RECORDING_BYTES, pickRecording, recordingScore, recordingWindow } from '../recordingMatch';
+import {
+  audioContentType,
+  MAX_RECORDING_BYTES,
+  pickRecording,
+  recordingScore,
+  recordingWindow,
+} from '../recordingMatch';
 import { formatCallDuration } from '../duration';
 
 /**
@@ -14,8 +20,22 @@ const START = Date.UTC(2026, 10, 24, 10, 30);
 
 const call = (over: Partial<PlannedCall['entry']> = {}): PlannedCall =>
   planCall(
-    { id: '1', number: '+91 98110 00001', type: CALL_TYPE.OUTGOING, date: START, durationSeconds: 120, cachedName: '', ...over },
-    { entityType: 'HOST_LEAD', leadId: 'h1', leadName: 'Run Club', contactName: 'Rohit Sharma', others: 0 },
+    {
+      id: '1',
+      number: '+91 98110 00001',
+      type: CALL_TYPE.OUTGOING,
+      date: START,
+      durationSeconds: 120,
+      cachedName: '',
+      ...over,
+    },
+    {
+      entityType: 'HOST_LEAD',
+      leadId: 'h1',
+      leadName: 'Run Club',
+      contactName: 'Rohit Sharma',
+      others: 0,
+    },
     'install',
   ) as PlannedCall;
 
@@ -32,7 +52,10 @@ const file = (over: Partial<RecordingFile> = {}): RecordingFile => ({
 
 describe('recordingWindow', () => {
   it('runs from just before the call to a few minutes after it ended', () => {
-    expect(recordingWindow(call())).toEqual({ fromMs: START - 5000, toMs: START + 120_000 + 180_000 });
+    expect(recordingWindow(call())).toEqual({
+      fromMs: START - 5000,
+      toMs: START + 120_000 + 180_000,
+    });
   });
 });
 
@@ -42,7 +65,11 @@ describe('recordingScore', () => {
   });
 
   it('counts the contact name, the Call recordings folder and a matching length', () => {
-    const named = file({ name: 'Rohit Sharma 2026-11-24.m4a', relativePath: 'Recordings/Call/', durationMs: 118_000 });
+    const named = file({
+      name: 'Rohit Sharma 2026-11-24.m4a',
+      relativePath: 'Recordings/Call/',
+      durationMs: 118_000,
+    });
     expect(recordingScore(named, call())).toBe(2 + 2 + 1);
   });
 
@@ -54,7 +81,11 @@ describe('recordingScore', () => {
 describe('pickRecording', () => {
   it('picks the best-evidenced file in the window', () => {
     const weak = file({ uri: 'content://weak', relativePath: 'Recordings/Call/' });
-    const strong = file({ uri: 'content://strong', name: '9811000001.m4a', relativePath: 'Recordings/Call/' });
+    const strong = file({
+      uri: 'content://strong',
+      name: '9811000001.m4a',
+      relativePath: 'Recordings/Call/',
+    });
     expect(pickRecording(call(), [weak, strong])?.uri).toBe('content://strong');
   });
 
@@ -68,11 +99,15 @@ describe('pickRecording', () => {
     expect(pickRecording(call(), [file({ ...named, addedAtMs: START - 60_000 })])).toBeNull();
     expect(pickRecording(call(), [file({ ...named, addedAtMs: START + 10 * 60_000 })])).toBeNull();
     expect(pickRecording(call(), [file({ ...named, sizeBytes: 0 })])).toBeNull();
-    expect(pickRecording(call(), [file({ ...named, sizeBytes: MAX_RECORDING_BYTES + 1 })])).toBeNull();
+    expect(
+      pickRecording(call(), [file({ ...named, sizeBytes: MAX_RECORDING_BYTES + 1 })]),
+    ).toBeNull();
   });
 
   it('looks for nothing on a call that never connected', () => {
-    expect(pickRecording(call({ durationSeconds: 0 }), [file({ name: '9811000001.m4a' })])).toBeNull();
+    expect(
+      pickRecording(call({ durationSeconds: 0 }), [file({ name: '9811000001.m4a' })]),
+    ).toBeNull();
   });
 });
 

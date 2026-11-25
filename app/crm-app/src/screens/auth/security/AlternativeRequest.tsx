@@ -1,7 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Text, YStack } from 'tamagui';
-import { makeSecurityExceptionSchema, securityExceptionDefaults, type SecurityExceptionValues } from '@duncit/forms/schemas';
+import {
+  makeSecurityExceptionSchema,
+  securityExceptionDefaults,
+  type SecurityExceptionValues,
+} from '@duncit/forms/schemas';
 
 import { DuncitButton } from '@/components/DuncitButton';
 import { TextField } from '@/components/TextField';
@@ -19,17 +23,31 @@ interface Props {
 export function AlternativeRequest({ exception, onRequest }: Readonly<Props>) {
   const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
-  const resolver = useMemo(() => formResolver<SecurityExceptionValues>(makeSecurityExceptionSchema(t)), [t]);
+  const resolver = useMemo(
+    () => formResolver<SecurityExceptionValues>(makeSecurityExceptionSchema(t)),
+    [t],
+  );
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { control, handleSubmit, formState } = useForm<SecurityExceptionValues, any, SecurityExceptionValues>({
+  const { control, handleSubmit, formState } = useForm<
+    SecurityExceptionValues,
+    any,
+    SecurityExceptionValues
+  >({
     defaultValues: securityExceptionDefaults,
     resolver,
     mode: 'onTouched',
   });
 
-  if (exception?.status === 'PENDING') return <Text color="$muted">{t('shell.securityVerification.alternative.pending')}</Text>;
+  if (exception?.status === 'PENDING')
+    return <Text color="$muted">{t('shell.securityVerification.alternative.pending')}</Text>;
   if (exception?.status === 'APPROVED') {
-    return <Text color="$success">{t('shell.securityVerification.alternative.approved', { vars: { until: exception.expires_at ?? '' } })}</Text>;
+    return (
+      <Text color="$success">
+        {t('shell.securityVerification.alternative.approved', {
+          vars: { until: exception.expires_at ?? '' },
+        })}
+      </Text>
+    );
   }
 
   const submit = async ({ reason }: SecurityExceptionValues) => {
@@ -50,7 +68,9 @@ export function AlternativeRequest({ exception, onRequest }: Readonly<Props>) {
       {exception?.status === 'REJECTED' ? (
         <Text color="$danger">
           {exception.decision_note
-            ? t('shell.securityVerification.alternative.rejectedWithNote', { vars: { note: exception.decision_note } })
+            ? t('shell.securityVerification.alternative.rejectedWithNote', {
+                vars: { note: exception.decision_note },
+              })
             : t('shell.securityVerification.alternative.rejected')}
         </Text>
       ) : null}

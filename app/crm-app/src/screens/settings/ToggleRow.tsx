@@ -20,7 +20,14 @@ export function ToggleRow({ id, label, hint, value, onChange }: Readonly<Props>)
           {hint}
         </Text>
       </YStack>
-      <Switch id={id} checked={value} onCheckedChange={onChange} aria-label={label} testID={id} size="$3">
+      <Switch
+        id={id}
+        checked={value}
+        onCheckedChange={onChange}
+        aria-label={label}
+        testID={id}
+        size="$3"
+      >
         <Switch.Thumb />
       </Switch>
     </XStack>

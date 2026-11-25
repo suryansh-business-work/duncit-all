@@ -43,11 +43,20 @@ export function RemindersScreen() {
         renderItem={({ item }) => <ReminderRow reminder={item} onChanged={refetch} />}
         ListHeaderComponent={
           <YStack paddingBottom="$3">
-            <DuncitButton label={t('crmApp.reminder.title')} onPress={() => navigation.navigate('AddReminder', {})} testID="reminders-add" />
+            <DuncitButton
+              label={t('crmApp.reminder.title')}
+              onPress={() => navigation.navigate('AddReminder', {})}
+              testID="reminders-add"
+            />
           </YStack>
         }
         ListEmptyComponent={
-          <StateView loading={!data && !error} error={error} empty={data ? t('crmApp.reminder.empty') : null} onRetry={refetch} />
+          <StateView
+            loading={!data && !error}
+            error={error}
+            empty={data ? t('crmApp.reminder.empty') : null}
+            onRetry={refetch}
+          />
         }
       />
     </YStack>

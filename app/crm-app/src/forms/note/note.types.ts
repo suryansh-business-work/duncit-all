@@ -23,7 +23,13 @@ export type NoteValues = z.infer<ReturnType<typeof makeNoteSchema>>;
 
 export const noteDefaults: NoteValues = { summary: '', body: '' };
 
-const ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+const ESCAPES: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+};
 
 /**
  * The portal stores a manual log as HTML (its editor is rich text). A note

@@ -22,8 +22,21 @@ export function AuthLayout({ title, subtitle, children }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
     <YStack flex={1} backgroundColor="$background">
-      <YStack backgroundColor="$primary" paddingTop="$8" paddingBottom="$9" paddingHorizontal="$5" alignItems="center" gap="$2">
-        <Image source={LOGO} style={{ width: 72, height: 72 }} resizeMode="contain" accessibilityIgnoresInvertColors accessible={false} />
+      <YStack
+        backgroundColor="$primary"
+        paddingTop="$8"
+        paddingBottom="$9"
+        paddingHorizontal="$5"
+        alignItems="center"
+        gap="$2"
+      >
+        <Image
+          source={LOGO}
+          style={{ width: 72, height: 72 }}
+          resizeMode="contain"
+          accessibilityIgnoresInvertColors
+          accessible={false}
+        />
         <Text color="$onPrimary" fontSize="$8" fontWeight="800" role="heading">
           {t('crmApp.login.title')}
         </Text>

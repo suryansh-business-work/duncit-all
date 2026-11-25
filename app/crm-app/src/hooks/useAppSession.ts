@@ -11,7 +11,8 @@ import { usePostCallStore } from '@/stores/postCall.store';
 
 /** A call just ended with a CRM contact: open its post-call screen once the app can navigate. */
 export function openPendingPostCall(): void {
-  if (usePostCallStore.getState().collect() && navigationRef.isReady()) navigationRef.navigate('PostCall');
+  if (usePostCallStore.getState().collect() && navigationRef.isReady())
+    navigationRef.navigate('PostCall');
 }
 
 /**
@@ -24,17 +25,37 @@ export function useAppSession(): void {
   const locale = useAuthStore((s) => s.user?.locale ?? null);
 
   useEffect(() => {
-    fireAndForget(useFeaturesStore.getState().hydrate(), logs.mobileApp, 'crm-app/useAppSession', 'hydrate');
-    fireAndForget(useAuthStore.getState().bootstrap(), logs.mobileApp, 'crm-app/useAppSession', 'bootstrap');
+    fireAndForget(
+      useFeaturesStore.getState().hydrate(),
+      logs.mobileApp,
+      'crm-app/useAppSession',
+      'hydrate',
+    );
+    fireAndForget(
+      useAuthStore.getState().bootstrap(),
+      logs.mobileApp,
+      'crm-app/useAppSession',
+      'bootstrap',
+    );
   }, []);
 
   useEffect(() => {
-    fireAndForget(useLocaleStore.getState().load(locale), logs.mobileApp, 'crm-app/useAppSession', 'load');
+    fireAndForget(
+      useLocaleStore.getState().load(locale),
+      logs.mobileApp,
+      'crm-app/useAppSession',
+      'load',
+    );
   }, [locale]);
 
   useEffect(() => {
     if (status !== 'signedIn') return undefined;
-    fireAndForget(registerBackgroundSync(), logs.mobileApp, 'crm-app/useAppSession', 'registerBackgroundSync');
+    fireAndForget(
+      registerBackgroundSync(),
+      logs.mobileApp,
+      'crm-app/useAppSession',
+      'registerBackgroundSync',
+    );
     fireAndForget(runSync(), logs.mobileApp, 'crm-app/useAppSession', 'runSync');
     openPendingPostCall();
     const subscription = AppState.addEventListener('change', (next) => {

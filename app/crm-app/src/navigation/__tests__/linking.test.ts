@@ -6,7 +6,9 @@ import { fromTelLink, linking } from '../linking';
 
 describe('fromTelLink', () => {
   it('turns a tapped phone number into the CRM dialer with the number filled in', () => {
-    expect(fromTelLink('tel:+91%2098110%2000001')).toBe('duncitcrm://dialer?number=%2B919811000001');
+    expect(fromTelLink('tel:+91%2098110%2000001')).toBe(
+      'duncitcrm://dialer?number=%2B919811000001',
+    );
     expect(fromTelLink('TEL:*123#')).toBe('duncitcrm://dialer?number=*123%23');
   });
 

@@ -18,8 +18,19 @@ function Recording({ url }: Readonly<{ url: string }>) {
   const status = useAudioPlayerStatus(player);
   const label = status.playing ? t('crmApp.activity.pause') : t('crmApp.activity.play');
   return (
-    <XStack role="button" aria-label={label} onPress={() => (status.playing ? player.pause() : player.play())} alignItems="center" gap="$2" testID="comm-play">
-      <MaterialIcons name={status.playing ? 'pause-circle' : 'play-circle'} size={30} color={theme.primary?.val} />
+    <XStack
+      role="button"
+      aria-label={label}
+      onPress={() => (status.playing ? player.pause() : player.play())}
+      alignItems="center"
+      gap="$2"
+      testID="comm-play"
+    >
+      <MaterialIcons
+        name={status.playing ? 'pause-circle' : 'play-circle'}
+        size={30}
+        color={theme.primary?.val}
+      />
       <Text color="$accent">{label}</Text>
     </XStack>
   );
@@ -31,7 +42,9 @@ export function CommLogItem({ log }: Readonly<{ log: CommLog }>) {
   const [open, setOpen] = useState(false);
   const isCall = log.type === 'CALL';
   let title = log.subject || t('crmApp.activity.email');
-  if (isCall) title = log.direction === 'INBOUND' ? t('crmApp.activity.inbound') : t('crmApp.activity.outbound');
+  if (isCall)
+    title =
+      log.direction === 'INBOUND' ? t('crmApp.activity.inbound') : t('crmApp.activity.outbound');
   const summary = log.summary?.status === 'READY' ? log.summary : null;
   const meta = [
     displayDateTime(log.created_at),
@@ -40,21 +53,41 @@ export function CommLogItem({ log }: Readonly<{ log: CommLog }>) {
   ].filter(Boolean);
 
   return (
-    <YStack backgroundColor="$surface" borderRadius="$3" padding="$3" gap="$2" testID={`comm-${log.id}`}>
-      <XStack role="button" aria-expanded={open} onPress={() => setOpen((v) => !v)} justifyContent="space-between" gap="$2">
+    <YStack
+      backgroundColor="$surface"
+      borderRadius="$3"
+      padding="$3"
+      gap="$2"
+      testID={`comm-${log.id}`}
+    >
+      <XStack
+        role="button"
+        aria-expanded={open}
+        onPress={() => setOpen((v) => !v)}
+        justifyContent="space-between"
+        gap="$2"
+      >
         <YStack flex={1}>
           <Text fontWeight="700">{title}</Text>
           <Text color="$muted" fontSize="$2">
             {meta.join(' · ')}
           </Text>
         </YStack>
-        <MaterialIcons name={open ? 'expand-less' : 'expand-more'} size={24} accessibilityElementsHidden />
+        <MaterialIcons
+          name={open ? 'expand-less' : 'expand-more'}
+          size={24}
+          accessibilityElementsHidden
+        />
       </XStack>
       {open && isCall ? (
         <YStack gap="$2">
           {log.recording_url ? <Recording url={log.recording_url} /> : null}
-          {log.transcript_status === 'PENDING' && log.recording_url ? <Text color="$muted">{t('crmApp.activity.transcribing')}</Text> : null}
-          {log.transcript_status === 'FAILED' ? <Text color="$danger">{t('crmApp.activity.transcriptFailed')}</Text> : null}
+          {log.transcript_status === 'PENDING' && log.recording_url ? (
+            <Text color="$muted">{t('crmApp.activity.transcribing')}</Text>
+          ) : null}
+          {log.transcript_status === 'FAILED' ? (
+            <Text color="$danger">{t('crmApp.activity.transcriptFailed')}</Text>
+          ) : null}
           {summary?.text ? (
             <YStack gap="$1">
               <Text fontWeight="700">{t('crmApp.activity.summary')}</Text>

@@ -18,7 +18,16 @@ interface ActionProps {
 function Action({ icon, label, onPress, testID }: Readonly<ActionProps>) {
   const theme = useTheme();
   return (
-    <XStack role="button" aria-label={label} onPress={onPress} padding="$2" borderRadius="$10" backgroundColor="$primarySoft" hitSlop={6} testID={testID}>
+    <XStack
+      role="button"
+      aria-label={label}
+      onPress={onPress}
+      padding="$2"
+      borderRadius="$10"
+      backgroundColor="$primarySoft"
+      hitSlop={6}
+      testID={testID}
+    >
       <MaterialIcons name={icon} size={22} color={theme.primary?.val} />
     </XStack>
   );
@@ -48,12 +57,43 @@ export function ContactRow({ contact, index }: Readonly<{ contact: LeadContact; 
             {[contact.role, phone, contact.email].filter(Boolean).join(' · ')}
           </Text>
         </YStack>
-        {phone ? <Action icon="call" label={t('crmApp.lead.call', { vars: { name } })} onPress={() => fireAndForget(call(), logs.mobileApp, 'crm-app/ContactRow', 'call')} testID={`contact-call-${index}`} /> : null}
+        {phone ? (
+          <Action
+            icon="call"
+            label={t('crmApp.lead.call', { vars: { name } })}
+            onPress={() => fireAndForget(call(), logs.mobileApp, 'crm-app/ContactRow', 'call')}
+            testID={`contact-call-${index}`}
+          />
+        ) : null}
         {whatsapp ? (
-          <Action icon="chat" label={t('crmApp.lead.whatsapp', { vars: { name } })} onPress={() => fireAndForget(Linking.openURL(whatsappUrl(whatsapp)), logs.mobileApp, 'crm-app/ContactRow', 'whatsappUrl')} testID={`contact-whatsapp-${index}`} />
+          <Action
+            icon="chat"
+            label={t('crmApp.lead.whatsapp', { vars: { name } })}
+            onPress={() =>
+              fireAndForget(
+                Linking.openURL(whatsappUrl(whatsapp)),
+                logs.mobileApp,
+                'crm-app/ContactRow',
+                'whatsappUrl',
+              )
+            }
+            testID={`contact-whatsapp-${index}`}
+          />
         ) : null}
         {contact.email ? (
-          <Action icon="email" label={t('crmApp.lead.email', { vars: { name } })} onPress={() => fireAndForget(Linking.openURL(`mailto:${contact.email}`), logs.mobileApp, 'crm-app/ContactRow', 'openURL')} testID={`contact-email-${index}`} />
+          <Action
+            icon="email"
+            label={t('crmApp.lead.email', { vars: { name } })}
+            onPress={() =>
+              fireAndForget(
+                Linking.openURL(`mailto:${contact.email}`),
+                logs.mobileApp,
+                'crm-app/ContactRow',
+                'openURL',
+              )
+            }
+            testID={`contact-email-${index}`}
+          />
         ) : null}
       </XStack>
       {note ? (

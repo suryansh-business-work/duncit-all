@@ -7,7 +7,7 @@ import { LEAD_QUERY_FIELD, leadQueryFlags, type LeadKind } from './leadKinds';
 
 type LeadResult = ResultOf<typeof CrmAppLeadDocument>;
 /** Any of the five kinds — each reads the same card fields, so every field below is common to all. */
-export type Lead = NonNullable<LeadResult[keyof LeadResult]>;
+export type Lead = NonNullable<LeadResult[Exclude<keyof LeadResult, '__typename'>]>;
 export type LeadContact = Lead['contacts'][number];
 
 /** One entry of a lead's timeline, as every kind returns it. */

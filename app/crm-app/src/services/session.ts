@@ -36,4 +36,5 @@ export function resetTokenCache(): void {
  * the server treats that token as signed out everywhere else. The same reader
  * the CRM portal uses (@duncit/user-core), so both gate identically.
  */
-export const needsSecurityVerification = (token: string | null): boolean => isPortalTokenPending(token);
+export const needsSecurityVerification = (token: string | null): boolean =>
+  isPortalTokenPending(token);

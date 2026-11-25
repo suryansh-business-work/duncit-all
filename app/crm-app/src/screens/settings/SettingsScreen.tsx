@@ -26,7 +26,15 @@ export function SettingsScreen() {
       <Card title={t('crmApp.settings.account')}>
         {name ? <Text fontWeight="600">{name}</Text> : null}
         {user?.email ? <Text color="$muted">{user.email}</Text> : null}
-        <DuncitButton label={t('crmApp.settings.signOut')} onPress={() => fireAndForget(signOut(), logs.mobileApp, 'crm-app/SettingsScreen', 'signOut')} variant="outline" tone="danger" testID="settings-sign-out" />
+        <DuncitButton
+          label={t('crmApp.settings.signOut')}
+          onPress={() =>
+            fireAndForget(signOut(), logs.mobileApp, 'crm-app/SettingsScreen', 'signOut')
+          }
+          variant="outline"
+          tone="danger"
+          testID="settings-sign-out"
+        />
       </Card>
       <Card title={t('crmApp.settings.calls')}>
         <ToggleRow
@@ -34,21 +42,42 @@ export function SettingsScreen() {
           label={t('crmApp.settings.callerId')}
           hint={t('crmApp.settings.callerIdHint')}
           value={features.callerId}
-          onChange={(callerId) => fireAndForget(features.set({ callerId }), logs.mobileApp, 'crm-app/SettingsScreen', 'set')}
+          onChange={(callerId) =>
+            fireAndForget(
+              features.set({ callerId }),
+              logs.mobileApp,
+              'crm-app/SettingsScreen',
+              'set',
+            )
+          }
         />
         <ToggleRow
           id="feature-auto-log"
           label={t('crmApp.settings.autoLog')}
           hint={t('crmApp.settings.autoLogHint')}
           value={features.autoLog}
-          onChange={(autoLog) => fireAndForget(features.set({ autoLog }), logs.mobileApp, 'crm-app/SettingsScreen', 'set')}
+          onChange={(autoLog) =>
+            fireAndForget(
+              features.set({ autoLog }),
+              logs.mobileApp,
+              'crm-app/SettingsScreen',
+              'set',
+            )
+          }
         />
         <ToggleRow
           id="feature-recordings"
           label={t('crmApp.settings.recordings')}
           hint={t('crmApp.settings.recordingsHint')}
           value={features.recordings}
-          onChange={(recordings) => fireAndForget(features.set({ recordings }), logs.mobileApp, 'crm-app/SettingsScreen', 'set')}
+          onChange={(recordings) =>
+            fireAndForget(
+              features.set({ recordings }),
+              logs.mobileApp,
+              'crm-app/SettingsScreen',
+              'set',
+            )
+          }
         />
       </Card>
       <HomeScreenCard />

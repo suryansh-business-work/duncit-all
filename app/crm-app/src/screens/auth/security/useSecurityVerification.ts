@@ -15,8 +15,11 @@ import { useAuthStore } from '@/stores/auth.store';
 import { errorCode, errorMessage } from '@/utils/errors';
 import { useTranslation } from '@/hooks/useTranslation';
 
-export type Challenge = NonNullable<ResultOf<typeof CrmAppSecurityChallengeDocument>['portalSecurityChallenge']>;
-export type ConsentKey = 'authorized_person' | 'credentials_not_shared' | 'policies_acknowledged' | 'location_consent';
+export type Challenge = NonNullable<
+  ResultOf<typeof CrmAppSecurityChallengeDocument>['portalSecurityChallenge']
+>;
+export type ConsentKey =
+  'authorized_person' | 'credentials_not_shared' | 'policies_acknowledged' | 'location_consent';
 export type Consent = Record<ConsentKey, boolean>;
 type Fix = { latitude: number; longitude: number; accuracy_meters: number };
 /** How a failed location request is reported to the server (its LOCATION_ERROR_CODES). */
@@ -31,7 +34,8 @@ export const NO_CONSENT: Consent = {
 
 /** What blocks Proceed — the portal's own two rules. */
 export function blockers(consent: Consent, fix: Fix | null, approvedException: boolean) {
-  const acknowledged = consent.authorized_person && consent.credentials_not_shared && consent.policies_acknowledged;
+  const acknowledged =
+    consent.authorized_person && consent.credentials_not_shared && consent.policies_acknowledged;
   const location = approvedException || (fix !== null && consent.location_consent);
   return { acknowledgements: !acknowledged, location: !location };
 }
@@ -74,7 +78,11 @@ export function useSecurityVerification() {
     if (!permission.granted) return setLocationError('PERMISSION_DENIED');
     try {
       const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-      setFix({ latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy_meters: pos.coords.accuracy ?? 0 });
+      setFix({
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        accuracy_meters: pos.coords.accuracy ?? 0,
+      });
     } catch {
       setLocationError('POSITION_UNAVAILABLE');
     }
@@ -82,7 +90,8 @@ export function useSecurityVerification() {
 
   const approved = challenge?.exception?.status === 'APPROVED' ? challenge.exception : null;
   const blocked = blockers(consent, fix, approved !== null);
-  const canProceed = challenge !== null && !submitting && !blocked.acknowledgements && !blocked.location;
+  const canProceed =
+    challenge !== null && !submitting && !blocked.acknowledgements && !blocked.location;
 
   const submit = async () => {
     if (!challenge || !canProceed) return;
@@ -97,7 +106,11 @@ export function useSecurityVerification() {
             consent,
             location: approved ? null : fix,
             exception_id: approved?.id ?? null,
-            client: { timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, language: null, platform: Platform.OS },
+            client: {
+              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              language: null,
+              platform: Platform.OS,
+            },
           },
         },
         await authed(),
@@ -124,5 +137,21 @@ export function useSecurityVerification() {
     setChallenge((c) => (c ? { ...c, exception: requestPortalSecurityException } : c));
   };
 
-  return { challenge, loadError, load, consent, setConsent, fix, locationError, shareLocation, blocked, canProceed, submitting, submitError, submit, requestAlternative, approved };
+  return {
+    challenge,
+    loadError,
+    load,
+    consent,
+    setConsent,
+    fix,
+    locationError,
+    shareLocation,
+    blocked,
+    canProceed,
+    submitting,
+    submitError,
+    submit,
+    requestAlternative,
+    approved,
+  };
 }

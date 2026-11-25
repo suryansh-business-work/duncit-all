@@ -56,7 +56,10 @@ export class ErrorBoundary extends Component<Props, State> {
       platform: Platform.OS,
       appVersion: appVersion(),
     });
-    logs.mobileApp.error(report.route, BOUNDARY_LOG_COMPONENT, { error: crashLogError(report), ...crashLogData(report, 'CAUGHT') });
+    logs.mobileApp.error(report.route, BOUNDARY_LOG_COMPONENT, {
+      error: crashLogError(report),
+      ...crashLogData(report, 'CAUGHT'),
+    });
     this.setState({ report });
   }
 
@@ -67,14 +70,24 @@ export class ErrorBoundary extends Component<Props, State> {
     if (!report) return;
     if (this.reportedId !== report.crash_id) {
       this.reportedId = report.crash_id;
-      logs.mobileApp.warn(report.route, BOUNDARY_LOG_COMPONENT, { error: crashLogError(report), ...crashLogData(report, 'REPORTED') });
+      logs.mobileApp.warn(report.route, BOUNDARY_LOG_COMPONENT, {
+        error: crashLogError(report),
+        ...crashLogData(report, 'REPORTED'),
+      });
     }
     // Filing a feedback row needs a session; a signed-out crash is reported by its log alone.
-    if (await getToken()) await submitFeedback(ISSUE_REPORT_CATEGORY, buildCrashReportMessage(report), report.route);
+    if (await getToken())
+      await submitFeedback(ISSUE_REPORT_CATEGORY, buildCrashReportMessage(report), report.route);
   };
 
   override render() {
     if (!this.state.error) return this.props.children;
-    return <ErrorPanel reference={this.state.report?.crash_id} onRetry={this.reset} onReport={this.report} />;
+    return (
+      <ErrorPanel
+        reference={this.state.report?.crash_id}
+        onRetry={this.reset}
+        onReport={this.report}
+      />
+    );
   }
 }

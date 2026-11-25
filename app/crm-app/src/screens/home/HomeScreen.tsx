@@ -22,7 +22,10 @@ export function HomeScreen() {
   const navigation = useNavigation<NavigationProp<AppStackParamList>>();
   const name = useAuthStore((s) => s.user?.first_name ?? '');
   const filter = useMemo(() => ({ filter: { ...todayWindow(), status: 'PENDING' as const } }), []);
-  const reminders = useGqlQuery(CrmAppRemindersDocument, filter, { fallbackError: t('crmApp.common.loadFailed'), skip: true });
+  const reminders = useGqlQuery(CrmAppRemindersDocument, filter, {
+    fallbackError: t('crmApp.common.loadFailed'),
+    skip: true,
+  });
   const { refetch } = reminders;
   useFocusEffect(
     useCallback(() => {
@@ -46,12 +49,20 @@ export function HomeScreen() {
       {phoneReady ? null : (
         <Card title={t('crmApp.home.setupTitle')} testID="home-setup">
           <Text color="$muted">{t('crmApp.home.setupBody')}</Text>
-          <DuncitButton label={t('crmApp.home.setupAction')} onPress={() => navigation.navigate('Tabs', { screen: 'Settings' })} />
+          <DuncitButton
+            label={t('crmApp.home.setupAction')}
+            onPress={() => navigation.navigate('Tabs', { screen: 'Settings' })}
+          />
         </Card>
       )}
       <XStack gap="$3">
         <YStack flex={1}>
-          <DuncitButton label={t('crmApp.home.openDialer')} onPress={() => navigation.navigate('Tabs', { screen: 'Dialer' })} fullWidth testID="home-dialer" />
+          <DuncitButton
+            label={t('crmApp.home.openDialer')}
+            onPress={() => navigation.navigate('Tabs', { screen: 'Dialer' })}
+            fullWidth
+            testID="home-dialer"
+          />
         </YStack>
         <YStack flex={1}>
           <DuncitButton

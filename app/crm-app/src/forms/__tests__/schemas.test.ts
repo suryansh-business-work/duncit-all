@@ -6,14 +6,16 @@ import { makeLoginSchema } from '@/forms/login';
 
 /** The rules each form refuses by — the same messages a person reads. */
 
-const messages = (result: { success: boolean; error?: { issues: Array<{ message: string }> } }) =>
+const messages = (result: { success: boolean; error?: { issues: { message: string }[] } }) =>
   result.success ? [] : (result.error?.issues ?? []).map((i) => i.message);
 
 describe('sign-in (the shared console rules)', () => {
   const schema = makeLoginSchema(fallbackT, 'EMAIL');
 
   it('accepts an address and an 8+ character password', () => {
-    expect(schema.safeParse({ email: 'asha@duncit.com', password: 'longenough' }).success).toBe(true);
+    expect(schema.safeParse({ email: 'asha@duncit.com', password: 'longenough' }).success).toBe(
+      true,
+    );
   });
 
   it('refuses a missing or malformed address and a short password', () => {
@@ -27,7 +29,10 @@ describe('two-step code', () => {
   const schema = makeTwoFactorSchema(fallbackT);
 
   it('accepts six digits, trimmed', () => {
-    expect(schema.safeParse({ code: ' 123456 ' })).toMatchObject({ success: true, data: { code: '123456' } });
+    expect(schema.safeParse({ code: ' 123456 ' })).toMatchObject({
+      success: true,
+      data: { code: '123456' },
+    });
   });
 
   it.each(['12345', '1234567', 'abcdef', ''])('refuses %p with the code message', (code) => {
@@ -44,13 +49,15 @@ describe('note', () => {
   });
 
   it('caps the note length', () => {
-    expect(messages(schema.safeParse({ summary: '', body: 'x'.repeat(NOTE_BODY_MAX + 1) }))).toEqual([
-      `Keep it under ${NOTE_BODY_MAX} characters`,
-    ]);
+    expect(
+      messages(schema.safeParse({ summary: '', body: 'x'.repeat(NOTE_BODY_MAX + 1) })),
+    ).toEqual([`Keep it under ${NOTE_BODY_MAX} characters`]);
   });
 
   it('stores typed text as escaped paragraphs, so it can never inject markup into the portal', () => {
-    expect(noteToHtml('Hi <b>team</b> & "all"\nline two')).toBe('<p>Hi &lt;b&gt;team&lt;/b&gt; &amp; &quot;all&quot;</p><p>line two</p>');
+    expect(noteToHtml('Hi <b>team</b> & "all"\nline two')).toBe(
+      '<p>Hi &lt;b&gt;team&lt;/b&gt; &amp; &quot;all&quot;</p><p>line two</p>',
+    );
   });
 });
 
@@ -59,8 +66,12 @@ describe('reminder', () => {
 
   it('needs a title and a due choice', () => {
     expect(schema.safeParse({ title: 'Call back', due: 'tomorrow', notes: '' }).success).toBe(true);
-    expect(messages(schema.safeParse({ title: ' ', due: 'tomorrow', notes: '' }))).toEqual(['Give the reminder a title']);
-    expect(messages(schema.safeParse({ title: 'x', due: 'someday', notes: '' }))).toEqual(['Pick when it is due']);
+    expect(messages(schema.safeParse({ title: ' ', due: 'tomorrow', notes: '' }))).toEqual([
+      'Give the reminder a title',
+    ]);
+    expect(messages(schema.safeParse({ title: 'x', due: 'someday', notes: '' }))).toEqual([
+      'Pick when it is due',
+    ]);
   });
 
   it('works out each due choice from now', () => {

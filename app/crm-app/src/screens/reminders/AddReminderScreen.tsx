@@ -36,7 +36,10 @@ export function AddReminderScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      contentContainerStyle={{ padding: 16, gap: 12 }}
+      keyboardShouldPersistTaps="handled"
+    >
       {params.name ? <Text color="$muted">{params.name}</Text> : null}
       <ReminderForm onSubmit={submit} initialTitle={params.title} error={error} />
     </ScrollView>

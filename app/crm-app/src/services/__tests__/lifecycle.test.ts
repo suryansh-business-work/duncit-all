@@ -3,11 +3,6 @@ import * as TaskManager from 'expo-task-manager';
 import { renderHook, waitFor } from '@testing-library/react-native';
 import { AppState } from 'react-native';
 
-jest.mock('crm-telephony', () => ({ CrmTelephony: { takePendingPostCall: jest.fn(() => null), setFeatures: jest.fn() } }));
-jest.mock('@/services/call-sync', () => ({ syncDeviceCalls: jest.fn() }));
-jest.mock('@/services/directory-sync', () => ({ isDirectoryStale: jest.fn(), readDirectoryStatus: jest.fn(), syncDirectory: jest.fn() }));
-jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
-
 import { syncDeviceCalls } from '@/services/call-sync';
 import { isDirectoryStale, readDirectoryStatus, syncDirectory } from '@/services/directory-sync';
 import { gqlRequest } from '@/services/graphql.client';
@@ -15,8 +10,25 @@ import { clearToken, resetTokenCache, setToken } from '@/services/session';
 import { useAuthStore } from '@/stores/auth.store';
 import { useFeaturesStore } from '@/stores/features.store';
 import { useAppSession } from '@/hooks/useAppSession';
-import { BACKGROUND_SYNC_TASK, defineBackgroundSync, registerBackgroundSync, runSync, unregisterBackgroundSync } from '../background-sync';
+import {
+  BACKGROUND_SYNC_TASK,
+  defineBackgroundSync,
+  registerBackgroundSync,
+  runSync,
+  unregisterBackgroundSync,
+} from '../background-sync';
 import { uploadFile } from '../upload';
+
+jest.mock('crm-telephony', () => ({
+  CrmTelephony: { takePendingPostCall: jest.fn(() => null), setFeatures: jest.fn() },
+}));
+jest.mock('@/services/call-sync', () => ({ syncDeviceCalls: jest.fn() }));
+jest.mock('@/services/directory-sync', () => ({
+  isDirectoryStale: jest.fn(),
+  readDirectoryStatus: jest.fn(),
+  syncDirectory: jest.fn(),
+}));
+jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
 
 const jwt = (psv: object) => `h.${Buffer.from(JSON.stringify({ psv })).toString('base64url')}.s`;
 
@@ -66,7 +78,9 @@ describe('background task', () => {
 
   it('schedules every 15 minutes and unschedules only a registered task', async () => {
     await registerBackgroundSync();
-    expect(BackgroundTask.registerTaskAsync).toHaveBeenCalledWith(BACKGROUND_SYNC_TASK, { minimumInterval: 15 });
+    expect(BackgroundTask.registerTaskAsync).toHaveBeenCalledWith(BACKGROUND_SYNC_TASK, {
+      minimumInterval: 15,
+    });
     await unregisterBackgroundSync();
     expect(BackgroundTask.unregisterTaskAsync).not.toHaveBeenCalled();
     (TaskManager.isTaskRegisteredAsync as jest.Mock).mockResolvedValueOnce(true);
@@ -79,18 +93,38 @@ describe('uploadFile', () => {
   afterEach(() => jest.restoreAllMocks());
 
   it('gets a ticket, posts the file to /upload and answers its URL', async () => {
-    (gqlRequest as jest.Mock).mockResolvedValue({ getImagekitAuth: { uploadUrl: 'https://server/upload', ticket: 't 1' } });
-    const fetchMock = jest.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: true, json: async () => ({ url: 'https://ik/x.m4a' }) } as Response);
-    await expect(uploadFile({ uri: 'file:///a.m4a', name: 'a b.m4a', type: 'audio/mp4' }, 'call-recordings')).resolves.toBe('https://ik/x.m4a');
-    expect((gqlRequest as jest.Mock).mock.calls[0][1]).toEqual({ folder: 'call-recordings', surface: 'MOBILE' });
-    expect(fetchMock.mock.calls[0][0]).toBe('https://server/upload?ticket=t%201&fileName=a%20b.m4a');
+    (gqlRequest as jest.Mock).mockResolvedValue({
+      getImagekitAuth: { uploadUrl: 'https://server/upload', ticket: 't 1' },
+    });
+    const fetchMock = jest
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue({ ok: true, json: async () => ({ url: 'https://ik/x.m4a' }) } as Response);
+    await expect(
+      uploadFile({ uri: 'file:///a.m4a', name: 'a b.m4a', type: 'audio/mp4' }, 'call-recordings'),
+    ).resolves.toBe('https://ik/x.m4a');
+    expect((gqlRequest as jest.Mock).mock.calls[0][1]).toEqual({
+      folder: 'call-recordings',
+      surface: 'MOBILE',
+    });
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      'https://server/upload?ticket=t%201&fileName=a%20b.m4a',
+    );
   });
 
   it('fails loudly on a refused upload or a missing URL', async () => {
-    (gqlRequest as jest.Mock).mockResolvedValue({ getImagekitAuth: { uploadUrl: 'https://server/upload', ticket: 't' } });
-    jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce({ ok: false, status: 413 } as Response).mockResolvedValueOnce({ ok: true, json: async () => ({}) } as Response);
-    await expect(uploadFile({ uri: 'f', name: 'n', type: 'audio/mp4' }, 'x')).rejects.toThrow('HTTP 413');
-    await expect(uploadFile({ uri: 'f', name: 'n', type: 'audio/mp4' }, 'x')).rejects.toThrow('without a file URL');
+    (gqlRequest as jest.Mock).mockResolvedValue({
+      getImagekitAuth: { uploadUrl: 'https://server/upload', ticket: 't' },
+    });
+    jest
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({ ok: false, status: 413 } as Response)
+      .mockResolvedValueOnce({ ok: true, json: async () => ({}) } as Response);
+    await expect(uploadFile({ uri: 'f', name: 'n', type: 'audio/mp4' }, 'x')).rejects.toThrow(
+      'HTTP 413',
+    );
+    await expect(uploadFile({ uri: 'f', name: 'n', type: 'audio/mp4' }, 'x')).rejects.toThrow(
+      'without a file URL',
+    );
   });
 });
 
@@ -98,7 +132,7 @@ describe('useAppSession', () => {
   it('restores the session on launch and, once signed in, syncs whenever the app comes to the front', async () => {
     const bootstrap = jest.fn().mockResolvedValue(undefined);
     useAuthStore.setState({ status: 'loading', bootstrap });
-    const listeners: Array<(s: string) => void> = [];
+    const listeners: ((s: string) => void)[] = [];
     jest.spyOn(AppState, 'addEventListener').mockImplementation((_e, fn) => {
       listeners.push(fn as (s: string) => void);
       return { remove: jest.fn() } as never;

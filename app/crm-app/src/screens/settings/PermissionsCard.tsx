@@ -5,10 +5,15 @@ import { fireAndForget, logs } from '@duncit/logs';
 
 import { Card } from '@/components/Card';
 import { DuncitButton } from '@/components/DuncitButton';
-import { readPermissions, requestPermission, type PermissionGroup, type PermissionState } from '@/services/permissions';
+import {
+  readPermissions,
+  requestPermission,
+  type PermissionGroup,
+  type PermissionState,
+} from '@/services/permissions';
 import { useTranslation } from '@/hooks/useTranslation';
 
-const ROWS: Array<{ group: PermissionGroup; label: string }> = [
+const ROWS: { group: PermissionGroup; label: string }[] = [
   { group: 'phone', label: 'crmApp.settings.permPhone' },
   { group: 'call', label: 'crmApp.settings.permCall' },
   { group: 'overlay', label: 'crmApp.settings.permOverlay' },
@@ -29,7 +34,10 @@ export function PermissionsCard() {
 
   useEffect(() => {
     refresh();
-    const subscription = AppState.addEventListener('change', (next) => next === 'active' && refresh());
+    const subscription = AppState.addEventListener(
+      'change',
+      (next) => next === 'active' && refresh(),
+    );
     return () => subscription.remove();
   }, [refresh]);
 
@@ -41,7 +49,13 @@ export function PermissionsCard() {
   return (
     <Card title={t('crmApp.settings.permissions')}>
       {ROWS.map(({ group, label }) => (
-        <XStack key={group} alignItems="center" justifyContent="space-between" paddingVertical="$1" gap="$2">
+        <XStack
+          key={group}
+          alignItems="center"
+          justifyContent="space-between"
+          paddingVertical="$1"
+          gap="$2"
+        >
           <Text flex={1}>{t(label)}</Text>
           {state?.[group] ? (
             <Text color="$success" fontWeight="600" testID={`perm-${group}-ok`}>
@@ -49,7 +63,16 @@ export function PermissionsCard() {
             </Text>
           ) : (
             <YStack>
-              <DuncitButton label={t('crmApp.settings.allow')} onPress={() => fireAndForget(allow(group), logs.mobileApp, 'crm-app/PermissionsCard', 'allow')} size="sm" variant="soft" accessibilityLabel={`${t('crmApp.settings.allow')} ${t(label)}`} testID={`perm-${group}`} />
+              <DuncitButton
+                label={t('crmApp.settings.allow')}
+                onPress={() =>
+                  fireAndForget(allow(group), logs.mobileApp, 'crm-app/PermissionsCard', 'allow')
+                }
+                size="sm"
+                variant="soft"
+                accessibilityLabel={`${t('crmApp.settings.allow')} ${t(label)}`}
+                testID={`perm-${group}`}
+              />
             </YStack>
           )}
         </XStack>

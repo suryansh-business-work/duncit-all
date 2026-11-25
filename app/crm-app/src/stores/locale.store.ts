@@ -28,14 +28,23 @@ export const useLocaleStore = create<LocaleState>((set) => ({
     try {
       const { publicLocales } = await gqlRequest(CrmAppLocalesDocument, undefined, { auth: false });
       const chosen =
-        publicLocales.find((l) => l.code === preferred) ?? publicLocales.find((l) => l.is_default) ?? publicLocales[0];
+        publicLocales.find((l) => l.code === preferred) ??
+        publicLocales.find((l) => l.is_default) ??
+        publicLocales[0];
       const locale = chosen?.code ?? FALLBACK_LOCALE;
-      const { publicTranslations } = await gqlRequest(CrmAppTranslationsDocument, { locale }, { auth: false });
+      const { publicTranslations } = await gqlRequest(
+        CrmAppTranslationsDocument,
+        { locale },
+        { auth: false },
+      );
       const catalogue: Record<string, string> = {};
       for (const row of publicTranslations) catalogue[row.key] = row.value;
       set({ locale, isRtl: chosen?.is_rtl ?? false, catalogue });
     } catch (error) {
-      logs.mobileApp.warn('crm-app', 'locale-load', { error, msg: 'Server translations unavailable; bundled copy in use' });
+      logs.mobileApp.warn('crm-app', 'locale-load', {
+        error,
+        msg: 'Server translations unavailable; bundled copy in use',
+      });
     }
   },
 }));

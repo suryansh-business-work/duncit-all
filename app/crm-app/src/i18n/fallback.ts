@@ -32,4 +32,7 @@ export const CRM_FALLBACK_FLAT = flattenCatalogue(CRM_FALLBACK);
 export type Translate = Translator['t'];
 
 /** The bundled English, for code that runs outside React (schemas, the background sync). */
-export const fallbackT: Translate = createTranslator({ locale: 'en-IN', fallback: CRM_FALLBACK_FLAT }).t;
+export const fallbackT: Translate = createTranslator({
+  locale: 'en-IN',
+  fallback: CRM_FALLBACK_FLAT,
+}).t;

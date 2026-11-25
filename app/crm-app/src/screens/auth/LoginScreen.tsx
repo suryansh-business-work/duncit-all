@@ -17,7 +17,11 @@ export function LoginScreen() {
     try {
       await signIn(email.trim(), password);
     } catch (err) {
-      setError(err instanceof NoCrmAccessError ? t('crmApp.login.noAccess') : errorMessage(err, t('crmApp.login.failed')));
+      setError(
+        err instanceof NoCrmAccessError
+          ? t('crmApp.login.noAccess')
+          : errorMessage(err, t('crmApp.login.failed')),
+      );
     }
   };
 

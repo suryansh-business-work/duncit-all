@@ -26,12 +26,16 @@ export function SecurityVerificationScreen() {
   return (
     <AuthLayout
       title={t('shell.securityVerification.title')}
-      subtitle={t('shell.securityVerification.subtitle', { vars: { portal: t('crmApp.login.title') } })}
+      subtitle={t('shell.securityVerification.subtitle', {
+        vars: { portal: t('crmApp.login.title') },
+      })}
     >
       <StateView loading={!challenge && !v.loadError} error={v.loadError} onRetry={v.load} />
       {challenge ? (
         <YStack gap="$4">
-          {challenge.reverify ? <Text color="$warning">{t('shell.securityVerification.reverify')}</Text> : null}
+          {challenge.reverify ? (
+            <Text color="$warning">{t('shell.securityVerification.reverify')}</Text>
+          ) : null}
           <YStack backgroundColor="$infoSoft" borderRadius="$3" padding="$3">
             <Text fontWeight="700">{t('shell.securityVerification.warning.label')}</Text>
             <Text>{t('shell.securityVerification.warning.body')}</Text>
@@ -51,7 +55,11 @@ export function SecurityVerificationScreen() {
               </YStack>
             ))}
           </YStack>
-          <ConsentList consent={v.consent} onChange={v.setConsent} locationNotNeeded={v.approved !== null} />
+          <ConsentList
+            consent={v.consent}
+            onChange={v.setConsent}
+            locationNotNeeded={v.approved !== null}
+          />
           {v.approved ? null : (
             <YStack gap="$2">
               <Text fontWeight="700" role="heading">
@@ -59,16 +67,33 @@ export function SecurityVerificationScreen() {
               </Text>
               <Text color="$muted">{t('shell.securityVerification.location.why')}</Text>
               <DuncitButton
-                label={v.fix ? t('shell.securityVerification.location.refresh') : t('shell.securityVerification.location.request')}
+                label={
+                  v.fix
+                    ? t('shell.securityVerification.location.refresh')
+                    : t('shell.securityVerification.location.request')
+                }
                 onPress={v.shareLocation}
                 variant="outline"
                 testID="security-location"
               />
-              {v.fix ? <Text color="$success">{t('shell.securityVerification.location.granted')}</Text> : null}
+              {v.fix ? (
+                <Text color="$success">{t('shell.securityVerification.location.granted')}</Text>
+              ) : null}
               {v.locationError === 'PERMISSION_DENIED' ? (
                 <YStack gap="$2">
                   <Text color="$danger">{t('crmApp.security.locationPermission')}</Text>
-                  <DuncitButton label={t('crmApp.security.openSettings')} onPress={() => fireAndForget(Linking.openSettings(), logs.mobileApp, 'crm-app/SecurityVerificationScreen', 'openSettings')} variant="ghost" />
+                  <DuncitButton
+                    label={t('crmApp.security.openSettings')}
+                    onPress={() =>
+                      fireAndForget(
+                        Linking.openSettings(),
+                        logs.mobileApp,
+                        'crm-app/SecurityVerificationScreen',
+                        'openSettings',
+                      )
+                    }
+                    variant="ghost"
+                  />
                 </YStack>
               ) : null}
               {v.locationError === 'POSITION_UNAVAILABLE' ? (
@@ -76,13 +101,21 @@ export function SecurityVerificationScreen() {
               ) : null}
             </YStack>
           )}
-          {v.fix ? null : <AlternativeRequest exception={challenge.exception} onRequest={v.requestAlternative} />}
-          {v.blocked.acknowledgements ? <Text color="$muted">{t('shell.securityVerification.blocked.acknowledgements')}</Text> : null}
+          {v.fix ? null : (
+            <AlternativeRequest exception={challenge.exception} onRequest={v.requestAlternative} />
+          )}
+          {v.blocked.acknowledgements ? (
+            <Text color="$muted">{t('shell.securityVerification.blocked.acknowledgements')}</Text>
+          ) : null}
           {!v.blocked.acknowledgements && v.blocked.location ? (
             <Text color="$muted">{t('shell.securityVerification.blocked.location')}</Text>
           ) : null}
           <DuncitButton
-            label={v.submitting ? t('shell.securityVerification.proceeding') : t('shell.securityVerification.proceed')}
+            label={
+              v.submitting
+                ? t('shell.securityVerification.proceeding')
+                : t('shell.securityVerification.proceed')
+            }
             onPress={v.submit}
             disabled={!v.canProceed}
             loading={v.submitting}
@@ -95,7 +128,19 @@ export function SecurityVerificationScreen() {
             </Text>
           ) : null}
           <Text color="$muted">{t('shell.securityVerification.signOutHint')}</Text>
-          <DuncitButton label={t('shell.securityVerification.signOut')} onPress={() => fireAndForget(signOut(), logs.mobileApp, 'crm-app/SecurityVerificationScreen', 'signOut')} variant="ghost" testID="security-sign-out" />
+          <DuncitButton
+            label={t('shell.securityVerification.signOut')}
+            onPress={() =>
+              fireAndForget(
+                signOut(),
+                logs.mobileApp,
+                'crm-app/SecurityVerificationScreen',
+                'signOut',
+              )
+            }
+            variant="ghost"
+            testID="security-sign-out"
+          />
         </YStack>
       ) : null}
     </AuthLayout>

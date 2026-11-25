@@ -15,5 +15,10 @@ export function renderWithTheme(ui: ReactElement) {
 
 /** A navigation object whose calls a test can assert on. */
 export function mockNavigation() {
-  return { navigate: jest.fn(), goBack: jest.fn(), canGoBack: jest.fn(() => true), setOptions: jest.fn() };
+  return {
+    navigate: jest.fn(),
+    goBack: jest.fn(),
+    canGoBack: jest.fn(() => true),
+    setOptions: jest.fn(),
+  };
 }

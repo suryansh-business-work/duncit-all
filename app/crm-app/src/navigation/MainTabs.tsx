@@ -43,7 +43,9 @@ export function MainTabs() {
         tabBarStyle: { backgroundColor: theme.surface?.val },
         headerStyle: { backgroundColor: theme.primary?.val },
         headerTintColor: theme.onPrimary?.val,
-        tabBarIcon: ({ color, size }) => <MaterialIcons name={ICONS[route.name]} color={color} size={size} />,
+        tabBarIcon: ({ color, size }) => (
+          <MaterialIcons name={ICONS[route.name]} color={color} size={size} />
+        ),
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />

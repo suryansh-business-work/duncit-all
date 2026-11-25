@@ -32,7 +32,14 @@ export function StateView({ loading, error, empty, onRetry }: Readonly<Props>) {
         <Text color="$danger" textAlign="center">
           {typeof error === 'string' ? error : t('crmApp.common.loadFailed')}
         </Text>
-        {onRetry ? <DuncitButton label={t('shell.common.retry')} onPress={onRetry} variant="outline" testID="state-retry" /> : null}
+        {onRetry ? (
+          <DuncitButton
+            label={t('shell.common.retry')}
+            onPress={onRetry}
+            variant="outline"
+            testID="state-retry"
+          />
+        ) : null}
       </YStack>
     );
   }

@@ -17,13 +17,21 @@ export function TwoFactorScreen() {
     try {
       await completeTwoFactor(code);
     } catch (err) {
-      setError(err instanceof NoCrmAccessError ? t('crmApp.login.noAccess') : errorMessage(err, t('crmApp.login.failed')));
+      setError(
+        err instanceof NoCrmAccessError
+          ? t('crmApp.login.noAccess')
+          : errorMessage(err, t('crmApp.login.failed')),
+      );
     }
   };
 
   return (
     <AuthLayout title={t('crmApp.twoFactor.title')}>
-      <TwoFactorForm onSubmit={submit} onBack={() => useAuthStore.setState({ status: 'signedOut', challengeToken: null })} error={error} />
+      <TwoFactorForm
+        onSubmit={submit}
+        onBack={() => useAuthStore.setState({ status: 'signedOut', challengeToken: null })}
+        error={error}
+      />
     </AuthLayout>
   );
 }

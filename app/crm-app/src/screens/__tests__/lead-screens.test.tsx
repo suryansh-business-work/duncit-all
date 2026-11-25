@@ -1,20 +1,26 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
-jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
-jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
-const mockNav = { navigate: jest.fn(), goBack: jest.fn(), canGoBack: jest.fn(() => true), setOptions: jest.fn() };
-let mockRouteParams: Record<string, unknown> = {};
-jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => mockNav,
-  useRoute: () => ({ params: mockRouteParams }),
-  useFocusEffect: (fn: () => void) => require('react').useEffect(fn, [fn]),
-}));
-
 import { gqlRequest } from '@/services/graphql.client';
 import { renderWithTheme } from '@/test-utils';
 import { LeadDetailScreen } from '../lead/LeadDetailScreen';
 import { AddNoteScreen } from '../lead/AddNoteScreen';
 import { AddReminderScreen } from '../reminders/AddReminderScreen';
+
+jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
+jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
+const mockNav = {
+  navigate: jest.fn(),
+  goBack: jest.fn(),
+  canGoBack: jest.fn(() => true),
+  setOptions: jest.fn(),
+};
+let mockRouteParams: Record<string, unknown> = {};
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => mockNav,
+  useRoute: () => ({ params: mockRouteParams }),
+  useFocusEffect: (fn: () => void) =>
+    jest.requireActual<typeof import('react')>('react').useEffect(fn, [fn]),
+}));
 
 const request = gqlRequest as jest.Mock;
 
@@ -26,8 +32,25 @@ const venue = {
   priority: 'High',
   assigned_to: 'Asha',
   next_follow_up_date: null,
-  contacts: [{ name: 'Rohit', role: 'Owner', mobile_number: '9811000001', whatsapp_number: null, email: 'rohit@cafe.in' }],
-  activity_log: [{ id: 'n1', type: 'NOTE', summary: 'Visited', body_text: 'Liked the turf', created_at: '2026-11-20T10:00:00.000Z', is_deleted: false }],
+  contacts: [
+    {
+      name: 'Rohit',
+      role: 'Owner',
+      mobile_number: '9811000001',
+      whatsapp_number: null,
+      email: 'rohit@cafe.in',
+    },
+  ],
+  activity_log: [
+    {
+      id: 'n1',
+      type: 'NOTE',
+      summary: 'Visited',
+      body_text: 'Liked the turf',
+      created_at: '2026-11-20T10:00:00.000Z',
+      is_deleted: false,
+    },
+  ],
 };
 
 const commLog = {
@@ -42,7 +65,12 @@ const commLog = {
   recording_url: '',
   transcript: 'Agent: Hello',
   transcript_status: 'READY',
-  summary: { status: 'READY', text: 'Wants Sunday slots', key_points: ['Budget 5k'], follow_ups: [] },
+  summary: {
+    status: 'READY',
+    text: 'Wants Sunday slots',
+    key_points: ['Budget 5k'],
+    follow_ups: [],
+  },
   created_at: '2026-11-24T10:00:00.000Z',
 };
 
@@ -66,13 +94,23 @@ describe('LeadDetailScreen', () => {
     request.mockResolvedValue({ venue });
     renderWithTheme(<LeadDetailScreen />);
     fireEvent.press(await screen.findByTestId('lead-add-note'));
-    expect(mockNav.navigate).toHaveBeenCalledWith('AddNote', { kind: 'VENUE_LEAD', id: 'v1', name: 'Smash Arena' });
+    expect(mockNav.navigate).toHaveBeenCalledWith('AddNote', {
+      kind: 'VENUE_LEAD',
+      id: 'v1',
+      name: 'Smash Arena',
+    });
     fireEvent.press(screen.getByTestId('lead-add-reminder'));
-    expect(mockNav.navigate).toHaveBeenCalledWith('AddReminder', { kind: 'VENUE_LEAD', id: 'v1', name: 'Smash Arena' });
+    expect(mockNav.navigate).toHaveBeenCalledWith('AddReminder', {
+      kind: 'VENUE_LEAD',
+      id: 'v1',
+      name: 'Smash Arena',
+    });
   });
 
   it('shows calls with their AI summary and transcript on the Activity tab', async () => {
-    request.mockImplementation(async (_doc: unknown, vars: { filter?: unknown }) => (vars.filter ? { communicationLogs: { total: 1, items: [commLog] } } : { venue }));
+    request.mockImplementation(async (_doc: unknown, vars: { filter?: unknown }) =>
+      vars.filter ? { communicationLogs: { total: 1, items: [commLog] } } : { venue },
+    );
     renderWithTheme(<LeadDetailScreen />);
     fireEvent.press(await screen.findByTestId('lead-tab-activity'));
     expect(await screen.findByText('Incoming call')).toBeOnTheScreen();
@@ -105,7 +143,13 @@ describe('AddNoteScreen', () => {
     fireEvent.press(screen.getByTestId('note-save'));
     await waitFor(() => expect(mockNav.goBack).toHaveBeenCalled());
     expect(request.mock.calls[0][1]).toEqual({
-      input: { entity_type: 'HOST_LEAD', entity_id: 'h1', summary: null, body_html: '<p>Call &lt;later&gt;</p>', body_text: 'Call <later>' },
+      input: {
+        entity_type: 'HOST_LEAD',
+        entity_id: 'h1',
+        summary: null,
+        body_html: '<p>Call &lt;later&gt;</p>',
+        body_text: 'Call <later>',
+      },
     });
   });
 
@@ -122,7 +166,12 @@ describe('AddNoteScreen', () => {
 
 describe('AddReminderScreen', () => {
   it('creates a reminder on the lead, due at the chosen time', async () => {
-    mockRouteParams = { kind: 'VENUE_LEAD', id: 'v1', name: 'Smash Arena', title: 'Call with Smash Arena' };
+    mockRouteParams = {
+      kind: 'VENUE_LEAD',
+      id: 'v1',
+      name: 'Smash Arena',
+      title: 'Call with Smash Arena',
+    };
     request.mockResolvedValue({ createCrmReminder: { id: 'r1' } });
     renderWithTheme(<AddReminderScreen />);
     fireEvent.press(screen.getByTestId('reminder-due-hour'));
@@ -130,7 +179,12 @@ describe('AddReminderScreen', () => {
     fireEvent.press(screen.getByTestId('reminder-save'));
     await waitFor(() => expect(mockNav.goBack).toHaveBeenCalled());
     const input = request.mock.calls[0][1].input;
-    expect(input).toMatchObject({ entity_type: 'VENUE_LEAD', lead_id: 'v1', title: 'Call with Smash Arena', notes: null });
+    expect(input).toMatchObject({
+      entity_type: 'VENUE_LEAD',
+      lead_id: 'v1',
+      title: 'Call with Smash Arena',
+      notes: null,
+    });
     expect(new Date(input.due_at).getTime() - before).toBeGreaterThanOrEqual(59 * 60 * 1000);
   });
 
@@ -141,6 +195,10 @@ describe('AddReminderScreen', () => {
     fireEvent.changeText(screen.getByTestId('reminder-title'), 'Team review');
     fireEvent.press(screen.getByTestId('reminder-save'));
     await waitFor(() => expect(request).toHaveBeenCalled());
-    expect(request.mock.calls[0][1].input).toMatchObject({ entity_type: 'GENERAL', lead_id: null, title: 'Team review' });
+    expect(request.mock.calls[0][1].input).toMatchObject({
+      entity_type: 'GENERAL',
+      lead_id: null,
+      title: 'Team review',
+    });
   });
 });

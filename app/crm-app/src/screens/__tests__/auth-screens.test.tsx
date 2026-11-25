@@ -1,11 +1,11 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
-jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
-
 import { renderWithTheme } from '@/test-utils';
 import { NoCrmAccessError, useAuthStore } from '@/stores/auth.store';
 import { LoginScreen } from '../auth/LoginScreen';
 import { TwoFactorScreen } from '../auth/TwoFactorScreen';
+
+jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
 
 /** Sign-in on the phone: the portal's rules and messages. */
 

@@ -1,3 +1,9 @@
+import { ClientError } from 'graphql-request';
+import { parse } from 'graphql';
+
+import { resetTokenCache, setToken } from '@/services/session';
+import { CLIENT_HEADERS, gqlRequest, isQuery, isTransient, toApiError } from '../graphql.client';
+
 const mockRequest = jest.fn();
 const mockConstruct = jest.fn();
 jest.mock('graphql-request', () => {
@@ -10,12 +16,6 @@ jest.mock('graphql-request', () => {
     }),
   };
 });
-
-import { ClientError } from 'graphql-request';
-import { parse } from 'graphql';
-
-import { resetTokenCache, setToken } from '@/services/session';
-import { CLIENT_HEADERS, gqlRequest, isQuery, isTransient, toApiError } from '../graphql.client';
 
 /** The one door to the API: headers, token, retries for reads only, worded errors. */
 
@@ -52,14 +52,19 @@ it('words every failure for a person and keeps the server code', () => {
   const mapped = toApiError(clientError(401, 'Not authenticated', 'UNAUTHENTICATED'));
   expect(mapped.message).toBe('Not authenticated');
   expect(mapped.code).toBe('UNAUTHENTICATED');
-  expect(toApiError(new TypeError('x')).message).toBe('Network error. Check your connection and try again.');
+  expect(toApiError(new TypeError('x')).message).toBe(
+    'Network error. Check your connection and try again.',
+  );
 });
 
 it('posts to the API with the client headers and the session token', async () => {
   await setToken('tok-1');
   mockRequest.mockResolvedValue({ me: { user_id: 'u1' } });
   await expect(gqlRequest(QUERY)).resolves.toEqual({ me: { user_id: 'u1' } });
-  const [url, options] = mockConstruct.mock.calls[0] as [string, { headers: Record<string, string> }];
+  const [url, options] = mockConstruct.mock.calls[0] as [
+    string,
+    { headers: Record<string, string> },
+  ];
   expect(url).toMatch(/\/graphql$/);
   expect(options.headers).toMatchObject({ ...CLIENT_HEADERS, Authorization: 'Bearer tok-1' });
 });
@@ -69,8 +74,12 @@ it('sends no token when asked not to, or a given one instead', async () => {
   mockRequest.mockResolvedValue({});
   await gqlRequest(QUERY, undefined, { auth: false });
   await gqlRequest(QUERY, undefined, { token: 'pending' });
-  expect((mockConstruct.mock.calls[0][1] as { headers: Record<string, string> }).headers.Authorization).toBeUndefined();
-  expect((mockConstruct.mock.calls[1][1] as { headers: Record<string, string> }).headers.Authorization).toBe('Bearer pending');
+  expect(
+    (mockConstruct.mock.calls[0][1] as { headers: Record<string, string> }).headers.Authorization,
+  ).toBeUndefined();
+  expect(
+    (mockConstruct.mock.calls[1][1] as { headers: Record<string, string> }).headers.Authorization,
+  ).toBe('Bearer pending');
 });
 
 it('retries a read through a brief outage', async () => {

@@ -43,7 +43,8 @@ export function PostCallScreen() {
   const seconds = pending ? Math.round((pending.endedAt - pending.startedAt) / 1000) : 0;
   const kind = pending?.entityType;
   const leadId = pending?.leadId;
-  const lead = isLeadKind(kind) && leadId ? { kind, id: leadId, name: pending?.leadName ?? who } : null;
+  const lead =
+    isLeadKind(kind) && leadId ? { kind, id: leadId, name: pending?.leadName ?? who } : null;
 
   let saveText = t('crmApp.postCall.saving');
   if (save === 'saved') saveText = t('crmApp.postCall.saved');
@@ -53,17 +54,35 @@ export function PostCallScreen() {
     <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
       <Card title={t('crmApp.postCall.with', { vars: { name: who } })}>
         {pending?.contactName ? <Text color="$muted">{pending.contactName}</Text> : null}
-        <Text>{pending?.answered ? t('crmApp.postCall.lasted', { vars: { duration: formatCallDuration(seconds) } }) : t('crmApp.postCall.missed')}</Text>
-        <Text color={save === 'failed' ? '$danger' : '$muted'} aria-live="polite" testID="post-call-save">
+        <Text>
+          {pending?.answered
+            ? t('crmApp.postCall.lasted', { vars: { duration: formatCallDuration(seconds) } })
+            : t('crmApp.postCall.missed')}
+        </Text>
+        <Text
+          color={save === 'failed' ? '$danger' : '$muted'}
+          aria-live="polite"
+          testID="post-call-save"
+        >
           {saveText}
         </Text>
       </Card>
       {lead ? (
         <YStack gap="$2">
-          <DuncitButton label={t('crmApp.lead.addNote')} onPress={() => navigation.navigate('AddNote', lead)} testID="post-call-note" fullWidth />
+          <DuncitButton
+            label={t('crmApp.lead.addNote')}
+            onPress={() => navigation.navigate('AddNote', lead)}
+            testID="post-call-note"
+            fullWidth
+          />
           <DuncitButton
             label={t('crmApp.lead.addReminder')}
-            onPress={() => navigation.navigate('AddReminder', { ...lead, title: t('crmApp.postCall.with', { vars: { name: lead.name } }) })}
+            onPress={() =>
+              navigation.navigate('AddReminder', {
+                ...lead,
+                title: t('crmApp.postCall.with', { vars: { name: lead.name } }),
+              })
+            }
             variant="outline"
             testID="post-call-reminder"
             fullWidth
@@ -77,7 +96,13 @@ export function PostCallScreen() {
           />
         </YStack>
       ) : null}
-      <DuncitButton label={t('crmApp.postCall.done')} onPress={done} variant={lead ? 'ghost' : 'solid'} testID="post-call-done" fullWidth />
+      <DuncitButton
+        label={t('crmApp.postCall.done')}
+        onPress={done}
+        variant={lead ? 'ghost' : 'solid'}
+        testID="post-call-done"
+        fullWidth
+      />
     </ScrollView>
   );
 }

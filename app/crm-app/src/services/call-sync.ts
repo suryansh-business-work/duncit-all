@@ -45,7 +45,11 @@ export async function installId(): Promise<string> {
   return id;
 }
 
-async function attachRecording(phone: CrmTelephonyModule, call: PlannedCall, logId: string): Promise<boolean> {
+async function attachRecording(
+  phone: CrmTelephonyModule,
+  call: PlannedCall,
+  logId: string,
+): Promise<boolean> {
   const { fromMs, toMs } = recordingWindow(call);
   const file = pickRecording(call, await phone.findRecordings(fromMs, toMs));
   if (!file) return false;
@@ -109,7 +113,10 @@ async function run(): Promise<CallSyncResult> {
       if (outcome === 'recorded') result.recordings += 1;
       await writeValue(STORAGE_KEYS.callCheckpoint, String(entry.date));
     } catch (error) {
-      logs.mobileApp.warn('crm-app/call-sync', 'handle', { error, msg: 'Call sync stopped; it resumes from this call next time' });
+      logs.mobileApp.warn('crm-app/call-sync', 'handle', {
+        error,
+        msg: 'Call sync stopped; it resumes from this call next time',
+      });
       result.failed = true;
       break;
     }

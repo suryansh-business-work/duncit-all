@@ -61,7 +61,12 @@ export function TextField<T extends FieldValues>({
         />
       )}
       {error ? (
-        <Text color="$danger" fontSize="$2" role="alert" testID={testID ? `${testID}-error` : undefined}>
+        <Text
+          color="$danger"
+          fontSize="$2"
+          role="alert"
+          testID={testID ? `${testID}-error` : undefined}
+        >
           {error}
         </Text>
       ) : null}

@@ -18,14 +18,21 @@ export function HomeScreenCard() {
   const [pin, setPin] = useState<PinState>('idle');
 
   const pinDialer = () => {
-    const placed = CrmTelephony?.canPinShortcut() ? CrmTelephony.pinDialerShortcut(t('crmApp.native.dialer')) : false;
+    const placed = CrmTelephony?.canPinShortcut()
+      ? CrmTelephony.pinDialerShortcut(t('crmApp.native.dialer'))
+      : false;
     setPin(placed ? 'sent' : 'unsupported');
   };
 
   return (
     <Card title={t('crmApp.settings.homeScreen')}>
       <Text color="$muted">{t('crmApp.settings.pinDialerHint')}</Text>
-      <DuncitButton label={t('crmApp.settings.pinDialer')} onPress={pinDialer} testID="settings-pin-dialer" fullWidth />
+      <DuncitButton
+        label={t('crmApp.settings.pinDialer')}
+        onPress={pinDialer}
+        testID="settings-pin-dialer"
+        fullWidth
+      />
       {pin === 'sent' ? (
         <Text color="$success" aria-live="polite">
           {t('crmApp.settings.pinDialerSent')}

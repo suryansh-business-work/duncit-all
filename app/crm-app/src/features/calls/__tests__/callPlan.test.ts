@@ -17,7 +17,13 @@ const entry = (over: Partial<CallLogEntry> = {}): CallLogEntry => ({
   ...over,
 });
 
-const lead: DirectoryMatch = { entityType: 'VENUE_LEAD', leadId: 'lead-1', leadName: 'Smash Arena', contactName: 'Rohit', others: 0 };
+const lead: DirectoryMatch = {
+  entityType: 'VENUE_LEAD',
+  leadId: 'lead-1',
+  leadName: 'Smash Arena',
+  contactName: 'Rohit',
+  others: 0,
+};
 
 describe('callKey', () => {
   it.each([

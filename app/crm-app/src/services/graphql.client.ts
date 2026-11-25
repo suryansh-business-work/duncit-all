@@ -37,20 +37,35 @@ export function isTransient(error: unknown): boolean {
 }
 
 export function toApiError(error: unknown): ApiError {
-  if (error instanceof Error && error.name === 'AbortError') return new ApiError('The request timed out. Please try again.');
+  if (error instanceof Error && error.name === 'AbortError')
+    return new ApiError('The request timed out. Please try again.');
   if (error instanceof ClientError) {
     const first = error.response.errors?.[0];
-    return new ApiError(first?.message ?? 'Request failed.', error.response.status, first?.extensions);
+    return new ApiError(
+      first?.message ?? 'Request failed.',
+      error.response.status,
+      first?.extensions,
+    );
   }
   return new ApiError('Network error. Check your connection and try again.');
 }
 
-async function attempt<T>(document: DocumentNode, variables: Variables | undefined, headers: Record<string, string>) {
+async function attempt<T>(
+  document: DocumentNode,
+  variables: Variables | undefined,
+  headers: Record<string, string>,
+) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), config.requestTimeoutMs);
   try {
-    const client = new GraphQLClient(`${config.apiUrl}/graphql`, { headers, signal: controller.signal });
-    return await client.request<T, Variables>(document as TypedDocumentNode<T, Variables>, variables);
+    const client = new GraphQLClient(`${config.apiUrl}/graphql`, {
+      headers,
+      signal: controller.signal,
+    });
+    return await client.request<T, Variables>(
+      document as TypedDocumentNode<T, Variables>,
+      variables,
+    );
   } finally {
     clearTimeout(timer);
   }

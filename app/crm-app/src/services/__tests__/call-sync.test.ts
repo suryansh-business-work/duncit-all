@@ -1,5 +1,11 @@
 import * as SecureStore from 'expo-secure-store';
 
+import { gqlRequest } from '@/services/graphql.client';
+import { uploadFile } from '@/services/upload';
+import { STORAGE_KEYS } from '@/services/secure-storage';
+import { useFeaturesStore } from '@/stores/features.store';
+import { installId, syncDeviceCalls } from '../call-sync';
+
 const mockPhone = {
   getCallLog: jest.fn(),
   lookupNumber: jest.fn(),
@@ -15,13 +21,10 @@ jest.mock('crm-telephony', () => ({
   CALL_TYPE: { INCOMING: 1, OUTGOING: 2, MISSED: 3, VOICEMAIL: 4, REJECTED: 5, BLOCKED: 6 },
 }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
-jest.mock('@/services/upload', () => ({ RECORDINGS_FOLDER: 'call-recordings', uploadFile: jest.fn() }));
-
-import { gqlRequest } from '@/services/graphql.client';
-import { uploadFile } from '@/services/upload';
-import { STORAGE_KEYS } from '@/services/secure-storage';
-import { useFeaturesStore } from '@/stores/features.store';
-import { installId, syncDeviceCalls } from '../call-sync';
+jest.mock('@/services/upload', () => ({
+  RECORDINGS_FOLDER: 'call-recordings',
+  uploadFile: jest.fn(),
+}));
 
 /**
  * The call sync: calls with CRM contacts reach the lead's communication log
@@ -34,9 +37,29 @@ const upload = uploadFile as jest.Mock;
 const store = (SecureStore as unknown as { __store: Map<string, string> }).__store;
 const START = Date.UTC(2026, 10, 24, 10, 0);
 
-const lead = { entityType: 'VENUE_LEAD', leadId: 'lead-1', leadName: 'Smash Arena', contactName: 'Rohit', others: 0 };
-const crmCall = { id: '11', number: '9811000001', type: 2, date: START, durationSeconds: 90, cachedName: '' };
-const personalCall = { id: '12', number: '9000000000', type: 1, date: START + 60_000, durationSeconds: 300, cachedName: 'Mum' };
+const lead = {
+  entityType: 'VENUE_LEAD',
+  leadId: 'lead-1',
+  leadName: 'Smash Arena',
+  contactName: 'Rohit',
+  others: 0,
+};
+const crmCall = {
+  id: '11',
+  number: '9811000001',
+  type: 2,
+  date: START,
+  durationSeconds: 90,
+  cachedName: '',
+};
+const personalCall = {
+  id: '12',
+  number: '9000000000',
+  type: 1,
+  date: START + 60_000,
+  durationSeconds: 300,
+  cachedName: 'Mum',
+};
 
 beforeEach(() => {
   store.clear();
@@ -44,12 +67,23 @@ beforeEach(() => {
   store.set(STORAGE_KEYS.callCheckpoint, String(START - 1));
   store.set(STORAGE_KEYS.installId, 'install-a');
   useFeaturesStore.setState({ autoLog: true, recordings: true, callerId: true, hydrated: true });
-  mockPhone.lookupNumber.mockImplementation(async (n: string) => (n === crmCall.number ? lead : null));
+  mockPhone.lookupNumber.mockImplementation(async (n: string) =>
+    n === crmCall.number ? lead : null,
+  );
   mockPhone.findRecordings.mockResolvedValue([]);
-  request.mockImplementation(async (_doc: unknown, vars: { input: { client_call_id?: string; log_id?: string } }) => {
-    if (vars.input.client_call_id) return { logCrmDeviceCall: { id: 'log-1', recording_url: '', transcript_status: 'NONE' } };
-    return { attachCrmDeviceCallRecording: { id: vars.input.log_id, recording_url: 'https://ik.imagekit.io/r.m4a', transcript_status: 'PENDING' } };
-  });
+  request.mockImplementation(
+    async (_doc: unknown, vars: { input: { client_call_id?: string; log_id?: string } }) => {
+      if (vars.input.client_call_id)
+        return { logCrmDeviceCall: { id: 'log-1', recording_url: '', transcript_status: 'NONE' } };
+      return {
+        attachCrmDeviceCallRecording: {
+          id: vars.input.log_id,
+          recording_url: 'https://ik.imagekit.io/r.m4a',
+          transcript_status: 'PENDING',
+        },
+      };
+    },
+  );
 });
 
 it('logs the CRM call, skips the personal one without sending its number, and moves the checkpoint past both', async () => {
@@ -75,7 +109,15 @@ it('logs the CRM call, skips the personal one without sending its number, and mo
 it('uploads and attaches the phone recording, then deletes the cached copy', async () => {
   mockPhone.getCallLog.mockResolvedValue([crmCall]);
   mockPhone.findRecordings.mockResolvedValue([
-    { uri: 'content://1', name: 'Call_9811000001.m4a', sizeBytes: 500, addedAtMs: START + 95_000, durationMs: 0, mimeType: 'audio/mp4', relativePath: 'Recordings/Call/' },
+    {
+      uri: 'content://1',
+      name: 'Call_9811000001.m4a',
+      sizeBytes: 500,
+      addedAtMs: START + 95_000,
+      durationMs: 0,
+      mimeType: 'audio/mp4',
+      relativePath: 'Recordings/Call/',
+    },
   ]);
   mockPhone.copyRecordingToCache.mockResolvedValue('file:///cache/recordings/Call_9811000001.m4a');
   upload.mockResolvedValue('https://ik.imagekit.io/r.m4a');
@@ -83,9 +125,23 @@ it('uploads and attaches the phone recording, then deletes the cached copy', asy
   const result = await syncDeviceCalls();
 
   expect(result.recordings).toBe(1);
-  expect(upload).toHaveBeenCalledWith({ uri: 'file:///cache/recordings/Call_9811000001.m4a', name: 'Call_9811000001.m4a', type: 'audio/mp4' }, 'call-recordings');
-  expect(request.mock.calls[1][1].input).toEqual({ log_id: 'log-1', recording_url: 'https://ik.imagekit.io/r.m4a', file_name: 'Call_9811000001.m4a', content_type: 'audio/mp4' });
-  expect(mockPhone.deleteCachedRecording).toHaveBeenCalledWith('file:///cache/recordings/Call_9811000001.m4a');
+  expect(upload).toHaveBeenCalledWith(
+    {
+      uri: 'file:///cache/recordings/Call_9811000001.m4a',
+      name: 'Call_9811000001.m4a',
+      type: 'audio/mp4',
+    },
+    'call-recordings',
+  );
+  expect(request.mock.calls[1][1].input).toEqual({
+    log_id: 'log-1',
+    recording_url: 'https://ik.imagekit.io/r.m4a',
+    file_name: 'Call_9811000001.m4a',
+    content_type: 'audio/mp4',
+  });
+  expect(mockPhone.deleteCachedRecording).toHaveBeenCalledWith(
+    'file:///cache/recordings/Call_9811000001.m4a',
+  );
 });
 
 it('does not look for a recording when recordings are switched off, or when one is already attached', async () => {
@@ -96,7 +152,9 @@ it('does not look for a recording when recordings are switched off, or when one 
 
   useFeaturesStore.setState({ recordings: true });
   store.set(STORAGE_KEYS.callCheckpoint, String(START - 1));
-  request.mockResolvedValueOnce({ logCrmDeviceCall: { id: 'log-1', recording_url: 'https://already', transcript_status: 'READY' } });
+  request.mockResolvedValueOnce({
+    logCrmDeviceCall: { id: 'log-1', recording_url: 'https://already', transcript_status: 'READY' },
+  });
   await syncDeviceCalls();
   expect(mockPhone.findRecordings).not.toHaveBeenCalled();
 });

@@ -11,7 +11,10 @@ const P = PermissionsAndroid.PERMISSIONS;
 const sdk = typeof Platform.Version === 'number' ? Platform.Version : 0;
 
 /** Android runtime permissions per group; `overlay` is a special app access, handled apart. */
-export function permissionsFor(group: Exclude<PermissionGroup, 'overlay'>, apiLevel = sdk): Permission[] {
+export function permissionsFor(
+  group: Exclude<PermissionGroup, 'overlay'>,
+  apiLevel = sdk,
+): Permission[] {
   switch (group) {
     case 'phone':
       return [P.READ_PHONE_STATE, P.READ_CALL_LOG];
@@ -48,5 +51,6 @@ export async function requestPermission(group: PermissionGroup): Promise<void> {
     return;
   }
   const result = await PermissionsAndroid.requestMultiple(permissionsFor(group));
-  if (Object.values(result).includes(PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN)) await Linking.openSettings();
+  if (Object.values(result).includes(PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN))
+    await Linking.openSettings();
 }

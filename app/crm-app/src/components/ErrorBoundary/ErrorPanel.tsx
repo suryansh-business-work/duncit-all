@@ -34,18 +34,38 @@ export function ErrorPanel({ reference, onRetry, onReport }: Readonly<Props>) {
   else if (status === 'failed') outcome = t('ui.errorBoundary.reportFailed');
 
   return (
-    <YStack flex={1} alignItems="center" justifyContent="center" gap="$3" padding="$5" backgroundColor="$background" role="alert">
-      <MaterialIcons name="error-outline" size={48} color={theme.danger?.val} accessibilityElementsHidden />
+    <YStack
+      flex={1}
+      alignItems="center"
+      justifyContent="center"
+      gap="$3"
+      padding="$5"
+      backgroundColor="$background"
+      role="alert"
+    >
+      <MaterialIcons
+        name="error-outline"
+        size={48}
+        color={theme.danger?.val}
+        accessibilityElementsHidden
+      />
       <Text fontSize="$7" fontWeight="700" textAlign="center" role="heading">
         {t('ui.errorBoundary.title')}
       </Text>
       <Text color="$muted" textAlign="center">
         {t('ui.errorBoundary.body')}
       </Text>
-      <DuncitButton label={t('ui.errorBoundary.retry')} onPress={onRetry} fullWidth testID="error-retry" />
+      <DuncitButton
+        label={t('ui.errorBoundary.retry')}
+        onPress={onRetry}
+        fullWidth
+        testID="error-retry"
+      />
       {status !== 'sent' && (
         <DuncitButton
-          label={status === 'sending' ? t('ui.errorBoundary.reporting') : t('ui.errorBoundary.report')}
+          label={
+            status === 'sending' ? t('ui.errorBoundary.reporting') : t('ui.errorBoundary.report')
+          }
           onPress={report}
           variant="outline"
           loading={status === 'sending'}

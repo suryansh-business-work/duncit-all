@@ -21,7 +21,13 @@ export function AddNoteScreen() {
     setError(null);
     try {
       await gqlRequest(CrmAppAddNoteDocument, {
-        input: { entity_type: params.kind, entity_id: params.id, summary: summary || null, body_html: noteToHtml(body), body_text: body },
+        input: {
+          entity_type: params.kind,
+          entity_id: params.id,
+          summary: summary || null,
+          body_html: noteToHtml(body),
+          body_text: body,
+        },
       });
       navigation.goBack();
     } catch (err) {
@@ -30,7 +36,10 @@ export function AddNoteScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      contentContainerStyle={{ padding: 16, gap: 12 }}
+      keyboardShouldPersistTaps="handled"
+    >
       <Text color="$muted">{params.name}</Text>
       <NoteForm onSubmit={submit} error={error} />
     </ScrollView>

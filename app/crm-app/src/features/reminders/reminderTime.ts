@@ -7,7 +7,10 @@ export function todayWindow(now: Date = new Date()): { from: string; to: string 
 }
 
 /** A reminder is overdue once its due time has passed and it is not done. */
-export function isOverdue(reminder: { due_at: string; status: string }, now: Date = new Date()): boolean {
+export function isOverdue(
+  reminder: { due_at: string; status: string },
+  now: Date = new Date(),
+): boolean {
   return reminder.status !== 'DONE' && new Date(reminder.due_at).getTime() < now.getTime();
 }
 

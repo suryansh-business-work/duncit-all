@@ -42,21 +42,41 @@ export function LeadOverview({ lead, onAddNote, onAddReminder }: Readonly<Props>
       <Card title={t('crmApp.lead.contacts')}>
         {contacts.length === 0 ? <Text color="$muted">{t('crmApp.lead.noContacts')}</Text> : null}
         {contacts.map((contact, index) => (
-          <ContactRow key={`${contact.mobile_number ?? ''}-${index}`} contact={contact} index={index} />
+          <ContactRow
+            key={`${contact.mobile_number ?? ''}-${index}`}
+            contact={contact}
+            index={index}
+          />
         ))}
       </Card>
       <XStack gap="$3">
         <YStack flex={1}>
-          <DuncitButton label={t('crmApp.lead.addNote')} onPress={onAddNote} variant="outline" fullWidth testID="lead-add-note" />
+          <DuncitButton
+            label={t('crmApp.lead.addNote')}
+            onPress={onAddNote}
+            variant="outline"
+            fullWidth
+            testID="lead-add-note"
+          />
         </YStack>
         <YStack flex={1}>
-          <DuncitButton label={t('crmApp.lead.addReminder')} onPress={onAddReminder} variant="outline" fullWidth testID="lead-add-reminder" />
+          <DuncitButton
+            label={t('crmApp.lead.addReminder')}
+            onPress={onAddReminder}
+            variant="outline"
+            fullWidth
+            testID="lead-add-reminder"
+          />
         </YStack>
       </XStack>
       <Card title={t('crmApp.lead.notes')}>
         {notes.length === 0 ? <Text color="$muted">{t('crmApp.lead.noNotes')}</Text> : null}
         {notes.map((note) => (
-          <YStack key={note.id ?? note.created_at ?? note.summary ?? ''} paddingVertical="$2" gap="$1">
+          <YStack
+            key={note.id ?? note.created_at ?? note.summary ?? ''}
+            paddingVertical="$2"
+            gap="$1"
+          >
             {note.summary ? <Text fontWeight="600">{note.summary}</Text> : null}
             {note.body_text ? <Text>{note.body_text}</Text> : null}
             <Text color="$muted" fontSize="$2">

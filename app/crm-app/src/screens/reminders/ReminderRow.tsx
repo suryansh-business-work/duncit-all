@@ -50,20 +50,31 @@ export function ReminderRow({ reminder, onChanged }: Readonly<Props>) {
 
   const kind = reminder.entity_type;
   const leadId = reminder.lead_id;
-  const openLead = isLeadKind(kind) && leadId ? () => navigation.navigate('LeadDetail', { kind, id: leadId }) : undefined;
+  const openLead =
+    isLeadKind(kind) && leadId
+      ? () => navigation.navigate('LeadDetail', { kind, id: leadId })
+      : undefined;
 
   return (
     <XStack gap="$3" paddingVertical="$2" alignItems="center" testID={`reminder-${reminder.id}`}>
       <XStack
         role="checkbox"
         aria-checked={done}
-        aria-label={done ? t('crmApp.reminder.markPending', { vars: { title: reminder.title } }) : t('crmApp.reminder.markDone', { vars: { title: reminder.title } })}
+        aria-label={
+          done
+            ? t('crmApp.reminder.markPending', { vars: { title: reminder.title } })
+            : t('crmApp.reminder.markDone', { vars: { title: reminder.title } })
+        }
         aria-busy={busy}
         onPress={busy ? undefined : toggle}
         hitSlop={8}
         testID={`reminder-toggle-${reminder.id}`}
       >
-        <MaterialIcons name={done ? 'check-circle' : 'radio-button-unchecked'} size={26} color={theme.primary?.val} />
+        <MaterialIcons
+          name={done ? 'check-circle' : 'radio-button-unchecked'}
+          size={26}
+          color={theme.primary?.val}
+        />
       </XStack>
       <YStack flex={1} onPress={openLead} role={openLead ? 'link' : undefined}>
         <Text fontWeight="600" textDecorationLine={done ? 'line-through' : 'none'}>
@@ -73,7 +84,11 @@ export function ReminderRow({ reminder, onChanged }: Readonly<Props>) {
           {overdue ? `${t('crmApp.reminder.overdue')} · ` : ''}
           {displayDateTime(reminder.due_at)}
         </Text>
-        {failed ? <Text color="$danger" fontSize="$2">{t('crmApp.common.saveFailed')}</Text> : null}
+        {failed ? (
+          <Text color="$danger" fontSize="$2">
+            {t('crmApp.common.saveFailed')}
+          </Text>
+        ) : null}
       </YStack>
     </XStack>
   );

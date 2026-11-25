@@ -46,7 +46,9 @@ export function DuncitButton({
 }: Readonly<DuncitButtonProps>) {
   const spec = buttonSpec({ variant, tone, size, disabled, loading, fullWidth });
   const hitSlop = Math.max(0, (TOUCH_TARGET - spec.height) / 2);
-  const pressed = spec.interactive ? { ...PRESS_STYLE[spec.intent], backgroundColor: spec.pressBackgroundColor } : undefined;
+  const pressed = spec.interactive
+    ? { ...PRESS_STYLE[spec.intent], backgroundColor: spec.pressBackgroundColor }
+    : undefined;
   return (
     <XStack
       testID={testID}

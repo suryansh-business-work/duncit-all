@@ -1,5 +1,12 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
+import { gqlRequest } from '@/services/graphql.client';
+import { renderWithTheme } from '@/test-utils';
+import { useAuthStore } from '@/stores/auth.store';
+import { useFeaturesStore } from '@/stores/features.store';
+import { DialerScreen } from '../dialer/DialerScreen';
+import { SettingsScreen } from '../settings/SettingsScreen';
+
 const mockPhone = {
   lookupNumber: jest.fn(),
   placeCall: jest.fn(),
@@ -14,20 +21,19 @@ jest.mock('crm-telephony', () => ({
   },
 }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
-const mockNav = { navigate: jest.fn(), goBack: jest.fn(), canGoBack: jest.fn(() => true), setOptions: jest.fn() };
+const mockNav = {
+  navigate: jest.fn(),
+  goBack: jest.fn(),
+  canGoBack: jest.fn(() => true),
+  setOptions: jest.fn(),
+};
 let mockRouteParams: Record<string, unknown> | undefined;
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => mockNav,
   useRoute: () => ({ params: mockRouteParams }),
-  useFocusEffect: (fn: () => void) => require('react').useEffect(fn, [fn]),
+  useFocusEffect: (fn: () => void) =>
+    jest.requireActual<typeof import('react')>('react').useEffect(fn, [fn]),
 }));
-
-import { gqlRequest } from '@/services/graphql.client';
-import { renderWithTheme } from '@/test-utils';
-import { useAuthStore } from '@/stores/auth.store';
-import { useFeaturesStore } from '@/stores/features.store';
-import { DialerScreen } from '../dialer/DialerScreen';
-import { SettingsScreen } from '../settings/SettingsScreen';
 
 const request = gqlRequest as jest.Mock;
 
@@ -38,7 +44,13 @@ beforeEach(() => {
 
 describe('DialerScreen', () => {
   it('builds the number from the keypad and shows the CRM contact it belongs to', async () => {
-    mockPhone.lookupNumber.mockResolvedValue({ entityType: 'HOST_LEAD', leadId: 'h1', leadName: 'Run Club', contactName: 'Rohit', others: 0 });
+    mockPhone.lookupNumber.mockResolvedValue({
+      entityType: 'HOST_LEAD',
+      leadId: 'h1',
+      leadName: 'Run Club',
+      contactName: 'Rohit',
+      others: 0,
+    });
     renderWithTheme(<DialerScreen />);
     for (const key of '9811000001') fireEvent.press(screen.getByTestId(`key-${key}`));
     expect(screen.getByTestId('dialer-number').props.value).toBe('9811000001');
@@ -71,14 +83,24 @@ describe('DialerScreen', () => {
 
 describe('SettingsScreen', () => {
   beforeEach(() => {
-    useAuthStore.setState({ user: { user_id: 'u1', first_name: 'Asha', last_name: 'Rao', email: 'asha@duncit.com', roles: ['CRM_MANAGER'] } });
+    useAuthStore.setState({
+      user: {
+        user_id: 'u1',
+        first_name: 'Asha',
+        last_name: 'Rao',
+        email: 'asha@duncit.com',
+        roles: ['CRM_MANAGER'],
+      },
+    });
     useFeaturesStore.setState({ callerId: true, autoLog: true, recordings: true, hydrated: true });
   });
 
   it('shows the account and switches a call feature off', async () => {
     renderWithTheme(<SettingsScreen />);
     expect(screen.getByText('Asha Rao')).toBeOnTheScreen();
-    await act(async () => fireEvent(screen.getByTestId('feature-caller-id'), 'onCheckedChange', false));
+    await act(async () =>
+      fireEvent(screen.getByTestId('feature-caller-id'), 'onCheckedChange', false),
+    );
     expect(useFeaturesStore.getState().callerId).toBe(false);
     expect(mockPhone.setFeatures).toHaveBeenLastCalledWith(false, true);
   });

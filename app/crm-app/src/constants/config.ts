@@ -7,7 +7,10 @@ const DEFAULT_API = 'https://staging.server.duncit.com';
 
 /** The API origin without a trailing slash or `/graphql`. */
 export function resolveApiUrl(raw: string | undefined): string {
-  const value = (raw ?? '').trim().replace(/\/+$/, '').replace(/\/graphql$/, '');
+  const value = (raw ?? '')
+    .trim()
+    .replace(/\/+$/, '')
+    .replace(/\/graphql$/, '');
   return value || DEFAULT_API;
 }
 

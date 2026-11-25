@@ -25,7 +25,10 @@ export async function runSync(): Promise<boolean> {
     const result = await syncDeviceCalls();
     return !result.failed;
   } catch (error) {
-    logs.mobileApp.warn('crm-app/sync', 'runSync', { error, msg: 'Background sync failed; it runs again later' });
+    logs.mobileApp.warn('crm-app/sync', 'runSync', {
+      error,
+      msg: 'Background sync failed; it runs again later',
+    });
     return false;
   }
 }
@@ -33,15 +36,22 @@ export async function runSync(): Promise<boolean> {
 /** Must run at module scope (index.js) so Android can find the task with the app closed. */
 export function defineBackgroundSync(): void {
   TaskManager.defineTask(BACKGROUND_SYNC_TASK, async () =>
-    (await runSync()) ? BackgroundTask.BackgroundTaskResult.Success : BackgroundTask.BackgroundTaskResult.Failed,
+    (await runSync())
+      ? BackgroundTask.BackgroundTaskResult.Success
+      : BackgroundTask.BackgroundTaskResult.Failed,
   );
 }
 
 export async function registerBackgroundSync(): Promise<void> {
   try {
-    await BackgroundTask.registerTaskAsync(BACKGROUND_SYNC_TASK, { minimumInterval: MIN_INTERVAL_MINUTES });
+    await BackgroundTask.registerTaskAsync(BACKGROUND_SYNC_TASK, {
+      minimumInterval: MIN_INTERVAL_MINUTES,
+    });
   } catch (error) {
-    logs.mobileApp.warn('crm-app/sync', 'register', { error, msg: 'Background sync could not be scheduled' });
+    logs.mobileApp.warn('crm-app/sync', 'register', {
+      error,
+      msg: 'Background sync could not be scheduled',
+    });
   }
 }
 

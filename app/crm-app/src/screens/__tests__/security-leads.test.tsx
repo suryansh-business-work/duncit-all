@@ -1,11 +1,6 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import * as Location from 'expo-location';
 
-jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
-jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
-const mockNav = { navigate: jest.fn() };
-jest.mock('@react-navigation/native', () => ({ useNavigation: () => mockNav }));
-
 import { gqlRequest } from '@/services/graphql.client';
 import { renderWithTheme } from '@/test-utils';
 import { useAuthStore } from '@/stores/auth.store';
@@ -13,6 +8,11 @@ import { ApiError } from '@/utils/errors';
 import { blockers, NO_CONSENT } from '../auth/security/useSecurityVerification';
 import { SecurityVerificationScreen } from '../auth/SecurityVerificationScreen';
 import { LeadsScreen } from '../leads/LeadsScreen';
+
+jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
+jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
+const mockNav = { navigate: jest.fn() };
+jest.mock('@react-navigation/native', () => ({ useNavigation: () => mockNav }));
 
 const request = gqlRequest as jest.Mock;
 const challenge = {
@@ -22,7 +22,12 @@ const challenge = {
   sections: [{ key: 'monitoring', title: 'Monitoring', paragraphs: ['We record sign-ins.'] }],
   exception: null,
 };
-const allConsent = { authorized_person: true, credentials_not_shared: true, policies_acknowledged: true, location_consent: true };
+const allConsent = {
+  authorized_person: true,
+  credentials_not_shared: true,
+  policies_acknowledged: true,
+  location_consent: true,
+};
 
 beforeEach(() => jest.clearAllMocks());
 
@@ -41,26 +46,48 @@ describe('SecurityVerificationScreen', () => {
   it('shows the policy and submits consent with the current location for the new session', async () => {
     const completeSecurity = jest.fn().mockResolvedValue(undefined);
     useAuthStore.setState({ completeSecurity });
-    (Location.requestForegroundPermissionsAsync as jest.Mock).mockResolvedValueOnce({ granted: true });
-    (Location.getCurrentPositionAsync as jest.Mock).mockResolvedValueOnce({ coords: { latitude: 18.5, longitude: 73.8, accuracy: 12 } });
+    (Location.requestForegroundPermissionsAsync as jest.Mock).mockResolvedValueOnce({
+      granted: true,
+    });
+    (Location.getCurrentPositionAsync as jest.Mock).mockResolvedValueOnce({
+      coords: { latitude: 18.5, longitude: 73.8, accuracy: 12 },
+    });
     request.mockImplementation(async (_doc: unknown, vars?: { input?: unknown }) =>
-      vars?.input ? { submitPortalSecurityVerification: { token: 'verified' } } : { portalSecurityChallenge: challenge },
+      vars?.input
+        ? { submitPortalSecurityVerification: { token: 'verified' } }
+        : { portalSecurityChallenge: challenge },
     );
     renderWithTheme(<SecurityVerificationScreen />);
     expect(await screen.findByText('We record sign-ins.')).toBeOnTheScreen();
-    for (const key of Object.keys(allConsent)) fireEvent(screen.getByTestId(`consent-${key}`), 'onCheckedChange', true);
+    for (const key of Object.keys(allConsent))
+      fireEvent(screen.getByTestId(`consent-${key}`), 'onCheckedChange', true);
     await act(async () => fireEvent.press(screen.getByTestId('security-location')));
     await act(async () => fireEvent.press(screen.getByTestId('security-proceed')));
     await waitFor(() => expect(completeSecurity).toHaveBeenCalledWith('verified'));
     const input = request.mock.calls.find((c) => c[1]?.input)?.[1].input;
-    expect(input).toMatchObject({ policy_version: 'v3', consent: allConsent, location: { latitude: 18.5, longitude: 73.8, accuracy_meters: 12 }, exception_id: null });
+    expect(input).toMatchObject({
+      policy_version: 'v3',
+      consent: allConsent,
+      location: { latitude: 18.5, longitude: 73.8, accuracy_meters: 12 },
+      exception_id: null,
+    });
   });
 
   it('explains a refused location and lets the person ask an administrator instead', async () => {
-    (Location.requestForegroundPermissionsAsync as jest.Mock).mockResolvedValueOnce({ granted: false });
+    (Location.requestForegroundPermissionsAsync as jest.Mock).mockResolvedValueOnce({
+      granted: false,
+    });
     request.mockImplementation(async (_doc: unknown, vars?: { input?: { reason?: string } }) =>
       vars?.input?.reason
-        ? { requestPortalSecurityException: { id: 'e1', status: 'PENDING', reason: vars.input.reason, decision_note: null, expires_at: null } }
+        ? {
+            requestPortalSecurityException: {
+              id: 'e1',
+              status: 'PENDING',
+              reason: vars.input.reason,
+              decision_note: null,
+              expires_at: null,
+            },
+          }
         : { portalSecurityChallenge: challenge },
     );
     renderWithTheme(<SecurityVerificationScreen />);
@@ -69,13 +96,19 @@ describe('SecurityVerificationScreen', () => {
     fireEvent.changeText(screen.getByTestId('security-reason'), 'My GPS chip is broken today');
     await act(async () => fireEvent.press(screen.getByTestId('security-alternative')));
     expect(await screen.findByText(/with an administrator/)).toBeOnTheScreen();
-    expect(request.mock.calls.at(-1)?.[1]).toEqual({ input: { reason: 'My GPS chip is broken today', location_error: 'PERMISSION_DENIED' } });
+    expect(request.mock.calls.at(-1)?.[1]).toEqual({
+      input: { reason: 'My GPS chip is broken today', location_error: 'PERMISSION_DENIED' },
+    });
   });
 
   it('asks again with the new wording when the policy changed underneath', async () => {
     useAuthStore.setState({ completeSecurity: jest.fn() });
-    (Location.requestForegroundPermissionsAsync as jest.Mock).mockResolvedValueOnce({ granted: true });
-    (Location.getCurrentPositionAsync as jest.Mock).mockResolvedValueOnce({ coords: { latitude: 1, longitude: 1, accuracy: null } });
+    (Location.requestForegroundPermissionsAsync as jest.Mock).mockResolvedValueOnce({
+      granted: true,
+    });
+    (Location.getCurrentPositionAsync as jest.Mock).mockResolvedValueOnce({
+      coords: { latitude: 1, longitude: 1, accuracy: null },
+    });
     let submits = 0;
     let loads = 0;
     request.mockImplementation(async (_doc: unknown, vars?: { input?: unknown }) => {
@@ -88,7 +121,8 @@ describe('SecurityVerificationScreen', () => {
     });
     renderWithTheme(<SecurityVerificationScreen />);
     await screen.findByText('We record sign-ins.');
-    for (const key of Object.keys(allConsent)) fireEvent(screen.getByTestId(`consent-${key}`), 'onCheckedChange', true);
+    for (const key of Object.keys(allConsent))
+      fireEvent(screen.getByTestId(`consent-${key}`), 'onCheckedChange', true);
     await act(async () => fireEvent.press(screen.getByTestId('security-location')));
     await act(async () => fireEvent.press(screen.getByTestId('security-proceed')));
     expect(await screen.findByText('The policy changed')).toBeOnTheScreen();
@@ -101,19 +135,45 @@ describe('SecurityVerificationScreen', () => {
 
 describe('LeadsScreen', () => {
   it('searches every kind, narrows to one, and opens a lead', async () => {
-    request.mockResolvedValue({ searchCrmLeads: { total: 1, page: 1, page_size: 25, rows: [{ entity_type: 'CREATOR_LEAD', id: 'c1', name: 'Riya Runs', city: 'Mumbai', lead_status: 'New', phones: [] }] } });
+    request.mockResolvedValue({
+      searchCrmLeads: {
+        total: 1,
+        page: 1,
+        page_size: 25,
+        rows: [
+          {
+            entity_type: 'CREATOR_LEAD',
+            id: 'c1',
+            name: 'Riya Runs',
+            city: 'Mumbai',
+            lead_status: 'New',
+            phones: [],
+          },
+        ],
+      },
+    });
     renderWithTheme(<LeadsScreen />);
     expect(await screen.findByText('Riya Runs', {}, { timeout: 2000 })).toBeOnTheScreen();
     expect(screen.getByText('1 lead')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('leads-kind-CREATOR_LEAD'));
     fireEvent.changeText(screen.getByTestId('leads-search'), 'riya');
-    await waitFor(() => expect(request.mock.calls.at(-1)?.[1].input).toMatchObject({ search: 'riya', entity_types: ['CREATOR_LEAD'], page: 1 }), { timeout: 2000 });
+    await waitFor(
+      () =>
+        expect(request.mock.calls.at(-1)?.[1].input).toMatchObject({
+          search: 'riya',
+          entity_types: ['CREATOR_LEAD'],
+          page: 1,
+        }),
+      { timeout: 2000 },
+    );
     fireEvent.press(screen.getByTestId('lead-row-c1'));
     expect(mockNav.navigate).toHaveBeenCalledWith('LeadDetail', { kind: 'CREATOR_LEAD', id: 'c1' });
   });
 
   it('shows the error with a retry, and the empty state', async () => {
-    request.mockRejectedValueOnce(new Error('offline')).mockResolvedValue({ searchCrmLeads: { total: 0, page: 1, page_size: 25, rows: [] } });
+    request
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValue({ searchCrmLeads: { total: 0, page: 1, page_size: 25, rows: [] } });
     renderWithTheme(<LeadsScreen />);
     fireEvent.press(await screen.findByTestId('state-retry', {}, { timeout: 2000 }));
     expect(await screen.findByText('No leads match.')).toBeOnTheScreen();

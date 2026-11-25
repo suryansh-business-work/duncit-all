@@ -29,7 +29,8 @@ export function parseFeatures(raw: string | null): Features {
     return {
       callerId: typeof value.callerId === 'boolean' ? value.callerId : DEFAULT_FEATURES.callerId,
       autoLog: typeof value.autoLog === 'boolean' ? value.autoLog : DEFAULT_FEATURES.autoLog,
-      recordings: typeof value.recordings === 'boolean' ? value.recordings : DEFAULT_FEATURES.recordings,
+      recordings:
+        typeof value.recordings === 'boolean' ? value.recordings : DEFAULT_FEATURES.recordings,
     };
   } catch {
     return DEFAULT_FEATURES;
@@ -51,7 +52,8 @@ export const useFeaturesStore = create<FeaturesState>((set, get) => ({
     const { callerId, autoLog, recordings } = { ...get(), ...patch };
     const next = { callerId, autoLog, recordings };
     // Logging starts from the moment it is switched on — calls from before are never uploaded.
-    if (patch.autoLog === true && !get().autoLog) await writeValue(STORAGE_KEYS.callCheckpoint, String(Date.now()));
+    if (patch.autoLog === true && !get().autoLog)
+      await writeValue(STORAGE_KEYS.callCheckpoint, String(Date.now()));
     await writeValue(STORAGE_KEYS.features, JSON.stringify(next));
     pushToPhone(next);
     set(next);

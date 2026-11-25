@@ -1,5 +1,18 @@
 import { Linking, PermissionsAndroid } from 'react-native';
 
+import { resolveApiUrl } from '@/constants/config';
+import { ApiError, errorCode, errorMessage } from '@/utils/errors';
+import { dialNumber, dialable, whatsappUrl } from '../dialer';
+import { permissionsFor, readPermissions, requestPermission } from '../permissions';
+import {
+  clearToken,
+  getToken,
+  needsSecurityVerification,
+  peekToken,
+  resetTokenCache,
+  setToken,
+} from '../session';
+
 const mockPhone = {
   placeCall: jest.fn(),
   canDrawOverlays: jest.fn(() => false),
@@ -10,12 +23,6 @@ jest.mock('crm-telephony', () => ({
     return mockPhone;
   },
 }));
-
-import { resolveApiUrl } from '@/constants/config';
-import { ApiError, errorCode, errorMessage } from '@/utils/errors';
-import { dialNumber, dialable, whatsappUrl } from '../dialer';
-import { permissionsFor, readPermissions, requestPermission } from '../permissions';
-import { clearToken, getToken, needsSecurityVerification, peekToken, resetTokenCache, setToken } from '../session';
 
 afterEach(() => jest.restoreAllMocks());
 
@@ -29,7 +36,9 @@ describe('config', () => {
 
 describe('errors', () => {
   it('words a thrown value and reads its server code', () => {
-    expect(errorMessage(new ApiError('Lead not found', 200, { code: 'NOT_FOUND' }), 'x')).toBe('Lead not found');
+    expect(errorMessage(new ApiError('Lead not found', 200, { code: 'NOT_FOUND' }), 'x')).toBe(
+      'Lead not found',
+    );
     expect(errorMessage('weird', 'fallback')).toBe('fallback');
     expect(errorCode(new ApiError('x', 401, { code: 'UNAUTHENTICATED' }))).toBe('UNAUTHENTICATED');
     expect(errorCode(new ApiError('x', 500, { code: 7 }))).toBeUndefined();
@@ -51,7 +60,8 @@ describe('session', () => {
   });
 
   it('owes Security Verification only for a pending console claim', () => {
-    const jwt = (psv: object) => `h.${Buffer.from(JSON.stringify({ psv })).toString('base64url')}.s`;
+    const jwt = (psv: object) =>
+      `h.${Buffer.from(JSON.stringify({ psv })).toString('base64url')}.s`;
     expect(needsSecurityVerification(jwt({ portal: 'crm', verified: false }))).toBe(true);
     expect(needsSecurityVerification(jwt({ portal: 'crm', verified: true }))).toBe(false);
     expect(needsSecurityVerification(null)).toBe(false);
@@ -103,7 +113,9 @@ describe('permissions', () => {
   });
 
   it('sends a refused-for-good permission to Settings, and the overlay to its own screen', async () => {
-    jest.spyOn(PermissionsAndroid, 'requestMultiple').mockResolvedValue({ [P.CALL_PHONE]: 'never_ask_again' } as never);
+    jest
+      .spyOn(PermissionsAndroid, 'requestMultiple')
+      .mockResolvedValue({ [P.CALL_PHONE]: 'never_ask_again' } as never);
     const settings = jest.spyOn(Linking, 'openSettings').mockResolvedValue();
     await requestPermission('call');
     expect(settings).toHaveBeenCalled();

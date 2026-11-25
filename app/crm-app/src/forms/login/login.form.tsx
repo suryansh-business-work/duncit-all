@@ -28,8 +28,22 @@ export function LoginForm({ onSubmit, error }: Readonly<Props>) {
 
   return (
     <YStack gap="$3">
-      <TextField control={control} name="email" label={t('crmApp.login.email')} keyboardType="email-address" autoComplete="email" testID="login-email" />
-      <TextField control={control} name="password" label={t('crmApp.login.password')} secure={!showPassword} autoComplete="password" testID="login-password" />
+      <TextField
+        control={control}
+        name="email"
+        label={t('crmApp.login.email')}
+        keyboardType="email-address"
+        autoComplete="email"
+        testID="login-email"
+      />
+      <TextField
+        control={control}
+        name="password"
+        label={t('crmApp.login.password')}
+        secure={!showPassword}
+        autoComplete="password"
+        testID="login-password"
+      />
       <XStack justifyContent="flex-end">
         <DuncitButton
           label={showPassword ? t('crmApp.login.hidePassword') : t('crmApp.login.showPassword')}

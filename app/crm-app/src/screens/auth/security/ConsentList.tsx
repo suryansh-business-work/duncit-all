@@ -4,7 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { Consent, ConsentKey } from './useSecurityVerification';
 
-const ROWS: Array<{ key: ConsentKey; copy: string }> = [
+const ROWS: { key: ConsentKey; copy: string }[] = [
   { key: 'authorized_person', copy: 'shell.securityVerification.consent.authorized' },
   { key: 'credentials_not_shared', copy: 'shell.securityVerification.consent.credentials' },
   { key: 'policies_acknowledged', copy: 'shell.securityVerification.consent.policies' },

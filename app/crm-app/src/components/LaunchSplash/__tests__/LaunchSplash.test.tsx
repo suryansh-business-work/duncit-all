@@ -1,7 +1,6 @@
 import { act, render, screen } from '@testing-library/react-native';
 import { AccessibilityInfo, Animated } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
-import * as ExpoVideo from 'expo-video';
 
 import { LaunchSplashGate, SPLASH_MAX_MS } from '..';
 
@@ -11,11 +10,16 @@ import { LaunchSplashGate, SPLASH_MAX_MS } from '..';
  * the phone asks for reduced motion, or when it stalls past SPLASH_MAX_MS.
  */
 
-const video = ExpoVideo as unknown as {
+/**
+ * The expo-video mock from jest.setup.js, as the component sees it. `import *`
+ * would hand the test a copy of it, and a spy on a copy never reaches the
+ * component.
+ */
+const video = jest.requireMock<{
   __player: { muted: boolean; loop: boolean; play: jest.Mock };
   __emit: (event: string, payload?: unknown) => void;
   VideoView: (props: object) => unknown;
-};
+}>('expo-video');
 const hide = SplashScreen.hideAsync as jest.Mock;
 
 beforeEach(() => {

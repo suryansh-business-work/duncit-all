@@ -387,3 +387,9 @@ export {
   type CrmContactValues,
   type DuplicateCheckValues,
 } from './crm-leads';
+// Console sign-in (every portal's login card + the Duncit CRM app).
+export {
+  consoleLoginDefaults,
+  makeConsoleLoginSchema,
+  type ConsoleLoginValues,
+} from './console-login';

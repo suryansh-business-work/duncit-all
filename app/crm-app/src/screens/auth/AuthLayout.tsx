@@ -1,11 +1,14 @@
 import type { ReactNode } from 'react';
-import { Image, KeyboardAvoidingView, ScrollView } from 'react-native';
+import { KeyboardAvoidingView, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
+import { INK, RADII } from '@/constants/design';
 import { useTranslation } from '@/hooks/useTranslation';
-
-const LOGO = require('../../../assets/duncit-logo.png');
+import { AuthBackdrop } from './AuthBackdrop';
+import { AuthCardHeader } from './AuthCardHeader';
+import { AuthLegalLinks } from './AuthLegalLinks';
+import { ColorModeToggle } from './ColorModeToggle';
 
 interface Props {
   title: string;
@@ -14,56 +17,61 @@ interface Props {
 }
 
 /**
- * The sign-in screens' frame: the CRM's indigo band with the Duncit logo and
- * "Duncit CRM", and a card holding the step. Deliberately unlike the member
- * app's red sign-in, so nobody confuses the work app with the member app.
+ * The sign-in screens' frame, built to the CRM portal's login card: the CRM
+ * photo blurred behind a scrim, the light/dark switch, a glass card with the
+ * Duncit mark, "duncit.com" and the CRM chip, the step itself and the legal
+ * links, and the ink tagline bar under the card.
  */
 export function AuthLayout({ title, subtitle, children }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <YStack flex={1} backgroundColor="$background">
-      <YStack
-        backgroundColor="$primary"
-        paddingTop="$8"
-        paddingBottom="$9"
-        paddingHorizontal="$5"
-        alignItems="center"
-        gap="$2"
-      >
-        <Image
-          source={LOGO}
-          style={{ width: 72, height: 72 }}
-          resizeMode="contain"
-          accessibilityIgnoresInvertColors
-          accessible={false}
-        />
-        <Text color="$onPrimary" fontSize="$8" fontWeight="800" role="heading">
-          {t('crmApp.login.title')}
-        </Text>
-      </YStack>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior="height">
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1 }}>
-          <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
-            <YStack
-              marginTop="$-6"
-              marginHorizontal="$4"
-              backgroundColor="$surface"
-              borderRadius="$6"
-              padding="$5"
-              gap="$3"
-              borderWidth={1}
-              borderColor="$borderColor"
-              elevation={4}
-            >
-              <Text fontSize="$7" fontWeight="700" role="heading">
-                {title}
-              </Text>
-              {subtitle ? <Text color="$muted">{subtitle}</Text> : null}
-              {children}
+    <AuthBackdrop>
+      <SafeAreaView style={{ flex: 1 }}>
+        <XStack justifyContent="flex-end" paddingHorizontal="$3" paddingTop="$2">
+          <ColorModeToggle />
+        </XStack>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior="height">
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 16 }}
+          >
+            <YStack gap="$3" width="100%" maxWidth={420} alignSelf="center">
+              <YStack
+                backgroundColor="$glass"
+                borderRadius={RADII.lg}
+                borderWidth={1}
+                borderColor="$borderColor"
+                padding="$5"
+                gap="$3"
+                shadowColor="$shadowColor"
+                shadowOpacity={0.18}
+                shadowRadius={30}
+                shadowOffset={{ width: 0, height: 20 }}
+                elevation={6}
+              >
+                <AuthCardHeader />
+                <Text fontSize="$9" fontWeight="800" role="heading">
+                  {title}
+                </Text>
+                {subtitle ? <Text color="$muted">{subtitle}</Text> : null}
+                {children}
+                <AuthLegalLinks />
+              </YStack>
+              <YStack
+                backgroundColor={INK.fill}
+                borderRadius={RADII.lg}
+                paddingHorizontal="$4"
+                paddingVertical="$3"
+                testID="auth-tagline"
+              >
+                <Text color={INK.on} fontWeight="700" textAlign="center">
+                  {t('shell.portal.crm.tagline')}
+                </Text>
+              </YStack>
             </YStack>
-          </SafeAreaView>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </YStack>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </AuthBackdrop>
   );
 }

@@ -9,19 +9,21 @@ import { makeLoginSchema } from '@/forms/login';
 const messages = (result: { success: boolean; error?: { issues: { message: string }[] } }) =>
   result.success ? [] : (result.error?.issues ?? []).map((i) => i.message);
 
-describe('sign-in (the shared console rules)', () => {
-  const schema = makeLoginSchema(fallbackT, 'EMAIL');
+describe('sign-in (the portal login card rules)', () => {
+  const schema = makeLoginSchema(fallbackT);
 
-  it('accepts an address and an 8+ character password', () => {
-    expect(schema.safeParse({ email: 'asha@duncit.com', password: 'longenough' }).success).toBe(
-      true,
-    );
+  it('accepts an address and any non-empty password, as the portal does', () => {
+    expect(schema.safeParse({ email: 'asha@duncit.com', password: '1' }).success).toBe(true);
   });
 
-  it('refuses a missing or malformed address and a short password', () => {
-    expect(schema.safeParse({ email: '', password: 'longenough' }).success).toBe(false);
-    expect(schema.safeParse({ email: 'not-an-email', password: 'longenough' }).success).toBe(false);
-    expect(schema.safeParse({ email: 'asha@duncit.com', password: 'short' }).success).toBe(false);
+  it('refuses a missing or malformed address and an empty password with the portal messages', () => {
+    expect(messages(schema.safeParse({ email: '', password: '' }))).toEqual([
+      'E-mail address is required',
+      'Password is required',
+    ]);
+    expect(messages(schema.safeParse({ email: 'not-an-email', password: 'x' }))).toEqual([
+      'Enter a valid e-mail address',
+    ]);
   });
 });
 

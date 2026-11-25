@@ -22,4 +22,7 @@ export const config = {
   portalKey: 'crm',
   /** Who may use the app: the same roles the CRM portal requires. */
   allowedRoles: ['CRM_MANAGER', 'SUPER_ADMIN'] as readonly string[],
+  /** The sign-in backdrop: the CRM portal's own login photo (its appConfig.loginImage), sized for a phone. */
+  loginImage:
+    'https://images.pexels.com/photos/7658434/pexels-photo-7658434.jpeg?auto=compress&w=1080',
 } as const;

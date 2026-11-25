@@ -3,7 +3,13 @@ import { hasAppAccess } from '@duncit/user-core';
 import { CrmTelephony } from 'crm-telephony';
 
 import { config } from '@/constants/config';
-import { CrmAppLoginDocument, CrmAppMeDocument, CrmAppTwoFactorDocument } from '@/graphql/auth';
+import {
+  CrmAppLoginDocument,
+  CrmAppMeDocument,
+  CrmAppOtpLoginDocument,
+  CrmAppRequestLoginOtpDocument,
+  CrmAppTwoFactorDocument,
+} from '@/graphql/auth';
 import { gqlRequest } from '@/services/graphql.client';
 import { clearAllValues } from '@/services/secure-storage';
 import { clearToken, getToken, needsSecurityVerification, setToken } from '@/services/session';
@@ -31,6 +37,9 @@ interface AuthState {
   challengeToken: string | null;
   bootstrap: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  /** Email a one-time code. Resolves the same whether or not the address can sign in. */
+  requestLoginCode: (email: string) => Promise<void>;
+  signInWithCode: (email: string, code: string) => Promise<void>;
   completeTwoFactor: (code: string) => Promise<void>;
   completeSecurity: (token: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -62,6 +71,21 @@ export const useAuthStore = create<AuthState>((set, get) => {
     set({ status: 'signedIn', user: me, challengeToken: null });
   };
 
+  /** Either sign-in door: a token, or the authenticator step, or "no CRM access". */
+  const viaDoor = async (door: () => Promise<string>) => {
+    try {
+      await accept(await door());
+    } catch (error) {
+      const challenge = error instanceof ApiError ? error.extensions?.challenge_token : undefined;
+      if (errorCode(error) === 'TWO_FACTOR_REQUIRED' && typeof challenge === 'string') {
+        set({ status: 'twoFactor', challengeToken: challenge });
+        return;
+      }
+      if (errorCode(error) === 'FORBIDDEN') throw new NoCrmAccessError();
+      throw error;
+    }
+  };
+
   return {
     status: 'loading',
     user: null,
@@ -82,24 +106,34 @@ export const useAuthStore = create<AuthState>((set, get) => {
       }
     },
 
-    signIn: async (email, password) => {
-      try {
+    signIn: (email, password) =>
+      viaDoor(async () => {
         const { login } = await gqlRequest(
           CrmAppLoginDocument,
           { input: { channel: 'EMAIL', email, password, portal_key: config.portalKey } },
           { auth: false },
         );
-        await accept(login.token);
-      } catch (error) {
-        const challenge = error instanceof ApiError ? error.extensions?.challenge_token : undefined;
-        if (errorCode(error) === 'TWO_FACTOR_REQUIRED' && typeof challenge === 'string') {
-          set({ status: 'twoFactor', challengeToken: challenge });
-          return;
-        }
-        if (errorCode(error) === 'FORBIDDEN') throw new NoCrmAccessError();
-        throw error;
-      }
+        return login.token;
+      }),
+
+    requestLoginCode: async (email) => {
+      await gqlRequest(
+        CrmAppRequestLoginOtpDocument,
+        { input: { email, portal_key: config.portalKey } },
+        { auth: false },
+      );
     },
+
+    // A code is not a lesser credential: the same role gate, 2FA and Security Verification.
+    signInWithCode: (email, code) =>
+      viaDoor(async () => {
+        const { loginWithPortalOtp } = await gqlRequest(
+          CrmAppOtpLoginDocument,
+          { input: { email, otp: code, portal_key: config.portalKey } },
+          { auth: false },
+        );
+        return loginWithPortalOtp.token;
+      }),
 
     completeTwoFactor: async (code) => {
       const challenge = get().challengeToken;

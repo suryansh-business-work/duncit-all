@@ -136,3 +136,38 @@ describe('bootstrap', () => {
     expect(useAuthStore.getState().status).toBe('signedIn');
   });
 });
+
+describe('sign in with an emailed code', () => {
+  it('asks for a code for the CRM portal only, without a session', async () => {
+    request.mockResolvedValueOnce({ requestPortalLoginOtp: { ok: true } });
+    await useAuthStore.getState().requestLoginCode('asha@duncit.com');
+    expect(request.mock.calls[0]?.[1]).toEqual({
+      input: { email: 'asha@duncit.com', portal_key: 'crm' },
+    });
+    expect(request.mock.calls[0]?.[2]).toEqual({ auth: false });
+  });
+
+  it('trades the code for the same session a password gives, behind the same role gate', async () => {
+    request
+      .mockResolvedValueOnce({ loginWithPortalOtp: { token: VERIFIED } })
+      .mockResolvedValueOnce({ me: crmUser });
+    await useAuthStore.getState().signInWithCode('asha@duncit.com', '123456');
+    expect(request.mock.calls[0]?.[1]).toEqual({
+      input: { email: 'asha@duncit.com', otp: '123456', portal_key: 'crm' },
+    });
+    expect(useAuthStore.getState()).toMatchObject({ status: 'signedIn', user: crmUser });
+  });
+
+  it('still asks a 2FA account for its authenticator code, and refuses a non-CRM account', async () => {
+    request.mockRejectedValueOnce(
+      new ApiError('2FA', 401, { code: 'TWO_FACTOR_REQUIRED', challenge_token: 'ch-9' }),
+    );
+    await useAuthStore.getState().signInWithCode('asha@duncit.com', '123456');
+    expect(useAuthStore.getState()).toMatchObject({ status: 'twoFactor', challengeToken: 'ch-9' });
+
+    request.mockRejectedValueOnce(new ApiError('Forbidden', 403, { code: 'FORBIDDEN' }));
+    await expect(
+      useAuthStore.getState().signInWithCode('x@duncit.com', '123456'),
+    ).rejects.toBeInstanceOf(NoCrmAccessError);
+  });
+});

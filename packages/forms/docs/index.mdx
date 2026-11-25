@@ -1277,3 +1277,20 @@ makeEcommLeadSchema(t).safeParse({
 duplicateCheckKey([{ mobile_number: '98110 00001', email: '' }], '');
 // '{"contacts":[{"mobile_number":"98110 00001","email":""}],"website":""}'
 ```
+
+### Console sign-in — `makeConsoleLoginSchema`
+
+The portal login card's rules, shared with the Duncit CRM app's sign-in: an e-mail address
+(trimmed, checked against the HTML5 pattern the console login has always used) and any
+non-empty password, with the card's own `session.login.emailRequired` / `emailInvalid` /
+`passwordRequired` messages. Use this, not `makeLoginSchema`, for a console: the member contract
+sets an 8-character password floor and a phone channel the console login mutation does not take.
+`@duncit/user-context`'s `buildLoginSchema` holds the same three rules today and should move onto
+this export.
+
+```ts
+import { consoleLoginDefaults, makeConsoleLoginSchema } from '@duncit/forms/schemas';
+
+makeConsoleLoginSchema(t).safeParse({ email: ' asha@duncit.com ', password: '1' });
+// { success: true, data: { email: 'asha@duncit.com', password: '1' } }
+```

@@ -1,10 +1,11 @@
+import { useEffect } from 'react';
 import { Platform, useColorScheme } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TamaguiProvider, Theme } from 'tamagui';
-import { configureLogs, detectEnvironment, httpTransport } from '@duncit/logs';
+import { configureLogs, detectEnvironment, fireAndForget, httpTransport, logs } from '@duncit/logs';
 
 import config from './tamagui.config';
 import { config as appConfig } from '@/constants/config';
@@ -14,6 +15,7 @@ import { navigationRef } from '@/navigation/navigationRef';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { peekToken } from '@/services/session';
 import { useAppSession } from '@/hooks/useAppSession';
+import { resolveColorMode, useAppearanceStore } from '@/stores/appearance.store';
 
 // Structured logs to the server's /logs ingest (SignOz), attributed to the
 // signed-in account the same way a GraphQL call is.
@@ -30,15 +32,25 @@ configureLogs(httpTransport(`${appConfig.apiUrl}/logs`, { getToken: peekToken })
  * restores sign-in and starts the call sync.
  */
 export default function App() {
-  const scheme = useColorScheme();
+  const system = useColorScheme();
+  const saved = useAppearanceStore((s) => s.mode);
+  const scheme = resolveColorMode(saved, system);
   useAppSession();
+  useEffect(() => {
+    fireAndForget(
+      useAppearanceStore.getState().hydrate(),
+      logs.mobileApp,
+      'crm-app/App',
+      'appearance',
+    );
+  }, []);
 
   return (
     <ErrorBoundary scope="root" route="App">
       <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaProvider>
-          <TamaguiProvider config={config} defaultTheme={scheme === 'dark' ? 'dark' : 'light'}>
-            <Theme name={scheme === 'dark' ? 'dark' : 'light'}>
+          <TamaguiProvider config={config} defaultTheme={scheme}>
+            <Theme name={scheme}>
               <NavigationContainer ref={navigationRef} linking={linking}>
                 <RootNavigator />
               </NavigationContainer>

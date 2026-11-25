@@ -30,6 +30,23 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
       submit: 'Sign in',
       noAccess: 'This account does not have access to Duncit CRM. Ask your administrator for CRM access.',
       failed: 'Sign-in failed. Check your email and password and try again.',
+      // The card's header, as the portal's login card shows it (a brand mark and the console's name).
+      domain: 'duncit.com',
+      portal: 'CRM',
+    },
+    otp: {
+      or: 'or',
+      open: 'Login with OTP',
+      divider: 'sign in with a code',
+      send: 'Email me a code',
+      sending: 'Sending…',
+      sent: 'If that address can sign in here, a 6-digit code is on its way. It expires in a few minutes and only works for this portal.',
+      code: '6-digit code',
+      codeLabel: 'One-time code',
+      submit: 'Sign in',
+      submitting: 'Signing in…',
+      emailInvalid: 'Enter a valid e-mail address',
+      codeInvalid: 'Enter the 6-digit code',
     },
     twoFactor: {
       title: 'Two-step verification',

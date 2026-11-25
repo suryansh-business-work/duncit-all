@@ -1,5 +1,9 @@
+import type { ReactNode } from 'react';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useController, type Control, type FieldPath, type FieldValues } from 'react-hook-form';
-import { Input, Label, Text, TextArea, YStack } from 'tamagui';
+import { Input, Label, Text, TextArea, XStack, YStack, useTheme } from 'tamagui';
+
+import { RADII } from '@/constants/design';
 
 interface Props<T extends FieldValues> {
   control: Control<T>;
@@ -11,6 +15,14 @@ interface Props<T extends FieldValues> {
   multiline?: boolean;
   keyboardType?: 'default' | 'email-address' | 'number-pad' | 'phone-pad';
   autoComplete?: 'email' | 'password' | 'one-time-code' | 'off';
+  /**
+   * 'pill' is the portal login card's field: rounded, an icon in front, the
+   * label as the placeholder (still read out as the field's name).
+   */
+  variant?: 'boxed' | 'pill';
+  icon?: keyof typeof MaterialIcons.glyphMap;
+  /** A control inside the field's end, e.g. show/hide password. */
+  trailing?: ReactNode;
   testID?: string;
 }
 
@@ -28,43 +40,77 @@ export function TextField<T extends FieldValues>({
   multiline,
   keyboardType = 'default',
   autoComplete = 'off',
+  variant = 'boxed',
+  icon,
+  trailing,
   testID,
 }: Readonly<Props<T>>) {
+  const theme = useTheme();
   const { field, fieldState } = useController({ control, name });
   const id = `field-${name}`;
   const error = fieldState.error?.message;
+  const pill = variant === 'pill';
   const shared = {
     id,
     value: typeof field.value === 'string' ? field.value : '',
     onChangeText: field.onChange,
     onBlur: field.onBlur,
-    placeholder,
+    placeholder: pill ? label : placeholder,
     'aria-label': label,
     'aria-invalid': Boolean(error),
-    borderColor: error ? '$danger' : '$inputBorder',
     testID,
   } as const;
+  const input = (
+    <Input
+      {...shared}
+      secureTextEntry={secure}
+      keyboardType={keyboardType}
+      autoComplete={autoComplete}
+      autoCapitalize={keyboardType === 'email-address' || secure ? 'none' : 'sentences'}
+      {...(pill
+        ? { flex: 1, borderWidth: 0, backgroundColor: 'transparent', paddingHorizontal: '$2' }
+        : { borderColor: error ? '$danger' : '$inputBorder' })}
+    />
+  );
   return (
     <YStack gap="$1">
-      <Label htmlFor={id} fontWeight="600">
-        {label}
-      </Label>
-      {multiline ? (
-        <TextArea {...shared} minHeight={110} />
-      ) : (
-        <Input
-          {...shared}
-          secureTextEntry={secure}
-          keyboardType={keyboardType}
-          autoComplete={autoComplete}
-          autoCapitalize={keyboardType === 'email-address' || secure ? 'none' : 'sentences'}
-        />
+      {pill ? null : (
+        <Label htmlFor={id} fontWeight="600">
+          {label}
+        </Label>
       )}
+      {multiline && !pill ? (
+        <TextArea {...shared} minHeight={110} borderColor={error ? '$danger' : '$inputBorder'} />
+      ) : null}
+      {!multiline && !pill ? input : null}
+      {pill ? (
+        <XStack
+          alignItems="center"
+          borderWidth={1}
+          borderColor={error ? '$danger' : '$inputBorder'}
+          borderRadius={RADII.pill}
+          backgroundColor="$surface"
+          paddingLeft="$3"
+          paddingRight="$1"
+        >
+          {icon ? (
+            <MaterialIcons
+              name={icon}
+              size={20}
+              color={theme.muted?.val}
+              accessibilityElementsHidden
+            />
+          ) : null}
+          {input}
+          {trailing}
+        </XStack>
+      ) : null}
       {error ? (
         <Text
           color="$danger"
           fontSize="$2"
           role="alert"
+          paddingHorizontal={pill ? '$3' : 0}
           testID={testID ? `${testID}-error` : undefined}
         >
           {error}

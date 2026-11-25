@@ -2,6 +2,7 @@ import * as SecureStore from 'expo-secure-store';
 
 import { gqlRequest } from '@/services/graphql.client';
 import { STORAGE_KEYS } from '@/services/secure-storage';
+import { resolveColorMode, useAppearanceStore } from '../appearance.store';
 import { DEFAULT_FEATURES, parseFeatures, useFeaturesStore } from '../features.store';
 import { useLocaleStore } from '../locale.store';
 import { usePostCallStore } from '../postCall.store';
@@ -106,3 +107,20 @@ describe('post-call hand-off', () => {
     expect(usePostCallStore.getState().collect()).toBe(false);
   });
 });
+
+describe('appearance', () => {
+  it('follows the phone until a choice is made, then keeps it across launches', async () => {
+    expect(resolveColorMode(null, 'dark')).toBe('dark');
+    expect(resolveColorMode(null, null)).toBe('light');
+    useAppearanceStore.getState().toggle('light');
+    expect(useAppearanceStore.getState().mode).toBe('dark');
+    expect(resolveColorMode('dark', 'light')).toBe('dark');
+    await waitForWrite();
+    useAppearanceStore.setState({ mode: null });
+    await useAppearanceStore.getState().hydrate();
+    expect(useAppearanceStore.getState().mode).toBe('dark');
+  });
+});
+
+/** Let the fire-and-forget save land before reading it back. */
+const waitForWrite = () => new Promise<void>((resolve) => setImmediate(resolve));

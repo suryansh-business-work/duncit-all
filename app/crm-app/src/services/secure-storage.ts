@@ -11,9 +11,13 @@ export const STORAGE_KEYS = {
   directorySyncedAt: 'duncit_crm_directory_synced_at',
   features: 'duncit_crm_features',
   locale: 'duncit_crm_locale',
+  colorMode: 'duncit_crm_color_mode',
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
+
+/** Device preferences that outlive a sign-out (they hold no CRM data). */
+const PREFERENCE_KEYS: ReadonlySet<StorageKey> = new Set([STORAGE_KEYS.colorMode]);
 
 export const readValue = (key: StorageKey): Promise<string | null> => SecureStore.getItemAsync(key);
 
@@ -22,7 +26,8 @@ export const writeValue = (key: StorageKey, value: string): Promise<void> =>
 
 export const removeValue = (key: StorageKey): Promise<void> => SecureStore.deleteItemAsync(key);
 
-/** Everything the app stored, gone — sign-out leaves nothing of the CRM behind. */
+/** Everything the app stored, gone — sign-out leaves nothing of the CRM behind (only device preferences stay). */
 export async function clearAllValues(): Promise<void> {
-  await Promise.all(Object.values(STORAGE_KEYS).map((key) => SecureStore.deleteItemAsync(key)));
+  const keys = Object.values(STORAGE_KEYS).filter((key) => !PREFERENCE_KEYS.has(key));
+  await Promise.all(keys.map((key) => SecureStore.deleteItemAsync(key)));
 }

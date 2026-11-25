@@ -13,6 +13,14 @@ import accent from './crm-accent.json';
  */
 type Accent = typeof accent;
 
+/**
+ * The portal login screen's layers over its photo: a scrim of the page colour
+ * that keeps text readable, and a near-opaque card (the portal's frosted glass;
+ * React Native draws no backdrop blur, so the card carries more of its colour).
+ */
+const SCRIM_ALPHA = 0.74;
+const GLASS_ALPHA = 0.92;
+
 /** One mode's keys: the shared palette, with the CRM accent as the action colour. */
 export function crmTheme(m: ModeColors, a: Accent) {
   const primary = a.active;
@@ -44,6 +52,8 @@ export function crmTheme(m: ModeColors, a: Accent) {
     info: m.info,
     infoSoft: withAlpha(m.info, SOFT_ALPHA),
     warningSoft: withAlpha(m.warning, SOFT_ALPHA),
+    scrim: withAlpha(m.bg, SCRIM_ALPHA),
+    glass: withAlpha(m.surface, GLASS_ALPHA),
     onDanger: m.onSemantic,
     onSuccess: m.onSemantic,
     ...pressThemeKeys({ primary, primaryActive: a.hover, danger: m.error, success: m.success }),

@@ -22,6 +22,29 @@ export const CrmAppTwoFactorDocument = gql(`
   }
 `);
 
+/** Sign in with an emailed code instead of a password — the portal's "Login with OTP". */
+export const CrmAppRequestLoginOtpDocument = gql(`
+  mutation CrmAppRequestLoginOtp($input: PortalLoginOtpRequestInput!) {
+    requestPortalLoginOtp(input: $input) { ok }
+  }
+`);
+
+export const CrmAppOtpLoginDocument = gql(`
+  mutation CrmAppOtpLogin($input: PortalLoginOtpInput!) {
+    loginWithPortalOtp(input: $input) {
+      token
+      user { user_id first_name last_name email roles }
+    }
+  }
+`);
+
+/** Admin Branding's legal links and support address, shown under the sign-in card (public). */
+export const CrmAppBrandingDocument = gql(`
+  query CrmAppBranding {
+    branding { terms_url privacy_url support_email }
+  }
+`);
+
 /** Who is signed in, re-read on launch so a role removed in the portal locks the app too. */
 export const CrmAppMeDocument = gql(`
   query CrmAppMe {

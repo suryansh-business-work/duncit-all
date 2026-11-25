@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import { Text, XStack, YStack, useTheme } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { SURFACE } from '@/components/surface';
@@ -9,33 +8,9 @@ import { CrmAppCommLogsDocument } from '@/graphql/comms';
 import { displayDateTime } from '@/features/reminders/reminderTime';
 import { formatCallDuration } from '@/features/calls/duration';
 import { useTranslation } from '@/hooks/useTranslation';
+import { CallDetails } from './CallDetails';
 
 export type CommLog = ResultOf<typeof CrmAppCommLogsDocument>['communicationLogs']['items'][number];
-
-function Recording({ url }: Readonly<{ url: string }>) {
-  const { t } = useTranslation();
-  const theme = useTheme();
-  const player = useAudioPlayer({ uri: url });
-  const status = useAudioPlayerStatus(player);
-  const label = status.playing ? t('crmApp.activity.pause') : t('crmApp.activity.play');
-  return (
-    <XStack
-      role="button"
-      aria-label={label}
-      onPress={() => (status.playing ? player.pause() : player.play())}
-      alignItems="center"
-      gap="$2"
-      testID="comm-play"
-    >
-      <MaterialIcons
-        name={status.playing ? 'pause-circle' : 'play-circle'}
-        size={30}
-        color={theme.accentText?.val}
-      />
-      <Text color="$accent">{label}</Text>
-    </XStack>
-  );
-}
 
 /** One call or email on the lead: what, when, how it went, and for a call its recording, transcript and AI summary. */
 export function CommLogItem({ log }: Readonly<{ log: CommLog }>) {
@@ -46,7 +21,6 @@ export function CommLogItem({ log }: Readonly<{ log: CommLog }>) {
   if (isCall)
     title =
       log.direction === 'INBOUND' ? t('crmApp.activity.inbound') : t('crmApp.activity.outbound');
-  const summary = log.summary?.status === 'READY' ? log.summary : null;
   const meta = [
     displayDateTime(log.created_at),
     t(`crmApp.activity.status.${log.status}`),
@@ -74,37 +48,7 @@ export function CommLogItem({ log }: Readonly<{ log: CommLog }>) {
           accessibilityElementsHidden
         />
       </XStack>
-      {open && isCall ? (
-        <YStack gap="$2">
-          {log.recording_url ? <Recording url={log.recording_url} /> : null}
-          {log.transcript_status === 'PENDING' && log.recording_url ? (
-            <Text color="$muted">{t('crmApp.activity.transcribing')}</Text>
-          ) : null}
-          {log.transcript_status === 'FAILED' ? (
-            <Text color="$danger">{t('crmApp.activity.transcriptFailed')}</Text>
-          ) : null}
-          {summary?.text ? (
-            <YStack gap="$1">
-              <Text fontWeight="700">{t('crmApp.activity.summary')}</Text>
-              <Text>{summary.text}</Text>
-              {summary.key_points.map((point) => (
-                <XStack key={point} gap="$2" alignItems="center">
-                  <MaterialIcons name="fiber-manual-record" size={8} accessibilityElementsHidden />
-                  <Text color="$muted" flex={1}>
-                    {point}
-                  </Text>
-                </XStack>
-              ))}
-            </YStack>
-          ) : null}
-          {log.transcript ? (
-            <YStack gap="$1">
-              <Text fontWeight="700">{t('crmApp.activity.transcript')}</Text>
-              <Text selectable>{log.transcript}</Text>
-            </YStack>
-          ) : null}
-        </YStack>
-      ) : null}
+      {open && isCall ? <CallDetails log={log} /> : null}
     </YStack>
   );
 }

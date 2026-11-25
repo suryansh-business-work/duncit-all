@@ -40,7 +40,7 @@ let running: Promise<CallSyncResult> | null = null;
 export async function installId(): Promise<string> {
   const existing = await readValue(STORAGE_KEYS.installId);
   if (existing) return existing;
-  const id = randomUUID().replace(/-/g, '').slice(0, 16);
+  const id = randomUUID().replaceAll('-', '').slice(0, 16);
   await writeValue(STORAGE_KEYS.installId, id);
   return id;
 }

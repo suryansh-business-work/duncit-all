@@ -40,9 +40,7 @@ function LeadDetail({ kind, id }: Readonly<{ kind: LeadKind; id: string }>) {
   }, [lead, navigation]);
 
   if (!lead) {
-    return (
-      <StateView loading={loading || (!error && !lead)} error={error ?? null} onRetry={refetch} />
-    );
+    return <StateView loading={loading || !error} error={error ?? null} onRetry={refetch} />;
   }
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>

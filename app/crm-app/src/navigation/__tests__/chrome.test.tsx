@@ -37,7 +37,6 @@ describe('consoleChrome', () => {
         elevation: 0,
       });
       expect(chrome.stackHeader.headerStyle.backgroundColor).not.toBe(t.primary);
-      expect(chrome.ink).toBe(t.color);
     },
   );
 

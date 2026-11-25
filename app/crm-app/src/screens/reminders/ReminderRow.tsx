@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { Text, XStack, YStack, useTheme } from 'tamagui';
+import { fireAndForget, logs } from '@duncit/logs';
 
 import { CrmAppToggleReminderDocument } from '@/graphql/reminders';
 import { displayDateTime, isOverdue } from '@/features/reminders/reminderTime';
@@ -25,10 +26,40 @@ interface Props {
   onChanged: () => void;
 }
 
+/** The round tick: marks the reminder done, or pending again. */
+function ReminderCheck({
+  reminder,
+  busy,
+  onToggle,
+}: Readonly<{ reminder: ReminderItem; busy: boolean; onToggle: () => void }>) {
+  const { t } = useTranslation();
+  const theme = useTheme();
+  const done = reminder.status === 'DONE';
+  const vars = { vars: { title: reminder.title } };
+  return (
+    <XStack
+      role="checkbox"
+      aria-checked={done}
+      aria-label={
+        done ? t('crmApp.reminder.markPending', vars) : t('crmApp.reminder.markDone', vars)
+      }
+      aria-busy={busy}
+      onPress={busy ? undefined : onToggle}
+      hitSlop={8}
+      testID={`reminder-toggle-${reminder.id}`}
+    >
+      <MaterialIcons
+        name={done ? 'check-circle' : 'radio-button-unchecked'}
+        size={26}
+        color={theme.accentText?.val}
+      />
+    </XStack>
+  );
+}
+
 /** One reminder: tick it done (or not), open its lead. */
 export function ReminderRow({ reminder, onChanged }: Readonly<Props>) {
   const { t } = useTranslation();
-  const theme = useTheme();
   const navigation = useNavigation<NavigationProp<AppStackParamList>>();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -41,7 +72,8 @@ export function ReminderRow({ reminder, onChanged }: Readonly<Props>) {
     try {
       await gqlRequest(CrmAppToggleReminderDocument, { id: reminder.id });
       onChanged();
-    } catch {
+    } catch (error) {
+      logs.mobileApp.warn('crm-app/ReminderRow', 'toggle', { error });
       setFailed(true);
     } finally {
       setBusy(false);
@@ -57,25 +89,11 @@ export function ReminderRow({ reminder, onChanged }: Readonly<Props>) {
 
   return (
     <XStack gap="$3" paddingVertical="$2" alignItems="center" testID={`reminder-${reminder.id}`}>
-      <XStack
-        role="checkbox"
-        aria-checked={done}
-        aria-label={
-          done
-            ? t('crmApp.reminder.markPending', { vars: { title: reminder.title } })
-            : t('crmApp.reminder.markDone', { vars: { title: reminder.title } })
-        }
-        aria-busy={busy}
-        onPress={busy ? undefined : toggle}
-        hitSlop={8}
-        testID={`reminder-toggle-${reminder.id}`}
-      >
-        <MaterialIcons
-          name={done ? 'check-circle' : 'radio-button-unchecked'}
-          size={26}
-          color={theme.accentText?.val}
-        />
-      </XStack>
+      <ReminderCheck
+        reminder={reminder}
+        busy={busy}
+        onToggle={() => fireAndForget(toggle(), logs.mobileApp, 'crm-app/ReminderRow', 'toggle')}
+      />
       <YStack flex={1} onPress={openLead} role={openLead ? 'link' : undefined}>
         <Text fontWeight="600" textDecorationLine={done ? 'line-through' : 'none'}>
           {reminder.title}

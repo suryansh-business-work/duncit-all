@@ -5,12 +5,19 @@
  */
 const DEFAULT_API = 'https://staging.server.duncit.com';
 
+const GRAPHQL_PATH = '/graphql';
+
+/** The value without the slashes it ends in (a loop: no regex to backtrack on a long run). */
+function withoutTrailingSlashes(value: string): string {
+  let end = value.length;
+  while (end > 0 && value[end - 1] === '/') end -= 1;
+  return value.slice(0, end);
+}
+
 /** The API origin without a trailing slash or `/graphql`. */
 export function resolveApiUrl(raw: string | undefined): string {
-  const value = (raw ?? '')
-    .trim()
-    .replace(/\/+$/, '')
-    .replace(/\/graphql$/, '');
+  const trimmed = withoutTrailingSlashes((raw ?? '').trim());
+  const value = trimmed.endsWith(GRAPHQL_PATH) ? trimmed.slice(0, -GRAPHQL_PATH.length) : trimmed;
   return value || DEFAULT_API;
 }
 

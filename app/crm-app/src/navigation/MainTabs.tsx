@@ -41,7 +41,7 @@ export function MainTabs() {
         title: t(LABEL_KEYS[route.name]),
         ...chrome.tabsHeader,
         ...chrome.tabBar,
-        headerLeft: () => <MenuButton tint={chrome.ink} />,
+        headerLeft: MenuButton,
         tabBarIcon: ({ color, size }) => (
           <MaterialIcons name={ICONS[route.name]} color={color} size={size} />
         ),

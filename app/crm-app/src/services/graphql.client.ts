@@ -81,15 +81,23 @@ export async function gqlRequest<TResult, TVars extends object = Record<string, 
   const token = options.token ?? (options.auth === false ? null : await getToken());
   if (token) headers.Authorization = `Bearer ${token}`;
   const tries = isQuery(document) ? MAX_ATTEMPTS : 1;
-  let last: unknown;
-  for (let i = 0; i < tries; i += 1) {
-    try {
-      return await attempt<TResult>(document, variables as Variables | undefined, headers);
-    } catch (error) {
-      last = error;
-      if (!isTransient(error) || i === tries - 1) break;
-      await sleep(RETRY_DELAY_MS * (i + 1));
-    }
+  return withRetries(
+    () => attempt<TResult>(document, variables as Variables | undefined, headers),
+    tries,
+  );
+}
+
+/**
+ * Run `once`, and again after a growing pause while it fails with a transient
+ * error and tries remain; the last error comes back as an ApiError. Each try
+ * waits for the one before it, one call at a time.
+ */
+async function withRetries<T>(once: () => Promise<T>, tries: number, done = 0): Promise<T> {
+  try {
+    return await once();
+  } catch (error) {
+    if (!isTransient(error) || done + 1 >= tries) throw toApiError(error);
+    await sleep(RETRY_DELAY_MS * (done + 1));
+    return withRetries(once, tries, done + 1);
   }
-  throw toApiError(last);
 }

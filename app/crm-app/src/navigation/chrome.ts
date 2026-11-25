@@ -42,7 +42,6 @@ export function consoleChrome(mode: ConsoleMode) {
         borderTopWidth: StyleSheet.hairlineWidth,
       },
     },
-    ink: t.color,
   };
 }
 

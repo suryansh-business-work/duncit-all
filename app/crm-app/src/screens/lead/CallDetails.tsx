@@ -1,0 +1,68 @@
+import { MaterialIcons } from '@expo/vector-icons';
+import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import { Text, XStack, YStack, useTheme } from 'tamagui';
+
+import { useTranslation } from '@/hooks/useTranslation';
+import type { CommLog } from './CommLogItem';
+
+function Recording({ url }: Readonly<{ url: string }>) {
+  const { t } = useTranslation();
+  const theme = useTheme();
+  const player = useAudioPlayer({ uri: url });
+  const status = useAudioPlayerStatus(player);
+  const label = status.playing ? t('crmApp.activity.pause') : t('crmApp.activity.play');
+  return (
+    <XStack
+      role="button"
+      aria-label={label}
+      onPress={() => (status.playing ? player.pause() : player.play())}
+      alignItems="center"
+      gap="$2"
+      testID="comm-play"
+    >
+      <MaterialIcons
+        name={status.playing ? 'pause-circle' : 'play-circle'}
+        size={30}
+        color={theme.accentText?.val}
+      />
+      <Text color="$accent">{label}</Text>
+    </XStack>
+  );
+}
+
+/** A call's recording, where its transcript stands, its AI summary and its transcript. */
+export function CallDetails({ log }: Readonly<{ log: CommLog }>) {
+  const { t } = useTranslation();
+  const summary = log.summary?.status === 'READY' ? log.summary : null;
+  return (
+    <YStack gap="$2">
+      {log.recording_url ? <Recording url={log.recording_url} /> : null}
+      {log.transcript_status === 'PENDING' && log.recording_url ? (
+        <Text color="$muted">{t('crmApp.activity.transcribing')}</Text>
+      ) : null}
+      {log.transcript_status === 'FAILED' ? (
+        <Text color="$danger">{t('crmApp.activity.transcriptFailed')}</Text>
+      ) : null}
+      {summary?.text ? (
+        <YStack gap="$1">
+          <Text fontWeight="700">{t('crmApp.activity.summary')}</Text>
+          <Text>{summary.text}</Text>
+          {summary.key_points.map((point) => (
+            <XStack key={point} gap="$2" alignItems="center">
+              <MaterialIcons name="fiber-manual-record" size={8} accessibilityElementsHidden />
+              <Text color="$muted" flex={1}>
+                {point}
+              </Text>
+            </XStack>
+          ))}
+        </YStack>
+      ) : null}
+      {log.transcript ? (
+        <YStack gap="$1">
+          <Text fontWeight="700">{t('crmApp.activity.transcript')}</Text>
+          <Text selectable>{log.transcript}</Text>
+        </YStack>
+      ) : null}
+    </YStack>
+  );
+}

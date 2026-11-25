@@ -6,15 +6,17 @@
  */
 const accent = require('./crm-accent.json');
 
-module.exports = ({ config }) => ({
-  ...config,
-  android: {
-    ...config.android,
-    adaptiveIcon: { ...config.android.adaptiveIcon, backgroundColor: accent.active },
-  },
-  plugins: config.plugins.map((plugin) =>
-    Array.isArray(plugin) && plugin[0] === 'expo-splash-screen'
-      ? [plugin[0], { ...plugin[1], backgroundColor: accent.active }]
-      : plugin,
-  ),
-});
+module.exports = function withCrmAccent({ config }) {
+  return {
+    ...config,
+    android: {
+      ...config.android,
+      adaptiveIcon: { ...config.android.adaptiveIcon, backgroundColor: accent.active },
+    },
+    plugins: config.plugins.map((plugin) =>
+      Array.isArray(plugin) && plugin[0] === 'expo-splash-screen'
+        ? [plugin[0], { ...plugin[1], backgroundColor: accent.active }]
+        : plugin,
+    ),
+  };
+};

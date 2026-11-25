@@ -5,8 +5,11 @@ import { XStack } from 'tamagui';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AppStackParamList } from './types';
 
-/** The ☰ in each tab's header: opens the side menu (the portal's sidebar). */
-export function MenuButton({ tint }: Readonly<{ tint: string | undefined }>) {
+/**
+ * The ☰ in each tab's header: opens the side menu (the portal's sidebar).
+ * Used as the header's `headerLeft` itself, so it takes the header's tint.
+ */
+export function MenuButton({ tintColor }: Readonly<{ tintColor?: string }>) {
   const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp<AppStackParamList>>();
   return (
@@ -19,7 +22,7 @@ export function MenuButton({ tint }: Readonly<{ tint: string | undefined }>) {
       hitSlop={8}
       testID="menu-open"
     >
-      <MaterialIcons name="menu" size={26} color={tint} />
+      <MaterialIcons name="menu" size={26} color={tintColor} />
     </XStack>
   );
 }

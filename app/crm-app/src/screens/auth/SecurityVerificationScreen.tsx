@@ -1,4 +1,3 @@
-import { Linking } from 'react-native';
 import { Text, YStack } from 'tamagui';
 import { fireAndForget, logs } from '@duncit/logs';
 
@@ -9,7 +8,16 @@ import { useAuthStore } from '@/stores/auth.store';
 import { AuthLayout } from './AuthLayout';
 import { AlternativeRequest } from './security/AlternativeRequest';
 import { ConsentList } from './security/ConsentList';
+import { LocationStep } from './security/LocationStep';
+import { PolicySections } from './security/PolicySections';
 import { useSecurityVerification } from './security/useSecurityVerification';
+
+/** Why Proceed is still disabled: the confirmations first, then the location. */
+function blockedKey(blocked: { acknowledgements: boolean; location: boolean }): string | null {
+  if (blocked.acknowledgements) return 'shell.securityVerification.blocked.acknowledgements';
+  if (blocked.location) return 'shell.securityVerification.blocked.location';
+  return null;
+}
 
 /**
  * Security Verification & Location Tracking — the step the CRM portal asks of
@@ -22,6 +30,7 @@ export function SecurityVerificationScreen() {
   const signOut = useAuthStore((s) => s.signOut);
   const v = useSecurityVerification();
   const { challenge } = v;
+  const blocked = blockedKey(v.blocked);
 
   return (
     <AuthLayout
@@ -33,83 +42,19 @@ export function SecurityVerificationScreen() {
       <StateView loading={!challenge && !v.loadError} error={v.loadError} onRetry={v.load} />
       {challenge ? (
         <YStack gap="$4">
-          {challenge.reverify ? (
-            <Text color="$warning">{t('shell.securityVerification.reverify')}</Text>
-          ) : null}
-          <YStack backgroundColor="$infoSoft" borderRadius="$3" padding="$3">
-            <Text fontWeight="700">{t('shell.securityVerification.warning.label')}</Text>
-            <Text>{t('shell.securityVerification.warning.body')}</Text>
-          </YStack>
-          <YStack gap="$2">
-            <Text fontWeight="700" role="heading">
-              {t('shell.securityVerification.policies.title')}
-            </Text>
-            {challenge.sections.map((section) => (
-              <YStack key={section.key} gap="$1">
-                <Text fontWeight="600">{section.title}</Text>
-                {section.paragraphs.map((p) => (
-                  <Text key={p} color="$muted">
-                    {p}
-                  </Text>
-                ))}
-              </YStack>
-            ))}
-          </YStack>
+          <PolicySections challenge={challenge} />
           <ConsentList
             consent={v.consent}
             onChange={v.setConsent}
             locationNotNeeded={v.approved !== null}
           />
           {v.approved ? null : (
-            <YStack gap="$2">
-              <Text fontWeight="700" role="heading">
-                {t('shell.securityVerification.location.title')}
-              </Text>
-              <Text color="$muted">{t('shell.securityVerification.location.why')}</Text>
-              <DuncitButton
-                label={
-                  v.fix
-                    ? t('shell.securityVerification.location.refresh')
-                    : t('shell.securityVerification.location.request')
-                }
-                onPress={v.shareLocation}
-                variant="outline"
-                testID="security-location"
-              />
-              {v.fix ? (
-                <Text color="$success">{t('shell.securityVerification.location.granted')}</Text>
-              ) : null}
-              {v.locationError === 'PERMISSION_DENIED' ? (
-                <YStack gap="$2">
-                  <Text color="$danger">{t('crmApp.security.locationPermission')}</Text>
-                  <DuncitButton
-                    label={t('crmApp.security.openSettings')}
-                    onPress={() =>
-                      fireAndForget(
-                        Linking.openSettings(),
-                        logs.mobileApp,
-                        'crm-app/SecurityVerificationScreen',
-                        'openSettings',
-                      )
-                    }
-                    variant="ghost"
-                  />
-                </YStack>
-              ) : null}
-              {v.locationError === 'POSITION_UNAVAILABLE' ? (
-                <Text color="$danger">{t('shell.securityVerification.location.unavailable')}</Text>
-              ) : null}
-            </YStack>
+            <LocationStep fix={v.fix} locationError={v.locationError} onShare={v.shareLocation} />
           )}
           {v.fix ? null : (
             <AlternativeRequest exception={challenge.exception} onRequest={v.requestAlternative} />
           )}
-          {v.blocked.acknowledgements ? (
-            <Text color="$muted">{t('shell.securityVerification.blocked.acknowledgements')}</Text>
-          ) : null}
-          {!v.blocked.acknowledgements && v.blocked.location ? (
-            <Text color="$muted">{t('shell.securityVerification.blocked.location')}</Text>
-          ) : null}
+          {blocked ? <Text color="$muted">{t(blocked)}</Text> : null}
           <DuncitButton
             label={
               v.submitting

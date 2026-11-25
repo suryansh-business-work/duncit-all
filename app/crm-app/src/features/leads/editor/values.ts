@@ -16,8 +16,12 @@ export type LeadFormValues = Record<string, unknown> & {
 type ServiceRow = { service: string; custom_name: string; description: string };
 type LinkRow = { name: string; url: string };
 
-const str = (value: unknown): string =>
-  value === null || value === undefined ? '' : String(value);
+/** A stored text or number as form text; anything else (null, an object) as empty. */
+function str(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return String(value);
+  return '';
+}
 
 /** A new lead of this kind: the portal's own starting values (status New, priority Medium, one blank contact). */
 export function leadDefaults(kind: LeadKind): LeadFormValues {

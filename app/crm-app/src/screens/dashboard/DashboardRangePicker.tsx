@@ -3,7 +3,7 @@ import { XStack, YStack } from 'tamagui';
 import { CRM_DASHBOARD_RANGES, type CrmDashboardRange, type CrmDateWindow } from '@duncit/utils';
 
 import { DateField } from '@/components/DateField';
-import { DuncitButton } from '@/components/DuncitButton';
+import { SelectChip } from '@/components/mobile/SelectChip';
 import { useTranslation } from '@/hooks/useTranslation';
 
 /** The app's words for each range (literal keys, so the localization gate sees them). */
@@ -34,12 +34,11 @@ export function DashboardRangePicker({ range, onRange, custom, onCustom }: Reado
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <XStack gap="$2" role="radiogroup" aria-label={t('crm.dashboard.dashboardTimeRange')}>
           {CRM_DASHBOARD_RANGES.map((r) => (
-            <DuncitButton
+            <SelectChip
               key={r}
               label={t(RANGE_KEY[r])}
               onPress={() => onRange(r)}
-              size="sm"
-              variant={range === r ? 'solid' : 'outline'}
+              selected={range === r}
               testID={`dashboard-range-${r}`}
             />
           ))}

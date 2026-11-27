@@ -1,6 +1,6 @@
 import { Label, Text, XStack, YStack } from 'tamagui';
 
-import { DuncitButton } from '@/components/DuncitButton';
+import { SelectChip } from '@/components/mobile/SelectChip';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Ref {
@@ -28,12 +28,11 @@ function Choice({
       <Label fontWeight="600">{label}</Label>
       <XStack flexWrap="wrap" gap="$2" role="radiogroup" aria-label={label}>
         {options.map((o) => (
-          <DuncitButton
+          <SelectChip
             key={o.id}
             label={o.name}
             onPress={() => onPick(o.id)}
-            variant={picked === o.id ? 'solid' : 'outline'}
-            size="sm"
+            selected={picked === o.id}
             testID={`${testID}-${o.id}`}
           />
         ))}

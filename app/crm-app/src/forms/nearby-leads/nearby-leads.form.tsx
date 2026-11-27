@@ -5,6 +5,7 @@ import { Label, Text, XStack, YStack, useTheme } from 'tamagui';
 
 import { ChoiceField } from '@/components/ChoiceField';
 import { DuncitButton } from '@/components/DuncitButton';
+import { SelectChip } from '@/components/mobile/SelectChip';
 import { useNearbyPlaces } from '@/features/leads-list/useNearbyPlaces';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formResolver } from '@/utils/form-resolver';
@@ -64,18 +65,16 @@ export function NearbyLeadsForm({ initialValues, onSubmit }: Readonly<Props>) {
       <YStack gap="$2">
         <Label fontWeight="600">{t('crm.nearby.centreLabel')}</Label>
         <XStack gap="$2" flexWrap="wrap" role="radiogroup" aria-label={t('crm.nearby.centreLabel')}>
-          <DuncitButton
+          <SelectChip
             label={t('crm.nearby.myLocation')}
             onPress={() => source.onChange('me')}
-            variant={source.value === 'me' ? 'solid' : 'outline'}
-            size="sm"
+            selected={source.value === 'me'}
             testID="nearby-source-me"
           />
-          <DuncitButton
+          <SelectChip
             label={t('crm.nearby.pickPlace')}
             onPress={() => source.onChange('place')}
-            variant={source.value === 'place' ? 'solid' : 'outline'}
-            size="sm"
+            selected={source.value === 'place'}
             testID="nearby-source-place"
           />
         </XStack>
@@ -119,12 +118,11 @@ export function NearbyLeadsForm({ initialValues, onSubmit }: Readonly<Props>) {
         <Label fontWeight="600">{t('crm.nearby.radiusLabel')}</Label>
         <XStack gap="$2" flexWrap="wrap" role="radiogroup" aria-label={t('crm.nearby.radiusLabel')}>
           {NEARBY_RADIUS.marks.map((mark) => (
-            <DuncitButton
+            <SelectChip
               key={mark}
               label={km(mark)}
               onPress={() => radius.onChange(mark)}
-              variant={radius.value === mark ? 'solid' : 'outline'}
-              size="sm"
+              selected={radius.value === mark}
               testID={`nearby-radius-${mark}`}
             />
           ))}

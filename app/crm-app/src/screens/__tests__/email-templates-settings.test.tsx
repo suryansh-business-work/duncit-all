@@ -136,9 +136,10 @@ describe('EmailTemplateSettingsScreen › Logos & Images', () => {
   it('shows the three shelves, the email logo and each image with its details', async () => {
     await open();
     expect(mockNav.setOptions).toHaveBeenCalledWith({ title: 'Email settings' });
+    // The app bar names the page; no web-style intro line under it.
     expect(
-      screen.getByText('The brand images, theme and AI instructions every CRM email uses.'),
-    ).toBeOnTheScreen();
+      screen.queryByText('The brand images, theme and AI instructions every CRM email uses.'),
+    ).toBeNull();
     expect(screen.getByText('Logos')).toBeOnTheScreen();
     expect(screen.getByText('Banners')).toBeOnTheScreen();
     expect(screen.getByText('No images yet.')).toBeOnTheScreen();

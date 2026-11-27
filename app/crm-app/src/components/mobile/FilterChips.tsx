@@ -1,8 +1,8 @@
 import { ScrollView } from 'react-native';
 import { Text, XStack } from 'tamagui';
 
-import { MOBILE, RADII } from '@/constants/design';
-import { haptics } from '@/services/haptics';
+import { MOBILE } from '@/constants/design';
+import { SelectChip } from './SelectChip';
 
 export interface ChipOption<K extends string> {
   key: K;
@@ -20,9 +20,9 @@ interface Props<K extends string> {
 }
 
 /**
- * One-of-many filter pills that scroll sideways under the screen edges: the
- * picked one filled with the accent wash, the rest outlined. Each pill keeps a
- * full touch target in height even though it draws smaller.
+ * One-of-many filter pills that scroll sideways under the screen edges, the
+ * picked one on the accent wash (SelectChip). Picking the current one again
+ * does nothing.
  */
 export function FilterChips<K extends string>({
   options,
@@ -44,41 +44,17 @@ export function FilterChips<K extends string>({
             {label}
           </Text>
         ) : null}
-        {options.map((option) => {
-          const selected = option.key === value;
-          return (
-            <XStack
-              key={option.key}
-              accessible
-              role="radio"
-              aria-checked={selected}
-              aria-label={option.label}
-              onPress={() => {
-                if (selected) return;
-                haptics.tap();
-                onChange(option.key);
-              }}
-              minHeight={36}
-              hitSlop={(MOBILE.touch - 36) / 2}
-              paddingHorizontal="$3"
-              alignItems="center"
-              borderRadius={RADII.pill}
-              borderWidth={1}
-              borderColor={selected ? '$primarySoft' : '$borderColor'}
-              backgroundColor={selected ? '$primarySoft' : '$surface'}
-              pressStyle={{ backgroundColor: '$hover' }}
-              testID={`${testID}-${option.key}`}
-            >
-              <Text
-                fontSize="$3"
-                fontWeight={selected ? '700' : '500'}
-                color={selected ? '$onPrimarySoft' : '$color'}
-              >
-                {option.label}
-              </Text>
-            </XStack>
-          );
-        })}
+        {options.map((option) => (
+          <SelectChip
+            key={option.key}
+            label={option.label}
+            selected={option.key === value}
+            onPress={() => {
+              if (option.key !== value) onChange(option.key);
+            }}
+            testID={`${testID}-${option.key}`}
+          />
+        ))}
       </XStack>
     </ScrollView>
   );

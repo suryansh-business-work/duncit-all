@@ -4,6 +4,7 @@ import { Label, Text, XStack, YStack } from 'tamagui';
 
 import { DateField } from '@/components/DateField';
 import { DuncitButton } from '@/components/DuncitButton';
+import { SelectChip } from '@/components/mobile/SelectChip';
 import { TextField } from '@/components/TextField';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formResolver } from '@/utils/form-resolver';
@@ -59,12 +60,11 @@ export function ReminderForm({
         <Label fontWeight="600">{t('crmApp.reminder.due')}</Label>
         <XStack flexWrap="wrap" gap="$2" role="radiogroup" aria-label={t('crmApp.reminder.due')}>
           {DUE_CHOICES.map((choice) => (
-            <DuncitButton
+            <SelectChip
               key={choice}
               label={t(`crmApp.reminder.in.${choice}`)}
               onPress={() => due.onChange(choice)}
-              variant={due.value === choice ? 'solid' : 'outline'}
-              size="sm"
+              selected={due.value === choice}
               testID={`reminder-due-${choice}`}
             />
           ))}

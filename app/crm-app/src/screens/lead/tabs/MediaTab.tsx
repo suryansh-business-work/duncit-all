@@ -36,7 +36,6 @@ export function MediaTab({ kind, id }: Readonly<LeadTabProps>) {
   }
   return (
     <Card title={t('crm.media.tabLabel')} testID="media-tab">
-      <Text color="$muted">{t('crm.media.tabSubtitle')}</Text>
       {media.uploadErrors.length > 0 ? (
         <TabAlert tone="warning" onClose={media.clearUploadErrors} testID="media-upload-errors">
           {media.uploadErrors.map((message, index) => (

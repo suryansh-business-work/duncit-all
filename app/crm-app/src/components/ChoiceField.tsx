@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useController, type Control, type FieldPath, type FieldValues } from 'react-hook-form';
 import { Input, Label, Text, XStack, YStack } from 'tamagui';
 
-import { DuncitButton } from '@/components/DuncitButton';
+import { SelectChip } from '@/components/mobile/SelectChip';
 
 export interface ChoiceOption {
   value: string;
@@ -78,24 +78,22 @@ export function ChoiceField<T extends FieldValues>({
       ) : null}
       <XStack flexWrap="wrap" gap="$2" role={multiple ? 'group' : 'radiogroup'} aria-label={label}>
         {noneLabel && !multiple ? (
-          <DuncitButton
+          <SelectChip
             label={noneLabel}
             onPress={() => {
               field.onChange('');
               onPick?.(null);
             }}
-            size="sm"
-            variant={picked[0] ? 'outline' : 'solid'}
+            selected={!picked[0]}
             testID={testID ? `${testID}-none` : undefined}
           />
         ) : null}
         {shown.map((option) => (
-          <DuncitButton
+          <SelectChip
             key={option.value}
             label={option.label}
             onPress={() => toggle(option)}
-            size="sm"
-            variant={picked.includes(option.value) ? 'solid' : 'outline'}
+            selected={picked.includes(option.value)}
             testID={testID ? `${testID}-${option.value}` : undefined}
           />
         ))}

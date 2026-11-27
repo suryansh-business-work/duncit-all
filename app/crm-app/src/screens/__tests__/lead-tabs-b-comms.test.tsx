@@ -156,12 +156,8 @@ describe('LeadActivity (Communications)', () => {
       type: null,
       search: null,
     });
-    expect(screen.getByText('Communication Log')).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        'Calls via Twilio, emails via SMTP. Transcripts are fetched from Servam AI for recorded calls.',
-      ),
-    ).toBeOnTheScreen();
+    // The tab already names it: no in-page heading repeating it.
+    expect(screen.queryByText('Communication Log')).toBeNull();
     expect(screen.getByText('All (4)')).toBeOnTheScreen();
     expect(screen.getByText('Email (1)')).toBeOnTheScreen();
     expect(screen.getByText('Call (3)')).toBeOnTheScreen();

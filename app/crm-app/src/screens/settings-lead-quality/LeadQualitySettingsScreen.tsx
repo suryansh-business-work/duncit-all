@@ -6,7 +6,7 @@ import {
   type NavigationProp,
   type RouteProp,
 } from '@react-navigation/native';
-import { Text, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
 import { TabBar } from '@/components/TabBar';
 import { QUALITY_LEAD_TYPES } from '@/generated/lead-quality-rules';
@@ -46,9 +46,6 @@ export function LeadQualitySettingsScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* The screen header names the page; the lead types are the portal's tabs. */}
-        <Text color="$muted" fontSize="$2">
-          {t('crm.leadQualitySettings.subtitle')}
-        </Text>
         <TabBar
           tabs={QUALITY_LEAD_TYPES.map((type) => ({
             key: type,

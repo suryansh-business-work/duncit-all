@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Text, XStack, YStack } from 'tamagui';
+import { XStack, YStack } from 'tamagui';
 import { fireAndForget, logs as appLogs } from '@duncit/logs';
 import {
   CRM_LOG_GRANULARITIES,
@@ -11,6 +11,7 @@ import {
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { DuncitButton } from '@/components/DuncitButton';
+import { SelectChip } from '@/components/mobile/SelectChip';
 import { StateView } from '@/components/StateView';
 import { ManualLogForm, manualLogDefaults, type ManualLogValues } from '@/forms/manual-log';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -81,22 +82,13 @@ export function ManualLogsTab({ kind, id, onChanged }: Readonly<LeadTabProps>) {
 
   return (
     <YStack gap="$3" testID="manual-logs-tab">
-      <YStack gap="$1">
-        <Text fontWeight="800" fontSize="$6" role="heading">
-          {t('crm.common.manualLogs')}
-        </Text>
-        <Text color="$muted" fontSize="$2">
-          {t('crm.manualLogs.subtitle')}
-        </Text>
-      </YStack>
       <XStack gap="$2" flexWrap="wrap" role="radiogroup" aria-label={t('crm.a11y.timeRange')}>
         {CRM_LOG_GRANULARITIES.map((value) => (
-          <DuncitButton
+          <SelectChip
             key={value}
             label={t(CRM_LOG_GRANULARITY_LABEL[value])}
             onPress={() => setRange(value)}
-            variant={range === value ? 'solid' : 'outline'}
-            size="sm"
+            selected={range === value}
             testID={`manual-log-range-${value}`}
           />
         ))}

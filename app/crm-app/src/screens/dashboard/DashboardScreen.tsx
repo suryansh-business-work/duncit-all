@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { RefreshControl, ScrollView } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack, useTheme } from 'tamagui';
+import { useTheme } from 'tamagui';
 import type { CrmDashboardRange, CrmDateWindow } from '@duncit/utils';
 
 import { StateView } from '@/components/StateView';
@@ -43,22 +42,6 @@ export function DashboardScreen() {
       contentContainerStyle={{ padding: 16, gap: 12 }}
       refreshControl={<RefreshControl refreshing={false} onRefresh={d.refetch} />}
     >
-      <XStack alignItems="center" gap="$2">
-        <MaterialIcons
-          name="dashboard"
-          size={24}
-          color={theme.accentText?.val}
-          accessibilityElementsHidden
-        />
-        <YStack flex={1}>
-          <Text fontSize="$7" fontWeight="800" role="heading">
-            {t('crmApp.dashboard.title')}
-          </Text>
-          <Text color="$muted" fontSize="$2">
-            {t('crmApp.dashboard.subtitle')}
-          </Text>
-        </YStack>
-      </XStack>
       <DashboardRangePicker range={range} onRange={setRange} custom={custom} onCustom={setCustom} />
       {d.loading || d.error ? (
         <StateView loading={d.loading} error={d.error} onRetry={d.refetch} />

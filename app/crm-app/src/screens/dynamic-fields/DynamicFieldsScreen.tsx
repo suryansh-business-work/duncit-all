@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { FlatList } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation, type NavigationProp } from '@react-navigation/native';
-import { Text, YStack, useTheme } from 'tamagui';
+import { YStack, useTheme } from 'tamagui';
 import { fireAndForget, logs } from '@duncit/logs';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -54,7 +54,6 @@ export function DynamicFieldsScreen() {
         contentContainerStyle={{ padding: 16, gap: 8 }}
         ListHeaderComponent={
           <YStack gap="$3" marginBottom="$2">
-            <Text color="$muted">{t('crmApp.dynamicFields.intro')}</Text>
             <DuncitButton
               label={t('crm.managedynamicfieldspage.newField')}
               onPress={() => navigation.navigate('DynamicFieldEditor', {})}

@@ -4,6 +4,7 @@ import { Label, Text, XStack, YStack } from 'tamagui';
 
 import { ChoiceField } from '@/components/ChoiceField';
 import { DuncitButton } from '@/components/DuncitButton';
+import { SelectChip } from '@/components/mobile/SelectChip';
 import { ToggleField } from '@/components/settings-editors/ToggleField';
 import { TextField } from '@/components/TextField';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -68,20 +69,18 @@ export function DynamicFieldForm({ values, onSubmit, onCancel }: Readonly<Props>
               role="radiogroup"
               aria-label={t('crm.managedynamicfieldspage.selectionMode')}
             >
-              <DuncitButton
+              <SelectChip
                 label={t('crm.managedynamicfieldspage.single')}
                 accessibilityLabel={`${t('crm.managedynamicfieldspage.single')}, ${t('crm.managedynamicfieldspage.singleSelect')}`}
                 onPress={() => field.onChange(false)}
-                size="sm"
-                variant={field.value ? 'outline' : 'solid'}
+                selected={!field.value}
                 testID="dynamic-field-single"
               />
-              <DuncitButton
+              <SelectChip
                 label={t('crm.managedynamicfieldspage.multiple')}
                 accessibilityLabel={`${t('crm.managedynamicfieldspage.multiple')}, ${t('crm.managedynamicfieldspage.multiSelect')}`}
                 onPress={() => field.onChange(true)}
-                size="sm"
-                variant={field.value ? 'solid' : 'outline'}
+                selected={field.value}
                 testID="dynamic-field-multiple"
               />
             </XStack>

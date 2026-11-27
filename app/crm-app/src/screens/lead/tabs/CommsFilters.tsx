@@ -2,7 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Input, XStack, YStack, useTheme } from 'tamagui';
 import type { CrmCommsFilter } from '@duncit/utils';
 
-import { DuncitButton } from '@/components/DuncitButton';
+import { SelectChip } from '@/components/mobile/SelectChip';
 import { RADII } from '@/constants/design';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -36,12 +36,11 @@ export function CommsFilters({
     <YStack gap="$2">
       <XStack gap="$2" flexWrap="wrap" role="radiogroup">
         {chips.map((chip) => (
-          <DuncitButton
+          <SelectChip
             key={chip.value}
             label={chip.label}
             onPress={() => onFilter(chip.value)}
-            variant={filter === chip.value ? 'solid' : 'outline'}
-            size="sm"
+            selected={filter === chip.value}
             testID={`crm-comms-filter-${chip.value.toLowerCase()}`}
           />
         ))}

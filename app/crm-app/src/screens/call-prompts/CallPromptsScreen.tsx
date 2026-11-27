@@ -76,7 +76,6 @@ export function CallPromptsScreen() {
       contentContainerStyle={{ padding: 16, gap: 8 }}
       ListHeaderComponent={
         <YStack gap="$3" marginBottom="$2">
-          <Text color="$muted">{t('crm.callPrompts.intro')}</Text>
           <Input
             value={search}
             onChangeText={setSearch}

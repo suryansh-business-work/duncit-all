@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import type { CrmImportField } from '@duncit/utils';
 
 import { DuncitButton } from '@/components/DuncitButton';
+import { SelectChip } from '@/components/mobile/SelectChip';
 import { SURFACE } from '@/components/surface';
 import { ToneChip } from '@/components/ToneChip';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -62,12 +63,11 @@ function FieldRow({
           {['', ...headers].map((header) => {
             const choice = header || IGNORE_ID;
             return (
-              <DuncitButton
+              <SelectChip
                 key={choice}
                 label={header || ignore}
                 onPress={() => pick(header)}
-                variant={header === value ? 'solid' : 'outline'}
-                size="sm"
+                selected={header === value}
                 testID={`import-field-${field.field}-${choice}`}
               />
             );

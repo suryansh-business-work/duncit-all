@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { Text, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 import { fireAndForget, logs } from '@duncit/logs';
 import { crmCommsTypeCounts, type CrmCommsFilter } from '@duncit/utils';
 
@@ -64,14 +64,6 @@ export function LeadActivity({ kind, id }: Readonly<{ kind: LeadKind; id: string
 
   return (
     <YStack gap="$2">
-      <YStack gap="$1">
-        <Text fontWeight="800" fontSize="$6" role="heading">
-          {t('crm.components.communicationLog')}
-        </Text>
-        <Text color="$muted" fontSize="$2">
-          {t('crm.comms.subtitle')}
-        </Text>
-      </YStack>
       <CommsFilters
         filter={filter}
         onFilter={setFilter}

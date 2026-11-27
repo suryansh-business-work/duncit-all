@@ -115,6 +115,29 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
       score: 'Score {score} · {label}',
       category: 'Category',
     },
+    // Settings › Twilio: the CRM call line's keys, edited in the app behind the Tech portal's unlock.
+    twilio: {
+      title: 'Twilio',
+      editSettings: 'Twilio settings',
+      unlockBody: 'Twilio keys are protected. Email a code to the root admin ({sentTo}) and enter it to edit them in this session.',
+      sendCode: 'Email the code',
+      resendCode: 'Send a new code',
+      codeSent: 'A code was sent to {sentTo}.',
+      code: 'Code',
+      codeInvalid: 'Enter the 6-digit code.',
+      unlock: 'Unlock',
+      accountSidHint: 'Starts with AC, from the Twilio console.',
+      tokenSaved: 'A token is saved. Leave this blank to keep it.',
+      phoneHint: 'The caller ID calls are made from, as + and country code, e.g. +14155552671.',
+      agentNumber: 'Agent phone number (optional)',
+      agentHint: 'Rung for your side of a CRM call. Leave blank to use the signed-in person’s profile phone.',
+      required: 'This is required.',
+      phoneInvalid: 'Enter the number as + and country code, e.g. +14155552671.',
+      save: 'Save',
+      saved: 'Twilio settings saved.',
+      test: 'Test connection',
+    },
+
     // The More tab: every other CRM page, the app's settings and sign-out.
     more: {
       app: 'App',
@@ -157,6 +180,8 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
     },
     home: {
       greeting: 'Hello, {name}',
+      // Home's calendar section: today, this week or this month of reminders and follow-ups.
+      calendar: 'Your calendar',
       dueToday: 'Due today',
       nothingDue: 'Nothing due today.',
       openDialer: 'Open dialer',

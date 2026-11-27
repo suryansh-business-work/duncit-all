@@ -285,8 +285,28 @@ describe('connectUrl', () => {
     m(startConnect).mockReturnValue({ state: 'signed', challenge: 'pkce' });
     m(CONNECTORS.YOUTUBE.authorizeUrl).mockReturnValue('https://accounts.google.com/o?x=1');
     expect(await svc.connectUrl('YOUTUBE', USER, 'CALENDAR')).toBe('https://accounts.google.com/o?x=1');
-    expect(startConnect).toHaveBeenCalledWith('YOUTUBE', USER, 'CALENDAR');
+    // No app chosen: the default app's keys, and an empty app in the signed state.
+    expect(socialCredentials).toHaveBeenCalledWith('YOUTUBE', '');
+    expect(startConnect).toHaveBeenCalledWith('YOUTUBE', USER, 'CALENDAR', '');
     expect(CONNECTORS.YOUTUBE.authorizeUrl).toHaveBeenCalledWith({ creds: CREDS, state: 'signed', challenge: 'pkce' });
+  });
+
+  it('connects through the app the marketer chose, carrying it in the signed state', async () => {
+    const appId = new Types.ObjectId().toHexString();
+    m(socialCredentials).mockResolvedValue(CREDS);
+    m(startConnect).mockReturnValue({ state: 'signed', challenge: 'pkce' });
+    m(CONNECTORS.LINKEDIN.authorizeUrl).mockReturnValue('https://linkedin/o');
+    expect(await svc.connectUrl('LINKEDIN', USER, 'ACCOUNTS', `  ${appId} `)).toBe('https://linkedin/o');
+    expect(socialCredentials).toHaveBeenCalledWith('LINKEDIN', appId);
+    expect(startConnect).toHaveBeenCalledWith('LINKEDIN', USER, 'ACCOUNTS', appId);
+  });
+
+  it('says the chosen app is gone, rather than that the network was never set up', async () => {
+    m(socialCredentials).mockResolvedValue(null);
+    const refused = svc.connectUrl('LINKEDIN', USER, 'ACCOUNTS', new Types.ObjectId().toHexString());
+    await expect(refused).rejects.toMatchObject({ extensions: { code: 'SOCIAL_APP_NOT_CONFIGURED' } });
+    await expect(refused).rejects.toThrow('That app is no longer set up for this network');
+    expect(startConnect).not.toHaveBeenCalled();
   });
 });
 
@@ -339,6 +359,24 @@ describe('completeConnect', () => {
     expect(m(syncSocialAccount).mock.calls.map((c) => c[0]).sort((a, b) => a.localeCompare(b))).toEqual(
       stored.map((s) => String(s._id)).sort((a, b) => a.localeCompare(b))
     );
+  });
+
+  it('keeps the app the account came through, uses its keys, and reports it on the account', async () => {
+    const appId = new Types.ObjectId().toHexString();
+    m(readConnectState).mockReturnValue({ ...state, appId });
+    m(socialCredentials).mockResolvedValue(CREDS);
+    m(CONNECTORS.X.connect).mockResolvedValue([discovered('x-9')]);
+    await svc.completeConnect('c', 's');
+    expect(socialCredentials).toHaveBeenCalledWith('X', appId);
+    const stored = await SocialAccountModel.findOne({ external_id: 'x-9' }).lean();
+    expect(String(stored?.env_entry_id)).toBe(appId);
+    expect((await svc.accounts()).find((a) => a.id === String(stored?._id))?.app_id).toBe(appId);
+
+    // The default app (no app in the state) is stored as no app, so it follows whichever entry is the default.
+    m(readConnectState).mockReturnValue({ ...state, appId: '' });
+    await svc.completeConnect('c', 's');
+    expect((await SocialAccountModel.findOne({ external_id: 'x-9' }).lean())?.env_entry_id).toBeNull();
+    expect((await svc.accounts()).find((a) => a.id === String(stored?._id))?.app_id).toBeNull();
   });
 
   it('writes the tokens sealed, and a reader opens them', async () => {

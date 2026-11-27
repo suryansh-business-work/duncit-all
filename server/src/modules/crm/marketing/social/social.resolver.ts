@@ -45,9 +45,9 @@ export const socialResolvers = {
     },
   },
   Mutation: {
-    socialConnectUrl: (_p: unknown, args: { provider: SocialProvider; return_to: SocialConnectReturn }, ctx: Ctx) => {
+    socialConnectUrl: (_p: unknown, args: { provider: SocialProvider; return_to: SocialConnectReturn; app_id?: string | null }, ctx: Ctx) => {
       const user = requireRole(ctx, ROLES);
-      return socialService.connectUrl(args.provider, user.id, args.return_to);
+      return socialService.connectUrl(args.provider, user.id, args.return_to, args.app_id);
     },
     syncSocialAccount: (_p: unknown, args: { id: string }, ctx: Ctx) => {
       requireRole(ctx, EDITOR_ROLES);

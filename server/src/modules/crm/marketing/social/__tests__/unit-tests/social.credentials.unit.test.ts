@@ -6,13 +6,17 @@
  */
 jest.mock('@config/runtimeEnv', () => ({ getRuntimeEnvValue: jest.fn() }));
 jest.mock('@config/url-configs', () => ({ getUrlConfigs: jest.fn() }));
+jest.mock('@modules/platform/envEntry/envEntry.model', () => ({ EnvEntryModel: { find: jest.fn(), findOne: jest.fn() } }));
 
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getUrlConfigs } from '@config/url-configs';
+import { Types } from 'mongoose';
+import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
 import {
   APP_FIELDS,
   SOCIAL_ENV_CATEGORIES,
   credentialsFrom,
+  metaWebhookKeys,
   providerOfCategory,
   providerReadiness,
   socialCredentials,
@@ -23,9 +27,28 @@ import { SOCIAL_PROVIDERS } from '../../social.types';
 
 const env = getRuntimeEnvValue as jest.Mock;
 const urls = getUrlConfigs as jest.Mock;
+const find = EnvEntryModel.find as jest.Mock;
+const findOne = EnvEntryModel.findOne as jest.Mock;
+
+/** A Mongoose query that ends in lean(), answering with `rows`; select and sort hand back the same query. */
+const query = (rows: unknown) => {
+  const q = { select: jest.fn(), sort: jest.fn(), lean: jest.fn().mockResolvedValue(rows) };
+  q.select.mockReturnValue(q);
+  q.sort.mockReturnValue(q);
+  return q;
+};
+const entry = (category: string, name: string, config: Record<string, unknown>, isDefault = false) => ({
+  _id: new Types.ObjectId(),
+  category,
+  name,
+  is_default: isDefault,
+  config,
+});
 
 beforeEach(() => {
   env.mockReset();
+  find.mockReset().mockReturnValue(query([]));
+  findOne.mockReset().mockReturnValue(query(null));
   urls.mockReset().mockResolvedValue({ serverUrl: 'https://api.duncit.test/' });
 });
 
@@ -108,19 +131,90 @@ describe('socialCredentials', () => {
       clientSecret: 'ig-secret',
       redirectUri: 'https://api.duncit.test/social/callback',
       version: 'v23.0',
+      // A Meta app always carries its Login for Business configuration, blank when none is set.
+      configId: '',
     });
     expect(env).toHaveBeenCalledWith('SOCIAL_INSTAGRAM_GRAPH_VERSION');
     // The Facebook app is a different entry: Instagram's keys do not answer for it.
     expect(await socialCredentials('FACEBOOK')).toBeNull();
+    expect(findOne).not.toHaveBeenCalled();
+  });
+
+  it("reads a chosen entry by id, only inside the provider's category and only while it is active", async () => {
+    const id = new Types.ObjectId();
+    findOne.mockReturnValue(query({ config: { app_id: 'brand-2', app_secret: 'brand-2-secret', graph_version: 'v24.0', login_config_id: ' cfg ' } }));
+    expect(await socialCredentials('FACEBOOK', id)).toEqual({
+      clientId: 'brand-2',
+      clientSecret: 'brand-2-secret',
+      redirectUri: 'https://api.duncit.test/social/callback',
+      version: 'v24.0',
+      configId: 'cfg',
+    });
+    expect(findOne).toHaveBeenCalledWith({ _id: id.toHexString(), category: 'SOCIAL_FACEBOOK', is_active: true });
+    // The default entry's keys are never read for a chosen app.
+    expect(env).not.toHaveBeenCalled();
+  });
+
+  it('is null for a chosen entry that is gone, switched off, in another category or missing a key', async () => {
+    expect(await socialCredentials('X', new Types.ObjectId().toHexString())).toBeNull();
+    findOne.mockReturnValue(query({ config: { client_id: 'only-id' } }));
+    expect(await socialCredentials('X', new Types.ObjectId().toHexString())).toBeNull();
+  });
+
+  it('never queries with an id that is not an ObjectId, and treats a blank id as the default', async () => {
+    expect(await socialCredentials('X', 'not-an-id')).toBeNull();
+    expect(findOne).not.toHaveBeenCalled();
+    env.mockImplementation(async (key: string) => ({ SOCIAL_X_CLIENT_ID: 'x', SOCIAL_X_CLIENT_SECRET: 's' })[key] ?? '');
+    expect(await socialCredentials('X', '   ')).toMatchObject({ clientId: 'x' });
+    expect(await socialCredentials('X', null)).toMatchObject({ clientId: 'x' });
+    expect(findOne).not.toHaveBeenCalled();
   });
 });
 
 describe('providerReadiness', () => {
-  it('says which networks can be connected and where each app is set up', async () => {
-    env.mockImplementation(async (key: string) => (key.startsWith('SOCIAL_THREADS_') ? 'set' : ''));
+  it('lists every complete app per network, says which can be connected and where each is set up', async () => {
+    const main = entry('SOCIAL_FACEBOOK', 'Duncit', { app_id: '1', app_secret: 's' }, true);
+    const brand = entry('SOCIAL_FACEBOOK', 'Brand two', { app_id: '2', app_secret: 't' });
+    const halfDone = entry('SOCIAL_FACEBOOK', 'No secret yet', { app_id: '3' });
+    const threads = entry('SOCIAL_THREADS', 'Threads app', { app_id: '4', app_secret: 'u' });
+    find.mockReturnValue(query([main, brand, halfDone, threads]));
+
     const ready = await providerReadiness();
+
     expect(ready).toHaveLength(6);
-    expect(ready.find((r) => r.provider === 'THREADS')).toEqual({ provider: 'THREADS', configured: true, category: 'SOCIAL_THREADS' });
-    expect(ready.find((r) => r.provider === 'YOUTUBE')).toEqual({ provider: 'YOUTUBE', configured: false, category: 'SOCIAL_YOUTUBE' });
+    expect(ready.find((r) => r.provider === 'FACEBOOK')).toEqual({
+      provider: 'FACEBOOK',
+      configured: true,
+      category: 'SOCIAL_FACEBOOK',
+      apps: [
+        { id: String(main._id), name: 'Duncit', is_default: true },
+        { id: String(brand._id), name: 'Brand two', is_default: false },
+      ],
+    });
+    expect(ready.find((r) => r.provider === 'THREADS')?.apps).toEqual([{ id: String(threads._id), name: 'Threads app', is_default: false }]);
+    expect(ready.find((r) => r.provider === 'YOUTUBE')).toEqual({ provider: 'YOUTUBE', configured: false, category: 'SOCIAL_YOUTUBE', apps: [] });
+    // Only active entries of the social categories are read.
+    expect(find).toHaveBeenCalledWith({ category: { $in: SOCIAL_ENV_CATEGORIES }, is_active: true });
+  });
+
+  it('never sends a key out: an app is its id, name and default flag only', async () => {
+    find.mockReturnValue(query([entry('SOCIAL_X', 'X app', { client_id: 'cid', client_secret: 'very-secret' }, true)]));
+    const x = (await providerReadiness()).find((r) => r.provider === 'X');
+    expect(JSON.stringify(x)).not.toContain('very-secret');
+    expect(JSON.stringify(x)).not.toContain('cid');
+  });
+});
+
+describe('metaWebhookKeys', () => {
+  it("collects every active Instagram and Facebook app's secret and verify token, skipping blanks", async () => {
+    find.mockReturnValue(
+      query([
+        { config: { app_secret: 'main-secret', webhook_verify_token: ' main-token ' } },
+        { config: { app_secret: 'brand-secret' } },
+        { config: {} },
+      ])
+    );
+    expect(await metaWebhookKeys()).toEqual({ secrets: ['main-secret', 'brand-secret'], verifyTokens: ['main-token'] });
+    expect(find).toHaveBeenCalledWith({ category: { $in: ['SOCIAL_INSTAGRAM', 'SOCIAL_FACEBOOK'] }, is_active: true });
   });
 });

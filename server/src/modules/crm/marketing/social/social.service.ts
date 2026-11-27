@@ -114,6 +114,8 @@ const pubAccount = (o: any, flaggedOpen: number, ownerNames: Map<string, string>
     messaging_missing_permission: o.platform === 'INSTAGRAM' || o.platform === 'FACEBOOK' ? missingDmPermission(o) : null,
     dm_error: o.dm_error ?? '',
     webhook_error: o.webhook_error ?? '',
+    // The app it was connected through; null for one connected through the default before apps could be chosen.
+    app_id: idOrNull(o.env_entry_id),
   };
 };
 
@@ -253,8 +255,10 @@ export async function commentContext(docs: any[]) {
  * in place; the tokens are sealed before they are written. Whoever connects
  * becomes the owner unless somebody already is — a reconnect by a colleague
  * must not quietly take an account away from the person looking after it.
+ * The app it came through is kept with it ('' — the default — is stored as
+ * null), since its tokens only work with that app.
  */
-async function saveDiscovered(provider: SocialProvider, accounts: DiscoveredAccount[], userId: string): Promise<string[]> {
+async function saveDiscovered(provider: SocialProvider, accounts: DiscoveredAccount[], userId: string, appId: string): Promise<string[]> {
   const ids: string[] = [];
   for (const account of accounts) {
     const { tokens, ...profile } = account;
@@ -271,6 +275,7 @@ async function saveDiscovered(provider: SocialProvider, accounts: DiscoveredAcco
           status: 'CONNECTED',
           last_error: '',
           connected_by: userId,
+          env_entry_id: appId || null,
           // A fresh token is a fresh start for the health line and the reminders.
           health_ok: null,
           health_message: '',
@@ -305,7 +310,7 @@ async function revokeAtNetwork(doc: AccountWithTokens): Promise<void> {
   const connector = CONNECTORS[doc.provider];
   if (!connector.revoke) return;
   try {
-    const creds = await socialCredentials(doc.provider);
+    const creds = await socialCredentials(doc.provider, doc.env_entry_id);
     if (!creds) return;
     await connector.revoke(handleOf(doc), creds);
   } catch (error) {
@@ -339,15 +344,21 @@ export const socialService = {
   /** The one callback URL every network's app registers — shown on the settings page beside each app. */
   redirectUri: socialRedirectUri,
 
-  /** The provider's consent screen, for the button the marketer just pressed. */
-  async connectUrl(provider: SocialProvider, userId: string, returnTo: SocialConnectReturn): Promise<string> {
-    const creds = await socialCredentials(provider);
+  /**
+   * The provider's consent screen, for the button the marketer just pressed.
+   * `appId` picks which of the network's apps to connect through (several can
+   * be set up); without one it is the default app, as before.
+   */
+  async connectUrl(provider: SocialProvider, userId: string, returnTo: SocialConnectReturn, appId?: string | null): Promise<string> {
+    const app = appId?.trim() ?? '';
+    const creds = await socialCredentials(provider, app);
     if (!creds) {
-      throw new GraphQLError('This network is not set up yet — add its app under Marketing › Settings › Integrations.', {
-        extensions: { code: 'SOCIAL_APP_NOT_CONFIGURED' },
-      });
+      const message = app
+        ? 'That app is no longer set up for this network (removed, switched off or missing its keys) — check it under Marketing › Settings › Integrations.'
+        : 'This network is not set up yet — add its app under Marketing › Settings › Integrations.';
+      throw new GraphQLError(message, { extensions: { code: 'SOCIAL_APP_NOT_CONFIGURED' } });
     }
-    const { state, challenge } = startConnect(provider, userId, returnTo);
+    const { state, challenge } = startConnect(provider, userId, returnTo, app);
     return CONNECTORS[provider].authorizeUrl({ creds, state, challenge });
   },
 
@@ -355,12 +366,12 @@ export const socialService = {
   async completeConnect(code: string, state: string): Promise<{ provider: SocialProvider; count: number }> {
     const parsed = readConnectState(state);
     if (!parsed) throw new Error('This connect link has expired or did not start here. Press Connect again.');
-    const creds = await socialCredentials(parsed.provider);
+    const creds = await socialCredentials(parsed.provider, parsed.appId);
     if (!creds) throw new Error('This network is not set up yet — add its app under Marketing › Settings › Integrations.');
     const found = await CONNECTORS[parsed.provider].connect({ code, creds, verifier: parsed.verifier });
     // A consent that granted nothing used to come back as "0 connected" and look like success.
     if (found.length === 0) throw new Error(NOTHING_GRANTED[parsed.provider] ?? NOTHING_GRANTED_DEFAULT);
-    const ids = await saveDiscovered(parsed.provider, found, parsed.userId);
+    const ids = await saveDiscovered(parsed.provider, found, parsed.userId, parsed.appId);
     await subscribeConnectedPages(found, creds);
     // In the background: the marketer is being sent back to the page now, and
     // the first read is several API calls per account.

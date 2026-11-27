@@ -108,7 +108,7 @@ async function prepare(id: string, text: string): Promise<Prepared> {
     });
   }
   if (account.status === 'EXPIRED') refuse('BAD_USER_INPUT', 'This account needs reconnecting in Social Accounts before it can reply.');
-  const creds = await socialCredentials(account.provider);
+  const creds = await socialCredentials(account.provider, account.env_entry_id);
   if (!creds) refuse('NOT_CONFIGURED', 'This network’s app is not set up yet — add it under Marketing › Settings › Integrations.');
   return { comment, account, replier, creds };
 }

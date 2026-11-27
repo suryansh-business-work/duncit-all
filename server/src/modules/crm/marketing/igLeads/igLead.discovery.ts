@@ -51,10 +51,10 @@ export interface DiscoveryReader {
  */
 export async function discoveryReader(): Promise<DiscoveryReader | null> {
   const account = await SocialAccountModel.findOne({ platform: 'INSTAGRAM', status: 'CONNECTED' })
-    .select('+access_token external_id provider')
-    .lean<{ external_id: string; access_token?: string; provider: SocialProvider }>();
+    .select('+access_token external_id provider env_entry_id')
+    .lean<{ external_id: string; access_token?: string; provider: SocialProvider; env_entry_id?: unknown }>();
   if (!account?.access_token) return null;
-  const creds = await socialCredentials(account.provider);
+  const creds = await socialCredentials(account.provider, account.env_entry_id);
   if (!creds) return null;
   const igUserId = account.external_id;
   // Stored sealed (social.tokens.ts); opened here, for this reader only.

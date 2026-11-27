@@ -1,8 +1,7 @@
 import express, { type Router } from 'express';
-import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { logs } from '@observability/log';
 import { validHubSignature } from '@utils/hubSignature';
-import { socialCredentials, socialEnvKey } from './social.credentials';
+import { metaWebhookKeys } from './social.credentials';
 import { processMetaWebhook } from './social.webhook.process';
 
 /**
@@ -17,20 +16,18 @@ import { processMetaWebhook } from './social.webhook.process';
  *   is parsed. A good one is answered 200 at once — Meta retries a slow
  *   endpoint and eventually disables it — and processed after.
  *
- * The Instagram and Facebook entries may be one Meta app or two, so either
- * app's verify token and secret is accepted.
+ * The Instagram and Facebook entries may be one Meta app or several (a second
+ * app for another brand's Pages), so any active app's verify token and secret
+ * is accepted.
  */
-const META_APPS = ['INSTAGRAM', 'FACEBOOK'] as const;
 const BODY_LIMIT = '2mb';
 
 async function verifyTokens(): Promise<string[]> {
-  const tokens = await Promise.all(META_APPS.map((provider) => getRuntimeEnvValue(socialEnvKey(provider, 'webhook_verify_token'))));
-  return tokens.map((token) => token.trim()).filter(Boolean);
+  return (await metaWebhookKeys()).verifyTokens;
 }
 
 async function appSecrets(): Promise<string[]> {
-  const creds = await Promise.all(META_APPS.map((provider) => socialCredentials(provider)));
-  return [...new Set(creds.flatMap((app) => (app ? [app.clientSecret] : [])))];
+  return [...new Set((await metaWebhookKeys()).secrets)];
 }
 
 /** Whether the raw body was signed by one of our Meta apps. */

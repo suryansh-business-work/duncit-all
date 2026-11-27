@@ -102,7 +102,7 @@ async function tokenVerdict(accountId: string, creds: SocialAppCredentials, acce
 
 /** One profile read, and what it says about the token. */
 async function verdictOf(doc: AccountWithTokens): Promise<Verdict> {
-  const creds = await socialCredentials(doc.provider);
+  const creds = await socialCredentials(doc.provider, doc.env_entry_id);
   if (!creds) return { ok: false, expired: false, message: NOT_CONFIGURED };
   try {
     const reader = READERS[doc.platform];

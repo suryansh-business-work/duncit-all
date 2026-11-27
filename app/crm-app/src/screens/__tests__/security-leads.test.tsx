@@ -15,6 +15,9 @@ jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
 // The Leads tab keeps its kind filter in the route; setParams updates it as react-navigation would.
 let mockRouteParams: Record<string, unknown> = {};
 const mockNav = {
+  // A tab screen also reads its tab navigator (useScrollTopOnTabEntry).
+  getState: () => undefined,
+  addListener: () => () => undefined,
   navigate: jest.fn(),
   setParams: jest.fn((next: Record<string, unknown>) => {
     mockRouteParams = { ...mockRouteParams, ...next };

@@ -21,6 +21,9 @@ jest.mock('@/services/permissions', () => ({
   hasPhoneFeatures: jest.fn(),
 }));
 const mockNav = {
+  // A tab screen also reads its tab navigator (useScrollTopOnTabEntry).
+  getState: () => undefined,
+  addListener: () => () => undefined,
   navigate: jest.fn(),
   goBack: jest.fn(),
   canGoBack: jest.fn(() => true),

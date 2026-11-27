@@ -10,7 +10,14 @@ import { LeadsScreen } from '../leads/LeadsScreen';
 
 jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
-const mockNav = { navigate: jest.fn(), setOptions: jest.fn(), setParams: jest.fn() };
+const mockNav = {
+  // A tab screen also reads its tab navigator (useScrollTopOnTabEntry).
+  getState: () => undefined,
+  addListener: () => () => undefined,
+  navigate: jest.fn(),
+  setOptions: jest.fn(),
+  setParams: jest.fn(),
+};
 let mockParams: Record<string, unknown> = {};
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => mockNav,

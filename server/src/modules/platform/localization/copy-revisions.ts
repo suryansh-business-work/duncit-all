@@ -501,4 +501,8 @@ export const COPY_REVISIONS: Readonly<Record<string, readonly string[]>> = {
   "tech.appBuilds.crmChannelHint": [
     "Pick a channel or paste its ID (e.g. C0123ABCD). Leave empty to announce them in the Android builds channel.",
   ],
+  // A social network can now have several apps, so "one app per network" is no longer true.
+  "marketing.integrations.subtitle": [
+    "One app per network. Add each app’s ID and secret here, test the connection, then connect accounts under Social media › Accounts.",
+  ],
 };

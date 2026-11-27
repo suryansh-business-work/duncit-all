@@ -596,7 +596,9 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
     integrations: {
       title: 'Integrations',
       subtitle:
-        'One app per network. Add each app’s ID and secret here, test the connection, then connect accounts under Social media › Accounts.',
+        'Add each network’s app ID and secret here, test the connection, then connect accounts under Social media › Accounts.',
+      multipleApps:
+        'Need accounts from another business or brand? Add another entry here with that app’s keys and test it. Social media › Accounts then asks which app to connect through, and those accounts post and message through that app.',
       tabInstagram: 'Instagram',
       tabFacebook: 'Facebook',
       tabThreads: 'Threads',
@@ -664,6 +666,12 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       openSettings: 'Open Integrations',
       connect: 'Connect',
       connectAnother: 'Connect another',
+      // A network can have several apps (Settings › Integrations); Connect asks which one.
+      chooseApp: 'Connect through which app',
+      connectVia: 'Connect via {name}',
+      defaultApp: 'Default',
+      appLine: 'App: {name}',
+      appRemoved: 'The app this account was connected through was removed or switched off. Use Connect to bring it back through another app.',
       noAccountYet: 'No account connected yet.',
       followers: 'Followers',
       statusConnected: 'Connected',

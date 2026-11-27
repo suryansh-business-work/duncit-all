@@ -1812,6 +1812,10 @@ export const STAFF_GAP_FLOWS: readonly CatalogueFlow[] = [
             'Toast "Connection cancelled."',
           ],
           [
+            'Add and test a second LinkedIn entry under Settings › Integrations, then press "Connect another"',
+            'A menu "Connect through which app" lists "Connect via <name>" per app, the default marked "Default"; each account row then shows "App: <name>" and posts, syncs and reconnects through that app',
+          ],
+          [
             'Press "Sync now" on the account',
             'Toast "<name> synced" and the row shows "Last synced <when>"; a refused sync shows its error (or "Sync failed")',
           ],

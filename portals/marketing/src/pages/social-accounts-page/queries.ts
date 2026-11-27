@@ -11,11 +11,20 @@ export type SocialSentiment = 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
 export type SocialSeverity = 'LOW' | 'MEDIUM' | 'HIGH';
 export type SocialReviewStatus = 'OPEN' | 'REVIEWED';
 
+/** One app a network can be connected through — an entry added and tested in Tech › Environment Variables or Settings › Integrations. */
+export interface SocialApp {
+  id: string;
+  name: string;
+  is_default: boolean;
+}
+
 export interface SocialProviderStatus {
   provider: SocialProvider;
   configured: boolean;
   /** The environment category the app's entry lives in — the Settings › Integrations tab to open. */
   category: string;
+  /** Every app it can be connected through, the default first. */
+  apps: SocialApp[];
 }
 
 export interface SocialAccount {
@@ -45,6 +54,8 @@ export interface SocialAccount {
   messaging_missing_permission: string | null;
   dm_error: string;
   webhook_error: string;
+  /** The app it was connected through and keeps using; null when connected through the default before apps could be chosen. */
+  app_id: string | null;
 }
 
 export interface SocialPostRow {
@@ -175,6 +186,7 @@ const ACCOUNT_FIELDS = gql`
     messaging_missing_permission
     dm_error
     webhook_error
+    app_id
   }
 `;
 
@@ -185,6 +197,11 @@ export const SOCIAL_SETUP = gql`
       provider
       configured
       category
+      apps {
+        id
+        name
+        is_default
+      }
     }
     socialAccounts {
       ...SocialAccountFields
@@ -194,8 +211,8 @@ export const SOCIAL_SETUP = gql`
 `;
 
 export const SOCIAL_CONNECT_URL = gql`
-  mutation SocialConnectUrl($provider: SocialProvider!, $return_to: SocialConnectReturn!) {
-    socialConnectUrl(provider: $provider, return_to: $return_to)
+  mutation SocialConnectUrl($provider: SocialProvider!, $return_to: SocialConnectReturn!, $app_id: ID) {
+    socialConnectUrl(provider: $provider, return_to: $return_to, app_id: $app_id)
   }
 `;
 

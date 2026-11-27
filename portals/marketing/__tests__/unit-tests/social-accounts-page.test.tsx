@@ -86,8 +86,8 @@ const setupMock = (accounts = [makeSocialAccount()]): MockedResponse => ({
   result: {
     data: {
       socialProviders: [
-        { __typename: 'SocialProviderStatus', provider: 'LINKEDIN', configured: true, category: 'SOCIAL_LINKEDIN' },
-        { __typename: 'SocialProviderStatus', provider: 'X', configured: false, category: 'SOCIAL_X' },
+        { __typename: 'SocialProviderStatus', provider: 'LINKEDIN', configured: true, category: 'SOCIAL_LINKEDIN', apps: [{ __typename: 'SocialApp', id: 'li-app', name: 'Duncit LinkedIn', is_default: true }] },
+        { __typename: 'SocialProviderStatus', provider: 'X', configured: false, category: 'SOCIAL_X', apps: [] },
       ],
       socialAccounts: accounts.map((a) => ({ __typename: 'SocialAccount', ...a })),
     },

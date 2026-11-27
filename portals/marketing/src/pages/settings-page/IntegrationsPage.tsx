@@ -35,6 +35,11 @@ export default function IntegrationsPage() {
           <Typography variant="body2" sx={{ color: 'text.secondary' }} data-testid="integration-hint">
             {t(active.hintKey)}
           </Typography>
+          {active.social && (
+            <Typography variant="body2" sx={{ color: 'text.secondary' }} data-testid="integration-multiple-apps">
+              {t('marketing.integrations.multipleApps')}
+            </Typography>
+          )}
           <EnvAccessGate>
             <Stack spacing={2}>
               {active.social && <RedirectUrlCard />}

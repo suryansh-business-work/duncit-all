@@ -31,6 +31,9 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
       note: 'Note',
       followUp: 'Follow-up',
       findLead: 'Find lead',
+      pageTools: 'More options',
+      // The empty fields of a lead's overview card, named on one line instead of a row of dashes each.
+      notFilled: 'Not filled: {fields}',
     },
     common: {
       loading: 'Loading…',
@@ -386,6 +389,8 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
       recordingFolder: 'Call recordings on this phone',
       noRecordings: 'None found',
       noRecordingsHint: 'No call recordings in the last 30 days. Turn on automatic call recording in your Phone app’s settings, and allow Call recordings (audio files) above.',
+      audioNeeded: 'Audio access needed',
+      audioNeededHint: 'Android hides the phone’s call recordings from Duncit CRM until you allow access to music and audio. Allow it, and calls waiting for their recording upload on the next sync.',
       recordingsFound: '{count} call recordings found on this {maker} phone in the last 30 days.',
       openSettings: 'Open settings',
       roleUnavailable: 'This phone cannot make Duncit CRM the call redirecting app.',

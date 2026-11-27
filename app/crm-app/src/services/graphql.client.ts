@@ -41,11 +41,13 @@ export function toApiError(error: unknown): ApiError {
     return new ApiError('The request timed out. Please try again.');
   if (error instanceof ClientError) {
     const first = error.response.errors?.[0];
-    return new ApiError(
-      first?.message ?? 'Request failed.',
-      error.response.status,
-      first?.extensions,
-    );
+    // No GraphQL error in the answer: a gateway page (502/503 while the server
+    // restarts after a deploy) — say what that means instead of "Request failed".
+    const fallback =
+      error.response.status >= 500
+        ? 'Duncit is busy for a moment. Please try again.'
+        : 'Request failed.';
+    return new ApiError(first?.message ?? fallback, error.response.status, first?.extensions);
   }
   return new ApiError('Network error. Check your connection and try again.');
 }

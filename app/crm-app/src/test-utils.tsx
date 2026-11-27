@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
-import { render } from '@testing-library/react-native';
+import { act, render } from '@testing-library/react-native';
 import { TamaguiProvider } from 'tamagui';
 
 import config from '../tamagui.config';
@@ -28,4 +28,17 @@ export function mockNavigation() {
     canGoBack: jest.fn(() => true),
     setOptions: jest.fn(),
   };
+}
+
+/**
+ * Press the button a screen put in its app bar with
+ * `navigation.setOptions({ headerRight })` — the navigator draws it outside
+ * the screen, so a test calls the button's own handler.
+ */
+export function pressHeaderRight(setOptions: jest.Mock): void {
+  const options = setOptions.mock.calls.at(-1)?.[0] as
+    { headerRight?: () => { props: { onPress: () => void } } } | undefined;
+  const button = options?.headerRight?.();
+  expect(button).toBeDefined();
+  act(() => button?.props.onPress());
 }

@@ -16,17 +16,13 @@ interface Props {
 
 /**
  * Devices and Last activity of the Duncit account a lead's contact belongs to
- * — the portal's two matched-user columns — or "Not on Duncit".
+ * — the portal's two matched-user columns. A lead with no Duncit account shows
+ * nothing: on a phone card only a real match is worth the line (the lead page
+ * still says "Not on Duncit").
  */
 export function LeadListRowMatched({ matched }: Readonly<Props>) {
   const { t } = useTranslation();
-  if (!matched) {
-    return (
-      <Text color="$muted" fontSize="$2">
-        {`${t('crm.matchedUser.devices')}: ${t('crm.matchedUser.notOnDuncit')}`}
-      </Text>
-    );
-  }
+  if (!matched) return null;
   const used = new Set(matched.platforms_used);
   const devices = PLATFORM_KEYS.filter((p) => used.has(p.value))
     .map((p) => t(p.key))

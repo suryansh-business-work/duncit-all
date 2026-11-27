@@ -3,7 +3,7 @@ import { Text, YStack } from 'tamagui';
 import type { CardLead, SectionModel, TrackingModel } from './overviewTypes';
 import { useTranslation } from '@/hooks/useTranslation';
 import { DetailCard } from '../parts/DetailCard';
-import { DetailRow } from '../parts/DetailRow';
+import { DetailRow, isEmptyValue } from '../parts/DetailRow';
 import { LinkText } from '../parts/LinkText';
 
 /** The venue's map: the Google Maps link for its address, or a nudge to add one. */
@@ -19,23 +19,39 @@ function MapLink({ url }: Readonly<{ url: string | null }>) {
   return <LinkText href={url} label={t('crm.leadDetail.openInMaps')} testID="lead-map-link" />;
 }
 
-/** The kind's overview cards, each a titled list of rows. */
+/**
+ * The kind's overview cards, each a titled list of rows. Only filled fields
+ * get a row; the empty ones are named on one muted line under them, so a new
+ * lead is not a page of dashes (Edit in the header fills them in).
+ */
 export function OverviewSections({ sections }: Readonly<{ sections: readonly SectionModel[] }>) {
+  const { t } = useTranslation();
   return (
     <>
-      {sections.map((section) => (
-        <DetailCard
-          key={section.key}
-          title={section.title}
-          icon={section.icon}
-          testID={`lead-overview-card-${section.key}`}
-        >
-          {section.rows.map((row) => (
-            <DetailRow key={row.label} label={row.label} value={row.value} />
-          ))}
-          {section.map ? <MapLink url={section.map.url} /> : null}
-        </DetailCard>
-      ))}
+      {sections.map((section) => {
+        const filled = section.rows.filter((row) => !isEmptyValue(row.value));
+        const empty = section.rows.filter((row) => isEmptyValue(row.value));
+        return (
+          <DetailCard
+            key={section.key}
+            title={section.title}
+            icon={section.icon}
+            testID={`lead-overview-card-${section.key}`}
+          >
+            {filled.map((row) => (
+              <DetailRow key={row.label} label={row.label} value={row.value} />
+            ))}
+            {empty.length > 0 ? (
+              <Text color="$muted" fontSize="$2" testID={`lead-overview-empty-${section.key}`}>
+                {t('crmApp.mobile.notFilled', {
+                  vars: { fields: empty.map((row) => row.label).join(', ') },
+                })}
+              </Text>
+            ) : null}
+            {section.map ? <MapLink url={section.map.url} /> : null}
+          </DetailCard>
+        );
+      })}
     </>
   );
 }

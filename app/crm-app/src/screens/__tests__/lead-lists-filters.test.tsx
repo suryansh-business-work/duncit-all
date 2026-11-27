@@ -5,12 +5,17 @@ import * as Location from 'expo-location';
 import * as editorDocs from '@/graphql/leadEditor';
 import * as docs from '@/graphql/leadLists';
 import { gqlRequest } from '@/services/graphql.client';
-import { renderWithTheme } from '@/test-utils';
+import { pressHeaderRight, renderWithTheme } from '@/test-utils';
 import { LeadListScreen } from '../leads/LeadListScreen';
 
 jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
 const mockNav = { navigate: jest.fn(), setOptions: jest.fn() };
+
+const openTool = (key: string) => {
+  pressHeaderRight(mockNav.setOptions);
+  fireEvent.press(screen.getByTestId(`lead-list-tools-${key}`));
+};
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => mockNav,
   useRoute: () => ({ params: { kind: 'HOST_LEAD' } }),
@@ -114,7 +119,11 @@ describe('LeadListScreen › Filters', () => {
         { field: 'host_type', op: 'contains', value: 'Club' },
       ],
     });
-    expect(screen.getByText('Filters (4)')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Filters (4)')).toBeOnTheScreen();
+    // The badge is visual only; the button's own label already says the count.
+    expect(
+      screen.getByTestId('lead-list-filter-count', { includeHiddenElements: true }),
+    ).toHaveTextContent('4');
     await openFilters();
     await act(async () => fireEvent.press(screen.getByTestId('filter-clear')));
     await waitFor(
@@ -180,7 +189,7 @@ describe('LeadListScreen › Filters', () => {
 describe('LeadListScreen › Nearby leads', () => {
   it('searches around a picked city and area, nearest first, then lists every lead again', async () => {
     await open();
-    fireEvent.press(screen.getByTestId('nearby-open'));
+    openTool('nearby');
     fireEvent.press(screen.getByTestId('nearby-source-place'));
     await act(async () => fireEvent.press(screen.getByTestId('nearby-find')));
     expect(screen.getByText('Pick a city')).toBeOnTheScreen();
@@ -209,12 +218,13 @@ describe('LeadListScreen › Nearby leads', () => {
         expect(lastVars()).toMatchObject({ near: null, query: { sort_by: 'next_follow_up_date' } }),
       WAIT,
     );
-    expect(screen.getByTestId('nearby-open')).toBeOnTheScreen();
+    // Back to every lead: the nearby chip is gone.
+    expect(screen.queryByTestId('nearby-chip')).toBeNull();
   });
 
   it('searches around the phone once location is allowed, and says why when it is not', async () => {
     await open();
-    fireEvent.press(screen.getByTestId('nearby-open'));
+    openTool('nearby');
     await act(async () => fireEvent.press(screen.getByTestId('nearby-find')));
     expect(
       within(await screen.findByTestId('nearby-error', {}, WAIT)).getByText(
@@ -251,7 +261,7 @@ describe('LeadListScreen › Nearby leads', () => {
   it('reports a failed nearby read in the sheet', async () => {
     failNearby = true;
     await open();
-    fireEvent.press(screen.getByTestId('nearby-open'));
+    openTool('nearby');
     fireEvent.press(screen.getByTestId('nearby-source-place'));
     fireEvent.press(await screen.findByTestId('nearby-city-Pune', {}, WAIT));
     await act(async () => fireEvent.press(screen.getByTestId('nearby-find')));

@@ -5,9 +5,17 @@ import { useAuthStore } from '@/stores/auth.store';
 import { MoreScreen } from '../more/MoreScreen';
 
 jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
-const mockNav = { navigate: jest.fn(), goBack: jest.fn(), setOptions: jest.fn() };
+const mockNav = {
+  navigate: jest.fn(),
+  goBack: jest.fn(),
+  setOptions: jest.fn(),
+  // The tab screen listens for being switched to (scroll back to the top).
+  getState: jest.fn(() => ({ index: 0 })),
+  addListener: jest.fn(() => jest.fn()),
+};
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => mockNav,
+  useRoute: () => ({ key: 'More' }),
 }));
 
 beforeEach(() => {

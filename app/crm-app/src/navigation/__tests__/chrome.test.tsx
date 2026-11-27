@@ -4,7 +4,14 @@ import { TamaguiProvider, Theme } from 'tamagui';
 
 import config, { crmTheme } from '../../../tamagui.config';
 import { AppNavigation } from '../AppNavigation';
-import { activeTabInk, consoleChrome, navigationTheme, useConsoleChrome } from '../chrome';
+import {
+  TAB_INDICATOR,
+  activeTabInk,
+  consoleChrome,
+  navigationTheme,
+  useConsoleChrome,
+} from '../chrome';
+import { TabIcon } from '../TabIcon';
 
 jest.mock('../RootNavigator', () => {
   const { Text: MockText } = jest.requireActual('react-native');
@@ -41,11 +48,17 @@ describe('consoleChrome', () => {
   );
 
   it.each(['light', 'dark'] as const)(
-    'marks the current %s tab with a soft red pill, the others muted',
+    'marks the current %s tab with a soft red pill behind its icon, the others muted',
     (mode) => {
       const t = crmTheme(mode);
-      const { tabBar } = consoleChrome(mode);
-      expect(tabBar.tabBarActiveBackgroundColor).toBe(t.primarySoft);
+      const { tabBar, tabIndicator } = consoleChrome(mode);
+      // The pill is behind the icon only (Material 3), so the item itself is never filled.
+      expect(tabIndicator).toBe(t.primarySoft);
+      expect(tabBar).not.toHaveProperty('tabBarActiveBackgroundColor');
+      expect(tabBar.tabBarIconStyle).toEqual({
+        width: TAB_INDICATOR.width,
+        height: TAB_INDICATOR.height,
+      });
       expect(tabBar.tabBarActiveTintColor).toBe(activeTabInk(mode));
       expect(tabBar.tabBarInactiveTintColor).toBe(t.muted);
       expect(tabBar.tabBarStyle.backgroundColor).toBe(t.surface);
@@ -97,4 +110,16 @@ describe('AppNavigation', () => {
       expect(await screen.findByText('root navigator')).toBeTruthy();
     },
   );
+});
+
+describe('TabIcon', () => {
+  it('draws the pill only behind the current tab’s icon', () => {
+    const wrapper = inMode('light');
+    const { rerender } = render(<TabIcon name="groups" color="#000" focused indicator="#fee" />, {
+      wrapper,
+    });
+    expect(screen.getByTestId('tab-indicator-groups')).toBeOnTheScreen();
+    rerender(<TabIcon name="groups" color="#000" focused={false} indicator="#fee" />);
+    expect(screen.queryByTestId('tab-indicator-groups')).toBeNull();
+  });
 });

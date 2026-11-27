@@ -7,10 +7,13 @@ import {
   type NavigationProp,
   type RouteProp,
 } from '@react-navigation/native';
-import { useTheme } from 'tamagui';
+import { YStack, useTheme } from 'tamagui';
 import { fireAndForget, logs } from '@duncit/logs';
 
+import { Fab } from '@/components/mobile/Fab';
+import { IconButton } from '@/components/mobile/IconButton';
 import { StateView } from '@/components/StateView';
+import { MOBILE } from '@/constants/design';
 import type { LeadListRow as Row } from '@/features/leads-list/listKinds';
 import { useLeadListState } from '@/features/leads-list/useLeadListState';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -20,14 +23,17 @@ import { LeadListHeader } from './LeadListHeader';
 import { LeadListRow } from './LeadListRow';
 import { LeadListRowActions } from './LeadListRowActions';
 import { LeadListToolSheets, type ToolSheet } from './LeadListToolSheets';
+import { LeadListToolsMenu } from './LeadListToolsMenu';
 
 const SCOPE = 'crm-app/LeadListScreen';
 
 /**
  * Leads › one kind (the portal's Venue / Host / Ecomm / Creators / Community
- * Leads page): search, filters and order, Nearby leads, Recalculate scores,
- * Fill with AI and Excel import, and each lead's card: tap to open, Call at
- * the side, and the ⋯ (or a long press) for edit, note, follow-up and delete.
+ * Leads page): search and filters on top, the page tools (Nearby leads,
+ * Recalculate scores, Fill with AI, Excel import, Manage services) in the app
+ * bar's ⋯, New lead as the floating button, and each lead's card: tap to
+ * open, Call at the side, its ⋯ (or a long press) for edit, note, follow-up
+ * and delete.
  */
 export function LeadListScreen() {
   const { t } = useTranslation();
@@ -41,6 +47,7 @@ export function LeadListScreen() {
   const [toDelete, setToDelete] = useState<Row | null>(null);
   const [actionsFor, setActionsFor] = useState<Row | null>(null);
   const [pulling, setPulling] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const close = () => setSheet(null);
   const reload = () => fireAndForget(list.refresh(), logs.mobileApp, SCOPE, 'refresh');
   const pull = () => {
@@ -58,8 +65,23 @@ export function LeadListScreen() {
   };
 
   useEffect(() => {
-    navigation.setOptions({ title: t(definition.copy.title) });
-  }, [navigation, t, definition]);
+    navigation.setOptions({
+      title: t(definition.copy.title),
+      headerRight: () => (
+        <IconButton
+          icon={{ name: 'more-vert' }}
+          label={t('crmApp.mobile.pageTools')}
+          color={theme.onPrimary?.val}
+          onPress={() => setToolsOpen(true)}
+          testID="lead-list-tools-open"
+        />
+      ),
+    });
+  }, [navigation, t, definition, theme.onPrimary?.val]);
+  const services =
+    kind === 'VENUE_LEAD' || kind === 'HOST_LEAD' || kind === 'ECOMM_LEAD'
+      ? () => navigation.navigate('ServicesOffered')
+      : undefined;
   // Back from the editor or a lead: show what changed.
   const { refresh } = list;
   useFocusEffect(
@@ -67,7 +89,7 @@ export function LeadListScreen() {
   );
 
   return (
-    <>
+    <YStack flex={1}>
       <FlatList
         style={{ flex: 1, backgroundColor: theme.background?.val }}
         data={list.rows}
@@ -79,28 +101,22 @@ export function LeadListScreen() {
         }
         initialNumToRender={10}
         windowSize={7}
-        contentContainerStyle={{ padding: 16, gap: 8 }}
+        contentContainerStyle={{
+          padding: 16,
+          gap: 8,
+          paddingBottom: MOBILE.fab + MOBILE.gutter * 2,
+        }}
         ListHeaderComponent={
           <LeadListHeader
-            definition={definition}
             search={state.search}
             onSearch={state.setSearch}
             total={list.total}
             filterCount={state.filterCount}
             nearbyLabel={state.nearbyLabel}
             status={status}
-            onNew={() => navigation.navigate('LeadEditor', { kind })}
             onFilters={() => setSheet('filters')}
             onNearby={() => setSheet('nearby')}
             onClearNearby={state.clearNearby}
-            onRecalculate={() => setSheet('recalculate')}
-            onFillWithAi={() => setSheet('ai')}
-            onImport={() => setSheet('import')}
-            onManageServices={
-              kind === 'VENUE_LEAD' || kind === 'HOST_LEAD' || kind === 'ECOMM_LEAD'
-                ? () => navigation.navigate('ServicesOffered')
-                : undefined
-            }
           />
         }
         renderItem={({ item }) => (
@@ -133,6 +149,23 @@ export function LeadListScreen() {
           list.rows.length > 0 && list.loading ? <StateView loading inline /> : null
         }
       />
+      <Fab
+        icon="add"
+        label={t(definition.copy.newLead)}
+        onPress={() => navigation.navigate('LeadEditor', { kind })}
+        testID="lead-list-new"
+      />
+      <LeadListToolsMenu
+        open={toolsOpen}
+        definition={definition}
+        nearbyOn={Boolean(state.nearbyLabel)}
+        onNearby={() => setSheet('nearby')}
+        onRecalculate={() => setSheet('recalculate')}
+        onFillWithAi={() => setSheet('ai')}
+        onImport={() => setSheet('import')}
+        onManageServices={services}
+        onClose={() => setToolsOpen(false)}
+      />
       <LeadListToolSheets
         sheet={sheet}
         kind={kind}
@@ -161,6 +194,6 @@ export function LeadListScreen() {
           done(message);
         }}
       />
-    </>
+    </YStack>
   );
 }

@@ -4,7 +4,7 @@ import * as editorDocs from '@/graphql/leadEditor';
 import * as docs from '@/graphql/leadLists';
 import { CrmAppLeadSearchDocument } from '@/graphql/leads';
 import { gqlRequest } from '@/services/graphql.client';
-import { renderWithTheme } from '@/test-utils';
+import { pressHeaderRight, renderWithTheme } from '@/test-utils';
 import { LeadListScreen } from '../leads/LeadListScreen';
 import { LeadsScreen } from '../leads/LeadsScreen';
 
@@ -17,6 +17,11 @@ const mockNav = {
   navigate: jest.fn(),
   setOptions: jest.fn(),
   setParams: jest.fn(),
+};
+
+const openTool = (key: string) => {
+  pressHeaderRight(mockNav.setOptions);
+  fireEvent.press(screen.getByTestId(`lead-list-tools-${key}`));
 };
 let mockParams: Record<string, unknown> = {};
 jest.mock('@react-navigation/native', () => ({
@@ -93,7 +98,9 @@ describe('LeadListScreen', () => {
     serve();
     renderWithTheme(<LeadListScreen />);
     expect(await screen.findByText('Smash Arena', {}, WAIT)).toBeOnTheScreen();
-    expect(mockNav.setOptions).toHaveBeenCalledWith({ title: 'Venue Leads' });
+    expect(mockNav.setOptions).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Venue Leads' }),
+    );
     expect(lastQuery()).toEqual({
       query: {
         search: null,
@@ -155,7 +162,7 @@ describe('LeadListScreen', () => {
     });
     fireEvent.press(screen.getByTestId('lead-list-new'));
     expect(mockNav.navigate).toHaveBeenCalledWith('LeadEditor', { kind: 'VENUE_LEAD' });
-    fireEvent.press(screen.getByTestId('lead-list-services'));
+    openTool('services');
     expect(mockNav.navigate).toHaveBeenCalledWith('ServicesOffered');
   });
 
@@ -208,7 +215,7 @@ describe('LeadListScreen', () => {
     renderWithTheme(<LeadListScreen />);
     await screen.findByText('Smash Arena', {}, WAIT);
     const run = async () => {
-      fireEvent.press(screen.getByTestId('lead-quality-recalculate-all'));
+      openTool('recalculate');
       await act(async () => fireEvent.press(screen.getByTestId('recalculate-dialog-confirm')));
     };
     await run();
@@ -241,10 +248,14 @@ describe('LeadListScreen', () => {
         WAIT,
       ),
     ).toBeOnTheScreen();
-    expect(mockNav.setOptions).toHaveBeenCalledWith({ title: 'Creators Leads' });
-    expect(screen.queryByTestId('lead-list-ai')).toBeNull();
-    expect(screen.queryByTestId('lead-list-import')).toBeNull();
-    expect(screen.queryByTestId('lead-list-services')).toBeNull();
+    expect(mockNav.setOptions).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Creators Leads' }),
+    );
+    pressHeaderRight(mockNav.setOptions);
+    expect(screen.getByTestId('lead-list-tools-recalculate')).toBeOnTheScreen();
+    expect(screen.queryByTestId('lead-list-tools-ai')).toBeNull();
+    expect(screen.queryByTestId('lead-list-tools-import')).toBeNull();
+    expect(screen.queryByTestId('lead-list-tools-services')).toBeNull();
   });
 
   it('shows a failed read with a retry', async () => {
@@ -275,7 +286,8 @@ describe('LeadListScreen', () => {
     expect(await screen.findByText('Smash Arena', {}, WAIT)).toBeOnTheScreen();
     expect(screen.queryByTestId('lead-duplicate-chip')).toBeNull();
     expect(screen.getByText('Not scored yet')).toBeOnTheScreen();
-    expect(screen.getByText('Devices: Not on Duncit')).toBeOnTheScreen();
+    // No Duncit account: the card stays quiet instead of saying so.
+    expect(screen.queryByText(/Not on Duncit/)).toBeNull();
   });
 });
 

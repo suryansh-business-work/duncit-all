@@ -10,6 +10,7 @@ import { ListRow } from '@/components/mobile/ListRow';
 import { ListSection } from '@/components/mobile/ListSection';
 import { SURFACE } from '@/components/surface';
 import { MOBILE } from '@/constants/design';
+import { useScrollTopOnTabEntry } from '@/hooks/useScrollTopOnTabEntry';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CRM_NAV, moreSections } from '@/navigation/crmNav';
 import { openNavTarget } from '@/navigation/navTarget';
@@ -27,6 +28,7 @@ const SECTIONS = moreSections(CRM_NAV);
  */
 export function MoreScreen() {
   const { t } = useTranslation();
+  const scrollRef = useScrollTopOnTabEntry<ScrollView>();
   const navigation = useNavigation<NavigationProp<AppStackParamList>>();
   const user = useAuthStore((s) => s.user);
   const signOut = useAuthStore((s) => s.signOut);
@@ -35,6 +37,7 @@ export function MoreScreen() {
 
   return (
     <ScrollView
+      ref={scrollRef}
       contentContainerStyle={{ padding: MOBILE.gutter, gap: 20, paddingBottom: 32 }}
       testID="more-list"
     >

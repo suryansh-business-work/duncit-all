@@ -15,6 +15,7 @@ import { MOBILE } from '@/constants/design';
 import { CrmAppRemindersDocument } from '@/graphql/reminders';
 import { todayWindow } from '@/features/reminders/reminderTime';
 import { useGqlQuery } from '@/hooks/useGqlQuery';
+import { useScrollTopOnTabEntry } from '@/hooks/useScrollTopOnTabEntry';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AppStackParamList } from '@/navigation/types';
 import { hasPhoneFeatures, readPermissions } from '@/services/permissions';
@@ -30,6 +31,7 @@ const SCOPE = 'crm-app/HomeScreen';
  */
 export function HomeScreen() {
   const { t } = useTranslation();
+  const scrollRef = useScrollTopOnTabEntry<ScrollView>();
   const theme = useTheme();
   const navigation = useNavigation<NavigationProp<AppStackParamList>>();
   const name = useAuthStore((s) => s.user?.first_name ?? '');
@@ -67,6 +69,7 @@ export function HomeScreen() {
   const due = reminders.data?.crmReminders ?? [];
   return (
     <ScrollView
+      ref={scrollRef}
       contentContainerStyle={{ padding: MOBILE.gutter, gap: 16 }}
       refreshControl={
         <RefreshControl refreshing={pulling} onRefresh={pull} tintColor={theme.accentText?.val} />

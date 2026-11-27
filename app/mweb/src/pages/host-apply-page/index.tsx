@@ -17,6 +17,7 @@ import {
 } from './queries';
 import SuccessScreen from './SuccessScreen';
 import { useTranslation } from '../../i18n/useTranslation';
+import { useScrollTopOnChange } from '../../app/pageScroll';
 
 type Step = 'category' | 'survey' | 'success';
 
@@ -30,6 +31,7 @@ export default function HostApplyPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>('category');
+  useScrollTopOnChange(step); // category → survey → success: each opens at the top
   const [scope, setScope] = useState<CategoryScope | null>(null);
   const [survey, setSurvey] = useState<ActiveSurvey | null>(null);
   const [resolving, setResolving] = useState(false);

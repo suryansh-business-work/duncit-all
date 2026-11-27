@@ -82,6 +82,9 @@ export function RootNavigator() {
         <Stack.Screen
           name="LeadDetail"
           component={LeadDetailScreen}
+          // A lead opening another lead (a duplicate, a reminder, a call) pushes a
+          // new page: without an id the open one was reused, scroll and all.
+          getId={({ params }) => `${params.kind}:${params.id}`}
           options={{ title: t('crmApp.lead.overview') }}
         />
         <Stack.Screen
@@ -119,7 +122,12 @@ export function RootNavigator() {
           component={LeadResearchScreen}
           options={{ title: t('shell.nav.leadResearch') }}
         />
-        <Stack.Screen name="Candidate" component={CandidateScreen} options={{ title: '' }} />
+        <Stack.Screen
+          name="Candidate"
+          component={CandidateScreen}
+          getId={({ params }) => params.id}
+          options={{ title: '' }}
+        />
         <Stack.Screen
           name="LeadDiscovery"
           component={LeadDiscoveryScreen}
@@ -138,6 +146,7 @@ export function RootNavigator() {
         <Stack.Screen
           name="UserLeadDetail"
           component={UserLeadDetailScreen}
+          getId={({ params }) => params.id}
           options={{ title: '' }}
         />
         <Stack.Screen

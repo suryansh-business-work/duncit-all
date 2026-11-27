@@ -14,6 +14,7 @@ import {
 } from '@/features/reminders/calendarView';
 import { useRemindersCalendar } from '@/features/reminders/useRemindersCalendar';
 import { isLeadKind } from '@/features/leads/leadKinds';
+import { useScrollTopOnTabEntry } from '@/hooks/useScrollTopOnTabEntry';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AppStackParamList } from '@/navigation/types';
 import type { ReminderItem } from './ReminderRow';
@@ -51,6 +52,7 @@ export function RemindersScreen() {
         : agendaDays(events, view, cursor),
     [events, view, cursor, selectedDay],
   );
+  const listRef = useScrollTopOnTabEntry<FlatList<(typeof groups)[number]>>();
 
   const changeView = (next: CalendarView) => {
     calendar.setView(next);
@@ -71,6 +73,7 @@ export function RemindersScreen() {
   return (
     <YStack flex={1}>
       <FlatList
+        ref={listRef}
         style={{ flex: 1, backgroundColor: theme.background?.val }}
         data={groups}
         keyExtractor={(group) => format(group.day, 'yyyy-MM-dd')}

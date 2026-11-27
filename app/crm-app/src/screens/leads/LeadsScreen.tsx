@@ -18,6 +18,7 @@ import { StateView } from '@/components/StateView';
 import { MOBILE } from '@/constants/design';
 import { LEAD_KINDS, isLeadKind, type LeadKind } from '@/features/leads/leadKinds';
 import { useLeadSearch, type LeadRow } from '@/features/leads/useLeadSearch';
+import { useScrollTopOnTabEntry } from '@/hooks/useScrollTopOnTabEntry';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AppStackParamList, TabParamList } from '@/navigation/types';
 import { LeadSearchRow } from './LeadSearchRow';
@@ -47,6 +48,7 @@ export function LeadsScreen() {
   // The kind lives in the route, so a deep link, the More tab and the chips agree.
   const kind: LeadKind | null = useRoute<RouteProp<TabParamList, 'Leads'>>().params?.kind ?? null;
   const leads = useLeadSearch(search, kind, t('crmApp.common.loadFailed'));
+  const listRef = useScrollTopOnTabEntry<FlatList<LeadRow>>();
   const chips = useMemo<ChipOption<Filter>[]>(
     () => [
       { key: 'all', label: t('crmApp.leads.all') },
@@ -126,6 +128,7 @@ export function LeadsScreen() {
         </XStack>
       </YStack>
       <FlatList
+        ref={listRef}
         data={leads.rows}
         keyExtractor={(row) => `${row.entity_type}:${row.id}`}
         onEndReached={leads.loadMore}

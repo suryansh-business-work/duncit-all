@@ -6,6 +6,7 @@ import SurveyQuestionField, { type FieldAnswer } from './SurveyQuestionField';
 import { splitSections } from './surveySections';
 import type { ActiveSurvey } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
+import { useScrollTopOnChange } from '../../app/pageScroll';
 
 export interface SurveyAnswerInput {
   qid: string;
@@ -45,6 +46,8 @@ export default function SurveyStepper({
   const answers = answersProp ?? localAnswers;
   const setAnswers = setAnswersProp ?? setLocalAnswers;
   const [step, setStep] = useState(0);
+  // Each section is a page of its own: Next / Back opens it at the top.
+  useScrollTopOnChange(step);
   const [error, setError] = useState<string | null>(null);
 
   const get = (qid: string): FieldAnswer => answers[qid] ?? { value: '', values: [] };

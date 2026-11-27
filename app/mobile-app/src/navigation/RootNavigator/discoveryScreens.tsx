@@ -75,26 +75,62 @@ export function renderDiscoveryScreens() {
       <Stack.Screen name="PodPlans" component={PodPlansScreen} />
       <Stack.Screen name="Policies" component={PoliciesScreen} />
       <Stack.Screen name="SupportTickets" component={SupportTicketsScreen} />
-      <Stack.Screen name="Policy" component={PolicyScreen} />
+      <Stack.Screen name="Policy" component={PolicyScreen} getId={({ params }) => params.slug} />
       <Stack.Screen name="ChatRoom" component={ChatRoomScreen} />
       <Stack.Screen name="VenueChat" component={VenueChatScreen} />
-      <Stack.Screen name="PodDetails" component={PodDetailsScreen} />
+      {/* A page that opens ANOTHER page of its own kind (a similar pod, a
+          follower's profile, a linked policy) must push a new screen: without
+          an id React Navigation reuses the open one, which kept the previous
+          page's scroll offset and made Back skip it. */}
+      <Stack.Screen
+        name="PodDetails"
+        component={PodDetailsScreen}
+        getId={({ params }) => params.podId ?? `${params.clubSlug}/${params.podSlug}`}
+      />
       <Stack.Screen name="PodFeedback" component={PodFeedbackScreen} />
-      <Stack.Screen name="ClubDetails" component={ClubDetailsScreen} />
+      <Stack.Screen
+        name="ClubDetails"
+        component={ClubDetailsScreen}
+        getId={({ params }) => params.clubId ?? params.clubSlug}
+      />
       <Stack.Screen name="HostsVenues" component={HostsVenuesScreen} />
       {/* Both were bottom tabs; the account menu's grid pushes them now. */}
       <Stack.Screen name="Chats" component={ChatsScreen} />
       <Stack.Screen name="Following" component={FollowingScreen} />
-      <Stack.Screen name="PublicProfile" component={PublicProfileScreen} />
-      <Stack.Screen name="PostDetail" component={PostDetailScreen} />
-      <Stack.Screen name="Follow" component={FollowListScreen} />
-      <Stack.Screen name="VenueDetails" component={VenueDetailsScreen} />
+      <Stack.Screen
+        name="PublicProfile"
+        component={PublicProfileScreen}
+        getId={({ params }) => params.userId}
+      />
+      <Stack.Screen
+        name="PostDetail"
+        component={PostDetailScreen}
+        getId={({ params }) => params.postId}
+      />
+      <Stack.Screen
+        name="Follow"
+        component={FollowListScreen}
+        getId={({ params }) => params.userId}
+      />
+      <Stack.Screen
+        name="VenueDetails"
+        component={VenueDetailsScreen}
+        getId={({ params }) => params.venueId}
+      />
       <Stack.Screen name="VenueFoodOrder" component={VenueFoodOrderScreen} />
-      <Stack.Screen name="VenueFoodItem" component={VenueFoodItemScreen} />
+      <Stack.Screen
+        name="VenueFoodItem"
+        component={VenueFoodItemScreen}
+        getId={({ params }) => params.itemId}
+      />
       <Stack.Screen name="MyFoodOrders" component={MyFoodOrdersScreen} />
       <Stack.Screen name="MyRentedItems" component={MyRentedItemsScreen} />
       <Stack.Screen name="GigJobs" component={GigJobsScreen} />
-      <Stack.Screen name="GigJobDetail" component={GigJobDetailScreen} />
+      <Stack.Screen
+        name="GigJobDetail"
+        component={GigJobDetailScreen}
+        getId={({ params }) => params.id}
+      />
       <Stack.Screen name="GigJobForm" component={GigJobFormScreen} />
       <Stack.Screen name="MyGigJobs" component={MyGigJobsScreen} />
       <Stack.Screen name="FreelancerProfile" component={FreelancerProfileScreen} />
@@ -103,7 +139,11 @@ export function renderDiscoveryScreens() {
       <Stack.Screen name="FreeJoinSuccess" component={FreeJoinSuccessScreen} />
       <Stack.Screen name="ProductCheckout" component={GatedProductCheckoutScreen} />
       <Stack.Screen name="Shop" component={GatedShopScreen} />
-      <Stack.Screen name="ProductDetail" component={GatedProductDetailScreen} />
+      <Stack.Screen
+        name="ProductDetail"
+        component={GatedProductDetailScreen}
+        getId={({ params }) => params.productId}
+      />
       <Stack.Screen name="OrdersHistory" component={GatedOrdersHistoryScreen} />
       <Stack.Screen name="OrderDetail" component={GatedOrderDetailScreen} />
       <Stack.Screen name="AddressBook" component={AddressBookScreen} />

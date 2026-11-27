@@ -32,6 +32,8 @@ export type AppStackParamList = {
   Call: { kind: LeadKind; id: string; to: string; leadName: string; contactName?: string };
   /** The app's own settings (calls, caller ID, permissions, sync), opened from More. */
   Settings: undefined;
+  /** The CRM call line's Twilio settings (SUPER_ADMIN / TECH_MANAGER, after the emailed-code unlock). */
+  TwilioSetup: undefined;
   /** The portal's Dashboard: KPIs and charts for venue and host leads. */
   Dashboard: undefined;
   /** CRM › User Leads › WhatsApp Leads, one lead, and adding or editing one. */

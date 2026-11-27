@@ -1,9 +1,8 @@
-import { Linking } from 'react-native';
+import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { Text, YStack } from 'tamagui';
-import { fireAndForget, logs } from '@duncit/logs';
 
-import { config } from '@/constants/config';
 import { useTranslation } from '@/hooks/useTranslation';
+import type { AppStackParamList } from '@/navigation/types';
 
 /** The portal's own words for each missing Twilio field (literal keys for the localization gate). */
 const FIELD_KEYS: Record<string, string> = {
@@ -14,14 +13,15 @@ const FIELD_KEYS: Record<string, string> = {
 
 /**
  * "Twilio is not configured", what is missing and — for someone allowed to
- * change it — a link to the Twilio section of the Tech portal; everyone else
- * is told to ask an administrator. The portal's notice, word for word.
+ * change it — Configure Twilio, which opens the settings right here in the
+ * app (Settings › Twilio); everyone else is told to ask an administrator.
  */
 export function TwilioSetupNotice({
   missing,
   canConfigure,
 }: Readonly<{ missing: readonly string[]; canConfigure: boolean }>) {
   const { t } = useTranslation();
+  const navigation = useNavigation<NavigationProp<AppStackParamList>>();
   const fields = missing.map((field) => (FIELD_KEYS[field] ? t(FIELD_KEYS[field]) : field));
   return (
     <YStack
@@ -44,14 +44,7 @@ export function TwilioSetupNotice({
           role="link"
           color="$accentText"
           fontWeight="700"
-          onPress={() =>
-            fireAndForget(
-              Linking.openURL(`${config.techUrl}/?section=TWILIO`),
-              logs.mobileApp,
-              'crm-app/TwilioSetupNotice',
-              'openTech',
-            )
-          }
+          onPress={() => navigation.navigate('TwilioSetup')}
           testID="twilio-configure"
         >
           {t('crm.call.configureTwilio')}

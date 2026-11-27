@@ -1,12 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
-import { Spinner, YStack } from 'tamagui';
 
 import { useTranslation } from '@/hooks/useTranslation';
-import { useAuthStore } from '@/stores/auth.store';
-import { LoginScreen } from '@/screens/auth/LoginScreen';
-import { TwoFactorScreen } from '@/screens/auth/TwoFactorScreen';
-import { SecurityVerificationScreen } from '@/screens/auth/SecurityVerificationScreen';
 import { LeadDetailScreen } from '@/screens/lead/LeadDetailScreen';
 import { AddNoteScreen } from '@/screens/lead/AddNoteScreen';
 import { LeadEditorScreen } from '@/screens/lead/LeadEditorScreen';
@@ -28,6 +23,7 @@ import { LeadQualitySettingsScreen } from '@/screens/settings-lead-quality/LeadQ
 import { DynamicFieldsScreen } from '@/screens/dynamic-fields/DynamicFieldsScreen';
 import { DynamicFieldEditorScreen } from '@/screens/dynamic-fields/DynamicFieldEditorScreen';
 import { SettingsScreen } from '@/screens/settings/SettingsScreen';
+import { TwilioSetupScreen } from '@/screens/settings/TwilioSetupScreen';
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
 import { UserLeadsScreen } from '@/screens/user-leads/UserLeadsScreen';
 import { EmailVerifierScreen } from '@/screens/email-verifier/EmailVerifierScreen';
@@ -40,6 +36,7 @@ import { UserLeadEditorScreen } from '@/screens/user-leads/UserLeadEditorScreen'
 import { useConsoleChrome } from './chrome';
 import { MainTabs } from './MainTabs';
 import { screenLayout, stackScreenLayout } from './screenLayout';
+import { SignInGate } from './SignInGate';
 import type { AppStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
@@ -48,27 +45,8 @@ const Stack = createNativeStackNavigator<AppStackParamList>();
 export function RootNavigator() {
   const { t } = useTranslation();
   const chrome = useConsoleChrome();
-  const status = useAuthStore((s) => s.status);
-
-  if (status === 'loading') {
-    return (
-      <YStack
-        flex={1}
-        alignItems="center"
-        justifyContent="center"
-        backgroundColor="$background"
-        aria-busy
-      >
-        <Spinner size="large" color="$accentText" />
-      </YStack>
-    );
-  }
-  if (status === 'signedOut') return <LoginScreen />;
-  if (status === 'twoFactor') return <TwoFactorScreen />;
-  if (status === 'security') return <SecurityVerificationScreen />;
-
   return (
-    <>
+    <SignInGate>
       {/* White icons over the red app bar, in light and dark mode alike. */}
       <StatusBar style="light" />
       <Stack.Navigator screenLayout={stackScreenLayout} screenOptions={chrome.stackHeader}>
@@ -106,6 +84,11 @@ export function RootNavigator() {
           name="Settings"
           component={SettingsScreen}
           options={{ title: t('crmApp.tabs.settings') }}
+        />
+        <Stack.Screen
+          name="TwilioSetup"
+          component={TwilioSetupScreen}
+          options={{ title: t('crmApp.twilio.title') }}
         />
         <Stack.Screen
           name="Dashboard"
@@ -191,6 +174,6 @@ export function RootNavigator() {
           options={{ title: t('crmApp.postCall.title') }}
         />
       </Stack.Navigator>
-    </>
+    </SignInGate>
   );
 }

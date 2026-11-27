@@ -237,8 +237,10 @@ describe('CallScreen', () => {
     expect(await screen.findByText('Twilio is not configured')).toBeOnTheScreen();
     expect(screen.getByText('Missing: Auth Token')).toBeOnTheScreen();
     expect(screen.getByTestId('call-start')).toBeDisabled();
+    // Configure Twilio opens the settings inside the app, not the Tech portal.
     fireEvent.press(screen.getByTestId('twilio-configure'));
-    expect(Linking.openURL).toHaveBeenCalledWith('https://staging.tech.duncit.com/?section=TWILIO');
+    expect(mockNav.navigate).toHaveBeenCalledWith('TwilioSetup');
+    expect(Linking.openURL).not.toHaveBeenCalled();
     await act(async () => fireEvent.press(screen.getByTestId('call-sim')));
     expect(dial).toHaveBeenCalledWith('9811000001');
     expect(screen.getByText(/Your phone’s dialer opened/)).toBeOnTheScreen();

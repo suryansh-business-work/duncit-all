@@ -86,3 +86,15 @@ it('falls back to "not known" when Android names no default dialer', () => {
     literal: false,
   });
 });
+
+it('asks for audio access before anything else about recordings, even when folders were seen before', () => {
+  const row = byId(callingRows(healthy, [samsungFolder], false), 'recordings');
+  expect(row).toMatchObject({
+    value: 'crmApp.calling.audioNeeded',
+    tone: 'warn',
+    hintKey: 'crmApp.calling.audioNeededHint',
+    action: 'grantAudio',
+  });
+  // With access, the folder is reported as before.
+  expect(byId(callingRows(healthy, [samsungFolder], true), 'recordings')?.tone).toBe('ok');
+});

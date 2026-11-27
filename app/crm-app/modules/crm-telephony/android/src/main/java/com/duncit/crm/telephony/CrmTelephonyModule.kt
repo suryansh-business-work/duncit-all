@@ -77,6 +77,7 @@ class CrmTelephonyModule : Module() {
           "name" to it.name,
           "sizeBytes" to it.sizeBytes.toDouble(),
           "addedAtMs" to it.addedAtMs.toDouble(),
+          "modifiedAtMs" to it.modifiedAtMs.toDouble(),
           "durationMs" to it.durationMs.toDouble(),
           "mimeType" to it.mimeType,
           "relativePath" to it.relativePath,

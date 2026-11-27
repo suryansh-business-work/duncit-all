@@ -3,7 +3,7 @@ import type { CallingDiagnostics, RecordingFolder } from 'crm-telephony';
 import type { RowTone } from './DiagnosticRow';
 
 /** The fixes a row can offer; the card turns each into a button. */
-export type RowAction = 'redirectionRole' | 'appSettings';
+export type RowAction = 'redirectionRole' | 'appSettings' | 'grantAudio';
 
 export interface CallingRow {
   id: string;
@@ -25,6 +25,7 @@ export interface CallingRow {
 export function callingRows(
   phone: CallingDiagnostics,
   folders: readonly RecordingFolder[],
+  audioAccess = true,
 ): CallingRow[] {
   const rows: CallingRow[] = [
     {
@@ -61,7 +62,7 @@ export function callingRows(
       hintKey: 'crmApp.calling.backgroundHint',
       action: 'appSettings',
     });
-  rows.push(recordingRow(phone, folders));
+  rows.push(recordingRow(phone, folders, audioAccess));
   return rows;
 }
 
@@ -84,8 +85,25 @@ function outgoingRow(phone: CallingDiagnostics): CallingRow {
   };
 }
 
-function recordingRow(phone: CallingDiagnostics, folders: readonly RecordingFolder[]): CallingRow {
+/**
+ * Where the phone keeps its call recordings — or why none can be seen. Audio
+ * access comes first: without it Android shows the app no audio file at all,
+ * which used to read as "no recordings" and sent people to the wrong fix.
+ */
+function recordingRow(
+  phone: CallingDiagnostics,
+  folders: readonly RecordingFolder[],
+  audioAccess: boolean,
+): CallingRow {
   const base = { id: 'recordings', labelKey: 'crmApp.calling.recordingFolder' };
+  if (!audioAccess)
+    return {
+      ...base,
+      value: 'crmApp.calling.audioNeeded',
+      tone: 'warn',
+      hintKey: 'crmApp.calling.audioNeededHint',
+      action: 'grantAudio',
+    };
   const [newest] = folders;
   if (!newest)
     return {

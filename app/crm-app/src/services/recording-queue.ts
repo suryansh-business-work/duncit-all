@@ -24,11 +24,11 @@ export interface PendingRecording {
 }
 
 /** How long after a call ends its recording may still appear. */
-export const FIND_WINDOW_MS = 30 * 60 * 1000;
+export const FIND_WINDOW_MS = 6 * 60 * 60 * 1000;
 /** How long a failing upload keeps being retried. */
 export const GIVE_UP_MS = 24 * 60 * 60 * 1000;
 /** A runaway queue never grows past this; the oldest call goes first. */
-const MAX_QUEUED = 10;
+const MAX_QUEUED = 30;
 
 const callEnd = (call: PlannedCall) => call.entry.date + call.entry.durationSeconds * 1000;
 

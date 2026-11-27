@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView } from 'react-native';
 import { useFocusEffect, useNavigation, type NavigationProp } from '@react-navigation/native';
 import { Text, XStack, YStack, useTheme } from 'tamagui';
@@ -15,10 +15,10 @@ import { MOBILE } from '@/constants/design';
 import { CrmAppRemindersDocument } from '@/graphql/reminders';
 import { todayWindow } from '@/features/reminders/reminderTime';
 import { useGqlQuery } from '@/hooks/useGqlQuery';
+import { usePhoneSetup } from '@/hooks/usePhoneSetup';
 import { useScrollTopOnTabEntry } from '@/hooks/useScrollTopOnTabEntry';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AppStackParamList } from '@/navigation/types';
-import { hasPhoneFeatures, readPermissions } from '@/services/permissions';
 import { useAuthStore } from '@/stores/auth.store';
 import { ReminderRow } from '@/screens/reminders/ReminderRow';
 
@@ -47,15 +47,7 @@ export function HomeScreen() {
       fireAndForget(refetch(), logs.mobileApp, SCOPE, 'refetch');
     }, [refetch]),
   );
-  const [phoneReady, setPhoneReady] = useState(true);
-
-  useEffect(() => {
-    // An iPhone has no call features to set up, so nothing to nudge about.
-    if (!hasPhoneFeatures()) return;
-    readPermissions()
-      .then((p) => setPhoneReady(p.phone && p.call))
-      .catch(() => setPhoneReady(false));
-  }, []);
+  const phone = usePhoneSetup();
 
   const pull = () => {
     setPulling(true);
@@ -107,12 +99,13 @@ export function HomeScreen() {
           testID="home-dashboard"
         />
       </XStack>
-      {phoneReady ? null : (
+      {phone.ready ? null : (
         <Card title={t('crmApp.home.setupTitle')} testID="home-setup">
           <Text color="$muted">{t('crmApp.home.setupBody')}</Text>
           <DuncitButton
             label={t('crmApp.home.setupAction')}
-            onPress={() => navigation.navigate('Settings')}
+            onPress={() => fireAndForget(phone.setUp(), logs.mobileApp, SCOPE, 'setUp')}
+            testID="home-set-up"
           />
         </Card>
       )}

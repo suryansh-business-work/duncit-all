@@ -12,6 +12,8 @@ internal data class RecordingFile(
   val name: String,
   val sizeBytes: Long,
   val addedAtMs: Long,
+  /** When the file was last written (the recorder finishes it at hang-up). */
+  val modifiedAtMs: Long,
   val durationMs: Long,
   val mimeType: String,
   val relativePath: String,
@@ -25,24 +27,34 @@ internal data class RecordingFile(
  * which call.
  */
 internal object RecordingFinder {
+  /**
+   * Audio files added OR last written between the two times. A recorder that
+   * writes into a folder the media scanner only indexes later gets a late
+   * DATE_ADDED (minutes or hours after the call), which fell outside the
+   * call's window, so the recording was never found; its DATE_MODIFIED is the
+   * moment the recorder finished the file, right at hang-up.
+   */
   fun between(context: Context, fromMs: Long, toMs: Long): List<RecordingFile> {
     val projection = arrayOf(
       MediaStore.Audio.Media._ID,
       MediaStore.Audio.Media.DISPLAY_NAME,
       MediaStore.Audio.Media.SIZE,
       MediaStore.Audio.Media.DATE_ADDED,
+      MediaStore.Audio.Media.DATE_MODIFIED,
       MediaStore.Audio.Media.DURATION,
       MediaStore.Audio.Media.MIME_TYPE,
       MediaStore.Audio.Media.RELATIVE_PATH,
     )
     val out = ArrayList<RecordingFile>()
     val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+    val fromSec = (fromMs / 1000).toString()
+    val toSec = (toMs / 1000).toString()
     context.contentResolver.query(
       collection,
       projection,
-      "${MediaStore.Audio.Media.DATE_ADDED} BETWEEN ? AND ?",
-      // DATE_ADDED is in seconds.
-      arrayOf((fromMs / 1000).toString(), (toMs / 1000).toString()),
+      "(${MediaStore.Audio.Media.DATE_ADDED} BETWEEN ? AND ?) OR (${MediaStore.Audio.Media.DATE_MODIFIED} BETWEEN ? AND ?)",
+      // Both columns are in seconds.
+      arrayOf(fromSec, toSec, fromSec, toSec),
       "${MediaStore.Audio.Media.DATE_ADDED} ASC",
     )?.use { cursor ->
       while (cursor.moveToNext()) {
@@ -53,9 +65,10 @@ internal object RecordingFinder {
             name = cursor.getString(1).orEmpty(),
             sizeBytes = cursor.getLong(2),
             addedAtMs = cursor.getLong(3) * 1000,
-            durationMs = cursor.getLong(4),
-            mimeType = cursor.getString(5).orEmpty(),
-            relativePath = cursor.getString(6).orEmpty(),
+            modifiedAtMs = cursor.getLong(4) * 1000,
+            durationMs = cursor.getLong(5),
+            mimeType = cursor.getString(6).orEmpty(),
+            relativePath = cursor.getString(7).orEmpty(),
           ),
         )
       }
@@ -77,7 +90,7 @@ internal object RecordingFinder {
       if (!"${file.relativePath} ${file.name}".contains("call", ignoreCase = true)) continue
       byFolder.getOrPut(file.relativePath) { mutableListOf() }.add(file)
     }
-    return byFolder.map { (path, files) -> CallFolder(path, files.size, files.maxOf { it.addedAtMs }) }
+    return byFolder.map { (path, files) -> CallFolder(path, files.size, files.maxOf { maxOf(it.addedAtMs, it.modifiedAtMs) }) }
       .sortedByDescending { it.latestMs }
   }
 

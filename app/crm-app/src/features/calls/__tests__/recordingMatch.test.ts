@@ -3,6 +3,7 @@ import { CALL_TYPE, type RecordingFile } from 'crm-telephony';
 import { planCall, type PlannedCall } from '../callPlan';
 import {
   audioContentType,
+  inRecordingWindow,
   MAX_RECORDING_BYTES,
   pickRecording,
   recordingScore,
@@ -56,6 +57,25 @@ describe('recordingWindow', () => {
       fromMs: START - 5000,
       toMs: START + 120_000 + 180_000,
     });
+  });
+});
+
+describe('inRecordingWindow', () => {
+  const span = { fromMs: 1000, toMs: 2000 };
+
+  it('takes a file added during the window', () => {
+    expect(inRecordingWindow({ addedAtMs: 1500 }, span)).toBe(true);
+  });
+
+  it('takes a file indexed late when the recorder finished writing it in the window', () => {
+    expect(inRecordingWindow({ addedAtMs: 90_000, modifiedAtMs: 1999 }, span)).toBe(true);
+  });
+
+  it('refuses a file from before or after the call, by both times', () => {
+    expect(inRecordingWindow({ addedAtMs: 999, modifiedAtMs: 999 }, span)).toBe(false);
+    expect(inRecordingWindow({ addedAtMs: 2001, modifiedAtMs: 5000 }, span)).toBe(false);
+    // An older app build reports no modified time at all.
+    expect(inRecordingWindow({ addedAtMs: 2001 }, span)).toBe(false);
   });
 });
 

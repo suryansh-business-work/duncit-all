@@ -3,6 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import { Linking } from 'react-native';
 
 import { syncDeviceCalls } from '@/services/call-sync';
+import { requestPermission } from '@/services/permissions';
 import { STORAGE_KEYS } from '@/services/secure-storage';
 import { renderWithTheme } from '@/test-utils';
 import { CallingCard } from '../CallingCard';
@@ -19,6 +20,13 @@ jest.mock('crm-telephony', () => ({
   },
 }));
 jest.mock('@/services/call-sync', () => ({ syncDeviceCalls: jest.fn() }));
+const mockAudio = { granted: true };
+jest.mock('@/services/permissions', () => ({
+  hasAudioAccess: jest.fn(async () => mockAudio.granted),
+  requestPermission: jest.fn(async () => {
+    mockAudio.granted = true;
+  }),
+}));
 
 /** Settings › Calling & recording: each gap with its fix, the two tests, and the sync health. */
 
@@ -45,6 +53,7 @@ const diagnostics = {
 beforeEach(() => {
   store.clear();
   jest.clearAllMocks();
+  mockAudio.granted = true;
   mockPhone.diagnostics.mockReturnValue(diagnostics);
   mockPhone.recordingFolders.mockResolvedValue([
     { relativePath: 'Recordings/Call/', count: 4, latestMs: 1 },
@@ -129,4 +138,14 @@ it('lists the calls and recordings that could not be sent, newest first', async 
   const lines = await screen.findAllByText(/(call not logged|recording not attached)/);
   expect(lines[0]).toHaveTextContent(/recording not attached \(HTTP_413\)/);
   expect(lines[1]).toHaveTextContent(/call not logged \(NOT_FOUND\)/);
+});
+
+it('asks for audio access when the phone hides its recordings, then shows the folder', async () => {
+  mockAudio.granted = false;
+  renderWithTheme(<CallingCard />);
+  expect(await screen.findByText('Audio access needed')).toBeOnTheScreen();
+  expect(screen.queryByText('Recordings/Call/')).toBeNull();
+  fireEvent.press(screen.getByTestId('calling-recordings-action'));
+  expect(requestPermission).toHaveBeenCalledWith('audio');
+  expect(await screen.findByText('Recordings/Call/')).toBeOnTheScreen();
 });

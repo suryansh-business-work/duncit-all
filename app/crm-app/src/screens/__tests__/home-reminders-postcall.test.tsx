@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 
 import { gqlRequest } from '@/services/graphql.client';
 import { syncDeviceCalls } from '@/services/call-sync';
-import { hasPhoneFeatures, readPermissions } from '@/services/permissions';
+import { hasPhoneFeatures, readPermissions, requestGroups } from '@/services/permissions';
 import { STORAGE_KEYS } from '@/services/secure-storage';
 import { renderWithTheme } from '@/test-utils';
 import { useAuthStore } from '@/stores/auth.store';
@@ -17,17 +17,19 @@ jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
 jest.mock('@/services/call-sync', () => ({ syncDeviceCalls: jest.fn() }));
 jest.mock('@/services/permissions', () => ({
+  ...jest.requireActual('@/services/permissions'),
   readPermissions: jest.fn(),
   hasPhoneFeatures: jest.fn(),
+  requestGroups: jest.fn().mockResolvedValue(undefined),
 }));
 const mockNav = {
-  // A tab screen also reads its tab navigator (useScrollTopOnTabEntry).
-  getState: () => undefined,
-  addListener: () => () => undefined,
   navigate: jest.fn(),
   goBack: jest.fn(),
   canGoBack: jest.fn(() => true),
   setOptions: jest.fn(),
+  // The tab screens listen for being switched to (scroll back to the top).
+  getState: jest.fn(() => ({ index: 0 })),
+  addListener: jest.fn(() => jest.fn()),
 };
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => mockNav,
@@ -95,15 +97,34 @@ describe('HomeScreen', () => {
     expect(screen.queryByTestId('home-due-count')).toBeNull();
   });
 
-  it('counts what is due and opens Settings from the set-up nudge', async () => {
-    (readPermissions as jest.Mock).mockResolvedValue({ phone: true, call: false });
+  it('counts what is due, and Set up asks for every missing permission in one prompt', async () => {
+    (readPermissions as jest.Mock)
+      .mockResolvedValueOnce({ phone: true, call: false, audio: true })
+      .mockResolvedValue({ phone: true, call: true, audio: true });
     request.mockResolvedValue({
       crmReminders: [reminder(), reminder({ id: 'r2', title: 'Later' })],
     });
     renderWithTheme(<HomeScreen />);
     expect(await screen.findByTestId('home-due-count')).toHaveTextContent('2');
     fireEvent.press(within(screen.getByTestId('home-setup')).getByText('Set up'));
-    expect(mockNav.navigate).toHaveBeenLastCalledWith('Settings');
+    // Recordings are on by default, so audio access is asked for with the rest.
+    expect(requestGroups).toHaveBeenCalledWith(['phone', 'call', 'notifications', 'audio']);
+    // Once granted, the nudge goes away on the re-check.
+    await waitFor(() => expect(screen.queryByTestId('home-setup')).toBeNull());
+    expect(mockNav.navigate).not.toHaveBeenCalledWith('Settings');
+  });
+
+  it('nudges while audio access is missing and recordings are on, not once they are off', async () => {
+    (readPermissions as jest.Mock).mockResolvedValue({ phone: true, call: true, audio: false });
+    request.mockResolvedValue({ crmReminders: [] });
+    const { unmount } = renderWithTheme(<HomeScreen />);
+    expect(await screen.findByTestId('home-setup')).toBeOnTheScreen();
+    unmount();
+    useFeaturesStore.setState({ recordings: false });
+    renderWithTheme(<HomeScreen />);
+    await screen.findByText('Nothing due today.');
+    expect(screen.queryByTestId('home-setup')).toBeNull();
+    useFeaturesStore.setState({ recordings: true });
   });
 
   it('on an iPhone never asks for the Android phone permissions or nudges about them', async () => {

@@ -37,10 +37,11 @@ export function permissionsFor(
 }
 
 export const RUNTIME_GROUPS = ['phone', 'call', 'notifications', 'audio'] as const;
+export type RuntimeGroup = (typeof RUNTIME_GROUPS)[number];
 
 export type PermissionState = Record<PermissionGroup, boolean>;
 
-const granted = async (group: (typeof RUNTIME_GROUPS)[number]) =>
+const granted = async (group: RuntimeGroup) =>
   (await Promise.all(permissionsFor(group).map((p) => PermissionsAndroid.check(p)))).every(Boolean);
 
 export async function readPermissions(): Promise<PermissionState> {
@@ -53,13 +54,38 @@ export async function readPermissions(): Promise<PermissionState> {
   return { phone, call, notifications, audio, overlay: CrmTelephony?.canDrawOverlays() ?? false };
 }
 
+/** Whether the app may see the phone's audio files — without it no call recording is ever found. */
+export const hasAudioAccess = (): Promise<boolean> => granted('audio');
+
+/**
+ * What the switched-on call features need from Android: the call log and
+ * calling, notifications for the post-call card, and the audio files while
+ * recordings are on (a recording the app cannot see is never uploaded).
+ */
+export const setupGroups = (recordings: boolean): RuntimeGroup[] =>
+  recordings ? [...RUNTIME_GROUPS] : ['phone', 'call', 'notifications'];
+
+/** The call features can work: phone and calling, and audio access while recordings are on. */
+export const isSetUp = (state: PermissionState, recordings: boolean): boolean =>
+  state.phone && state.call && (!recordings || state.audio);
+
+/**
+ * Ask for every permission of these groups in one system flow (Home's Set up).
+ * One the person refused for good can only be given in Settings, so that opens.
+ */
+export async function requestGroups(groups: readonly RuntimeGroup[]): Promise<void> {
+  const all = groups.flatMap((group) => permissionsFor(group));
+  if (all.length === 0) return;
+  const result = await PermissionsAndroid.requestMultiple(all);
+  if (Object.values(result).includes(PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN))
+    await Linking.openSettings();
+}
+
 /** Ask for one group. A permission the person refused for good can only be given in Settings. */
 export async function requestPermission(group: PermissionGroup): Promise<void> {
   if (group === 'overlay') {
     CrmTelephony?.openOverlaySettings();
     return;
   }
-  const result = await PermissionsAndroid.requestMultiple(permissionsFor(group));
-  if (Object.values(result).includes(PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN))
-    await Linking.openSettings();
+  await requestGroups([group]);
 }

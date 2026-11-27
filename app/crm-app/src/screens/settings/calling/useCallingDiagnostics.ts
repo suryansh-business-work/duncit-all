@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 import { CrmTelephony, type CallingDiagnostics, type RecordingFolder } from 'crm-telephony';
 
+import { hasAudioAccess } from '@/services/permissions';
 import { readQueue } from '@/services/recording-queue';
 import { readSyncStatus, type SyncStatus } from '@/services/sync-status';
 
@@ -13,17 +14,26 @@ export interface CallingHealth {
   folders: RecordingFolder[];
   status: SyncStatus;
   pendingRecordings: number;
+  /** Whether the app may see audio files (the recordings) at all. */
+  audioAccess: boolean;
 }
 
 /** Read everything the card shows; a phone without the native side reports nothing. */
 export async function readCallingHealth(now = Date.now()): Promise<CallingHealth> {
   const phone = CrmTelephony;
-  const [folders, status, queue] = await Promise.all([
+  const [folders, status, queue, audioAccess] = await Promise.all([
     phone ? phone.recordingFolders(now - RECORDING_LOOKBACK_MS) : Promise.resolve([]),
     readSyncStatus(),
     readQueue(),
+    phone ? hasAudioAccess() : Promise.resolve(false),
   ]);
-  return { phone: phone?.diagnostics() ?? null, folders, status, pendingRecordings: queue.length };
+  return {
+    phone: phone?.diagnostics() ?? null,
+    folders,
+    status,
+    pendingRecordings: queue.length,
+    audioAccess,
+  };
 }
 
 /**

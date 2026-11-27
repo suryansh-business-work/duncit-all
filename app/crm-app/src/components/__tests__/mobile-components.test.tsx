@@ -13,6 +13,7 @@ import { QuickAction } from '../mobile/QuickAction';
 import { SearchBar } from '../mobile/SearchBar';
 import { SkeletonRows } from '../mobile/Skeleton';
 import { StateView } from '../StateView';
+import { Toggle } from '../Toggle';
 import { haptics } from '@/services/haptics';
 
 beforeEach(() => jest.clearAllMocks());
@@ -228,5 +229,31 @@ describe('haptics', () => {
     );
     expect(Haptics.notificationAsync).toHaveBeenCalledWith(Haptics.NotificationFeedbackType.Error);
     expect(Haptics.impactAsync).toHaveBeenCalledWith(Haptics.ImpactFeedbackStyle.Medium);
+  });
+});
+
+describe('Toggle (the CRM switch)', () => {
+  it('flips with a tick and says whether it is on', () => {
+    const onChange = jest.fn();
+    const { rerender } = renderWithTheme(
+      <Toggle checked={false} onChange={onChange} label="Caller ID" testID="sw" />,
+    );
+    const sw = screen.getByTestId('sw');
+    expect(sw).not.toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Caller ID' })).toBeOnTheScreen();
+    fireEvent.press(sw);
+    expect(onChange).toHaveBeenCalledWith(true);
+    expect(Haptics.selectionAsync).toHaveBeenCalledTimes(1);
+    rerender(<Toggle checked onChange={onChange} label="Caller ID" testID="sw" />);
+    expect(screen.getByTestId('sw')).toBeChecked();
+    fireEvent.press(screen.getByTestId('sw'));
+    expect(onChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it('is marked disabled when it cannot be changed', () => {
+    renderWithTheme(
+      <Toggle checked onChange={jest.fn()} label="Recordings" disabled testID="sw" />,
+    );
+    expect(screen.getByTestId('sw')).toBeDisabled();
   });
 });

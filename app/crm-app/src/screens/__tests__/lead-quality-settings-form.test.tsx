@@ -118,7 +118,7 @@ describe('LeadQualityConfigForm', () => {
   it('drops the minimum score while a lead qualifies on its gates alone', () => {
     renderForm();
     expect(value('lead-quality-min-score')).toBe('61');
-    fireEvent(screen.getByTestId('lead-quality-gates-only'), 'onCheckedChange', true);
+    fireEvent.press(screen.getByTestId('lead-quality-gates-only'));
     expect(screen.queryByTestId('lead-quality-min-score')).toBeNull();
   });
 

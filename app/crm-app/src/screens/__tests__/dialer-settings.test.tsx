@@ -132,9 +132,7 @@ describe('SettingsScreen', () => {
 
   it('switches a call feature off', async () => {
     renderWithTheme(<SettingsScreen />);
-    await act(async () =>
-      fireEvent(screen.getByTestId('feature-caller-id'), 'onCheckedChange', false),
-    );
+    await act(async () => fireEvent.press(screen.getByTestId('feature-caller-id')));
     expect(useFeaturesStore.getState().callerId).toBe(false);
     expect(mockPhone.setFeatures).toHaveBeenLastCalledWith(false, true);
   });

@@ -1,6 +1,7 @@
 import { Text, XStack, YStack } from 'tamagui';
 import { fireAndForget, logs } from '@duncit/logs';
 
+import { ChatLayout } from '@/components/mobile/ChatLayout';
 import { useTranslation } from '@/hooks/useTranslation';
 import { AskAiActionCard } from './AskAiActionCard';
 import { useAskAiActions } from './AskAiActions';
@@ -20,7 +21,8 @@ const SCOPE = 'crm-app/AskAiTab';
  * Ask AI about this lead — the portal's drawer as a tab: a conversation
  * grounded in the lead's whole CRM history (what it read is listed), which
  * can draft emails and plan reminders for the agent to confirm, edit or
- * dismiss. Every lead kind has it.
+ * dismiss. Every lead kind has it. Laid out as a phone chat: only the
+ * conversation scrolls, the question box stays at the bottom with the keyboard.
  */
 export function AskAiTab({ kind, id, lead, onChanged }: Readonly<LeadTabProps>) {
   const { t } = useTranslation();
@@ -40,61 +42,62 @@ export function AskAiTab({ kind, id, lead, onChanged }: Readonly<LeadTabProps>) 
   const error = actions.error ?? thread.error;
 
   return (
-    <YStack gap="$3" testID="ask-ai-tab">
-      <XStack alignItems="center" gap="$2">
-        <YStack flex={1}>
-          <Text fontWeight="800" fontSize="$6" role="heading">
-            {t('crm.components.askAi')}
-          </Text>
-          <Text color="$muted" fontSize="$2" numberOfLines={1}>
+    <YStack flex={1} testID="ask-ai-tab">
+      <ChatLayout
+        composer={
+          // Questions wait for the saved thread, so a late load cannot replace a fresh answer.
+          <AskAiComposer busy={thread.asking || thread.loadingThread} onSend={thread.ask} />
+        }
+        testID="ask-ai-chat"
+      >
+        <XStack alignItems="center" gap="$2">
+          <Text flex={1} color="$muted" fontSize="$2" numberOfLines={1}>
             {t('crm.askAi.about', { vars: { name: lead.name } })}
           </Text>
-        </YStack>
-        <TabIconButton
-          icon="restart-alt"
-          label={t('crm.askAi.newConversation')}
-          onPress={() => run(thread.clear(), 'clear')}
-          disabled={thread.clearing || thread.messages.length === 0}
-          testID="crm-ask-ai-clear"
+          <TabIconButton
+            icon="restart-alt"
+            label={t('crm.askAi.newConversation')}
+            onPress={() => run(thread.clear(), 'clear')}
+            disabled={thread.clearing || thread.messages.length === 0}
+            testID="crm-ask-ai-clear"
+          />
+        </XStack>
+        <AskAiContextPanel context={thread.context} loading={thread.loadingThread} />
+        <AskAiMessages
+          messages={thread.messages}
+          pending={thread.pending}
+          ready={!thread.loadingThread}
+          onSuggestion={(text) => run(thread.ask(text), 'ask')}
+          renderActions={(m) =>
+            actions
+              .refsOf(m)
+              .map((ref) => (
+                <AskAiActionCard
+                  key={`${ref.messageId}-${ref.index}`}
+                  action={ref.action}
+                  busy={actions.isBusy(ref)}
+                  onReviewEmail={() => actions.openEmail(ref)}
+                  onCreateReminder={() => run(actions.createReminder(ref), 'createReminder')}
+                  onEditReminder={() => actions.openReminder(ref)}
+                  onApplyUpdate={() => run(actions.applyUpdate(ref), 'applyUpdate')}
+                  onDismiss={() => run(actions.dismiss(ref), 'dismiss')}
+                />
+              ))
+          }
         />
-      </XStack>
-      <AskAiContextPanel context={thread.context} loading={thread.loadingThread} />
-      <AskAiMessages
-        messages={thread.messages}
-        pending={thread.pending}
-        ready={!thread.loadingThread}
-        onSuggestion={(text) => run(thread.ask(text), 'ask')}
-        renderActions={(m) =>
-          actions
-            .refsOf(m)
-            .map((ref) => (
-              <AskAiActionCard
-                key={`${ref.messageId}-${ref.index}`}
-                action={ref.action}
-                busy={actions.isBusy(ref)}
-                onReviewEmail={() => actions.openEmail(ref)}
-                onCreateReminder={() => run(actions.createReminder(ref), 'createReminder')}
-                onEditReminder={() => actions.openReminder(ref)}
-                onApplyUpdate={() => run(actions.applyUpdate(ref), 'applyUpdate')}
-                onDismiss={() => run(actions.dismiss(ref), 'dismiss')}
-              />
-            ))
-        }
-      />
-      {error ? (
-        <TabAlert
-          tone="danger"
-          onClose={() => {
-            actions.clearError();
-            thread.clearError();
-          }}
-          testID="crm-ask-ai-error"
-        >
-          {error}
-        </TabAlert>
-      ) : null}
-      {/* Questions wait for the saved thread, so a late load cannot replace a fresh answer. */}
-      <AskAiComposer busy={thread.asking || thread.loadingThread} onSend={thread.ask} />
+        {error ? (
+          <TabAlert
+            tone="danger"
+            onClose={() => {
+              actions.clearError();
+              thread.clearError();
+            }}
+            testID="crm-ask-ai-error"
+          >
+            {error}
+          </TabAlert>
+        ) : null}
+      </ChatLayout>
       <AskAiEmailSheet
         kind={kind}
         id={id}

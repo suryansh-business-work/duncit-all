@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useController, type Control, type FieldPath, type FieldValues } from 'react-hook-form';
 import { Input, Label, Text, TextArea, XStack, YStack, useTheme } from 'tamagui';
@@ -65,7 +65,9 @@ export function TextField<T extends FieldValues>({
 }: Readonly<Props<T>>) {
   const theme = useTheme();
   const { field, fieldState } = useController({ control, name });
-  const id = `field-${name}`;
+  // Unique per field on screen: two forms with a field of the same name (one per
+  // AI prompt, say) gave two inputs one id, which React Native warns about.
+  const id = `field-${name}-${useId()}`;
   const error = fieldState.error?.message;
   const pill = variant === 'pill';
   const shared = {

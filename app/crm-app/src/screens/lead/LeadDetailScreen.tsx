@@ -61,6 +61,33 @@ function LeadDetail({ kind, id }: Readonly<{ kind: LeadKind; id: string }>) {
   const props = { kind, id, lead, onChanged: reload };
   const Pane = leadPaneFor(kind, tab);
   const active = Pane ? tab : 'overview';
+  // The header already carries the lead's name; this line says what kind it is.
+  const kindLine = (
+    <Text color="$muted" paddingHorizontal="$4" paddingTop="$3" testID="lead-kind">
+      {t(`crmApp.kind.${kind}`)}
+    </Text>
+  );
+  const tabBar = (
+    <YStack backgroundColor="$background" paddingHorizontal="$4">
+      <TabBar
+        tabs={leadTabsFor(kind).map((key) => ({ key, label: leadTabLabel(key, t, lead) }))}
+        active={active}
+        onChange={setTab}
+        testID="lead-tab"
+      />
+    </YStack>
+  );
+  // Ask AI is a chat: the header stays, the conversation scrolls on its own and
+  // its question box is pinned at the bottom with the keyboard (ChatLayout).
+  if (Pane && active === 'ask-ai') {
+    return (
+      <YStack flex={1} backgroundColor="$background">
+        {kindLine}
+        {tabBar}
+        <Pane {...props} />
+      </YStack>
+    );
+  }
   return (
     <YStack flex={1} backgroundColor="$background">
       <ScrollView
@@ -68,18 +95,8 @@ function LeadDetail({ kind, id }: Readonly<{ kind: LeadKind; id: string }>) {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingBottom: MOBILE.gutter }}
       >
-        {/* The header already carries the lead's name; this line says what kind it is. */}
-        <Text color="$muted" paddingHorizontal="$4" paddingTop="$3" testID="lead-kind">
-          {t(`crmApp.kind.${kind}`)}
-        </Text>
-        <YStack backgroundColor="$background" paddingHorizontal="$4">
-          <TabBar
-            tabs={leadTabsFor(kind).map((key) => ({ key, label: leadTabLabel(key, t, lead) }))}
-            active={active}
-            onChange={setTab}
-            testID="lead-tab"
-          />
-        </YStack>
+        {kindLine}
+        {tabBar}
         <YStack padding="$4" gap="$3">
           {Pane ? (
             <Pane {...props} />
@@ -88,18 +105,16 @@ function LeadDetail({ kind, id }: Readonly<{ kind: LeadKind; id: string }>) {
           )}
         </YStack>
       </ScrollView>
-      {/* Ask AI has its own composer at the bottom; every other tab keeps the actions under the thumb. */}
-      {active === 'ask-ai' ? null : (
-        <LeadContactActions
-          kind={kind}
-          id={id}
-          name={lead.name}
-          lead={lead}
-          leadValues={leadValues}
-          onAddNote={() => navigation.navigate('AddNote', { kind, id, name: lead.name })}
-          onAddReminder={() => navigation.navigate('AddReminder', { kind, id, name: lead.name })}
-        />
-      )}
+      {/* Every tab but Ask AI (its composer sits there) keeps the actions under the thumb. */}
+      <LeadContactActions
+        kind={kind}
+        id={id}
+        name={lead.name}
+        lead={lead}
+        leadValues={leadValues}
+        onAddNote={() => navigation.navigate('AddNote', { kind, id, name: lead.name })}
+        onAddReminder={() => navigation.navigate('AddReminder', { kind, id, name: lead.name })}
+      />
     </YStack>
   );
 }

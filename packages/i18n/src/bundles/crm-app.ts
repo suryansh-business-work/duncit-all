@@ -13,7 +13,25 @@ import type { NestedCatalogue } from '../catalogue';
  */
 export const CRM_APP_BUNDLE: NestedCatalogue = {
   crmApp: {
-    tabs: { home: 'Home', leads: 'Leads', dialer: 'Dialer', reminders: 'Reminders', settings: 'Settings' },
+    tabs: {
+      home: 'Home',
+      leads: 'Leads',
+      dialer: 'Dialer',
+      reminders: 'Reminders',
+      more: 'More',
+      // The app settings screen's title, opened from More (no longer a tab).
+      settings: 'Settings',
+    },
+    // The phone's own words for its controls: search, filters, quick actions and row menus.
+    mobile: {
+      clearSearch: 'Clear search',
+      leadKind: 'Lead type',
+      moreActionsFor: 'More actions for {name}',
+      openLead: 'Open lead',
+      note: 'Note',
+      followUp: 'Follow-up',
+      findLead: 'Find lead',
+    },
     common: {
       loading: 'Loading…',
       loadFailed: 'This could not be loaded.',
@@ -94,9 +112,11 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
       score: 'Score {score} · {label}',
       category: 'Category',
     },
-    menu: {
-      open: 'Open menu',
-      close: 'Close menu',
+    // The More tab: every other CRM page, the app's settings and sign-out.
+    more: {
+      app: 'App',
+      settingsHint: 'Calls, caller ID, permissions and sync',
+      signOutConfirm: 'You will need your email and password to sign in again.',
     },
     otp: {
       or: 'or',

@@ -88,6 +88,18 @@ describe('ScreenScrollProvider', () => {
   });
 });
 
+/**
+ * The jest ScrollView mock keeps ONE `scrollTo` mock on its prototype for every
+ * instance, and `jest.spyOn` hands that same mock back, so calls an earlier test
+ * made are cleared before each assertion.
+ */
+function spyScrollTo(view: RNScrollView | null) {
+  if (!view) throw new Error('the scroll view did not mount');
+  const scrollTo = jest.spyOn(view, 'scrollTo').mockImplementation(() => undefined);
+  scrollTo.mockClear();
+  return scrollTo;
+}
+
 describe('RefreshScrollView in a screen', () => {
   it('registers a vertical scroll view and still hands the caller its ref', () => {
     const ref = createRef<RNScrollView>();
@@ -97,9 +109,7 @@ describe('RefreshScrollView in a screen', () => {
       </RefreshScrollView>,
     );
     expect(ref.current).not.toBeNull();
-    const scrollTo = jest
-      .spyOn(ref.current as RNScrollView, 'scrollTo')
-      .mockImplementation(() => undefined);
+    const scrollTo = spyScrollTo(ref.current);
 
     screenScroll.scrollToTop();
     expect(scrollTo).toHaveBeenCalledWith({ x: 0, y: 0, animated: false });
@@ -112,9 +122,7 @@ describe('RefreshScrollView in a screen', () => {
         <Text>Card</Text>
       </RefreshScrollView>,
     );
-    const scrollTo = jest
-      .spyOn(ref.current as RNScrollView, 'scrollTo')
-      .mockImplementation(() => undefined);
+    const scrollTo = spyScrollTo(ref.current);
 
     screenScroll.scrollToTop();
     expect(scrollTo).not.toHaveBeenCalled();
@@ -123,9 +131,7 @@ describe('RefreshScrollView in a screen', () => {
   it('drops out of the registry when it unmounts', () => {
     const ref = createRef<RNScrollView>();
     const { screenScroll, rerender } = renderScreen(<RefreshScrollView ref={ref} />);
-    const scrollTo = jest
-      .spyOn(ref.current as RNScrollView, 'scrollTo')
-      .mockImplementation(() => undefined);
+    const scrollTo = spyScrollTo(ref.current);
 
     rerender(
       <ScreenScrollProvider>

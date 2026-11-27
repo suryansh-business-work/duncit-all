@@ -114,8 +114,38 @@ describe('LeadListScreen', () => {
     renderWithTheme(<LeadListScreen />);
     fireEvent.press(await screen.findByText('Smash Arena', {}, WAIT));
     expect(mockNav.navigate).toHaveBeenCalledWith('LeadDetail', { kind: 'VENUE_LEAD', id: 'v1' });
-    fireEvent.press(screen.getByTestId('lead-list-edit-v1'));
+    fireEvent.press(screen.getByTestId('lead-list-more-v1'));
+    fireEvent.press(screen.getByTestId('lead-list-actions-edit'));
     expect(mockNav.navigate).toHaveBeenCalledWith('LeadEditor', { kind: 'VENUE_LEAD', id: 'v1' });
+    // A long press opens the same sheet: log a note or schedule a follow-up from the list.
+    fireEvent(screen.getByTestId('lead-list-row-v1'), 'onLongPress');
+    fireEvent.press(screen.getByTestId('lead-list-actions-note'));
+    expect(mockNav.navigate).toHaveBeenCalledWith('AddNote', {
+      kind: 'VENUE_LEAD',
+      id: 'v1',
+      name: 'Smash Arena',
+    });
+    fireEvent.press(screen.getByTestId('lead-list-more-v1'));
+    fireEvent.press(screen.getByTestId('lead-list-actions-follow-up'));
+    expect(mockNav.navigate).toHaveBeenCalledWith('AddReminder', {
+      kind: 'VENUE_LEAD',
+      id: 'v1',
+      name: 'Smash Arena',
+    });
+    fireEvent.press(screen.getByTestId('lead-list-more-v1'));
+    fireEvent.press(screen.getByTestId('lead-list-actions-open'));
+    expect(mockNav.navigate).toHaveBeenLastCalledWith('LeadDetail', {
+      kind: 'VENUE_LEAD',
+      id: 'v1',
+    });
+    fireEvent.press(screen.getByTestId('lead-list-call-v1'));
+    expect(mockNav.navigate).toHaveBeenLastCalledWith('Call', {
+      kind: 'VENUE_LEAD',
+      id: 'v1',
+      to: '9811000001',
+      leadName: 'Smash Arena',
+      contactName: 'Smash Arena',
+    });
     fireEvent.press(screen.getByTestId('lead-list-new'));
     expect(mockNav.navigate).toHaveBeenCalledWith('LeadEditor', { kind: 'VENUE_LEAD' });
     fireEvent.press(screen.getByTestId('lead-list-services'));
@@ -144,7 +174,8 @@ describe('LeadListScreen', () => {
       ]),
     );
     renderWithTheme(<LeadListScreen />);
-    fireEvent.press(await screen.findByTestId('lead-list-delete-v1', {}, WAIT));
+    fireEvent.press(await screen.findByTestId('lead-list-more-v1', {}, WAIT));
+    fireEvent.press(screen.getByTestId('lead-list-actions-delete'));
     expect(screen.getByText('Delete "Smash Arena"? This cannot be undone.')).toBeOnTheScreen();
     await act(async () => fireEvent.press(screen.getByTestId('lead-list-delete-dialog-confirm')));
     expect(screen.getByTestId('lead-list-delete-dialog-error')).toHaveTextContent('Not allowed');
@@ -152,7 +183,8 @@ describe('LeadListScreen', () => {
     await act(async () => fireEvent.press(screen.getByTestId('lead-list-delete-dialog-confirm')));
     expect(request).toHaveBeenCalledWith(docs.CrmAppDeleteVenueLeadDocument, { id: 'v1' });
     expect(screen.getByTestId('lead-list-status')).toHaveTextContent('Venue lead deleted');
-    fireEvent.press(screen.getByTestId('lead-list-delete-v1'));
+    fireEvent.press(screen.getByTestId('lead-list-more-v1'));
+    fireEvent.press(screen.getByTestId('lead-list-actions-delete'));
     fireEvent.press(screen.getByTestId('lead-list-delete-dialog-cancel'));
     expect(screen.queryByTestId('lead-list-delete-dialog-error')).toBeNull();
   });

@@ -1,46 +1,18 @@
-import { XStack, YStack } from 'tamagui';
-
-import { DuncitButton } from '@/components/DuncitButton';
-import { useTranslation } from '@/hooks/useTranslation';
 import { LeadOverviewDetails } from './tabs/LeadOverviewDetails';
 import type { LeadTabProps } from './tabs/parts/tabTypes';
 
 interface Props extends LeadTabProps {
   /** Opens another tab of the lead page (the score ring opens Quality). */
   onOpenTab: (tab: string) => void;
-  onAddNote: () => void;
-  onAddReminder: () => void;
+  /** The lead's template values, for the bottom bar's Email action. */
+  onLeadValues: (values: Readonly<Record<string, string>>) => void;
 }
 
 /**
  * The lead's Overview tab: the portal's hero, stat tiles, overview cards and
- * Lead tracking card, then the quick Add note (a manual log) and Add reminder.
+ * Lead tracking card. Note and Follow-up sit in the page's bottom bar now, so
+ * they are under the thumb on every tab, not only at the end of this one.
  */
-export function LeadOverviewTab({ onAddNote, onAddReminder, ...tab }: Readonly<Props>) {
-  const { t } = useTranslation();
-  return (
-    <YStack gap="$3">
-      <LeadOverviewDetails {...tab} />
-      <XStack gap="$3">
-        <YStack flex={1}>
-          <DuncitButton
-            label={t('crmApp.lead.addNote')}
-            onPress={onAddNote}
-            variant="outline"
-            fullWidth
-            testID="lead-add-note"
-          />
-        </YStack>
-        <YStack flex={1}>
-          <DuncitButton
-            label={t('crmApp.lead.addReminder')}
-            onPress={onAddReminder}
-            variant="outline"
-            fullWidth
-            testID="lead-add-reminder"
-          />
-        </YStack>
-      </XStack>
-    </YStack>
-  );
+export function LeadOverviewTab(props: Readonly<Props>) {
+  return <LeadOverviewDetails {...props} />;
 }

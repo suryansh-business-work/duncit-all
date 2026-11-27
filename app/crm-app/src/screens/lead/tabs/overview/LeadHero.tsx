@@ -4,7 +4,6 @@ import { XStack, YStack } from 'tamagui';
 import { RADII } from '@/constants/design';
 import type { LeadKind } from '@/features/leads/leadKinds';
 import { useTranslation } from '@/hooks/useTranslation';
-import { LeadContactActions } from '../contacts/LeadContactActions';
 import { Chip, PriorityChip, StatusChip } from '../parts/Chips';
 import { LeadQualityRing } from '../quality/LeadQualityRing';
 import { MatchedUserChip } from './MatchedUser';
@@ -13,10 +12,8 @@ import type { CardLead, HeroModel } from './overviewTypes';
 interface Props {
   kind: LeadKind;
   id: string;
-  name: string;
   lead: CardLead;
   hero: HeroModel;
-  leadValues?: Readonly<Record<string, string>>;
   onOpenQuality?: () => void;
 }
 
@@ -24,18 +21,10 @@ const PHOTO_SIZE = 56;
 
 /**
  * The portal's hero card under the lead's name: the logo or photo, status,
- * priority, city and the kind's own chips, the tags, the quick contact
- * actions and the quality score ring.
+ * priority, city and the kind's own chips, the tags and the quality score
+ * ring. The contact actions live in the page's bottom bar, on every tab.
  */
-export function LeadHero({
-  kind,
-  id,
-  name,
-  lead,
-  hero,
-  leadValues,
-  onOpenQuality,
-}: Readonly<Props>) {
+export function LeadHero({ kind, id, lead, hero, onOpenQuality }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
     <YStack gap="$3" testID="lead-hero">
@@ -75,7 +64,6 @@ export function LeadHero({
           ))}
         </XStack>
       ) : null}
-      <LeadContactActions kind={kind} id={id} name={name} lead={lead} leadValues={leadValues} />
     </YStack>
   );
 }

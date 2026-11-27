@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import type { ReactElement } from 'react';
 
 import { gqlRequest } from '@/services/graphql.client';
 import { renderWithTheme } from '@/test-utils';
@@ -10,6 +11,7 @@ jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
 // The hero and overview cards have their own tests; here the page around them is under test.
 jest.mock('../lead/tabs/LeadOverviewDetails', () => ({ LeadOverviewDetails: () => null }));
+jest.mock('../lead/tabs/AskAiTab', () => ({ AskAiTab: () => null }));
 const mockNav = {
   navigate: jest.fn(),
   goBack: jest.fn(),
@@ -86,7 +88,9 @@ describe('LeadDetailScreen', () => {
     request.mockResolvedValue({ venue });
     renderWithTheme(<LeadDetailScreen />);
     expect(await screen.findByText('Contacts (1)')).toBeOnTheScreen();
-    expect(mockNav.setOptions).toHaveBeenCalledWith({ title: 'Smash Arena' });
+    expect(mockNav.setOptions).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Smash Arena' }),
+    );
     expect(request.mock.calls[0][1]).toMatchObject({ id: 'v1', venue: true, host: false });
     const tabs = screen.getAllByTestId(/^lead-tab-/).map((tab) => tab.props.testID);
     expect(tabs).toEqual(
@@ -131,7 +135,7 @@ describe('LeadDetailScreen', () => {
     expect(screen.queryByText('Website')).toBeNull();
   });
 
-  it('opens Add note and Add reminder for this lead from Overview', async () => {
+  it('opens Note and Follow-up for this lead from the bottom bar, and Edit from the header', async () => {
     request.mockResolvedValue({ venue });
     renderWithTheme(<LeadDetailScreen />);
     fireEvent.press(await screen.findByTestId('lead-add-note'));
@@ -146,8 +150,39 @@ describe('LeadDetailScreen', () => {
       id: 'v1',
       name: 'Smash Arena',
     });
+    // Edit is the header's button: the page hands it to the navigator with the lead's name.
+    const options = mockNav.setOptions.mock.calls.at(-1)?.[0] as {
+      title: string;
+      headerRight: () => ReactElement;
+    };
+    expect(options.title).toBe('Smash Arena');
+    renderWithTheme(options.headerRight());
     fireEvent.press(screen.getByTestId('lead-edit'));
     expect(mockNav.navigate).toHaveBeenCalledWith('LeadEditor', { kind: 'VENUE_LEAD', id: 'v1' });
+  });
+
+  it('keeps Call, WhatsApp and Email for the primary contact on every tab, off without the detail', async () => {
+    request.mockResolvedValue({ venue });
+    renderWithTheme(<LeadDetailScreen />);
+    fireEvent.press(await screen.findByTestId('lead-tab-contacts'));
+    fireEvent.press(screen.getByTestId('lead-action-call'));
+    expect(mockNav.navigate).toHaveBeenCalledWith('Call', {
+      kind: 'VENUE_LEAD',
+      id: 'v1',
+      to: '9811000001',
+      leadName: 'Smash Arena',
+      contactName: 'Smash Arena',
+    });
+    expect(screen.getByTestId('lead-action-email')).toBeEnabled();
+    // The contact has no WhatsApp number, but WhatsApp falls back to the mobile.
+    expect(screen.getByTestId('lead-action-whatsapp')).toBeEnabled();
+  });
+
+  it('hides the bottom bar on Ask AI, whose composer sits at the bottom', async () => {
+    request.mockResolvedValue({ venue });
+    renderWithTheme(<LeadDetailScreen />);
+    fireEvent.press(await screen.findByTestId('lead-tab-ask-ai'));
+    expect(screen.queryByTestId('lead-contact-actions')).toBeNull();
   });
 
   it('shows calls with their AI summary and transcript on the Communications tab', async () => {
@@ -157,7 +192,8 @@ describe('LeadDetailScreen', () => {
     renderWithTheme(<LeadDetailScreen />);
     fireEvent.press(await screen.findByTestId('lead-tab-communications'));
     expect(await screen.findByText('Incoming call')).toBeOnTheScreen();
-    expect(screen.queryByTestId('lead-add-note')).toBeNull();
+    // The bar stays on this tab too.
+    expect(screen.getByTestId('lead-add-note')).toBeOnTheScreen();
     fireEvent.press(screen.getByText('Incoming call'));
     expect(screen.getByText('Wants Sunday slots')).toBeOnTheScreen();
     expect(screen.getByText('Budget 5k')).toBeOnTheScreen();

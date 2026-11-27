@@ -160,7 +160,7 @@ describe('LeadsScreen', () => {
     mockRouteParams = {};
   });
 
-  it('opens on the kind the side menu chose', async () => {
+  it('opens on the kind a lead page link chose', async () => {
     mockRouteParams = { kind: 'HOST_LEAD' };
     request.mockResolvedValue({ searchCrmLeads: { total: 0, page: 1, page_size: 25, rows: [] } });
     renderWithTheme(<LeadsScreen />);
@@ -206,6 +206,39 @@ describe('LeadsScreen', () => {
     );
     fireEvent.press(screen.getByTestId('lead-row-c1'));
     expect(mockNav.navigate).toHaveBeenCalledWith('LeadDetail', { kind: 'CREATOR_LEAD', id: 'c1' });
+    // No number, no call button.
+    expect(screen.queryByTestId('lead-row-call-c1')).toBeNull();
+  });
+
+  it('calls a lead straight from its row on the CRM call line', async () => {
+    request.mockResolvedValue({
+      searchCrmLeads: {
+        total: 1,
+        page: 1,
+        page_size: 25,
+        rows: [
+          {
+            entity_type: 'VENUE_LEAD',
+            id: 'v1',
+            name: 'Smash Arena',
+            city: null,
+            lead_status: null,
+            phones: ['', '+919811000001'],
+          },
+        ],
+      },
+    });
+    renderWithTheme(<LeadsScreen />);
+    fireEvent.press(await screen.findByTestId('lead-row-call-v1', {}, { timeout: 2000 }));
+    expect(mockNav.navigate).toHaveBeenCalledWith('Call', {
+      kind: 'VENUE_LEAD',
+      id: 'v1',
+      to: '+919811000001',
+      leadName: 'Smash Arena',
+      contactName: 'Smash Arena',
+    });
+    // Only a kind narrows to its full list, so there is no list link on All.
+    expect(screen.queryByTestId('leads-open-list')).toBeNull();
   });
 
   it('shows the error with a retry, and the empty state', async () => {

@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Linking } from 'react-native';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import { XStack, YStack, useTheme } from 'tamagui';
+import { YStack } from 'tamagui';
 import { fireAndForget, logs } from '@duncit/logs';
 import { crmWhatsappDigits } from '@duncit/utils';
 
-import { DuncitButton } from '@/components/DuncitButton';
+import { ActionBar } from '@/components/mobile/ActionBar';
+import { QuickAction } from '@/components/mobile/QuickAction';
 import type { LeadKind } from '@/features/leads/leadKinds';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AppStackParamList } from '@/navigation/types';
@@ -22,16 +22,26 @@ interface Props {
   lead: CardLead;
   /** The lead's values by slug (venue and host leads), for the composer's templates. */
   leadValues?: Readonly<Record<string, string>>;
+  onAddNote: () => void;
+  onAddReminder: () => void;
 }
 
 /**
- * The quick actions under the lead's name, for its primary contact: Call
- * (the app's call screen on the CRM call line), WhatsApp and Email (the
- * composer). Each is off when the contact has no such detail.
+ * The lead page's bar pinned under the thumb, on every tab: Call (the app's
+ * call screen on the CRM call line), WhatsApp, Email (the composer) for the
+ * primary contact, then Note (a manual log) and Follow-up (a reminder). A
+ * contact action is off when the contact has no such detail.
  */
-export function LeadContactActions({ kind, id, name, lead, leadValues }: Readonly<Props>) {
+export function LeadContactActions({
+  kind,
+  id,
+  name,
+  lead,
+  leadValues,
+  onAddNote,
+  onAddReminder,
+}: Readonly<Props>) {
   const { t } = useTranslation();
-  const theme = useTheme();
   const navigation = useNavigation<NavigationProp<AppStackParamList>>();
   const [composing, setComposing] = useState<ComposeTarget | null>(null);
   const [result, setResult] = useState<{ message: string; ok: boolean } | null>(null);
@@ -58,48 +68,55 @@ export function LeadContactActions({ kind, id, name, lead, leadValues }: Readonl
     setResult(null);
     setComposing({ displayName: name, email });
   };
-  const icon = (glyph: 'phone' | 'email') => (
-    <MaterialIcons name={glyph} size={16} color={theme.accentText?.val} />
-  );
 
   return (
-    <YStack gap="$2">
-      <XStack gap="$2" flexWrap="wrap" testID="lead-contact-actions">
-        <DuncitButton
+    <YStack>
+      {result ? (
+        <YStack paddingHorizontal="$4" paddingBottom="$2">
+          <ResultNote result={result} />
+        </YStack>
+      ) : null}
+      <ActionBar testID="lead-contact-actions">
+        <QuickAction
+          icon={{ name: 'phone' }}
           label={t('crm.leadDetail.call')}
           accessibilityLabel={
             mobile ? t('crm.leadDetail.callNumber', { vars: { number: mobile } }) : undefined
           }
           onPress={call}
-          variant="outline"
-          size="sm"
           disabled={!mobile}
-          icon={icon('phone')}
           testID="lead-action-call"
         />
-        <DuncitButton
+        <QuickAction
+          icon={{ set: 'community', name: 'whatsapp' }}
           label={t('crm.leadDetail.whatsapp')}
           onPress={openWhatsapp}
-          variant="outline"
-          size="sm"
           disabled={!waDigits}
-          icon={<MaterialCommunityIcons name="whatsapp" size={16} color={theme.accentText?.val} />}
           testID="lead-action-whatsapp"
         />
-        <DuncitButton
+        <QuickAction
+          icon={{ name: 'email' }}
           label={t('shell.common.email')}
           accessibilityLabel={
             email ? t('crm.leadDetail.emailAddress', { vars: { email } }) : undefined
           }
           onPress={compose}
-          variant="outline"
-          size="sm"
           disabled={!email}
-          icon={icon('email')}
           testID="lead-action-email"
         />
-      </XStack>
-      <ResultNote result={result} />
+        <QuickAction
+          icon={{ name: 'note-add' }}
+          label={t('crmApp.mobile.note')}
+          onPress={onAddNote}
+          testID="lead-add-note"
+        />
+        <QuickAction
+          icon={{ name: 'alarm-add' }}
+          label={t('crmApp.mobile.followUp')}
+          onPress={onAddReminder}
+          testID="lead-add-reminder"
+        />
+      </ActionBar>
       <EmailComposeModal
         kind={kind}
         id={id}

@@ -1,17 +1,15 @@
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 import type { CrmCalendarEntityFilter, CrmCalendarStatusFilter } from '@duncit/utils';
 
 import { FilterChips } from '@/components/mobile/FilterChips';
-import { IconButton } from '@/components/mobile/IconButton';
 import { MOBILE } from '@/constants/design';
 import {
   CALENDAR_VIEWS,
   VIEW_LABEL_KEY,
-  stepCursor,
-  viewTitle,
   type CalendarView,
 } from '@/features/reminders/calendarView';
 import { useTranslation } from '@/hooks/useTranslation';
+import { CalendarPeriodNav } from './CalendarPeriodNav';
 
 interface Props {
   view: CalendarView;
@@ -36,7 +34,6 @@ const EDGE = { marginHorizontal: -MOBILE.gutter } as const;
 export function RemindersHeader(props: Readonly<Props>) {
   const { view, cursor } = props;
   const { t } = useTranslation();
-  const upcoming = view === 'upcoming';
   return (
     <YStack gap="$2" marginBottom="$3">
       <YStack {...EDGE}>
@@ -48,50 +45,7 @@ export function RemindersHeader(props: Readonly<Props>) {
           testID="calendar-view"
         />
       </YStack>
-      <XStack alignItems="center" gap="$1" minHeight={MOBILE.touch}>
-        {upcoming ? null : (
-          <IconButton
-            icon={{ name: 'chevron-left' }}
-            label={t('crm.a11y.previousPeriod')}
-            onPress={() => props.onCursor(stepCursor(view, cursor, -1))}
-            testID="calendar-previous"
-          />
-        )}
-        <Text
-          flex={1}
-          fontWeight="700"
-          fontSize="$5"
-          textAlign={upcoming ? 'left' : 'center'}
-          role="heading"
-          aria-live="polite"
-          testID="calendar-title"
-        >
-          {viewTitle(view, cursor, t)}
-        </Text>
-        {upcoming ? null : (
-          <>
-            <XStack
-              role="button"
-              aria-label={t('crm.components.today')}
-              onPress={() => props.onCursor(new Date())}
-              minHeight={MOBILE.touch}
-              paddingHorizontal="$2"
-              alignItems="center"
-              testID="calendar-today"
-            >
-              <Text color="$accentText" fontWeight="600">
-                {t('crm.components.today')}
-              </Text>
-            </XStack>
-            <IconButton
-              icon={{ name: 'chevron-right' }}
-              label={t('crm.a11y.nextPeriod')}
-              onPress={() => props.onCursor(stepCursor(view, cursor, 1))}
-              testID="calendar-next"
-            />
-          </>
-        )}
-      </XStack>
+      <CalendarPeriodNav view={view} cursor={cursor} onCursor={props.onCursor} />
       <YStack {...EDGE} gap="$2">
         <FilterChips
           label={t('shell.common.type')}

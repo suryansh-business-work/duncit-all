@@ -1,17 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { FlatList } from 'react-native';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
-import { format, isSameDay, isSameMonth, startOfMonth } from 'date-fns';
+import { format } from 'date-fns';
 import { YStack, useTheme } from 'tamagui';
 
 import { Fab } from '@/components/mobile/Fab';
 import { StateView } from '@/components/StateView';
 import { MOBILE } from '@/constants/design';
-import {
-  agendaDays,
-  type CalendarEvent,
-  type CalendarView,
-} from '@/features/reminders/calendarView';
+import type { CalendarEvent } from '@/features/reminders/calendarView';
+import { useCalendarAgenda } from '@/features/reminders/useCalendarAgenda';
 import { useRemindersCalendar } from '@/features/reminders/useRemindersCalendar';
 import { isLeadKind } from '@/features/leads/leadKinds';
 import { useScrollTopOnTabEntry } from '@/hooks/useScrollTopOnTabEntry';
@@ -37,33 +34,10 @@ export function RemindersScreen() {
   const navigation = useNavigation<NavigationProp<AppStackParamList>>();
   const calendar = useRemindersCalendar(t);
   const { view, cursor, events } = calendar;
-  const [selectedDay, setSelectedDay] = useState(() => new Date());
+  const agenda = useCalendarAgenda(calendar);
+  const { groups, selectedDay, setSelectedDay, changeView, changeCursor } = agenda;
   const [selected, setSelected] = useState<Event | null>(null);
-
-  // The month view lists the picked day; every other view lists its days.
-  const groups = useMemo(
-    () =>
-      view === 'month'
-        ? agendaDays(
-            events.filter((e) => isSameDay(e.date, selectedDay)),
-            'day',
-            selectedDay,
-          )
-        : agendaDays(events, view, cursor),
-    [events, view, cursor, selectedDay],
-  );
   const listRef = useScrollTopOnTabEntry<FlatList<(typeof groups)[number]>>();
-
-  const changeView = (next: CalendarView) => {
-    calendar.setView(next);
-    if (next === 'month') setSelectedDay(cursor);
-  };
-  const changeCursor = (next: Date) => {
-    calendar.setCursor(next);
-    // In the month view, paging keeps a day of the shown month picked.
-    if (view === 'month' && !isSameMonth(next, selectedDay))
-      setSelectedDay(isSameMonth(next, new Date()) ? new Date() : startOfMonth(next));
-  };
   const openLead = (event: Event) => {
     const kind = event.entity;
     const id = event.leadId;

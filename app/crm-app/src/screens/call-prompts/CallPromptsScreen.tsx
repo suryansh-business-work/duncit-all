@@ -127,7 +127,7 @@ export function CallPromptsScreen() {
         />
       }
       ListFooterComponent={
-        prompts.rows.length > 0 && prompts.loading ? <StateView loading /> : null
+        prompts.rows.length > 0 && prompts.loading ? <StateView loading inline /> : null
       }
     />
   );

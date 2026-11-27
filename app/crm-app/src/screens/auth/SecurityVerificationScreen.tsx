@@ -39,7 +39,7 @@ export function SecurityVerificationScreen() {
         vars: { portal: t('crmApp.login.title') },
       })}
     >
-      <StateView loading={!challenge && !v.loadError} error={v.loadError} onRetry={v.load} />
+      <StateView loading={!challenge && !v.loadError} error={v.loadError} onRetry={v.load} inline />
       {challenge ? (
         <YStack gap="$4">
           <PolicySections challenge={challenge} />

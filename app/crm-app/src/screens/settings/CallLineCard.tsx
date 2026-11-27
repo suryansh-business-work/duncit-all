@@ -60,7 +60,7 @@ export function CallLineCard() {
           </XStack>
         </YStack>
       ) : (
-        <StateView loading={loading} error={error} onRetry={refetch} />
+        <StateView loading={loading} error={error} onRetry={refetch} inline />
       )}
     </Card>
   );

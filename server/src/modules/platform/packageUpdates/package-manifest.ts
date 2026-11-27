@@ -71,6 +71,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "expo-crypto", range: "~57.0.3", kind: "dependencies" },
       { name: "expo-document-picker", range: "~57.0.3", kind: "dependencies" },
       { name: "expo-font", range: "~57.0.4", kind: "dependencies" },
+      { name: "expo-haptics", range: "~57.0.3", kind: "dependencies" },
       { name: "expo-image-picker", range: "~57.0.22", kind: "dependencies" },
       { name: "expo-linking", range: "~57.0.11", kind: "dependencies" },
       { name: "expo-location", range: "~57.0.20", kind: "dependencies" },

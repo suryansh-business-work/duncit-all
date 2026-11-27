@@ -130,7 +130,7 @@ export function EmailVerifierScreen() {
         />
       }
       ListFooterComponent={
-        history.rows.length > 0 && history.loading ? <StateView loading /> : null
+        history.rows.length > 0 && history.loading ? <StateView loading inline /> : null
       }
     />
   );

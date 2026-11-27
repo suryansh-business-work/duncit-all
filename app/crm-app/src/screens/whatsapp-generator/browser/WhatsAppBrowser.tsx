@@ -59,7 +59,9 @@ export function WhatsAppBrowser({ top }: Readonly<{ top: ReactElement }>) {
             onRetry={refresh}
           />
         }
-        ListFooterComponent={list.rows.length > 0 && list.loading ? <StateView loading /> : null}
+        ListFooterComponent={
+          list.rows.length > 0 && list.loading ? <StateView loading inline /> : null
+        }
       />
       <GroupMembersSheet group={members} onClose={() => setMembers(null)} />
     </>

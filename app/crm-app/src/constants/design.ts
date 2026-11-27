@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { radii } from '@duncit/auth-tokens';
 import { tokens } from '@duncit/theme/tokens';
 
@@ -13,3 +14,20 @@ export const RADII = { ...tokens.radius, pill: radii.pill };
  * units (4 and 3) of the theme's shape radius, `radius.sm`.
  */
 export const AUTH_RADII = { card: tokens.radius.sm * 4, bar: tokens.radius.sm * 3 };
+
+/**
+ * The mobile layer's sizes. A touch target is 48 dp on Android (Material) and
+ * 44 pt on iOS (Human Interface Guidelines); everything a thumb presses meets
+ * the platform's floor. Icons, avatars and the floating button scale from it.
+ */
+export const MOBILE = {
+  touch: Platform.OS === 'ios' ? tokens.size.touchTarget : 48,
+  icon: 22,
+  iconSm: 18,
+  avatar: 40,
+  fab: 56,
+  /** The gutter between the screen edge and its content. */
+  gutter: 16,
+  /** How long one beat of the skeleton's pulse lasts. */
+  pulse: tokens.motion.slow * 4,
+} as const;

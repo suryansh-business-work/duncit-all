@@ -54,7 +54,7 @@ export function CallSetupSection({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const theme = useTheme();
-  if (loading && !setup) return <StateView loading />;
+  if (loading && !setup) return <StateView loading inline />;
   const notConfigured = (setup && !setup.configured) || call.errorCode === 'TWILIO_NOT_CONFIGURED';
   const ready = crmCanStartCall(setup, to) && !call.starting;
 

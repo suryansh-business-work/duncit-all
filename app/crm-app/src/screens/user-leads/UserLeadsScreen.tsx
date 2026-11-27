@@ -168,7 +168,9 @@ export function UserLeadsScreen() {
             onRetry={leads.refresh}
           />
         }
-        ListFooterComponent={leads.rows.length > 0 && leads.loading ? <StateView loading /> : null}
+        ListFooterComponent={
+          leads.rows.length > 0 && leads.loading ? <StateView loading inline /> : null
+        }
       />
     </YStack>
   );

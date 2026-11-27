@@ -155,7 +155,9 @@ export function ReviewQueue({ jobId, onClearJob }: Readonly<Props>) {
           onRetry={queue.refresh}
         />
       }
-      ListFooterComponent={queue.rows.length > 0 && queue.loading ? <StateView loading /> : null}
+      ListFooterComponent={
+        queue.rows.length > 0 && queue.loading ? <StateView loading inline /> : null
+      }
     />
   );
 }

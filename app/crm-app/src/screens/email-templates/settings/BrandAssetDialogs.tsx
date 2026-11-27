@@ -1,7 +1,7 @@
 import { fireAndForget, logs } from '@duncit/logs';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { ActionSheet } from '@/components/email-templates/ActionSheet';
+import { ActionSheet } from '@/components/ActionSheet';
 import { DialogCard } from '@/components/email-templates/DialogCard';
 import type { BrandAsset, EmailSettingsState } from '@/features/email-templates/useEmailSettings';
 import { MediaNameForm } from '@/forms/media-name';

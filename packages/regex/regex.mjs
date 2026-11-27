@@ -43,6 +43,8 @@ const NON_DIGITS = /\D+/g;
 export const PHONE_INTL = /^\d{6,15}$/;
 /** {@link PHONE_INTL} tolerating a leading `+` for a pasted full number. */
 export const PHONE_INTL_PLUS = /^\+?\d{6,15}$/;
+/** A full international number in E.164: `+`, then 7–15 digits, never starting with 0 (`+14155552671`). */
+export const PHONE_E164 = /^\+[1-9]\d{6,14}$/;
 /** Postal code, 4–10 digits — non-Indian addresses included. */
 export const PINCODE_LOOSE = /^\d{4,10}$/;
 
@@ -185,6 +187,7 @@ export const isPincode = (v) => PINCODE.test(v);
 export const isEmail = (v) => EMAIL.test(v);
 export const isOtp = (v) => OTP_6.test(v);
 export const isPhoneIntl = (v) => PHONE_INTL.test(v);
+export const isPhoneE164 = (v) => PHONE_E164.test(v);
 export const isPincodeLoose = (v) => PINCODE_LOOSE.test(v);
 export const isIfsc = (v) => IFSC.test(v);
 export const isUpiId = (v) => UPI_ID.test(v);

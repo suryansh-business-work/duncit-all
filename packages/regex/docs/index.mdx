@@ -15,6 +15,7 @@ exports:
   - 'PHONE_NUMBER_IN'
   - 'PHONE_INTL'
   - 'PHONE_INTL_PLUS'
+  - 'PHONE_E164'
   - 'DIAL_CODE'
   - 'PINCODE'
   - 'PINCODE_LOOSE'
@@ -164,6 +165,7 @@ isPhysicalGiftCardPasscode('1234-5678-9012-345O')  // false — the letter O is 
 isPincode('012345')             // false — an Indian PIN never starts with 0
 isPhoneIntl('+14155552671')     // false — PHONE_INTL is digits only…
 PHONE_INTL_PLUS.test('+14155552671') // true  — …use this one for a pasted full number
+PHONE_E164.test('+14155552671')      // true  — strict E.164: the + and no leading 0 (Twilio numbers)
 DIAL_CODE.test('+91')           // true
 ```
 
@@ -199,6 +201,7 @@ above holds for everything you can import.
 | `PHONE_NUMBER_IN` | `/^[6-9]\d{9}$/` | — | India mobile, stricter (starts 6–9) |
 | `PHONE_INTL` | `/^\d{6,15}$/` | `isPhoneIntl` | ITU E.164 range, digits only |
 | `PHONE_INTL_PLUS` | `/^\+?\d{6,15}$/` | — | as above, tolerating a pasted `+` |
+| `PHONE_E164` | `/^\+[1-9]\d{6,14}$/` | `isPhoneE164` | strict E.164 (`+14155552671`): the Tech portal's phone fields |
 | `DIAL_CODE` | `/^\+?\d{1,4}$/` | — | `+91`, `1`, `971` |
 | `PINCODE` | `/^[1-9]\d{5}$/` | `isPincode` | India PIN, exactly 6 |
 | `PINCODE_LOOSE` | `/^\d{4,10}$/` | `isPincodeLoose` | any postal code, 4–10 digits |
@@ -268,7 +271,7 @@ international patterns were added as **new names** rather than by loosening the 
 
 | Field | India-only | International |
 | --- | --- | --- |
-| Phone | `PHONE_NUMBER`, `PHONE_NUMBER_IN` | `PHONE_INTL`, `PHONE_INTL_PLUS` |
+| Phone | `PHONE_NUMBER`, `PHONE_NUMBER_IN` | `PHONE_INTL`, `PHONE_INTL_PLUS`, `PHONE_E164` |
 | Postal code | `PINCODE` | `PINCODE_LOOSE` |
 
 ## GSTIN — there is only one correct pattern

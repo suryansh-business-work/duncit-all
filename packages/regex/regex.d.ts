@@ -29,6 +29,8 @@ export function toDigits(value: unknown): string;
 export const PHONE_INTL: RegExp;
 /** {@link PHONE_INTL} tolerating a leading `+` for a pasted full number. */
 export const PHONE_INTL_PLUS: RegExp;
+/** A full international number in E.164: `+`, then 7–15 digits, never starting with 0 (`+14155552671`). */
+export const PHONE_E164: RegExp;
 /** Postal code, 4–10 digits — non-Indian addresses included. */
 export const PINCODE_LOOSE: RegExp;
 
@@ -82,6 +84,7 @@ export function isPincode(value: string): boolean;
 export function isEmail(value: string): boolean;
 export function isOtp(value: string): boolean;
 export function isPhoneIntl(value: string): boolean;
+export function isPhoneE164(value: string): boolean;
 export function isPincodeLoose(value: string): boolean;
 export function isIfsc(value: string): boolean;
 export function isUpiId(value: string): boolean;

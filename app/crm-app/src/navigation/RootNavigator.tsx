@@ -27,7 +27,7 @@ import { EmailTemplateSettingsScreen } from '@/screens/email-templates/EmailTemp
 import { LeadQualitySettingsScreen } from '@/screens/settings-lead-quality/LeadQualitySettingsScreen';
 import { DynamicFieldsScreen } from '@/screens/dynamic-fields/DynamicFieldsScreen';
 import { DynamicFieldEditorScreen } from '@/screens/dynamic-fields/DynamicFieldEditorScreen';
-import { MenuScreen } from '@/screens/menu/MenuScreen';
+import { SettingsScreen } from '@/screens/settings/SettingsScreen';
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
 import { UserLeadsScreen } from '@/screens/user-leads/UserLeadsScreen';
 import { EmailVerifierScreen } from '@/screens/email-verifier/EmailVerifierScreen';
@@ -72,7 +72,7 @@ export function RootNavigator() {
       {/* White icons over the red app bar, in light and dark mode alike. */}
       <StatusBar style="light" />
       <Stack.Navigator screenLayout={stackScreenLayout} screenOptions={chrome.stackHeader}>
-        {/* The tab bar and the menu's own safe area already keep clear of the system bars. */}
+        {/* The tab bar already keeps clear of the system navigation bar. */}
         <Stack.Screen
           name="Tabs"
           component={MainTabs}
@@ -100,14 +100,9 @@ export function RootNavigator() {
           options={{ title: t('crmApp.reminder.title') }}
         />
         <Stack.Screen
-          name="Menu"
-          component={MenuScreen}
-          layout={screenLayout}
-          options={{
-            headerShown: false,
-            presentation: 'transparentModal',
-            animation: 'slide_from_left',
-          }}
+          name="Settings"
+          component={SettingsScreen}
+          options={{ title: t('crmApp.tabs.settings') }}
         />
         <Stack.Screen
           name="Dashboard"

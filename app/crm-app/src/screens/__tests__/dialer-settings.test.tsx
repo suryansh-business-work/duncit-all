@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen } from '@testing-library/react-native';
 
 import { gqlRequest } from '@/services/graphql.client';
 import { renderWithTheme } from '@/test-utils';
@@ -130,9 +130,8 @@ describe('SettingsScreen', () => {
     useFeaturesStore.setState({ callerId: true, autoLog: true, recordings: true, hydrated: true });
   });
 
-  it('shows the account and switches a call feature off', async () => {
+  it('switches a call feature off', async () => {
     renderWithTheme(<SettingsScreen />);
-    expect(screen.getByText('Asha Rao')).toBeOnTheScreen();
     await act(async () =>
       fireEvent(screen.getByTestId('feature-caller-id'), 'onCheckedChange', false),
     );
@@ -151,11 +150,11 @@ describe('SettingsScreen', () => {
     expect(screen.getByText(/cannot add icons from apps/)).toBeOnTheScreen();
   });
 
-  it('on an iPhone keeps the account and the CRM call line, and leaves out the Android call features', () => {
+  it('on an iPhone keeps the CRM call line, and leaves out the Android call features', () => {
     mockPhoneModule = null;
     renderWithTheme(<SettingsScreen />);
-    expect(screen.getByText('Asha Rao')).toBeOnTheScreen();
-    expect(screen.getByTestId('settings-sign-out')).toBeOnTheScreen();
+    // The account and sign-out live on More now, not here.
+    expect(screen.queryByTestId('settings-sign-out')).toBeNull();
     expect(screen.getByTestId('settings-call-line')).toBeOnTheScreen();
     expect(screen.queryByTestId('feature-caller-id')).toBeNull();
     expect(screen.queryByTestId('feature-auto-log')).toBeNull();
@@ -163,13 +162,5 @@ describe('SettingsScreen', () => {
     expect(screen.queryByTestId('perm-phone')).toBeNull();
     expect(screen.queryByTestId('perm-phone-ok')).toBeNull();
     expect(screen.queryByTestId('settings-sync')).toBeNull();
-  });
-
-  it('signs out', async () => {
-    const signOut = jest.fn().mockResolvedValue(undefined);
-    useAuthStore.setState({ signOut });
-    renderWithTheme(<SettingsScreen />);
-    fireEvent.press(screen.getByTestId('settings-sign-out'));
-    await waitFor(() => expect(signOut).toHaveBeenCalled());
   });
 });

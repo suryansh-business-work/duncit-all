@@ -2,9 +2,11 @@ import { useMemo, useState } from 'react';
 import { FlatList } from 'react-native';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { format, isSameDay, isSameMonth, startOfMonth } from 'date-fns';
-import { useTheme } from 'tamagui';
+import { YStack, useTheme } from 'tamagui';
 
+import { Fab } from '@/components/mobile/Fab';
 import { StateView } from '@/components/StateView';
+import { MOBILE } from '@/constants/design';
 import {
   agendaDays,
   type CalendarEvent,
@@ -67,12 +69,16 @@ export function RemindersScreen() {
   };
 
   return (
-    <>
+    <YStack flex={1}>
       <FlatList
         style={{ flex: 1, backgroundColor: theme.background?.val }}
         data={groups}
         keyExtractor={(group) => format(group.day, 'yyyy-MM-dd')}
-        contentContainerStyle={{ padding: 16, gap: 8 }}
+        contentContainerStyle={{
+          padding: 16,
+          gap: 8,
+          paddingBottom: MOBILE.fab + MOBILE.gutter * 2,
+        }}
         refreshing={calendar.loading && calendar.loaded}
         onRefresh={calendar.refresh}
         ListHeaderComponent={
@@ -87,7 +93,6 @@ export function RemindersScreen() {
               onCursor={changeCursor}
               onEntity={calendar.setEntity}
               onStatus={calendar.setStatus}
-              onAdd={() => navigation.navigate('AddReminder', {})}
             />
             {view === 'month' ? (
               <RemindersMonthGrid
@@ -112,6 +117,7 @@ export function RemindersScreen() {
             loading={!calendar.loaded && !calendar.error}
             error={calendar.error}
             empty={calendar.loaded ? t('crm.calendar.nothingScheduled') : null}
+            emptyIcon="event-available"
             onRetry={calendar.refresh}
           />
         }
@@ -122,6 +128,12 @@ export function RemindersScreen() {
         onChanged={calendar.refresh}
         onOpenLead={openLead}
       />
-    </>
+      <Fab
+        icon="add-alarm"
+        label={t('crmApp.reminder.title')}
+        onPress={() => navigation.navigate('AddReminder', {})}
+        testID="reminders-add"
+      />
+    </YStack>
   );
 }

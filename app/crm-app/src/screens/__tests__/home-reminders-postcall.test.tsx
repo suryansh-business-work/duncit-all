@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import * as SecureStore from 'expo-secure-store';
 
 import { gqlRequest } from '@/services/graphql.client';
@@ -77,6 +77,30 @@ describe('HomeScreen', () => {
     expect(screen.getByText('Nothing due today.')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('home-dialer'));
     expect(mockNav.navigate).toHaveBeenCalledWith('Tabs', { screen: 'Dialer' });
+  });
+
+  it('opens the dialer, the lead search, a new follow-up and the dashboard from its quick actions', async () => {
+    request.mockResolvedValue({ crmReminders: [] });
+    renderWithTheme(<HomeScreen />);
+    await screen.findByText('Nothing due today.');
+    fireEvent.press(screen.getByTestId('home-leads'));
+    expect(mockNav.navigate).toHaveBeenLastCalledWith('Tabs', { screen: 'Leads' });
+    fireEvent.press(screen.getByTestId('home-add-reminder'));
+    expect(mockNav.navigate).toHaveBeenLastCalledWith('AddReminder', {});
+    fireEvent.press(screen.getByTestId('home-dashboard'));
+    expect(mockNav.navigate).toHaveBeenLastCalledWith('Dashboard');
+    expect(screen.queryByTestId('home-due-count')).toBeNull();
+  });
+
+  it('counts what is due and opens Settings from the set-up nudge', async () => {
+    (readPermissions as jest.Mock).mockResolvedValue({ phone: true, call: false });
+    request.mockResolvedValue({
+      crmReminders: [reminder(), reminder({ id: 'r2', title: 'Later' })],
+    });
+    renderWithTheme(<HomeScreen />);
+    expect(await screen.findByTestId('home-due-count')).toHaveTextContent('2');
+    fireEvent.press(within(screen.getByTestId('home-setup')).getByText('Set up'));
+    expect(mockNav.navigate).toHaveBeenLastCalledWith('Settings');
   });
 
   it('on an iPhone never asks for the Android phone permissions or nudges about them', async () => {

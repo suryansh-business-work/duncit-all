@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { Text, YStack } from 'tamagui';
 
 import { DuncitButton } from '@/components/DuncitButton';
+import { FormLayout } from '@/components/mobile/FormLayout';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formResolver } from '@/utils/form-resolver';
 import { ContactsEditor } from './ContactsEditor';
@@ -11,7 +12,11 @@ import { LeadBasicsSection } from './LeadBasicsSection';
 import { LeadTrackingSection } from './LeadTrackingSection';
 import { makeLeadSchema, type LeadFormProps, type LeadFormValues } from './lead.types';
 
-/** Create or edit a lead of any kind — the portal's rules, the fields a person in the field fills in. */
+/**
+ * Create or edit a lead of any kind — the portal's rules, the fields a person
+ * in the field fills in. The fields scroll; Save stays pinned at the bottom,
+ * above the keyboard, with what stops it right over it.
+ */
 export function LeadForm({
   kind,
   leadId,
@@ -19,6 +24,7 @@ export function LeadForm({
   options,
   onSubmit,
   error,
+  intro,
 }: Readonly<LeadFormProps>) {
   const { t } = useTranslation();
   // raw: the shared schema checks only some fields; the rest (area, notes, owner, follow-up) must reach the save.
@@ -38,15 +44,16 @@ export function LeadForm({
   });
   const errorCount = Object.keys(formState.errors).length;
 
-  return (
-    <YStack gap="$3">
-      <LeadBasicsSection kind={kind} control={control} options={options} />
-      <ContactsEditor control={control} />
-      <DuplicateWarnings kind={kind} leadId={leadId} control={control} />
-      <LeadTrackingSection kind={kind} control={control} setValue={setValue} options={options} />
+  const footer = (
+    <YStack flex={1} gap="$2">
       {formState.isSubmitted && errorCount > 0 ? (
         <Text color="$danger" role="alert" testID="lead-form-invalid">
           {t('crmApp.editor.fixErrors', { count: errorCount, vars: { count: errorCount } })}
+        </Text>
+      ) : null}
+      {error ? (
+        <Text color="$danger" role="alert" testID="lead-save-error">
+          {error}
         </Text>
       ) : null}
       <DuncitButton
@@ -56,11 +63,16 @@ export function LeadForm({
         fullWidth
         testID="lead-save"
       />
-      {error ? (
-        <Text color="$danger" role="alert" testID="lead-save-error">
-          {error}
-        </Text>
-      ) : null}
     </YStack>
+  );
+
+  return (
+    <FormLayout footer={footer}>
+      {intro ? <Text color="$muted">{intro}</Text> : null}
+      <LeadBasicsSection kind={kind} control={control} options={options} />
+      <ContactsEditor control={control} />
+      <DuplicateWarnings kind={kind} leadId={leadId} control={control} />
+      <LeadTrackingSection kind={kind} control={control} setValue={setValue} options={options} />
+    </FormLayout>
   );
 }

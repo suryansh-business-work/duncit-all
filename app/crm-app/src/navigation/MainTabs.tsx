@@ -6,10 +6,9 @@ import { HomeScreen } from '@/screens/home/HomeScreen';
 import { LeadsScreen } from '@/screens/leads/LeadsScreen';
 import { DialerScreen } from '@/screens/dialer/DialerScreen';
 import { RemindersScreen } from '@/screens/reminders/RemindersScreen';
-import { SettingsScreen } from '@/screens/settings/SettingsScreen';
+import { MoreScreen } from '@/screens/more/MoreScreen';
 import { useConsoleChrome } from './chrome';
 import { HeaderBrand } from './HeaderBrand';
-import { MenuButton } from './MenuButton';
 import { screenLayout } from './screenLayout';
 import type { TabParamList } from './types';
 
@@ -20,7 +19,7 @@ const ICONS: Record<keyof TabParamList, keyof typeof MaterialIcons.glyphMap> = {
   Leads: 'groups',
   Dialer: 'dialpad',
   Reminders: 'event',
-  Settings: 'settings',
+  More: 'more-horiz',
 };
 
 const LABEL_KEYS: Record<keyof TabParamList, string> = {
@@ -28,10 +27,14 @@ const LABEL_KEYS: Record<keyof TabParamList, string> = {
   Leads: 'crmApp.tabs.leads',
   Dialer: 'crmApp.tabs.dialer',
   Reminders: 'crmApp.tabs.reminders',
-  Settings: 'crmApp.tabs.settings',
+  More: 'crmApp.tabs.more',
 };
 
-/** The five tabs: Home, Leads, Dialer (in the middle, where a thumb rests), Reminders, Settings. */
+/**
+ * The five tabs: Home, Leads, Dialer (in the middle, where a thumb rests),
+ * Reminders and More. Each tab keeps its own place (scroll, filters) while
+ * another is open; More holds every other page, so no screen needs a side menu.
+ */
 export function MainTabs() {
   const { t } = useTranslation();
   const chrome = useConsoleChrome();
@@ -42,7 +45,6 @@ export function MainTabs() {
         title: t(LABEL_KEYS[route.name]),
         ...chrome.tabsHeader,
         ...chrome.tabBar,
-        headerLeft: MenuButton,
         headerTitle: ({ children }) => <HeaderBrand title={children} />,
         tabBarIcon: ({ color, size }) => (
           <MaterialIcons name={ICONS[route.name]} color={color} size={size} />
@@ -53,7 +55,7 @@ export function MainTabs() {
       <Tab.Screen name="Leads" component={LeadsScreen} />
       <Tab.Screen name="Dialer" component={DialerScreen} />
       <Tab.Screen name="Reminders" component={RemindersScreen} />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
+      <Tab.Screen name="More" component={MoreScreen} />
     </Tab.Navigator>
   );
 }

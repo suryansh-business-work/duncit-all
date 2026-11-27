@@ -13,8 +13,6 @@ export type NavIcon =
  *  - tab: one of the bottom tabs;
  *  - leads: the Leads tab, filtered to one kind (the portal's per-kind lead pages);
  *  - options: one of the managed lists (Amenities, Event Suitability);
- *  - portal: a CRM portal page the app does not have yet — its screen says so and
- *    opens that page in the portal (path is the portal's own route).
  */
 export type NavTarget =
   | { type: 'tab'; tab: 'Home' | 'Reminders' }
@@ -242,29 +240,34 @@ export const CRM_NAV: readonly NavItem[] = [
   },
 ];
 
-/** The key of the item a target belongs to, for the menu's "you are here" mark. */
-export function findNavKey(
-  items: readonly NavItem[],
-  match: (target: NavTarget) => boolean,
-): string | null {
-  for (const item of items) {
-    if (item.target && match(item.target)) return item.key;
-    const inside = item.children ? findNavKey(item.children, match) : null;
-    if (inside) return inside;
-  }
-  return null;
+/** One group of the More tab: the portal sidebar group's label and every page inside it. */
+export interface MoreSection {
+  key: string;
+  /** No label for the pages that sit at the sidebar's top level (Dashboard). */
+  labelKey?: string;
+  items: NavItem[];
 }
 
-/** The keys of the groups on the way to an item, so the menu opens with them expanded. */
-export function navPath(
-  items: readonly NavItem[],
-  key: string,
-  trail: string[] = [],
-): string[] | null {
-  for (const item of items) {
-    if (item.key === key) return trail;
-    const inside = item.children ? navPath(item.children, key, [...trail, item.key]) : null;
-    if (inside) return inside;
-  }
-  return null;
+const pagesIn = (item: NavItem): NavItem[] =>
+  item.children ? item.children.flatMap(pagesIn) : [item];
+
+/**
+ * The sidebar as the More tab lists it: each portal group becomes a titled
+ * section of its pages (nested groups flattened, in order), the top-level pages
+ * share one untitled section first, and pages a bottom tab already holds
+ * (Reminders) are left out — the tab bar is where they live on the phone.
+ */
+export function moreSections(items: readonly NavItem[]): MoreSection[] {
+  const notATab = (page: NavItem) => page.target?.type !== 'tab';
+  const top = items.filter((item) => !item.children && notATab(item));
+  const groups = items
+    .filter((item) => item.children)
+    .map((group) => ({
+      key: group.key,
+      labelKey: group.labelKey,
+      items: pagesIn(group).filter(notATab),
+    }));
+  return [...(top.length > 0 ? [{ key: 'top', items: top }] : []), ...groups].filter(
+    (section) => section.items.length > 0,
+  );
 }

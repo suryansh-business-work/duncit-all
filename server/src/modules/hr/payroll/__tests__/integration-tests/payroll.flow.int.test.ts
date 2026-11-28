@@ -226,6 +226,32 @@ describe('releasing and paying', () => {
     expect(Buffer.from(pdf, 'base64').subarray(0, 4).toString()).toBe('%PDF');
   });
 
+  it('tells Finance what releasing pays, and lets read-only Finance look but not release', async () => {
+    const { hr, paid } = await staff();
+    const unbanked = await employee(hr, 'Ravi');
+    const run = await M.createHrPayrollRun({}, { month: OCT }, hr);
+    await M.holdHrPayrollLine({}, { line_id: (await lineFor(run.id, hr, unbanked.id)).id, reason: 'Bank details awaited' }, hr);
+    const current = await Q.hrPayrollRun({}, { id: run.id }, hr);
+    await M.approveHrPayrollRun({}, { id: run.id, expected_revision: current.revision }, hr);
+    const payable = await hrPayrollResolvers.HrPayrollRun.payable({ id: run.id });
+    expect(payable).toEqual({ count: 1, net: (await lineFor(run.id, hr, paid.id)).net, held: 1 });
+    const viewer = await person('Vani', ['FINANCE_USER']);
+    await expect(Q.hrPayrollRun({}, { id: run.id }, viewer)).resolves.toMatchObject({ status: 'APPROVED' });
+    await expect(M.releaseHrPayrollRun({}, { id: run.id, pay_on: todayKey() }, viewer)).rejects.toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+  });
+
+  it('refuses to release a run that changed after Finance opened it', async () => {
+    const { hr, finance, runId } = await approvedRun();
+    const opened = await Q.hrPayrollRun({}, { id: runId }, finance);
+    await M.returnHrPayrollRun({}, { id: runId, note: 'One more look' }, hr);
+    const draft = await Q.hrPayrollRun({}, { id: runId }, hr);
+    await M.approveHrPayrollRun({}, { id: runId, expected_revision: draft.revision }, hr);
+    const stale = { id: runId, pay_on: addDays(todayKey(), 1), expected_revision: opened.revision };
+    await expect(M.releaseHrPayrollRun({}, stale, finance)).rejects.toMatchObject({ extensions: { code: 'CONFLICT' } });
+    const fresh = await Q.hrPayrollRun({}, { id: runId }, finance);
+    await expect(M.releaseHrPayrollRun({}, { ...stale, expected_revision: fresh.revision }, finance)).resolves.toMatchObject({ status: 'RELEASED' });
+  });
+
   it('marks a refused payout FAILED and retries it under a new key', async () => {
     const { finance, paid, runId, hr } = await approvedRun();
     payout.mockRejectedValueOnce(Object.assign(new Error('Insufficient balance in the account'), { extensions: { razorpay_status: 400 } }));

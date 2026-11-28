@@ -3,6 +3,7 @@ import type { AuthUser } from '@context';
 import { logs } from '@observability/log';
 import { userDisplayOf } from '@modules/access/user/user.display';
 import { HR_ROLES } from '@modules/hr/hr.roles';
+import { PORTAL_ROLE_REQUIREMENTS } from '@modules/portals/portal.constants';
 import type { PayoutActor } from '@modules/finance/payout/payout.audit';
 import { HrPayrollEventModel, type IPayrollActor, type PayrollEventAction } from './payroll.model';
 
@@ -13,8 +14,8 @@ import { HrPayrollEventModel, type IPayrollActor, type PayrollEventAction } from
  */
 export const PAYROLL_RELEASE_ROLES: readonly string[] = ['SUPER_ADMIN', 'FINANCE_MANAGER'];
 
-/** Reading runs: HR, and Finance who release them. */
-export const PAYROLL_READ_ROLES: readonly string[] = [...new Set([...HR_ROLES, ...PAYROLL_RELEASE_ROLES])];
+/** Reading runs: HR, and everyone the Finance console admits (read-only Finance users see runs; they never release). */
+export const PAYROLL_READ_ROLES: readonly string[] = [...new Set([...HR_ROLES, ...PAYROLL_RELEASE_ROLES, ...PORTAL_ROLE_REQUIREMENTS.finance])];
 
 /** The scheduler, which has no account. */
 export const SCHEDULER_ACTOR: IPayrollActor = { user_id: null, name: 'Payroll scheduler' };

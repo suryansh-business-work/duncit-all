@@ -3,12 +3,15 @@ import {
   HR_BLOCKING_ISSUES,
   HR_PAYROLL_ISSUES,
   HR_PAYROLL_ISSUE_KEYS,
+  HR_PAYROLL_EVENT_ACTIONS,
+  HR_PAYROLL_EVENT_KEYS,
   HR_PAYROLL_RUN_STATUSES,
   PAYSLIP_STATUSES,
   PAYSLIP_STATUS_KEYS,
   canEditHrPayrollRun,
   canReleaseHrPayrollRun,
   hrIssueColor,
+  hrPayrollEventKey,
   shiftMonthKey,
 } from '../src';
 
@@ -31,6 +34,12 @@ describe('payroll words and colours', () => {
   it('has a translation key for every issue and payslip status', () => {
     expect(HR_PAYROLL_ISSUES.map((issue) => HR_PAYROLL_ISSUE_KEYS[issue])).toEqual(HR_PAYROLL_ISSUES.map((issue) => `hrShared.issue.${issue}`));
     expect(PAYSLIP_STATUSES.map((status) => PAYSLIP_STATUS_KEYS[status])).toEqual(PAYSLIP_STATUSES.map((status) => `hrShared.payslipStatus.${status}`));
+  });
+
+  it('labels every payroll history step, and gives no key for a step this build does not know', () => {
+    expect(HR_PAYROLL_EVENT_ACTIONS.map((action) => HR_PAYROLL_EVENT_KEYS[action])).toEqual(HR_PAYROLL_EVENT_ACTIONS.map((action) => `hrShared.payrollEvent.${action}`));
+    expect(hrPayrollEventKey('RELEASED')).toBe('hrShared.payrollEvent.RELEASED');
+    expect(hrPayrollEventKey('ARCHIVED')).toBeNull();
   });
 
   it('lets HR edit only a draft and Finance release only an approved run', () => {

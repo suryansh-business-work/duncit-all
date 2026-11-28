@@ -51,6 +51,23 @@ export type HrLeaveAccrual = (typeof HR_LEAVE_ACCRUALS)[number];
 export const HR_BANK_REQUEST_STATUSES = REQUEST_STATUSES;
 export type HrBankRequestStatus = HrRequestStatus;
 
+/** What a payroll run's history records — the server's PAYROLL_EVENT_ACTIONS (hr/payroll/payroll.model.ts). */
+export const HR_PAYROLL_EVENT_ACTIONS = [
+  'CREATED',
+  'RECOMPUTED',
+  'ADJUSTED',
+  'HELD',
+  'UNHELD',
+  'APPROVED',
+  'RETURNED',
+  'RELEASED',
+  'DELETED',
+  'LINE_RELEASED',
+  'PAYOUT_RETRIED',
+  'COMPLETED',
+] as const;
+export type HrPayrollEventAction = (typeof HR_PAYROLL_EVENT_ACTIONS)[number];
+
 export const HR_CALENDAR_EVENT_KINDS = ['HOLIDAY', 'LEAVE', 'TEAM_LEAVE', 'PAYDAY', 'TARGET_DUE'] as const;
 export type HrCalendarEventKind = (typeof HR_CALENDAR_EVENT_KINDS)[number];
 
@@ -153,6 +170,25 @@ export const HR_CALENDAR_EVENT_KIND_KEYS = keyMap<HrCalendarEventKind>([
   'hrShared.calendarKind.PAYDAY',
   'hrShared.calendarKind.TARGET_DUE',
 ]);
+
+export const HR_PAYROLL_EVENT_KEYS = keyMap<HrPayrollEventAction>([
+  'hrShared.payrollEvent.CREATED',
+  'hrShared.payrollEvent.RECOMPUTED',
+  'hrShared.payrollEvent.ADJUSTED',
+  'hrShared.payrollEvent.HELD',
+  'hrShared.payrollEvent.UNHELD',
+  'hrShared.payrollEvent.APPROVED',
+  'hrShared.payrollEvent.RETURNED',
+  'hrShared.payrollEvent.RELEASED',
+  'hrShared.payrollEvent.DELETED',
+  'hrShared.payrollEvent.LINE_RELEASED',
+  'hrShared.payrollEvent.PAYOUT_RETRIED',
+  'hrShared.payrollEvent.COMPLETED',
+]);
+
+/** A history step's label key, or null for an action this build does not know yet (shown as the server names it). */
+const EVENT_KEY_BY_ACTION: ReadonlyMap<string, string> = new Map(Object.entries(HR_PAYROLL_EVENT_KEYS));
+export const hrPayrollEventKey = (action: string): string | null => EVENT_KEY_BY_ACTION.get(action) ?? null;
 
 /** The `YYYY-MM` key `by` months after (or before) `month`; the key itself when it is not a month. */
 export function shiftMonthKey(month: string, by: number): string {

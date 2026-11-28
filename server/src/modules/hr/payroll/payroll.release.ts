@@ -145,6 +145,9 @@ export const payrollReleaseService = {
     const input = parseInput(releaseSchema, raw);
     const run = await loadRun(id);
     if (!canReleaseRun(run.status)) fail('BAD_REQUEST', 'Only an approved payroll can be released');
+    if (input.expected_revision !== null && input.expected_revision !== undefined && input.expected_revision !== run.revision) {
+      fail('CONFLICT', 'This payroll changed after you opened it. Reload it and check the figures again.');
+    }
     if (run.approved?.by.user_id && String(run.approved.by.user_id) === user.id) {
       fail('FORBIDDEN', 'The person who approved this payroll cannot also release it. Ask another Finance Manager or Super Admin.');
     }

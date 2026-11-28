@@ -64,6 +64,14 @@ export const hrPayrollTypeDefs = /* GraphQL */ `
     employer: Float!
   }
 
+  type HrPayrollPayable {
+    count: Int!
+    "Their net pay in rupees."
+    net: Float!
+    "Salaries HR held, which releasing does not pay."
+    held: Int!
+  }
+
   "How the run's salaries stand with Razorpay."
   type HrPayrollPayoutSummary {
     paid: Int!
@@ -95,6 +103,8 @@ export const hrPayrollTypeDefs = /* GraphQL */ `
     "True for a draft whose pay, leave, targets or employee records changed after it was computed: recompute before approving."
     needs_recompute: Boolean!
     payout_summary: HrPayrollPayoutSummary!
+    "What releasing pays: salaries that are not held, have nothing blocking them and have something to pay."
+    payable: HrPayrollPayable!
     "Send it back as expected_revision."
     revision: Int!
     created_at: String
@@ -271,7 +281,7 @@ export const hrPayrollTypeDefs = /* GraphQL */ `
 export const financePayrollTypeDefs = /* GraphQL */ `
   extend type Mutation {
     "Finance: release an approved payroll for a pay date (today or up to 60 days ahead). Not by the person who approved it. Salaries are paid through RazorpayX on that day."
-    releaseHrPayrollRun(id: ID!, pay_on: String!, note: String): HrPayrollRun!
+    releaseHrPayrollRun(id: ID!, pay_on: String!, note: String, "The run's revision when the releaser opened it; a changed run is refused." expected_revision: Int): HrPayrollRun!
     "Finance: get one salary's payout moving again — a new attempt if it failed, a resend or status check if it is in flight."
     retryHrPayrollPayout(line_id: ID!): HrPayrollLine!
     "Finance: pay a salary HR held, once its reason is fixed. Reads the bank account fresh from the HR record."

@@ -250,4 +250,6 @@ export const approveSchema = z.object({ note: optionalNote });
 export const releaseSchema = z.object({
   pay_on: z.string().refine((v) => parseDayKey(v) !== null, 'Use a YYYY-MM-DD date'),
   note: optionalNote,
+  /** The revision the releaser looked at. Optional so older consoles keep working; when sent, a changed run is refused. */
+  expected_revision: z.number().int().min(0).nullish(),
 });

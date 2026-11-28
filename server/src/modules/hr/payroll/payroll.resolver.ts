@@ -12,7 +12,7 @@ import { payrollReleaseService } from './payroll.release';
 import { payrollSettingsService, type IHrPayrollSettings } from './payroll.settings';
 import { payslipService } from './payroll.payslip';
 import { PAYROLL_READ_ROLES, PAYROLL_RELEASE_ROLES, payrollActor } from './payroll.history';
-import { draftDateFor, payDateFor, shiftMonth } from './payroll.rules';
+import { draftDateFor, isPayable, payDateFor, shiftMonth } from './payroll.rules';
 
 /**
  * Four gates: HR prepares and approves; Finance (Super Admin, Finance Manager)
@@ -66,6 +66,13 @@ async function payoutSummary(runId: string) {
   return summary;
 }
 
+/** What releasing pays now, by the same rule the payout dispatch uses. */
+async function payableOf(runId: string) {
+  const lines = await HrPayrollLineModel.find({ run_id: objectId(runId, 'payroll run') }).select('hold issues net_paise').lean<IPayrollLine[]>();
+  const payable = lines.filter(isPayable);
+  return { count: payable.length, net: payable.reduce((sum, l) => sum + l.net_paise, 0) / 100, held: lines.filter((l) => l.hold).length };
+}
+
 const runView = (run: IPayrollRun) => toRun(run);
 
 export const hrPayrollResolvers = {
@@ -75,6 +82,7 @@ export const hrPayrollResolvers = {
       return inputsChangedSince(await loadRun(run.id));
     },
     payout_summary: async (run: { id: string }) => payoutSummary(run.id),
+    payable: async (run: { id: string }) => payableOf(run.id),
   },
   Query: {
     hrPayrollRunsTable: async (_p: unknown, args: TableArgs, ctx: Ctx) => {
@@ -135,8 +143,8 @@ export const hrPayrollResolvers = {
     deleteHrPayrollRun: async (_p: unknown, args: IdArgs, ctx: Ctx) => payrollRunService.remove(args.id, hr(ctx)),
     updateHrPayrollSettings: async (_p: unknown, args: { input: unknown }, ctx: Ctx) =>
       settingsView(await payrollSettingsService.update(args.input, hr(ctx).id)),
-    releaseHrPayrollRun: async (_p: unknown, args: IdArgs & { pay_on: string; note?: string | null }, ctx: Ctx) =>
-      runView(await payrollReleaseService.release(args.id, { pay_on: args.pay_on, note: args.note }, finance(ctx))),
+    releaseHrPayrollRun: async (_p: unknown, args: IdArgs & { pay_on: string; note?: string | null; expected_revision?: number | null }, ctx: Ctx) =>
+      runView(await payrollReleaseService.release(args.id, { pay_on: args.pay_on, note: args.note, expected_revision: args.expected_revision }, finance(ctx))),
     retryHrPayrollPayout: async (_p: unknown, args: { line_id: string }, ctx: Ctx) => toLine(await payrollReleaseService.retry(args.line_id, finance(ctx))),
     payHeldHrPayrollLine: async (_p: unknown, args: { line_id: string; note?: string | null }, ctx: Ctx) =>
       toLine(await payrollReleaseService.payHeld(args.line_id, args.note?.trim() || null, finance(ctx))),

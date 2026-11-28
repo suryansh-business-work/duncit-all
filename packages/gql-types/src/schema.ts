@@ -16310,6 +16310,15 @@ export type HrPayrollLineTablePage = {
   total: Scalars['Int']['output'];
 };
 
+export type HrPayrollPayable = {
+  __typename?: 'HrPayrollPayable';
+  count: Scalars['Int']['output'];
+  /** Salaries HR held, which releasing does not pay. */
+  held: Scalars['Int']['output'];
+  /** Their net pay in rupees. */
+  net: Scalars['Float']['output'];
+};
+
 export type HrPayrollPayout = {
   __typename?: 'HrPayrollPayout';
   attempt: Scalars['Int']['output'];
@@ -16347,6 +16356,8 @@ export type HrPayrollRun = {
   needs_recompute: Scalars['Boolean']['output'];
   /** The day Finance released it for; payouts start that day. */
   pay_on?: Maybe<Scalars['String']['output']>;
+  /** What releasing pays: salaries that are not held, have nothing blocking them and have something to pay. */
+  payable: HrPayrollPayable;
   payout_summary: HrPayrollPayoutSummary;
   released?: Maybe<HrPayrollStep>;
   /** The last time it was sent back to draft, and why. */
@@ -26982,6 +26993,7 @@ export type MutationRejoinPodArgs = {
 
 
 export type MutationReleaseHrPayrollRunArgs = {
+  expected_revision?: InputMaybe<Scalars['Int']['input']>;
   id: Scalars['ID']['input'];
   note?: InputMaybe<Scalars['String']['input']>;
   pay_on: Scalars['String']['input'];

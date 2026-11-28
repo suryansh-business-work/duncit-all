@@ -90,7 +90,7 @@ export const HR_EMPLOYEE_STATUS_COLORS = { ACTIVE: 'success', ON_NOTICE: 'warnin
  * value it labels, so the value is read back from the key's last segment; the
  * `${string}.${V}` type refuses a key whose last segment is not a value.
  */
-function keyMap<V extends string>(keys: readonly `${string}.${V}`[]): Readonly<Record<V, string>> {
+export function keyMap<V extends string>(keys: readonly `${string}.${V}`[]): Readonly<Record<V, string>> {
   return Object.fromEntries(keys.map((key) => [key.slice(key.lastIndexOf('.') + 1), key])) as Record<V, string>;
 }
 

@@ -47,6 +47,10 @@ import { TESTS_MANUAL_BUNDLE } from './bundles/tests-manual';
 import { INTEL_BUNDLE } from './bundles/intel';
 import { HR_BUNDLE } from './bundles/hr';
 import { HR_EMPLOYEE_BUNDLE } from './bundles/hr-employee';
+import { HR_SHARED_BUNDLE } from './bundles/hr-shared';
+import { HR_OPS_BUNDLE } from './bundles/hr-ops';
+import { FINANCE_PAYROLL_BUNDLE } from './bundles/finance-payroll';
+import { EMPLOYEE_SELF_BUNDLE } from './bundles/employee-self';
 import { POD_REQUESTS_BUNDLE } from './bundles/pod-requests';
 import { CLUB_ADMIN_BUNDLE } from './bundles/club-admin';
 import { FULFILMENT_BUNDLE } from './bundles/fulfilment';
@@ -165,6 +169,10 @@ export {
   INTEL_BUNDLE,
   HR_BUNDLE,
   HR_EMPLOYEE_BUNDLE,
+  HR_SHARED_BUNDLE,
+  HR_OPS_BUNDLE,
+  FINANCE_PAYROLL_BUNDLE,
+  EMPLOYEE_SELF_BUNDLE,
   POD_REQUESTS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
@@ -258,6 +266,10 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   intel: INTEL_BUNDLE,
   hr: HR_BUNDLE,
   hrEmployee: HR_EMPLOYEE_BUNDLE,
+  hrShared: HR_SHARED_BUNDLE,
+  hrOps: HR_OPS_BUNDLE,
+  financePayroll: FINANCE_PAYROLL_BUNDLE,
+  employeeSelf: EMPLOYEE_SELF_BUNDLE,
   podRequests: POD_REQUESTS_BUNDLE,
   clubAdmin: CLUB_ADMIN_BUNDLE,
   fulfilment: FULFILMENT_BUNDLE,

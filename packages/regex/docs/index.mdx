@@ -243,6 +243,8 @@ above holds for everything you can import.
 | `MONGO_DATABASE` | `/^[A-Za-z0-9_-]{1,64}$/` | `isMongoDatabase` | a MongoDB database name — `duncit` |
 | `MONGO_URI` | `/^mongodb(?:\+srv)?:\/\/\S{3,2000}$/` | `isMongoUri` | a MongoDB connection string — Atlas `mongodb+srv://…` or `mongodb://…` (Intel › Settings › Database Connectors, new Atlas connection) |
 | `DB_HOST` | `/^[A-Za-z0-9.-]{1,253}$/` | `isDbHost` | a database host — `db.example.com`, `duncit-mongo` (Intel › Settings › Database Connectors, new self-deployed connection) |
+| `LEAVE_CODE` | `/^[A-Z][A-Z0-9_]{0,11}$/` | `isLeaveCode` | a leave type's short code — `CL`, `SICK_2` (HR › Leave › Types) |
+| `MONTH_KEY` | `/^\d{4}-(?:0[1-9]\|1[0-2])$/` | `isMonthKey` | a calendar month — `2026-11` (HR › Payroll, Employee › Calendar) |
 | `HOSTNAME_LABEL` | `/^(?!-)[a-z\d-]{1,63}(?<!-)$/i` | `isHostname` | one DNS label; `isHostname` checks a whole name — `ns1.example.com`, two labels at least, 253 chars max |
 
 `EMAIL` and `UPI_ID` are bounded on both sides deliberately — the domain labels exclude `.`

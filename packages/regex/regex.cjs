@@ -218,6 +218,12 @@ const MONGO_URI = /^mongodb(?:\+srv)?:\/\/\S{3,2000}$/;
 /** A database host: DNS name, Docker service name or IPv4 — 1–253 letters, digits, `.` or `-`. See regex.mjs. */
 const DB_HOST = /^[A-Za-z0-9.-]{1,253}$/;
 
+/** A leave type's short code: a capital letter, then up to 11 capitals, digits or `_`. See regex.mjs. */
+const LEAVE_CODE = /^[A-Z][A-Z0-9_]{0,11}$/;
+
+/** A calendar month as `YYYY-MM`, month 01–12. See regex.mjs. */
+const MONTH_KEY = /^\d{4}-(?:0[1-9]|1[0-2])$/;
+
 /** Keep only the digits in a string. See regex.mjs for the full note. */
 const toDigits = (v) => String(v ?? '').replaceAll(NON_DIGITS, '');
 
@@ -269,6 +275,8 @@ module.exports = {
   MONGO_DATABASE,
   MONGO_URI,
   DB_HOST,
+  LEAVE_CODE,
+  MONTH_KEY,
   toDigits,
   isPhoneNumber: (v) => PHONE_NUMBER.test(v),
   isPincode: (v) => PINCODE.test(v),
@@ -311,6 +319,8 @@ module.exports = {
   isMongoDatabase: (v) => MONGO_DATABASE.test(v),
   isMongoUri: (v) => MONGO_URI.test(v),
   isDbHost: (v) => DB_HOST.test(v),
+  isLeaveCode: (v) => LEAVE_CODE.test(v),
+  isMonthKey: (v) => MONTH_KEY.test(v),
   isHostname: (v) => {
     const name = String(v ?? '').replace(/\.$/, '');
     const labels = name.split('.');

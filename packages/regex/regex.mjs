@@ -439,6 +439,18 @@ export const DB_HOST = /^[A-Za-z0-9.-]{1,253}$/;
 /** DB_HOST shape check. Trim before calling it. */
 export const isDbHost = (v) => DB_HOST.test(v);
 
+/** A leave type's short code such as `CL` or `SICK_2`: a capital letter, then up to 11 capitals, digits or `_`. One class, bounded count — linear. */
+export const LEAVE_CODE = /^[A-Z][A-Z0-9_]{0,11}$/;
+
+/** LEAVE_CODE shape check. Upper-case and trim before calling it. */
+export const isLeaveCode = (v) => LEAVE_CODE.test(v);
+
+/** A calendar month as `YYYY-MM`, month 01–12, e.g. `2026-11` (payroll and calendar months). Fixed length — linear. */
+export const MONTH_KEY = /^\d{4}-(?:0[1-9]|1[0-2])$/;
+
+/** MONTH_KEY shape check. */
+export const isMonthKey = (v) => MONTH_KEY.test(v);
+
 /**
  * A fully-qualified hostname such as `ns1.example.com`: at least two labels,
  * each a {@link HOSTNAME_LABEL}, 253 characters at most. A trailing dot (the

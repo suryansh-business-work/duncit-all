@@ -220,6 +220,14 @@ export function isMongoUri(value: string): boolean;
 export const DB_HOST: RegExp;
 /** DB_HOST shape check. Trim before calling it. */
 export function isDbHost(value: string): boolean;
+/** A leave type's short code such as `CL` or `SICK_2`: a capital letter, then up to 11 capitals, digits or `_`. One class, bounded count — linear. */
+export const LEAVE_CODE: RegExp;
+/** LEAVE_CODE shape check. Upper-case and trim before calling it. */
+export function isLeaveCode(value: string): boolean;
+/** A calendar month as `YYYY-MM`, month 01–12, e.g. `2026-11` (payroll and calendar months). Fixed length — linear. */
+export const MONTH_KEY: RegExp;
+/** MONTH_KEY shape check. */
+export function isMonthKey(value: string): boolean;
 /**
  * A fully-qualified hostname such as `ns1.example.com`: at least two labels,
  * each a {@link HOSTNAME_LABEL}, 253 characters at most. A trailing dot (the

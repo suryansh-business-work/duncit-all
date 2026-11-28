@@ -162,7 +162,7 @@ export const socialInboxTypeDefs = gql`
     max_length: Int!
   }
 
-  "Marketing > Social > Settings. Meta's own rules (24-hour window, 7-day human-agent reply, no cold DMs) are not settings."
+  "Marketing > Social > Settings. Meta's own rules (24-hour window, no cold DMs) are not settings; the 7-day human-agent reply is used only when human_agent_replies is on."
   type SocialSettings {
     "Hours between two scheduled reads of an account: the fallback when a webhook was missed (1-24)."
     sync_every_hours: Int!
@@ -190,6 +190,8 @@ export const socialInboxTypeDefs = gql`
     auto_reply_requires_approval: Boolean!
     "Brand-voice notes the AI follows when it drafts a reply (up to 2000 characters)."
     ai_reply_guidelines: String!
+    "A person may reply from 24 hours to 7 days on Meta's human agent tag. Off: every reply stops 24 hours after the person's last message. Turn on only once Meta has approved the app's Human Agent feature."
+    human_agent_replies: Boolean!
   }
 
   input SocialSettingsInput {
@@ -205,6 +207,8 @@ export const socialInboxTypeDefs = gql`
     auto_reply_daily_cap: Int!
     auto_reply_requires_approval: Boolean!
     ai_reply_guidelines: String!
+    "Omitted (older clients) keeps the saved value."
+    human_agent_replies: Boolean
   }
 
   "A tab of the comment queue: every network's comments, or Threads replies on their own."
@@ -258,8 +262,81 @@ export const socialInboxTypeDefs = gql`
     messaging_missing_permission: String
     "Why the last DM read failed; empty when it did not."
     dm_error: String!
-    "Why subscribing the Page to webhooks failed; empty when it did not."
+    "Why subscribing the Page to webhooks failed; empty when it did not. An Instagram account shows its linked Page's."
     webhook_error: String!
+    "When Meta last accepted the Page's webhook subscription (its own, or its linked Page's for Instagram); null when it never did."
+    webhook_subscribed_at: String
+    "The fields that subscription covers."
+    webhook_fields: [String!]!
+  }
+
+  enum SocialWebhookDeliveryStatus {
+    RECEIVED
+    PROCESSING
+    PROCESSED
+    FAILED
+  }
+
+  "What became of the events one webhook delivery carried."
+  type SocialWebhookOutcome {
+    events: Int!
+    "New DMs and comments stored."
+    stored: Int!
+    "Already stored: a Meta re-delivery, or a message the backfill or a send kept first."
+    duplicates: Int!
+    "Our own outbound messages coming back (kept as outbound, never as inbound)."
+    echoes: Int!
+    "For an account nobody has connected."
+    unknown_account: Int!
+    failed: Int!
+  }
+
+  "One signed delivery from Meta's webhook, kept for 14 days."
+  type SocialWebhookDelivery {
+    id: ID!
+    "instagram or page."
+    object: String!
+    "The Instagram account or Page ids the delivery names."
+    entry_ids: [String!]!
+    "The webhook fields it carried (messaging, comments, feed...)."
+    fields: [String!]!
+    status: SocialWebhookDeliveryStatus!
+    attempts: Int!
+    outcome: SocialWebhookOutcome!
+    error: String!
+    "The raw JSON Meta signed."
+    body: String!
+    received_at: String!
+    processed_at: String
+  }
+
+  "Meta's webhook registration for one object (instagram or page) of an app."
+  type SocialWebhookObjectStatus {
+    object: String!
+    registered: Boolean!
+    active: Boolean!
+    "The URL Meta calls; empty when nothing is registered."
+    callback_url: String!
+    "Meta calls our current webhook URL."
+    callback_matches: Boolean!
+    fields: [String!]!
+    "Fields the Inbox reads that the registration lacks."
+    missing_fields: [String!]!
+  }
+
+  "One Meta app's webhook setup, side by side with what we expect. No key is ever returned."
+  type SocialWebhookAppStatus {
+    "The Settings > Integrations entry Register uses."
+    entry_id: ID!
+    name: String!
+    app_id: String!
+    secret_set: Boolean!
+    verify_token_set: Boolean!
+    "Our webhook URL."
+    callback_url: String!
+    objects: [SocialWebhookObjectStatus!]!
+    "Meta's refusal when the registration could not be read; empty when it was."
+    error: String!
   }
 
   "What an auto-reply rule answers: a whole-message keyword, a phrase anywhere (FAQ), a person's first DM (WELCOME), or a phrase in a comment, answered with one private reply (COMMENT_TO_DM)."
@@ -322,6 +399,10 @@ export const socialInboxTypeDefs = gql`
     socialSettings: SocialSettings!
     "The URL Meta delivers webhooks to, for the app's Webhooks setup."
     socialWebhookUrl: String!
+    "The latest Meta webhook deliveries, newest first (at most 50)."
+    socialWebhookDeliveries(limit: Int): [SocialWebhookDelivery!]!
+    "Every Meta app's webhook registration at Meta, beside the URL and fields we expect."
+    socialWebhookSetup: [SocialWebhookAppStatus!]!
     "The auto-reply rules, most recently changed first."
     socialAutoReplyRulesTable(query: TableQueryInput): SocialAutoReplyRuleTablePage!
   }
@@ -349,5 +430,7 @@ export const socialInboxTypeDefs = gql`
     updateSocialAutoReplyRule(id: ID!, input: SocialAutoReplyRuleInput!): SocialAutoReplyRule!
     "Delete a rule. The replies it already made stay in Activity."
     deleteSocialAutoReplyRule(id: ID!): Boolean!
+    "Point the Meta app's webhook (Instagram and Page events) at our URL with the entry's verify token. Meta checks the URL there and then. Refused with NOT_CONFIGURED when the entry lacks a key or the verify token."
+    registerSocialWebhook(entry_id: ID!): SocialWebhookAppStatus!
   }
 `;

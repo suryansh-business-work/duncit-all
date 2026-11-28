@@ -114,6 +114,8 @@ const pubAccount = (o: any, flaggedOpen: number, ownerNames: Map<string, string>
     messaging_missing_permission: o.platform === 'INSTAGRAM' || o.platform === 'FACEBOOK' ? missingDmPermission(o) : null,
     dm_error: o.dm_error ?? '',
     webhook_error: o.webhook_error ?? '',
+    webhook_subscribed_at: iso(o.webhook_subscribed_at),
+    webhook_fields: o.webhook_fields ?? [],
     // The app it was connected through; null for one connected through the default before apps could be chosen.
     app_id: idOrNull(o.env_entry_id),
   };

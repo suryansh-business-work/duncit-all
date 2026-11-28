@@ -183,8 +183,43 @@ const META_WEBHOOK_PROVIDERS = ['INSTAGRAM', 'FACEBOOK'] as const satisfies read
  * Page connected through a second app is signed with that app's secret.
  */
 export async function metaWebhookKeys(): Promise<{ secrets: string[]; verifyTokens: string[] }> {
+  const apps = await metaWebhookApps();
+  const pick = (field: 'app_secret' | 'verify_token') => apps.map((app) => app[field]).filter(Boolean);
+  return { secrets: pick('app_secret'), verifyTokens: pick('verify_token') };
+}
+
+/** One active Meta app entry (Instagram or Facebook category) as the webhook setup reads it. */
+export interface MetaWebhookApp {
+  entry_id: string;
+  name: string;
+  provider: SocialProvider;
+  app_id: string;
+  app_secret: string;
+  verify_token: string;
+  version: string;
+}
+
+/** Every active Meta app entry, with the keys its webhook is verified and signed with. */
+export async function metaWebhookApps(): Promise<MetaWebhookApp[]> {
   const categories = META_WEBHOOK_PROVIDERS.map((provider) => APP_FIELDS[provider].category);
-  const entries = await EnvEntryModel.find({ category: { $in: categories }, is_active: true }).select('config').lean();
-  const pick = (field: string) => entries.map((entry) => configReader(entry.config)(field).trim()).filter(Boolean);
-  return { secrets: pick('app_secret'), verifyTokens: pick('webhook_verify_token') };
+  const entries = await EnvEntryModel.find({ category: { $in: categories }, is_active: true }).select('name category config').lean();
+  return entries.map((entry) => {
+    const read = configReader(entry.config);
+    const provider = providerOfCategory(entry.category) ?? 'FACEBOOK';
+    return {
+      entry_id: String(entry._id),
+      name: entry.name ?? '',
+      provider,
+      app_id: read('app_id').trim(),
+      app_secret: read('app_secret').trim(),
+      verify_token: read('webhook_verify_token').trim(),
+      version: read('graph_version').trim() || APP_FIELDS[provider].version?.fallback || '',
+    };
+  });
+}
+
+/** Where Meta delivers Instagram and Page events (social.webhook.router.ts). */
+export async function socialWebhookUrl(): Promise<string> {
+  const { serverUrl } = await getUrlConfigs();
+  return `${trimTrailingSlash(serverUrl)}/social/webhook`;
 }

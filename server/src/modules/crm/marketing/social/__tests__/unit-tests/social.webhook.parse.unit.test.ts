@@ -104,6 +104,30 @@ describe('parseMetaWebhook — Instagram', () => {
       },
     ]);
   });
+
+  it('reads a comment on a live video like any other comment', () => {
+    const [event] = parseMetaWebhook({
+      object: 'instagram',
+      entry: [{ id: IG, time: 1_764_000_000, changes: [{ field: 'live_comments', value: { id: 'lc-1', text: 'Hello live', from: { id: 'u-3', username: 'meera' }, media: { id: 'live-1' } } }] }],
+    });
+    expect(event).toMatchObject({ kind: 'COMMENT', external_id: 'lc-1', post_external_id: 'live-1', author_handle: 'meera', text: 'Hello live' });
+  });
+
+  it('keeps the story a DM answers as an attachment, so a reply with no text is not blank', () => {
+    const [event] = parseMetaWebhook({
+      object: 'instagram',
+      entry: [{ id: IG, messaging: [{ sender: { id: 'igsid-1' }, recipient: { id: IG }, timestamp: T, message: { mid: 'm-9', reply_to: { story: { url: 'https://cdn/story.mp4' } } } }] }],
+    });
+    expect(event).toMatchObject({ kind: 'DM', text: '', attachments: [{ type: 'story_reply', url: 'https://cdn/story.mp4' }] });
+  });
+
+  it('treats a message whose sender is the account itself as outbound even without is_echo', () => {
+    const [event] = parseMetaWebhook({
+      object: 'instagram',
+      entry: [{ id: IG, messaging: [{ sender: { id: IG }, recipient: { id: 'igsid-4' }, timestamp: T, message: { mid: 'm-10', text: 'Sent from the app' } }] }],
+    });
+    expect(event).toMatchObject({ direction: 'OUT', participant_id: 'igsid-4' });
+  });
 });
 
 describe('parseMetaWebhook — Page', () => {

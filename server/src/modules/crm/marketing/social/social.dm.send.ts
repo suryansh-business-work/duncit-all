@@ -8,6 +8,7 @@ import { socialCredentials } from './social.credentials';
 import { recordDm } from './social.dm.ingest';
 import { mapSendError } from './social.errors';
 import { SocialAccountModel } from './social.model';
+import { loadSocialSettings } from './social.settings';
 import { freshHandle, type AccountWithTokens } from './social.sync';
 import type { SocialAppCredentials } from './social.types';
 import { DM_LIMIT, messagingWindow, missingDmPermission, sendTerms, type SendTerms } from './social.window';
@@ -36,6 +37,14 @@ export function refuse(code: string, message: string): never {
   throw new GraphQLError(message, { extensions: { code } });
 }
 
+/** Why a reply may not go, in the words the Inbox shows. */
+export function windowClosedReason(automated: boolean, humanAgent: boolean): string {
+  if (automated) return 'Automated replies only go within 24 hours of the person’s last message.';
+  return humanAgent
+    ? 'The messaging window is closed: replies go only within 7 days of the person’s last message, and never to someone who has not written.'
+    : 'The messaging window is closed: replies go only within 24 hours of the person’s last message, and never to someone who has not written.';
+}
+
 interface Prepared {
   conversation: SocialConversationDoc;
   account: AccountWithTokens;
@@ -51,12 +60,9 @@ async function prepare(id: string, text: string, sender: DmSender): Promise<Prep
   if ([...text].length > limit) refuse('BAD_USER_INPUT', `A message on ${conversation.platform} is at most ${limit} characters.`);
   const automated = Boolean(sender.automation_rule_id);
   if (automated && conversation.opted_out) refuse('OPTED_OUT', 'This person opted out of automated messages.');
-  const terms = sendTerms(messagingWindow(conversation.last_inbound_at), automated);
-  if (!terms) {
-    refuse('WINDOW_CLOSED', automated
-      ? 'Automated replies only go within 24 hours of the person’s last message.'
-      : 'The messaging window is closed: replies go only within 7 days of the person’s last message, and never to someone who has not written.');
-  }
+  const { human_agent_replies: humanAgent } = await loadSocialSettings();
+  const terms = sendTerms(messagingWindow(conversation.last_inbound_at, Date.now(), humanAgent), automated);
+  if (!terms) refuse('WINDOW_CLOSED', windowClosedReason(automated, humanAgent));
   return { conversation, terms, ...(await messagingAccount(conversation.account_id)) };
 }
 

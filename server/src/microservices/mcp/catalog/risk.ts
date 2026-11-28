@@ -118,6 +118,9 @@ const CONFIRM_FIELDS = new Set([
   // (a trusted rule skips Approvals), so making or changing one is agreed first.
   'createSocialAutoReplyRule',
   'updateSocialAutoReplyRule',
+  // Overwrites the Meta app's own Webhooks setting (the URL Meta calls for
+  // every Instagram and Page event), so the person agrees first.
+  'registerSocialWebhook',
 ]);
 
 /** Words that mean a mutation reaches people or systems outside Duncit. */

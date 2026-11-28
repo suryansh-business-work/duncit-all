@@ -43,7 +43,8 @@ import { subscribeConnectedPages, syncConversations } from '../../social.dm.sync
 import { socialInboxResolvers } from '../../social.inbox.resolver';
 import { SocialAccountModel, SocialCommentModel, SocialPostModel } from '../../social.model';
 import { buildSocialOAuthRouter } from '../../social.router';
-import { resetSocialSettingsCache } from '../../social.settings';
+import { SocialSettingsModel, resetSocialSettingsCache } from '../../social.settings';
+import { conversationThread } from '../../social.conversations';
 import { processMetaWebhook } from '../../social.webhook.process';
 
 const m = (fn: unknown) => fn as jest.Mock;
@@ -105,7 +106,20 @@ describe('sendDirectMessage', () => {
     expect((await recordDm({ account_id: String(a._id), platform: 'INSTAGRAM', participant_id: 'igsid-1', direction: 'OUT', external_id: 'mid.out-1', text: 'Thanks for writing!', sent_at: new Date() })).duplicate).toBe(true);
   });
 
-  it('lets a person reply on the HUMAN_AGENT tag between 24 hours and 7 days', async () => {
+  it('refuses a person’s reply past 24 hours while Settings has not turned on human agent replies, saying why', async () => {
+    const a = await account();
+    const id = await conversationOn(String(a._id), 3 * 24 * HOUR);
+    await expect(sendDirectMessage(id, 'Sorry for the wait', { user: USER })).rejects.toMatchObject({
+      extensions: { code: 'WINDOW_CLOSED' },
+      message: expect.stringContaining('within 24 hours'),
+    });
+    expect(sendPageMessage).not.toHaveBeenCalled();
+    expect((await conversationThread(id)).conversation).toMatchObject({ window_state: 'CLOSED', window_closes_at: null });
+  });
+
+  it('lets a person reply on the HUMAN_AGENT tag between 24 hours and 7 days once Settings turns it on', async () => {
+    await SocialSettingsModel.updateOne({ key: 'default' }, { $set: { human_agent_replies: true } }, { upsert: true });
+    resetSocialSettingsCache();
     const a = await account();
     const id = await conversationOn(String(a._id), 3 * 24 * HOUR);
     m(sendPageMessage).mockResolvedValue({ external_id: 'mid.out-2', recipient_id: 'igsid-1' });

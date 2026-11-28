@@ -161,6 +161,62 @@ describe('recentConversations', () => {
     await expect(recentConversations(handle({ meta: {} }), since, CREDS)).resolves.toEqual([]);
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });
+
+  it('asks each platform only for the message fields it has, so a share, story reply or sticker is not stored blank', async () => {
+    queue({}, {});
+    await recentConversations(instagram, since, CREDS);
+    await recentConversations(facebook, since, CREDS);
+    expect(queryOf(0).fields).toBe('participants,updated_time,messages.limit(25){id,message,from,created_time,attachments,shares,story}');
+    expect(queryOf(1).fields).toBe('participants,updated_time,messages.limit(25){id,message,from,created_time,attachments,shares,sticker}');
+  });
+
+  it('keeps what a textless message was: a shared post, a story reply or mention, a sticker', async () => {
+    const message = (id: string, extra: Record<string, unknown>) => ({ id, message: '', from: { id: 'igsid-1' }, created_time: '2026-11-24T15:36:46+0000', ...extra });
+    queue({
+      data: [
+        {
+          id: 't-1',
+          updated_time: '2026-11-24T15:37:35+0000',
+          participants: { data: [{ id: 'igsid-1', username: 'duncit_app' }] },
+          messages: {
+            data: [
+              message('m-1', { shares: { data: [{ link: 'https://instagram.com/p/abc' }, {}] } }),
+              message('m-2', { story: { reply_to: { link: 'https://cdn/story.jpg' } } }),
+              message('m-3', { story: { mention: { link: 'https://cdn/mention.jpg' } } }),
+              message('m-4', { sticker: 'https://cdn/heart.png' }),
+            ],
+          },
+        },
+      ],
+    });
+    const [conversation] = await recentConversations(instagram, since, CREDS);
+    expect(conversation.messages.map((m) => m.attachments)).toEqual([
+      [{ type: 'share', url: 'https://instagram.com/p/abc' }],
+      [{ type: 'story_reply', url: 'https://cdn/story.jpg' }],
+      [{ type: 'story_mention', url: 'https://cdn/mention.jpg' }],
+      [{ type: 'sticker', url: 'https://cdn/heart.png' }],
+    ]);
+  });
+
+  it('follows the next page while its oldest conversation is still newer than the cursor, and stops once one is older', async () => {
+    const convo = (id: string, updated: string) => ({ id, updated_time: updated, participants: { data: [{ id: `p-${id}` }] } });
+    queue(
+      { data: [convo('a', '2026-11-25T00:00:00+0000')], paging: { next: `${GRAPH}/page-1/conversations?after=1` } },
+      { data: [convo('b', '2026-11-19T00:00:00+0000')], paging: { next: `${GRAPH}/page-1/conversations?after=2` } }
+    );
+    const found = await recentConversations(instagram, since, CREDS);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(urlOf(1)).toBe(`${GRAPH}/page-1/conversations?after=1`);
+    expect(found.map((c) => c.external_thread_id)).toEqual(['a']);
+  });
+
+  it('reads at most five pages however far back the conversations go', async () => {
+    const page = (n: number) => ({ data: [{ id: `c-${n}`, updated_time: '2026-11-26T00:00:00+0000', participants: { data: [{ id: `p-${n}` }] } }], paging: { next: `${GRAPH}/next-${n}` } });
+    queue(page(1), page(2), page(3), page(4), page(5), page(6));
+    const found = await recentConversations(instagram, since, CREDS);
+    expect(mockFetch).toHaveBeenCalledTimes(5);
+    expect(found).toHaveLength(5);
+  });
 });
 
 describe('subscribePageWebhooks', () => {

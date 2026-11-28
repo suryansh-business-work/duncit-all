@@ -2,8 +2,9 @@ import { SocialApiError } from './providers/http';
 
 /**
  * A Meta refusal, in words a marketer can act on, and whether it means the
- * account must be reconnected. The provider's own text is kept for the logs,
- * never shown raw; nothing here carries a token.
+ * account must be reconnected. A permission refusal carries Meta's own words
+ * (they name the permission or feature to add); the rest are plain words and
+ * Meta's text stays in the logs. Nothing here carries a token.
  */
 export interface MappedSendError {
   message: string;
@@ -20,6 +21,9 @@ const PERMISSION_CODES = new Set([10, 200, 230]);
 const RATE_LIMIT_CODES = new Set([4, 17, 32, 613]);
 const TRANSIENT_CODES = new Set([1, 2]);
 
+/** Meta's message without the "Facebook: " service prefix SocialApiError adds, cut to a line. */
+const metaReason = (error: SocialApiError): string => error.message.replace(/^[A-Za-z]+:\s*/, '').slice(0, 300);
+
 export function mapSendError(error: unknown): MappedSendError {
   if (!(error instanceof SocialApiError)) {
     return { message: 'The network could not be reached. Try again in a minute.', reconnect: false, retryable: true };
@@ -33,8 +37,10 @@ export function mapSendError(error: unknown): MappedSendError {
   if (error.expired || error.code === INVALID_TOKEN) {
     return { message: 'The account’s connection has expired. Reconnect it in Social Accounts.', reconnect: true, retryable: false };
   }
+  // A refused permission or feature (the human agent tag, pages_manage_metadata, …) is not a dead token:
+  // the account keeps syncing, and Meta's own reason says which permission to add before reconnecting.
   if (error.code !== null && PERMISSION_CODES.has(error.code)) {
-    return { message: 'The connection does not have the messaging permission. Reconnect the account to grant it.', reconnect: true, retryable: false };
+    return { message: `Meta refused this for a missing permission or feature — ${metaReason(error)}`, reconnect: false, retryable: false };
   }
   if (error.code !== null && RATE_LIMIT_CODES.has(error.code)) {
     return { message: 'The network is limiting how fast this account sends. Try again in a few minutes.', reconnect: false, retryable: true };

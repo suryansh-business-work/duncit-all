@@ -1,5 +1,5 @@
 import type { SocialAccountHandle, SocialAppCredentials } from '../social.types';
-import { SocialApiError } from './http';
+import { SocialApiError, socialJson } from './http';
 import { FACEBOOK_SERVICE, graphGet, graphPost, graphTime, isFacebookLogin } from './meta';
 
 /**
@@ -82,6 +82,12 @@ interface GraphMessage {
   created_time?: string;
   from?: GraphPerson;
   attachments?: { data?: { image_data?: { url?: string }; video_data?: { url?: string }; file_url?: string; mime_type?: string }[] };
+  /** A post, reel or link the person shared. */
+  shares?: { data?: { link?: string }[] };
+  /** Instagram: a reply to, or a mention in, a story. */
+  story?: { reply_to?: { link?: string }; mention?: { link?: string } };
+  /** Messenger: the sticker's image. */
+  sticker?: string;
 }
 
 interface GraphConversation {
@@ -89,6 +95,11 @@ interface GraphConversation {
   updated_time?: string;
   participants?: { data?: GraphPerson[] };
   messages?: { data?: GraphMessage[] };
+}
+
+interface ConversationPage {
+  data?: GraphConversation[];
+  paging?: { next?: string };
 }
 
 export interface FetchedMessage {
@@ -105,14 +116,47 @@ export interface FetchedConversation {
   messages: FetchedMessage[];
 }
 
-const attachmentsOf = (message: GraphMessage) =>
-  (message.attachments?.data ?? [])
-    .map((item) => {
+/** Files, then shares, story replies and stickers: a message with no text still says what it was. */
+export const attachmentsOf = (message: GraphMessage) =>
+  [
+    ...(message.attachments?.data ?? []).map((item) => {
       if (item.image_data?.url) return { type: 'image', url: item.image_data.url };
       if (item.video_data?.url) return { type: 'video', url: item.video_data.url };
       return { type: item.mime_type ?? 'file', url: item.file_url ?? '' };
-    })
-    .filter((item) => item.url);
+    }),
+    ...(message.shares?.data ?? []).map((share) => ({ type: 'share', url: share.link ?? '' })),
+    { type: 'story_reply', url: message.story?.reply_to?.link ?? '' },
+    { type: 'story_mention', url: message.story?.mention?.link ?? '' },
+    { type: 'sticker', url: message.sticker ?? '' },
+  ].filter((item) => item.url);
+
+/** The message fields each platform has: Meta refuses a whole read over one it does not know. */
+const MESSAGE_FIELDS = {
+  instagram: 'id,message,from,created_time,attachments,shares,story',
+  messenger: 'id,message,from,created_time,attachments,shares,sticker',
+} as const;
+/** A backfill reads at most this many pages of 50 conversations. */
+const MAX_CONVERSATION_PAGES = 5;
+
+const updatedAt = (conversation: GraphConversation) => graphTime(conversation.updated_time).getTime();
+
+/** Pages of conversations, newest first, until one reaches back past `since` (or the cap). */
+async function conversationsSince(account: SocialAccountHandle, page: string, since: Date, creds: SocialAppCredentials): Promise<GraphConversation[]> {
+  const platform = account.platform === 'INSTAGRAM' ? 'instagram' : 'messenger';
+  let res = await graphGet<ConversationPage>(creds.version, `/${page}/conversations`, account.access_token, {
+    platform,
+    fields: `participants,updated_time,messages.limit(25){${MESSAGE_FIELDS[platform]}}`,
+    limit: '50',
+  });
+  const all = [...(res.data ?? [])];
+  for (let pages = 1; pages < MAX_CONVERSATION_PAGES && res.paging?.next; pages += 1) {
+    const oldest = all.at(-1);
+    if (!oldest || updatedAt(oldest) < since.getTime()) break;
+    res = await socialJson<ConversationPage>(FACEBOOK_SERVICE, res.paging.next);
+    all.push(...(res.data ?? []));
+  }
+  return all;
+}
 
 /**
  * The Page's conversations updated since `since`, each with its latest
@@ -121,14 +165,10 @@ const attachmentsOf = (message: GraphMessage) =>
 export async function recentConversations(account: SocialAccountHandle, since: Date, creds: SocialAppCredentials): Promise<FetchedConversation[]> {
   const page = messagingPageOf(account);
   if (!page) return [];
-  const res = await graphGet<{ data?: GraphConversation[] }>(creds.version, `/${page}/conversations`, account.access_token, {
-    platform: account.platform === 'INSTAGRAM' ? 'instagram' : 'messenger',
-    fields: 'participants,updated_time,messages.limit(25){id,message,from,created_time,attachments}',
-    limit: '50',
-  });
+  const conversations = await conversationsSince(account, page, since, creds);
   const own = new Set([account.external_id, page]);
-  return (res.data ?? [])
-    .filter((conversation) => graphTime(conversation.updated_time).getTime() >= since.getTime())
+  return conversations
+    .filter((conversation) => updatedAt(conversation) >= since.getTime())
     .flatMap((conversation) => {
       const participant = (conversation.participants?.data ?? []).find((person) => !own.has(person.id));
       if (!participant) return [];

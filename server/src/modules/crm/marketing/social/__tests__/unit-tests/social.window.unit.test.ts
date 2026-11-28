@@ -31,6 +31,14 @@ describe('messagingWindow', () => {
   it('reads an ISO string the same as a Date', () => {
     expect(messagingWindow(ago(HOUR).toISOString(), NOW).state).toBe('OPEN');
   });
+
+  it('closes at 24 hours when the app has no human agent approval, and is unchanged inside them', () => {
+    expect(messagingWindow(ago(HOUR), NOW, false)).toEqual({ state: 'OPEN', closes_at: new Date(NOW - HOUR + STANDARD_WINDOW_MS) });
+    expect(messagingWindow(ago(STANDARD_WINDOW_MS - 1), NOW, false).state).toBe('OPEN');
+    expect(messagingWindow(ago(STANDARD_WINDOW_MS), NOW, false)).toEqual({ state: 'CLOSED', closes_at: null });
+    expect(messagingWindow(ago(3 * 24 * HOUR), NOW, false)).toEqual({ state: 'CLOSED', closes_at: null });
+    expect(sendTerms(messagingWindow(ago(3 * 24 * HOUR), NOW, false), false)).toBeNull();
+  });
 });
 
 describe('sendTerms', () => {

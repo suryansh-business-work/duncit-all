@@ -8,9 +8,10 @@ import { allUsersExist } from '../userNames';
  * team's choice rather than a network's rule. One document; every save goes
  * through the change log like any other model, so who changed what is kept.
  *
- * Meta's own rules — the 24-hour window, the 7-day human-agent reply, no
- * cold DMs — are deliberately NOT here (social.window.ts): no setting can
- * loosen them.
+ * Meta's own rules — the 24-hour window, no cold DMs — are deliberately NOT
+ * here (social.window.ts): no setting can loosen them. The 7-day human agent
+ * reply is Meta's too, but only for an app Meta approved for it, so it is
+ * offered only once `human_agent_replies` says the app has that approval.
  */
 export interface SocialSettings {
   /** Hours between two scheduled reads of an account — the fallback when a webhook was missed. */
@@ -37,6 +38,8 @@ export interface SocialSettings {
   auto_reply_requires_approval: boolean;
   /** Brand-voice notes the AI follows when it drafts a reply. */
   ai_reply_guidelines: string;
+  /** Whether a person may reply from 24 hours to 7 days on Meta's HUMAN_AGENT tag (the app must be approved for it). */
+  human_agent_replies: boolean;
 }
 
 export const SOCIAL_SETTINGS_DEFAULTS: Readonly<SocialSettings> = {
@@ -52,6 +55,7 @@ export const SOCIAL_SETTINGS_DEFAULTS: Readonly<SocialSettings> = {
   auto_reply_daily_cap: 50,
   auto_reply_requires_approval: true,
   ai_reply_guidelines: '',
+  human_agent_replies: false,
 };
 
 const MAX_KEYWORDS = 20;
@@ -75,6 +79,8 @@ export const socialSettingsInput = z
     auto_reply_daily_cap: z.number().int().min(0).max(500),
     auto_reply_requires_approval: z.boolean(),
     ai_reply_guidelines: z.string().trim().max(2000),
+    // Optional: a client from before this setting leaves the saved value as it is.
+    human_agent_replies: z.boolean().nullish(),
   })
   .strict();
 
@@ -93,6 +99,7 @@ const settingsSchema = new Schema(
     auto_reply_daily_cap: { type: Number, default: SOCIAL_SETTINGS_DEFAULTS.auto_reply_daily_cap },
     auto_reply_requires_approval: { type: Boolean, default: SOCIAL_SETTINGS_DEFAULTS.auto_reply_requires_approval },
     ai_reply_guidelines: { type: String, default: SOCIAL_SETTINGS_DEFAULTS.ai_reply_guidelines },
+    human_agent_replies: { type: Boolean, default: SOCIAL_SETTINGS_DEFAULTS.human_agent_replies },
     updated_by: { type: String, default: '' },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
@@ -140,7 +147,8 @@ export async function saveSocialSettings(input: unknown, userId: string): Promis
     const issue = parsed.error.issues[0];
     badInput(`${issue?.path.join('.') || 'settings'}: ${issue?.message ?? 'invalid value'}`);
   }
-  const settings = parsed.data;
+  const { human_agent_replies: humanAgent, ...rest } = parsed.data;
+  const settings = humanAgent === undefined || humanAgent === null ? rest : { ...rest, human_agent_replies: humanAgent };
   const assignee = settings.default_assignee_user_id;
   if (assignee && !(await allUsersExist([assignee]))) badInput('default_assignee_user_id: the assignee is not a known user');
   const overlap = settings.opt_out_keywords.filter((word) => settings.opt_in_keywords.includes(word));

@@ -6,7 +6,8 @@ import type { SocialPlatform } from './social.types';
  *
  * - `object: "instagram"` — the entry id is the Instagram account's id;
  *   `messaging[]` are DMs (our own sends come back with `is_echo`), and
- *   `changes[field=comments]` are comments on its media.
+ *   `changes[field=comments]` (and `live_comments`, on a live video) are
+ *   comments on its media.
  * - `object: "page"` — the entry id is the Page's id; `messaging[]` are
  *   Messenger DMs, `changes[field=feed]` with `item: comment` are comments.
  *
@@ -50,6 +51,8 @@ interface RawMessaging {
     is_echo?: boolean;
     is_deleted?: boolean;
     attachments?: { type?: string; payload?: { url?: string } }[];
+    /** Instagram: the story this message answers. */
+    reply_to?: { story?: { url?: string } };
   };
   postback?: { mid?: string; title?: string; payload?: string };
 }
@@ -94,13 +97,16 @@ function dmOf(platform: SocialPlatform, accountId: string, item: RawMessaging): 
     direction: outbound ? 'OUT' : 'IN',
     external_id: mid,
     text: message?.text ?? postback?.title ?? '',
-    attachments: (message?.attachments ?? []).map((a) => ({ type: a.type ?? 'file', url: a.payload?.url ?? '' })).filter((a) => a.url),
+    attachments: [
+      ...(message?.attachments ?? []).map((a) => ({ type: a.type ?? 'file', url: a.payload?.url ?? '' })),
+      { type: 'story_reply', url: message?.reply_to?.story?.url ?? '' },
+    ].filter((a) => a.url),
     sent_at: webhookTime(item.timestamp),
   };
 }
 
 function instagramComment(accountId: string, change: RawChange, entryTime: unknown): CommentEvent | null {
-  if (change.field !== 'comments') return null;
+  if (change.field !== 'comments' && change.field !== 'live_comments') return null;
   const value = record(change.value);
   const from = record(value.from);
   const id = str(value.id);

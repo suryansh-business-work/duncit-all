@@ -62,7 +62,10 @@ export function LinkStep({ connection, wa, onBack }: Readonly<Props>) {
   const theme = useTheme();
   const active = wa.connecting || wa.starting;
   const stalled = wa.connecting || connection.status === 'ERROR';
-  const error = wa.actionError || connection.last_error;
+  // The gateway holds a failure's reason in memory only, so after it restarts a failed session has none.
+  const failedNoReason =
+    connection.status === 'ERROR' ? t('crm.tools.sessionFailedNoReason') : null;
+  const error = wa.actionError || connection.last_error || failedNoReason;
   const iconColor = theme.onPrimary?.val;
 
   return (

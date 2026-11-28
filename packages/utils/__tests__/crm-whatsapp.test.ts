@@ -44,7 +44,13 @@ describe('waInitialConnectStep', () => {
     expect(waInitialConnectStep({ status: 'CONNECTING' })).toBe('link');
     expect(waInitialConnectStep({ status: 'DISCONNECTED', connected_at: '2026-11-20T10:00:00.000Z' })).toBe('link');
     expect(waInitialConnectStep({ status: 'DISCONNECTED', connected_at: null })).toBe('gateway');
-    expect(waInitialConnectStep({ status: 'ERROR' })).toBe('gateway');
+    expect(waInitialConnectStep({ status: 'DISCONNECTED' })).toBe('gateway');
+  });
+
+  it('opens a failed session on Link WhatsApp, where its reason and Restart connection are, linked before or not', () => {
+    expect(waInitialConnectStep({ status: 'ERROR' })).toBe('link');
+    expect(waInitialConnectStep({ status: 'ERROR', connected_at: null })).toBe('link');
+    expect(waInitialConnectStep({ status: 'ERROR', connected_at: '2026-11-20T10:00:00.000Z' })).toBe('link');
   });
 });
 

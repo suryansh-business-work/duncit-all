@@ -50,13 +50,16 @@ export const waExtractionPercent = (job: { total: number; processed: number }): 
   job.total > 0 ? Math.round((job.processed / job.total) * 100) : 0;
 
 /**
- * Which step the connect stepper opens on: a session already booting, or one linked before,
- * goes straight to Link WhatsApp; a first connect starts at the gateway URL and API key.
+ * Which step the connect stepper opens on: a session already booting, one that failed, or one
+ * linked before goes straight to Link WhatsApp; a first connect starts at the gateway URL and API
+ * key. A failed session opens on Link because ERROR only comes from a saved gateway, and Link is
+ * where its reason and Restart connection are.
  */
 export const waInitialConnectStep = (connection: {
   status: string;
   connected_at?: string | null;
-}): 'gateway' | 'link' => (connection.status === 'CONNECTING' || connection.connected_at ? 'link' : 'gateway');
+}): 'gateway' | 'link' =>
+  connection.status === 'CONNECTING' || connection.status === 'ERROR' || connection.connected_at ? 'link' : 'gateway';
 
 export type WaFirstStatusAction = 'arm' | 'resume' | 'restart' | 'none';
 

@@ -8520,6 +8520,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "crm.tools.resumingSession": "Reconnecting your saved WhatsApp session…",
   "crm.tools.saveAndContinue": "Save & continue",
   "crm.tools.scanInstructions": "Open WhatsApp → Linked devices → Link a device, then scan:",
+  "crm.tools.sessionFailedNoReason": "WhatsApp stopped after an earlier error and is not running now. Press Restart connection, then scan the new QR.",
   "crm.tools.sessionSaved": "Session saved. It stays linked when you leave this page.",
   "crm.tools.statusConnected": "Connected",
   "crm.tools.statusConnecting": "Connecting",

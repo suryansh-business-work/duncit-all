@@ -1704,6 +1704,8 @@ export const CRM_BUNDLE: NestedCatalogue = {
       resumingSession: 'Reconnecting your saved WhatsApp session…',
       saveAndContinue: 'Save & continue',
       scanInstructions: 'Open WhatsApp → Linked devices → Link a device, then scan:',
+      sessionFailedNoReason:
+        'WhatsApp stopped after an earlier error and is not running now. Press Restart connection, then scan the new QR.',
       sessionSaved: 'Session saved. It stays linked when you leave this page.',
       stepGateway: 'Gateway URL & API key',
       stepLink: 'Link WhatsApp',

@@ -2,27 +2,28 @@ import { Alert, Card, CardContent, Divider, Link, Stack, Typography } from '@mui
 import { Link as RouterLink } from 'react-router';
 import { useTranslation } from '@duncit/app-settings';
 import PlatformIcon from '../PlatformIcon';
-import { PROVIDER_ADDS, PROVIDER_LABEL, PROVIDER_PLATFORMS } from '../copy';
-import type { SocialAccount, SocialApp, SocialProvider } from '../queries';
+import { PROVIDER_ADDS, PROVIDER_LABEL } from '../copy';
+import type { SocialAccount, SocialApp, SocialPlatform, SocialProvider } from '../queries';
 import AccountRow, { type AccountApp } from './AccountRow';
-import ConnectButton from './ConnectButton';
+import ConnectButton, { type ConnectOption } from './ConnectButton';
 
 interface Props {
-  provider: SocialProvider;
-  configured: boolean;
-  /** Every app the network can be connected through, the default first. */
-  apps: SocialApp[];
+  platform: SocialPlatform;
+  /** Every app that can bring this platform's accounts, its own provider's first. */
+  options: ConnectOption[];
+  /** Each provider's apps, so a row can name the app its account came through. */
+  appsByProvider: ReadonlyMap<SocialProvider, SocialApp[]>;
   accounts: SocialAccount[];
-  /** Where this network's app is set up — the Settings › Integrations tab for it. */
+  /** Where this platform's app is set up — the Settings › Integrations tab for it. */
   settingsTo?: string;
-  onConnect: (provider: SocialProvider, appId?: string | null) => Promise<void>;
+  onConnect: (provider: SocialProvider, appId?: string | null, reconnect?: boolean) => Promise<void>;
   onSync: (account: SocialAccount) => Promise<void>;
   onSetOwner: (account: SocialAccount) => void;
   onDisconnect: (account: SocialAccount) => void;
 }
 
 /**
- * The app an account row names: only once the network has more than one app,
+ * The app an account row names: only once its provider has more than one app,
  * or when the account's own app is gone (then it must be brought back through
  * another). An account with no app was connected through the default.
  */
@@ -33,56 +34,43 @@ function appOf(account: SocialAccount, apps: SocialApp[]): AccountApp | null {
 }
 
 /**
- * One network: what connecting it adds, and the accounts it already brought
- * in. Until its app is set up there is nothing to press — the card says where
- * that happens and links there, instead of offering a button that would fail.
+ * One platform — what an account IS, whichever app brought it — with every
+ * account of it, however many: a second Instagram account is a second row,
+ * so "Connect another" is always there once one is. Until no app can bring
+ * the platform there is nothing to press: the card says where that is set up.
  */
-export default function ProviderCard({
-  provider,
-  configured,
-  apps,
-  accounts,
-  settingsTo,
-  onConnect,
-  onSync,
-  onSetOwner,
-  onDisconnect,
-}: Readonly<Props>) {
+export default function PlatformCard({ platform, options, appsByProvider, accounts, settingsTo, onConnect, onSync, onSetOwner, onDisconnect }: Readonly<Props>) {
   const { t } = useTranslation();
-  const titleId = `social-provider-title-${provider.toLowerCase()}`;
+  const titleId = `social-platform-title-${platform.toLowerCase()}`;
+  const slug = platform.toLowerCase();
+  const configured = options.length > 0;
   const connectLabel = accounts.length > 0 ? t('marketing.social.connectAnother') : t('marketing.social.connect');
 
   return (
-    <Card variant="outlined" component="section" aria-labelledby={titleId} data-testid={`social-provider-${provider.toLowerCase()}`}>
+    <Card variant="outlined" component="section" aria-labelledby={titleId} data-testid={`social-provider-${slug}`}>
       <CardContent>
         <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', minWidth: 0 }}>
-            <Stack direction="row" spacing={0.5} sx={{ color: 'text.secondary' }}>
-              {PROVIDER_PLATFORMS[provider].map((platform) => (
-                <PlatformIcon key={platform} platform={platform} />
-              ))}
-            </Stack>
+            <PlatformIcon platform={platform} sx={{ color: 'text.secondary' }} />
             <div>
               <Typography id={titleId} variant="subtitle1" component="h2" sx={{ fontWeight: 700 }}>
-                {t(PROVIDER_LABEL[provider])}
+                {t(PROVIDER_LABEL[platform])}
               </Typography>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {t(PROVIDER_ADDS[provider])}
+                {t(PROVIDER_ADDS[platform])}
               </Typography>
             </div>
           </Stack>
-          {configured && apps.length > 0 && (
-            <ConnectButton provider={provider} apps={apps} label={connectLabel} primary={accounts.length === 0} onConnect={onConnect} />
-          )}
+          {configured && <ConnectButton platform={platform} options={options} label={connectLabel} primary={accounts.length === 0} onConnect={onConnect} />}
         </Stack>
 
-        {configured ? null : (
-          <Alert severity="info" variant="outlined" sx={{ mt: 2 }} data-testid={`social-not-set-up-${provider.toLowerCase()}`}>
+        {!configured && (
+          <Alert severity="info" variant="outlined" sx={{ mt: 2 }} data-testid={`social-not-set-up-${slug}`}>
             {t('marketing.social.notSetUp')}
             {settingsTo && (
               <>
                 {' '}
-                <Link component={RouterLink} to={settingsTo} data-testid={`social-open-settings-${provider.toLowerCase()}`}>
+                <Link component={RouterLink} to={settingsTo} data-testid={`social-open-settings-${slug}`}>
                   {t('marketing.social.openSettings')}
                 </Link>
               </>
@@ -91,7 +79,7 @@ export default function ProviderCard({
         )}
 
         {configured && accounts.length === 0 && (
-          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 2 }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 2 }} data-testid={`social-no-account-${slug}`}>
             {t('marketing.social.noAccountYet')}
           </Typography>
         )}
@@ -102,10 +90,10 @@ export default function ProviderCard({
               <AccountRow
                 key={account.id}
                 account={account}
-                app={appOf(account, apps)}
+                app={appOf(account, appsByProvider.get(account.provider) ?? [])}
                 onSync={onSync}
-                // A reconnect goes through the account's own app: its tokens only work with that app.
-                onReconnect={() => onConnect(provider, account.app_id)}
+                // A reconnect goes through the account's own app (its tokens only work with that app) and asks again for declined permissions.
+                onReconnect={() => onConnect(account.provider, account.app_id, true)}
                 onSetOwner={onSetOwner}
                 onDisconnect={onDisconnect}
               />

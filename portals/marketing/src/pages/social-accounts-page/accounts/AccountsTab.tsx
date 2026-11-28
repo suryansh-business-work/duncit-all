@@ -3,10 +3,11 @@ import { Box } from '@mui/material';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
 import { integrationsPath } from '../../../lib/routes';
-import { PROVIDERS } from '../copy';
-import type { SocialAccount, SocialConnectReturn, SocialProviderStatus } from '../queries';
+import { CONNECT_PROVIDERS, PLATFORMS } from '../copy';
+import type { SocialAccount, SocialApp, SocialConnectReturn, SocialPlatform, SocialProvider, SocialProviderStatus } from '../queries';
+import type { ConnectOption } from './ConnectButton';
 import OwnerDialog from './OwnerDialog';
-import ProviderCard from './ProviderCard';
+import PlatformCard from './PlatformCard';
 import { useSocialAccountActions } from './useSocialAccountActions';
 
 interface Props {
@@ -19,7 +20,12 @@ interface Props {
   narrow?: boolean;
 }
 
-/** A card per network, in a fixed order, with its connected accounts inside. */
+/**
+ * A card per platform, in a fixed order, with every account OF that platform
+ * inside — however it arrived. One Meta login brings a Facebook Page and its
+ * Instagram account; the Page lands under Facebook and the account under
+ * Instagram, each card saying which app it came through.
+ */
 export default function AccountsTab({ providers, accounts, onChanged, returnTo, narrow = false }: Readonly<Props>) {
   const { t } = useTranslation();
   const actions = useSocialAccountActions(onChanged, returnTo);
@@ -27,6 +33,9 @@ export default function AccountsTab({ providers, accounts, onChanged, returnTo, 
   const [leaving, setLeaving] = useState<SocialAccount | null>(null);
   const [owning, setOwning] = useState<SocialAccount | null>(null);
   const status = new Map(providers.map((p) => [p.provider, p]));
+  const appsByProvider = new Map<SocialProvider, SocialApp[]>(providers.map((p) => [p.provider, p.configured ? p.apps : []]));
+  const optionsFor = (platform: SocialPlatform): ConnectOption[] =>
+    CONNECT_PROVIDERS[platform].flatMap((provider) => (appsByProvider.get(provider) ?? []).map((app) => ({ provider, app })));
 
   const confirmDisconnect = async (account: SocialAccount) => {
     if (await actions.disconnect(account)) setLeaving(null);
@@ -35,14 +44,14 @@ export default function AccountsTab({ providers, accounts, onChanged, returnTo, 
   return (
     <>
       <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: columns, alignItems: 'start' }}>
-        {PROVIDERS.map((provider) => (
-          <ProviderCard
-            key={provider}
-            provider={provider}
-            configured={status.get(provider)?.configured ?? false}
-            apps={status.get(provider)?.apps ?? []}
-            settingsTo={integrationsPath(status.get(provider)?.category)}
-            accounts={accounts.filter((account) => account.provider === provider)}
+        {PLATFORMS.map((platform) => (
+          <PlatformCard
+            key={platform}
+            platform={platform}
+            options={optionsFor(platform)}
+            appsByProvider={appsByProvider}
+            settingsTo={integrationsPath(status.get(CONNECT_PROVIDERS[platform][0])?.category)}
+            accounts={accounts.filter((account) => account.platform === platform)}
             onConnect={actions.connect}
             onSync={actions.sync}
             onSetOwner={setOwning}

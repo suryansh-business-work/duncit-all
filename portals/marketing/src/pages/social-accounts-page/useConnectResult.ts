@@ -20,10 +20,12 @@ export function useConnectResult(onConnected: () => void) {
   const connected = params.get('connected') ?? '';
   const error = params.get('social_error') ?? '';
   const count = Number(params.get('count') ?? 0);
+  // A held grant opens the account picker (ConnectPicker), which says how it went once the marketer chooses.
+  const picking = params.has('pick');
 
   useEffect(() => {
     if (!connected && !error) return;
-    if (isProvider(connected)) {
+    if (isProvider(connected) && !picking) {
       const provider = t(PROVIDER_LABEL[connected]);
       if (count > 0) {
         notify(t('marketing.social.connectedToast', { count, vars: { provider } }), 'success');
@@ -44,5 +46,5 @@ export function useConnectResult(onConnected: () => void) {
       },
       { replace: true }
     );
-  }, [connected, error, count, t, onConnected, setParams]);
+  }, [connected, error, count, picking, t, onConnected, setParams]);
 }

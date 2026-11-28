@@ -85,17 +85,31 @@ describe('SocialSettingsTab', () => {
 });
 
 describe('MessagingLine', () => {
-  it('asks for a reconnect when the messaging permission is missing, and names failed reads and webhooks', () => {
+  it('blocks with a warning and a working Reconnect when the messaging permission is missing, naming failed reads and webhooks', () => {
+    const onReconnect = vi.fn().mockResolvedValue(undefined);
     renderWithProviders(
-      <MessagingLine account={makeSocialAccount({ messaging_missing_permission: 'instagram_manage_messages', webhook_error: 'needs pages_manage_metadata', dm_error: 'boom' })} />
+      <MessagingLine
+        account={makeSocialAccount({ messaging_missing_permission: 'instagram_manage_messages', webhook_error: 'needs pages_manage_metadata', dm_error: 'boom' })}
+        onReconnect={onReconnect}
+      />
     );
-    expect(screen.getByTestId('social-messaging-line')).toHaveTextContent(
+    const line = screen.getByTestId('social-messaging-line');
+    expect(line).toHaveTextContent(
       'Reconnect to enable messaging (needs instagram_manage_messages). · Webhooks are not set up for this Page: needs pages_manage_metadata · Direct messages could not be read: boom'
     );
+    expect(line).toHaveClass('MuiAlert-root');
+    fireEvent.click(screen.getByTestId('social-messaging-reconnect-sa1'));
+    expect(onReconnect).toHaveBeenCalledTimes(1);
+  });
+
+  it('only notes a failed DM read, with no Reconnect, when nothing blocks messaging', () => {
+    renderWithProviders(<MessagingLine account={makeSocialAccount({ dm_error: 'timed out' })} onReconnect={vi.fn()} />);
+    expect(screen.getByTestId('social-messaging-line')).toHaveTextContent('Direct messages could not be read: timed out');
+    expect(screen.queryByTestId('social-messaging-reconnect-sa1')).not.toBeInTheDocument();
   });
 
   it('says nothing for an account that is ready', () => {
-    renderWithProviders(<MessagingLine account={makeSocialAccount()} />);
+    renderWithProviders(<MessagingLine account={makeSocialAccount()} onReconnect={vi.fn()} />);
     expect(screen.queryByTestId('social-messaging-line')).not.toBeInTheDocument();
   });
 });

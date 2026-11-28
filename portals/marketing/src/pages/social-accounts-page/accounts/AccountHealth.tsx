@@ -1,4 +1,5 @@
-import { Chip, Typography } from '@mui/material';
+import { Alert, Chip, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import type { SocialAccount } from '../queries';
 
@@ -45,9 +46,11 @@ export function HealthLine({ account }: Readonly<{ account: SocialAccount }>) {
 /**
  * Whether the account can do direct messages: the permission a reconnect would
  * grant, and why the last DM read or the Page's webhook subscription failed.
- * Nothing at all for an account that is ready (or a network without DMs here).
+ * A missing permission or a refused subscription blocks DMs, so it is a
+ * warning with the Reconnect that fixes it (Meta is asked to show the declined
+ * permissions again). Nothing at all for an account that is ready.
  */
-export function MessagingLine({ account }: Readonly<{ account: SocialAccount }>) {
+export function MessagingLine({ account, onReconnect }: Readonly<{ account: SocialAccount; onReconnect: () => Promise<void> }>) {
   const { t } = useTranslation();
   const lines = [
     account.messaging_missing_permission ? t('marketing.social.messagingMissing', { vars: { permission: account.messaging_missing_permission } }) : '',
@@ -55,9 +58,27 @@ export function MessagingLine({ account }: Readonly<{ account: SocialAccount }>)
     account.dm_error ? t('marketing.social.dmError', { vars: { reason: account.dm_error } }) : '',
   ].filter(Boolean);
   if (lines.length === 0) return null;
+  const blocking = Boolean(account.messaging_missing_permission || account.webhook_error);
+  if (!blocking) {
+    return (
+      <Typography variant="caption" component="p" sx={{ color: 'warning.main' }} data-testid="social-messaging-line">
+        {lines.join(' · ')}
+      </Typography>
+    );
+  }
   return (
-    <Typography variant="caption" component="p" sx={{ color: 'warning.main' }} data-testid="social-messaging-line">
+    <Alert
+      severity="warning"
+      variant="outlined"
+      sx={{ mt: 1 }}
+      data-testid="social-messaging-line"
+      action={
+        <DuncitButton size="small" color="warning" onClick={onReconnect} data-testid={`social-messaging-reconnect-${account.id}`}>
+          {t('marketing.social.reconnect')}
+        </DuncitButton>
+      }
+    >
       {lines.join(' · ')}
-    </Typography>
+    </Alert>
   );
 }

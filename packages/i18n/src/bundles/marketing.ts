@@ -601,6 +601,7 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
         'Need accounts from another business or brand? Add another entry here with that app’s keys and test it. Social media › Accounts then asks which app to connect through, and those accounts post and message through that app.',
       tabInstagram: 'Instagram',
       tabFacebook: 'Facebook',
+      tabMeta: 'Meta (Facebook + Instagram)',
       tabThreads: 'Threads',
       tabYoutube: 'YouTube',
       tabLinkedin: 'LinkedIn',
@@ -667,6 +668,13 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       openSettings: 'Open Integrations',
       connect: 'Connect',
       connectAnother: 'Connect another',
+      // Which app an account came through, on its card under the handle.
+      viaInstagram: 'via Instagram',
+      viaMeta: 'via Meta',
+      viaThreads: 'via Threads',
+      viaYoutube: 'via YouTube',
+      viaLinkedin: 'via LinkedIn',
+      viaX: 'via X',
       // A network can have several apps (Settings › Integrations); Connect asks which one.
       chooseApp: 'Connect through which app',
       connectVia: 'Connect via {name}',
@@ -2099,6 +2107,26 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       humanAgentReplies: 'Human agent replies (24 hours to 7 days)',
       humanAgentRepliesHint:
         'Off: the reply box closes 24 hours after the person’s last message. On: a person (never an auto-reply) may still reply for up to 7 days on Meta’s human agent tag. Turn this on only once Meta has approved the Human Agent feature for this app, or Meta refuses those replies.',
+    },
+    // After a connect: everything the grant reached, to tick before anything is created.
+    socialPicker: {
+      title: 'Choose the accounts to connect',
+      intro: 'This is everything {provider} gave Duncit access to. Tick the accounts to add; nothing is connected until you press Connect.',
+      loading: 'Reading what was found…',
+      accountLine: '{platform} — {name}',
+      connected: 'Connected',
+      willRefresh: 'Connected · will be refreshed',
+      tickOne: 'Tick at least one account to connect.',
+      connectCount: { one: 'Connect 1 account', other: 'Connect {count} accounts' },
+      cancel: 'Cancel',
+      close: 'Close',
+      foundMeta: 'Meta gave Duncit access to {pages} Facebook Pages and {instagram} Instagram accounts.',
+      causesTitle: 'This usually means one of these:',
+      causeNotProfessional: 'The Instagram account is a personal account. Switch it to a professional (business or creator) account in the Instagram app.',
+      causeNotLinked: 'The Instagram account is not linked to a Facebook Page. Link it in Meta Business Suite or Accounts Center.',
+      causeNotTicked: 'No Page was ticked on Meta’s consent screen. On the next Connect, tick the Page (or opt in to all current and future Pages).',
+      tryAgain: 'Fix it in Meta, then press Connect again.',
+      nothingOther: '{provider} gave Duncit access to no account. Check that you manage a Page, channel or profile there, then press Connect again and allow access to it.',
     },
     // Marketing → Social → Webhooks: whether Meta calls us, and every delivery it made.
     socialWebhooks: {

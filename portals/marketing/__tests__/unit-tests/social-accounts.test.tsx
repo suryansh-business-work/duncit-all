@@ -28,10 +28,10 @@ vi.mock('@duncit/dialogs', async (importOriginal) => ({
 }));
 
 import AccountRow from '../../src/pages/social-accounts-page/accounts/AccountRow';
-import ProviderCard from '../../src/pages/social-accounts-page/accounts/ProviderCard';
+import PlatformCard from '../../src/pages/social-accounts-page/accounts/PlatformCard';
 import AccountsTab from '../../src/pages/social-accounts-page/accounts/AccountsTab';
 import AiPoints from '../../src/pages/social-accounts-page/AiPoints';
-import type { SocialAccount, SocialApp, SocialProviderStatus } from '../../src/pages/social-accounts-page/queries';
+import type { SocialAccount, SocialApp, SocialProvider, SocialProviderStatus } from '../../src/pages/social-accounts-page/queries';
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -235,13 +235,16 @@ const cardHandlers = () => ({
   onDisconnect: vi.fn(),
 });
 
-describe('ProviderCard', () => {
-  it('explains where a network is set up, with a link there, instead of offering a button that would fail', () => {
+describe('PlatformCard', () => {
+  const only = (provider: SocialProvider, apps: SocialApp[]) => new Map<SocialProvider, SocialApp[]>([[provider, apps]]);
+  const options = (provider: SocialProvider, apps: SocialApp[]) => apps.map((app) => ({ provider, app }));
+
+  it('explains where a platform is set up, with a link there, instead of offering a button that would fail', () => {
     renderWithProviders(
-      <ProviderCard
-        provider="LINKEDIN"
-        configured={false}
-        apps={[]}
+      <PlatformCard
+        platform="LINKEDIN"
+        options={[]}
+        appsByProvider={new Map()}
         accounts={[]}
         settingsTo="/settings/integrations?selectedtab=SOCIAL_LINKEDIN"
         {...cardHandlers()}
@@ -252,31 +255,26 @@ describe('ProviderCard', () => {
     expect(screen.getByTestId('social-not-set-up-linkedin')).toHaveTextContent(
       'Not set up yet — add this network’s app under Settings › Integrations. Open Integrations',
     );
-    expect(screen.getByTestId('social-open-settings-linkedin')).toHaveAttribute(
-      'href',
-      '/settings/integrations?selectedtab=SOCIAL_LINKEDIN',
-    );
+    expect(screen.getByTestId('social-open-settings-linkedin')).toHaveAttribute('href', '/settings/integrations?selectedtab=SOCIAL_LINKEDIN');
     expect(screen.queryByTestId('social-connect-linkedin')).not.toBeInTheDocument();
     expect(screen.queryByText('No account connected yet.')).not.toBeInTheDocument();
   });
 
-  it('leaves the link out when no settings tab is known for the network', () => {
-    renderWithProviders(<ProviderCard provider="THREADS" configured={false} apps={[]} accounts={[]} {...cardHandlers()} />);
-    expect(screen.getByTestId('social-not-set-up-threads')).toHaveTextContent(
-      'Not set up yet — add this network’s app under Settings › Integrations.',
-    );
+  it('leaves the link out when no settings tab is known for the platform', () => {
+    renderWithProviders(<PlatformCard platform="THREADS" options={[]} appsByProvider={new Map()} accounts={[]} {...cardHandlers()} />);
+    expect(screen.getByTestId('social-not-set-up-threads')).toHaveTextContent('Not set up yet — add this network’s app under Settings › Integrations.');
     expect(screen.queryByTestId('social-open-settings-threads')).not.toBeInTheDocument();
   });
 
-  it('invites the first connection of a configured network', () => {
+  it('invites the first connection of a platform an app can bring', () => {
     const handlers = cardHandlers();
-    renderWithProviders(<ProviderCard provider="INSTAGRAM" configured apps={[MAIN_APP]} accounts={[]} {...handlers} />);
+    renderWithProviders(
+      <PlatformCard platform="INSTAGRAM" options={options('INSTAGRAM', [MAIN_APP])} appsByProvider={only('INSTAGRAM', [MAIN_APP])} accounts={[]} {...handlers} />,
+    );
     const card = screen.getByTestId('social-provider-instagram');
     expect(within(card).getByTestId('InstagramIcon')).toBeInTheDocument();
-    expect(within(card).queryByTestId('FacebookIcon')).not.toBeInTheDocument();
     expect(screen.getByText('Adds: Instagram professional account (business or creator)')).toBeInTheDocument();
-    expect(screen.getByText('No account connected yet.')).toBeInTheDocument();
-    expect(screen.queryByTestId('social-not-set-up-instagram')).not.toBeInTheDocument();
+    expect(screen.getByTestId('social-no-account-instagram')).toHaveTextContent('No account connected yet.');
     const connect = screen.getByTestId('social-connect-instagram');
     expect(connect).toHaveTextContent(/^Connect$/);
     expect(connect).toHaveClass('MuiButton-contained');
@@ -284,28 +282,25 @@ describe('ProviderCard', () => {
     expect(connect).not.toHaveAttribute('aria-haspopup');
     fireEvent.click(connect);
     expect(handlers.onConnect).toHaveBeenCalledWith('INSTAGRAM', 'main-app');
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
   it('draws the Threads mark for a Threads profile', () => {
-    renderWithProviders(<ProviderCard provider="THREADS" configured apps={[MAIN_APP]} accounts={[]} {...cardHandlers()} />);
+    renderWithProviders(<PlatformCard platform="THREADS" options={options('THREADS', [MAIN_APP])} appsByProvider={new Map()} accounts={[]} {...cardHandlers()} />);
     expect(within(screen.getByTestId('social-provider-threads')).getByTestId('AlternateEmailIcon')).toBeInTheDocument();
   });
 
-  it('lists connected accounts and reconnects through the same provider', () => {
+  it('lists every account of the platform with Connect another, and reconnects through the account’s own app asking again for permissions', () => {
     const handlers = cardHandlers();
     const live = makeSocialAccount({ id: 'x1', provider: 'X', platform: 'X', name: 'Duncit X' });
     const expired = makeSocialAccount({ id: 'x2', provider: 'X', platform: 'X', name: 'Old X', status: 'EXPIRED' });
-    renderWithProviders(<ProviderCard provider="X" configured apps={[MAIN_APP]} accounts={[live, expired]} {...handlers} />);
+    renderWithProviders(<PlatformCard platform="X" options={options('X', [MAIN_APP])} appsByProvider={only('X', [MAIN_APP])} accounts={[live, expired]} {...handlers} />);
     const connect = screen.getByTestId('social-connect-x');
     expect(connect).toHaveTextContent('Connect another');
     expect(connect).toHaveClass('MuiButton-outlined');
     expect(screen.queryByText('No account connected yet.')).not.toBeInTheDocument();
-    expect(screen.getByTestId('social-account-x1')).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('social-reconnect-x2'));
     // Connected through the default before apps could be chosen: no app, so the default answers.
-    expect(handlers.onConnect).toHaveBeenCalledWith('X', null);
-    // One app on the network: no row needs to say which.
+    expect(handlers.onConnect).toHaveBeenCalledWith('X', null, true);
     expect(screen.queryByTestId('social-app-line-x1')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('social-sync-x1'));
     expect(handlers.onSync).toHaveBeenCalledWith(live);
@@ -315,52 +310,45 @@ describe('ProviderCard', () => {
     expect(handlers.onDisconnect).toHaveBeenCalledWith(expired);
   });
 
-  it('still lists accounts a network brought in before its app was removed', () => {
-    renderWithProviders(
-      <ProviderCard provider="LINKEDIN" configured={false} apps={[]} accounts={[makeSocialAccount()]} {...cardHandlers()} />,
-    );
+  it('still lists accounts brought in before the app was removed', () => {
+    renderWithProviders(<PlatformCard platform="LINKEDIN" options={[]} appsByProvider={new Map()} accounts={[makeSocialAccount()]} {...cardHandlers()} />);
     expect(screen.getByTestId('social-not-set-up-linkedin')).toBeInTheDocument();
     expect(screen.getByTestId('social-account-sa1')).toBeInTheDocument();
   });
 
-  it('asks which app to connect through when the network has several, marking the default', () => {
+  it('asks which app to connect through when several can bring the platform, marking the default', () => {
     const handlers = cardHandlers();
-    renderWithProviders(<ProviderCard provider="FACEBOOK" configured apps={[MAIN_APP, BRAND_APP]} accounts={[]} {...handlers} />);
-    const connect = screen.getByTestId('social-connect-facebook');
+    const both = [...options('INSTAGRAM', [MAIN_APP]), ...options('FACEBOOK', [BRAND_APP])];
+    renderWithProviders(<PlatformCard platform="INSTAGRAM" options={both} appsByProvider={new Map()} accounts={[]} {...handlers} />);
+    const connect = screen.getByTestId('social-connect-instagram');
     expect(connect).toHaveAttribute('aria-haspopup', 'menu');
     fireEvent.click(connect);
     expect(handlers.onConnect).not.toHaveBeenCalled();
-    const menu = screen.getByRole('menu', { name: 'Connect through which app' });
-    const items = within(menu).getAllByRole('menuitem');
+    const items = within(screen.getByRole('menu', { name: 'Connect through which app' })).getAllByRole('menuitem');
     expect(items.map((item) => item.textContent)).toEqual(['Connect via DuncitDefault', 'Connect via Brand two']);
-    fireEvent.click(screen.getByTestId('social-connect-facebook-app-brand-app'));
+    fireEvent.click(screen.getByTestId('social-connect-instagram-app-brand-app'));
     expect(handlers.onConnect).toHaveBeenCalledWith('FACEBOOK', 'brand-app');
   });
 
-  it('names each account’s app once there are several, and reconnects through the account’s own app', () => {
+  it('names each account’s app once its provider has several, and reconnects through the account’s own app', () => {
     const handlers = cardHandlers();
     const onBrand = makeSocialAccount({ id: 'f1', provider: 'FACEBOOK', platform: 'FACEBOOK', app_id: 'brand-app', status: 'EXPIRED' });
     const onDefault = makeSocialAccount({ id: 'f2', provider: 'FACEBOOK', platform: 'FACEBOOK', app_id: null });
+    const apps = [MAIN_APP, BRAND_APP];
     renderWithProviders(
-      <ProviderCard provider="FACEBOOK" configured apps={[MAIN_APP, BRAND_APP]} accounts={[onBrand, onDefault]} {...handlers} />,
+      <PlatformCard platform="FACEBOOK" options={options('FACEBOOK', apps)} appsByProvider={only('FACEBOOK', apps)} accounts={[onBrand, onDefault]} {...handlers} />,
     );
     expect(screen.getByTestId('social-app-line-f1')).toHaveTextContent('App: Brand two');
-    // No app stored: it was connected through the default.
     expect(screen.getByTestId('social-app-line-f2')).toHaveTextContent('App: Duncit');
     fireEvent.click(screen.getByTestId('social-reconnect-f1'));
-    expect(handlers.onConnect).toHaveBeenCalledWith('FACEBOOK', 'brand-app');
+    expect(handlers.onConnect).toHaveBeenCalledWith('FACEBOOK', 'brand-app', true);
   });
 
   it('warns on an account whose app was removed, even with one app left', () => {
     const gone = makeSocialAccount({ id: 'g1', app_id: 'deleted-app' });
-    renderWithProviders(<ProviderCard provider="LINKEDIN" configured apps={[MAIN_APP]} accounts={[gone]} {...cardHandlers()} />);
+    renderWithProviders(<PlatformCard platform="LINKEDIN" options={options('LINKEDIN', [MAIN_APP])} appsByProvider={only('LINKEDIN', [MAIN_APP])} accounts={[gone]} {...cardHandlers()} />);
     expect(screen.getByTestId('social-app-missing-g1')).toBeInTheDocument();
     expect(screen.queryByTestId('social-app-line-g1')).not.toBeInTheDocument();
-  });
-
-  it('offers no Connect button when the network reports no usable app', () => {
-    renderWithProviders(<ProviderCard provider="X" configured apps={[]} accounts={[]} {...cardHandlers()} />);
-    expect(screen.queryByTestId('social-connect-x')).not.toBeInTheDocument();
   });
 });
 

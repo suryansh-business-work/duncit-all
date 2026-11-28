@@ -17,6 +17,7 @@ import IdeasTab from './ideas/IdeasTab';
 import SocialSettingsTab from './settings/SocialSettingsTab';
 import AutoRepliesTab from './auto-replies/AutoRepliesTab';
 import WebhooksTab from './webhooks/WebhooksTab';
+import ConnectPicker from './accounts/ConnectPicker';
 import { ideaText } from './ideas/idea-text';
 
 type Tab = 'accounts' | 'publish' | 'posts' | 'analytics' | 'monitoring' | 'ideas' | 'auto-replies' | 'webhooks' | 'settings';
@@ -76,6 +77,7 @@ export default function SocialAccountsPage() {
         {tabs.value === 'settings' && <SocialSettingsTab />}
       </Box>
 
+      <ConnectPicker onDone={reload} />
       <ComposerDialog request={composer} accounts={accounts} onClose={() => setComposer(null)} />
       <PostDetailDrawer postId={openPostId} onClose={() => setOpenPostId(null)} />
     </Box>

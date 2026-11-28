@@ -7,7 +7,7 @@ import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { StatusChip } from '@duncit/ui';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import PlatformIcon from '../PlatformIcon';
-import { STATUS_COLORS, STATUS_LABEL } from '../copy';
+import { STATUS_COLORS, STATUS_LABEL, VIA_LABEL } from '../copy';
 import type { SocialAccount } from '../queries';
 import { ExpiryChip, HealthLine, MessagingLine } from './AccountHealth';
 
@@ -69,6 +69,9 @@ export default function AccountRow({ account, app, onSync, onReconnect, onSetOwn
         <Typography variant="caption" component="p" sx={{ color: 'text.secondary' }}>
           {facts.join(' · ')}
         </Typography>
+        <Typography variant="caption" component="p" sx={{ color: 'text.secondary' }} data-testid={`social-via-${account.id}`}>
+          {t(VIA_LABEL[account.provider])}
+        </Typography>
         <Typography variant="caption" component="p" sx={{ color: 'text.secondary' }} data-testid={`social-owner-line-${account.id}`}>
           {owner}
         </Typography>
@@ -83,7 +86,7 @@ export default function AccountRow({ account, app, onSync, onReconnect, onSetOwn
           </Typography>
         )}
         <HealthLine account={account} />
-        <MessagingLine account={account} />
+        <MessagingLine account={account} onReconnect={onReconnect} />
         {account.status !== 'CONNECTED' && account.last_error && (
           <Typography variant="caption" component="p" sx={{ color: 'error.main' }} role="status">
             {account.last_error}

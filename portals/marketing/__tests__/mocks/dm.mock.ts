@@ -187,6 +187,7 @@ export const makeSocialSettings = (over: Partial<SocialSettings> = {}): SocialSe
   auto_reply_daily_cap: 50,
   auto_reply_requires_approval: true,
   ai_reply_guidelines: '',
+  human_agent_replies: false,
   ...over,
 });
 

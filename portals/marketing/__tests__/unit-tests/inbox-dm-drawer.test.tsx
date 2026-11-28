@@ -89,8 +89,17 @@ describe('ConversationDrawer', () => {
   it('turns Send off with the reason when the window has closed or the permission is missing', async () => {
     renderDrawer([conversationMock(read({}, { window_state: 'CLOSED', window_closes_at: null, opted_out: true }))]);
     const drawer = await screen.findByTestId('dm-drawer');
-    expect(await within(drawer).findByTestId('dm-window-CLOSED')).toHaveTextContent('Messaging window closed.');
+    const closed = await within(drawer).findByTestId('dm-window-CLOSED');
+    expect(closed).toHaveTextContent('Messaging window closed. The person last wrote fmt:2026-11-24T10:00:00.000Z');
+    expect(closed).toHaveTextContent('Reply from the Instagram or Messenger app');
     expect(within(drawer).getByTestId('dm-opted-out')).toBeInTheDocument();
+    expect(within(drawer).getByTestId('inbox-send')).toBeDisabled();
+  });
+
+  it('says no first message can go to someone who never wrote', async () => {
+    renderDrawer([conversationMock(read({}, { window_state: 'CLOSED', window_closes_at: null, last_inbound_at: null }))]);
+    const drawer = await screen.findByTestId('dm-drawer');
+    expect(await within(drawer).findByTestId('dm-window-CLOSED')).toHaveTextContent('never a first message to someone who has not written');
     expect(within(drawer).getByTestId('inbox-send')).toBeDisabled();
   });
 

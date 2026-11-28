@@ -20688,6 +20688,8 @@ export type Mutation = {
   register: AuthPayload;
   /** Register the location with ShipRocket so SHIP orders can pick up from it. */
   registerBrandPickupWithShiprocket: BrandPickupLocation;
+  /** Point the Meta app's webhook (Instagram and Page events) at our URL with the entry's verify token. Meta checks the URL there and then. Refused with NOT_CONFIGURED when the entry lacks a key or the verify token. */
+  registerSocialWebhook: SocialWebhookAppStatus;
   /** Turn a request down, with a reason. */
   rejectAccountDeletionRequest: AccountDeletionDetail;
   /** Reject the Club Admin. A reason is required. */
@@ -25721,6 +25723,11 @@ export type MutationRegisterArgs = {
 
 export type MutationRegisterBrandPickupWithShiprocketArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationRegisterSocialWebhookArgs = {
+  entry_id: Scalars['ID']['input'];
 };
 
 
@@ -38765,6 +38772,10 @@ export type Query = {
    * verified. A hint, not the gate — signup still refuses a taken identity.
    */
   socialSignupStatus: SocialSignupStatus;
+  /** The latest Meta webhook deliveries, newest first (at most 50). */
+  socialWebhookDeliveries: Array<SocialWebhookDelivery>;
+  /** Every Meta app's webhook registration at Meta, beside the URL and fields we expect. */
+  socialWebhookSetup: Array<SocialWebhookAppStatus>;
   /** The URL Meta delivers webhooks to, for the app's Webhooks setup. */
   socialWebhookUrl: Scalars['String']['output'];
   /** Every card, including the switched-off ones. Admin only. */
@@ -43277,6 +43288,11 @@ export type QuerySocialSignupStatusArgs = {
 };
 
 
+export type QuerySocialWebhookDeliveriesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QuerySslLiveCheckArgs = {
   name: Scalars['String']['input'];
 };
@@ -47455,8 +47471,12 @@ export type SocialAccount = {
   token_expires_at?: Maybe<Scalars['String']['output']>;
   /** Whole days until the token lapses (0 or less: lapsed); null for a token that does not expire. */
   token_expires_in_days?: Maybe<Scalars['Int']['output']>;
-  /** Why subscribing the Page to webhooks failed; empty when it did not. */
+  /** Why subscribing the Page to webhooks failed; empty when it did not. An Instagram account shows its linked Page's. */
   webhook_error: Scalars['String']['output'];
+  /** The fields that subscription covers. */
+  webhook_fields: Array<Scalars['String']['output']>;
+  /** When Meta last accepted the Page's webhook subscription (its own, or its linked Page's for Instagram); null when it never did. */
+  webhook_subscribed_at?: Maybe<Scalars['String']['output']>;
 };
 
 export type SocialAccountEngagement = {
@@ -48147,7 +48167,7 @@ export type SocialSeries = {
   values: Array<Scalars['Int']['output']>;
 };
 
-/** Marketing > Social > Settings. Meta's own rules (24-hour window, 7-day human-agent reply, no cold DMs) are not settings. */
+/** Marketing > Social > Settings. Meta's own rules (24-hour window, no cold DMs) are not settings; the 7-day human-agent reply is used only when human_agent_replies is on. */
 export type SocialSettings = {
   __typename?: 'SocialSettings';
   /** Brand-voice notes the AI follows when it drafts a reply (up to 2000 characters). */
@@ -48168,6 +48188,8 @@ export type SocialSettings = {
   default_assignee_user_id?: Maybe<Scalars['ID']['output']>;
   /** Days before a token expires that its owner is emailed (1-30). */
   expiry_alert_days: Scalars['Int']['output'];
+  /** A person may reply from 24 hours to 7 days on Meta's human agent tag. Off: every reply stops 24 hours after the person's last message. Turn on only once Meta has approved the app's Human Agent feature. */
+  human_agent_replies: Scalars['Boolean']['output'];
   /** An inbound DM from a lead's Instagram handle marks the lead Replied and stops its sequence. */
   link_dms_to_leads: Scalars['Boolean']['output'];
   /** A DM that is exactly one of these opts them back in. */
@@ -48187,6 +48209,8 @@ export type SocialSettingsInput = {
   backfill_days: Scalars['Int']['input'];
   default_assignee_user_id?: InputMaybe<Scalars['ID']['input']>;
   expiry_alert_days: Scalars['Int']['input'];
+  /** Omitted (older clients) keeps the saved value. */
+  human_agent_replies?: InputMaybe<Scalars['Boolean']['input']>;
   link_dms_to_leads: Scalars['Boolean']['input'];
   opt_in_keywords: Array<Scalars['String']['input']>;
   opt_out_keywords: Array<Scalars['String']['input']>;
@@ -48224,6 +48248,78 @@ export type SocialTopPost = {
   id: Scalars['ID']['output'];
   platform: SocialPlatform;
   text: Scalars['String']['output'];
+};
+
+/** One Meta app's webhook setup, side by side with what we expect. No key is ever returned. */
+export type SocialWebhookAppStatus = {
+  __typename?: 'SocialWebhookAppStatus';
+  app_id: Scalars['String']['output'];
+  /** Our webhook URL. */
+  callback_url: Scalars['String']['output'];
+  /** The Settings > Integrations entry Register uses. */
+  entry_id: Scalars['ID']['output'];
+  /** Meta's refusal when the registration could not be read; empty when it was. */
+  error: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  objects: Array<SocialWebhookObjectStatus>;
+  secret_set: Scalars['Boolean']['output'];
+  verify_token_set: Scalars['Boolean']['output'];
+};
+
+/** One signed delivery from Meta's webhook, kept for 14 days. */
+export type SocialWebhookDelivery = {
+  __typename?: 'SocialWebhookDelivery';
+  attempts: Scalars['Int']['output'];
+  /** The raw JSON Meta signed. */
+  body: Scalars['String']['output'];
+  /** The Instagram account or Page ids the delivery names. */
+  entry_ids: Array<Scalars['String']['output']>;
+  error: Scalars['String']['output'];
+  /** The webhook fields it carried (messaging, comments, feed...). */
+  fields: Array<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  /** instagram or page. */
+  object: Scalars['String']['output'];
+  outcome: SocialWebhookOutcome;
+  processed_at?: Maybe<Scalars['String']['output']>;
+  received_at: Scalars['String']['output'];
+  status: SocialWebhookDeliveryStatus;
+};
+
+export type SocialWebhookDeliveryStatus =
+  | 'FAILED'
+  | 'PROCESSED'
+  | 'PROCESSING'
+  | 'RECEIVED';
+
+/** Meta's webhook registration for one object (instagram or page) of an app. */
+export type SocialWebhookObjectStatus = {
+  __typename?: 'SocialWebhookObjectStatus';
+  active: Scalars['Boolean']['output'];
+  /** Meta calls our current webhook URL. */
+  callback_matches: Scalars['Boolean']['output'];
+  /** The URL Meta calls; empty when nothing is registered. */
+  callback_url: Scalars['String']['output'];
+  fields: Array<Scalars['String']['output']>;
+  /** Fields the Inbox reads that the registration lacks. */
+  missing_fields: Array<Scalars['String']['output']>;
+  object: Scalars['String']['output'];
+  registered: Scalars['Boolean']['output'];
+};
+
+/** What became of the events one webhook delivery carried. */
+export type SocialWebhookOutcome = {
+  __typename?: 'SocialWebhookOutcome';
+  /** Already stored: a Meta re-delivery, or a message the backfill or a send kept first. */
+  duplicates: Scalars['Int']['output'];
+  /** Our own outbound messages coming back (kept as outbound, never as inbound). */
+  echoes: Scalars['Int']['output'];
+  events: Scalars['Int']['output'];
+  failed: Scalars['Int']['output'];
+  /** New DMs and comments stored. */
+  stored: Scalars['Int']['output'];
+  /** For an account nobody has connected. */
+  unknown_account: Scalars['Int']['output'];
 };
 
 /** Meta's messaging window: OPEN within 24 h of the person's last message, HUMAN_AGENT (a person's reply only) up to 7 days, CLOSED after that or before they ever wrote. */

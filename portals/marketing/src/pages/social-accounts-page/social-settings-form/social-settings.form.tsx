@@ -5,7 +5,7 @@ import { Alert, Stack } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
-import { AiSection, AutoReplySection, LeadsSection, OptOutSection, SyncSection } from './social-settings.sections';
+import { AiSection, AutoReplySection, LeadsSection, MessagingWindowSection, OptOutSection, SyncSection } from './social-settings.sections';
 import {
   settingsFormValues,
   settingsInput,
@@ -34,7 +34,7 @@ export default function SocialSettingsForm({ settings, canEdit, canPickAssignee,
     <form noValidate onSubmit={save} data-testid="social-settings-form">
       <Stack spacing={2}>
         <Alert severity="info" data-testid="social-settings-meta-rules">
-          {t('marketing.socialSettings.metaRulesBody')}
+          {t('marketing.socialSettings.metaRulesWindowBody')}
         </Alert>
         {!canEdit && (
           <Alert severity="warning" data-testid="social-settings-read-only">
@@ -51,6 +51,7 @@ export default function SocialSettingsForm({ settings, canEdit, canPickAssignee,
           canPick={canPickAssignee}
         />
         <OptOutSection control={control} disabled={disabled} />
+        <MessagingWindowSection control={control} disabled={disabled} />
         <AutoReplySection control={control} disabled={disabled} />
         {canEdit && (
           <Stack direction="row">

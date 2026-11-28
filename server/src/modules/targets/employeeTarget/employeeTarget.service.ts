@@ -17,6 +17,7 @@ import { isDuplicateKeyError } from '@utils/mongo-error';
 import { escapedSearchRegex, runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { UserModel } from '@modules/access/user/user.model';
 import { userDisplayOf } from '@modules/access/user/user.display';
+import { hrJobIndex } from '@modules/hr/employee/employee.jobIndex';
 import { EmployeeTargetModel, type IEmployeeTarget, type ITargetPerson } from './employeeTarget.model';
 import { toTargetRow } from './employeeTarget.mapper';
 import { employeeTargetSettingsService } from './employeeTarget.settings';
@@ -156,7 +157,9 @@ export const employeeTargetService = {
     const filter: Record<string, unknown> = { 'metadata.role_keys': 'EMPLOYEE', 'metadata.status': 'ACTIVE' };
     if (term) {
       const rx = escapedSearchRegex(term);
-      filter.$or = [{ 'profile.first_name': rx }, { 'profile.last_name': rx }, { 'auth.email': rx }];
+      // The HR directory answers by employee code, title or department too.
+      const hrMatches = await hrJobIndex.searchUserIds(rx, ASSIGNABLE_LIMIT);
+      filter.$or = [{ 'profile.first_name': rx }, { 'profile.last_name': rx }, { 'auth.email': rx }, { _id: { $in: hrMatches } }];
     }
     const users = await UserModel.find(filter)
       .select('profile.first_name profile.last_name profile.profile_photo auth.email')
@@ -165,12 +168,19 @@ export const employeeTargetService = {
       .lean<
         { _id: Types.ObjectId; profile?: { first_name?: string; last_name?: string; profile_photo?: string }; auth?: { email?: string } }[]
       >();
-    return users.map((u) => ({
-      id: String(u._id),
-      name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim(),
-      email: u.auth?.email ?? null,
-      photo: u.profile?.profile_photo ?? null,
-    }));
+    const jobs = await hrJobIndex.byUserIds(users.map((u) => u._id));
+    return users.map((u) => {
+      const job = jobs.get(String(u._id));
+      return {
+        id: String(u._id),
+        name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim(),
+        email: u.auth?.email ?? null,
+        photo: u.profile?.profile_photo ?? null,
+        employee_code: job?.employee_code ?? null,
+        job_title: job?.job_title ?? null,
+        department: job?.department ?? null,
+      };
+    });
   },
 
   /** One target per employee per month; a repeated press of Assign returns the first record. */
@@ -259,6 +269,15 @@ export const employeeTargetService = {
     tablePage({ ...LIVE, 'employee.user_id': new Types.ObjectId(userId) }, query),
 
   myById: async (id: string, userId: string) => one(await liveDoc(id, userId)),
+
+  /** HR console, read-only: one employee's live targets, newest month first (at most `limit`). */
+  async forEmployee(userId: string, limit = 24) {
+    const docs = await EmployeeTargetModel.find({ ...LIVE, 'employee.user_id': new Types.ObjectId(userId) })
+      .sort({ month: -1 })
+      .limit(limit)
+      .lean<IEmployeeTarget[]>();
+    return rows(docs);
+  },
 
   /** The caller's targets still unsubmitted inside an open reminder window — the banner's source. */
   async myDue(userId: string) {

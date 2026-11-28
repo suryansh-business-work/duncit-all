@@ -110,6 +110,13 @@ const CONFIRM_FIELDS = new Set([
   'generateReelVoiceover',
   'generateReelSubtitles',
   'recommendNextReel',
+  // HR: a hire grants the Employee console, an exit takes it away, a rehire
+  // gives it back, and a bank change decides where a salary is paid.
+  'hireHrEmployee',
+  'scheduleHrEmployeeExit',
+  'rehireHrEmployee',
+  'restoreHrEmployeeAccess',
+  'updateHrEmployeeBank',
   // The social Inbox writing to a real person as the brand: a direct message,
   // and a public reply under their comment. An agent drafts; a person agrees.
   'sendSocialMessage',

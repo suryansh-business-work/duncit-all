@@ -47,9 +47,10 @@ const submit = (employee: Ctx, id: string, revision: number, over: Record<string
     employee
   );
 
+// Index builds on a cold in-memory mongod can outlast the 5 s default when this suite runs first.
 beforeAll(async () => {
   await EmployeeTargetModel.syncIndexes();
-});
+}, 60_000);
 
 describe('assigning', () => {
   it('stores the goals against an active employee, attributed to the admin', async () => {
@@ -110,7 +111,10 @@ describe('assigning', () => {
     await person('Lee', ['EMPLOYEE'], 'INACTIVE');
     await person('Mo', ['USER']);
     const all = await Q.targetAssignableEmployees({}, {}, admin);
-    expect(all).toEqual([{ id: priya.user!.id, name: 'Priya Rao', email: priya.user!.email, photo: null }]);
+    // No HR record for Priya, so the HR labels are empty — she is still offered.
+    expect(all).toEqual([
+      { id: priya.user!.id, name: 'Priya Rao', email: priya.user!.email, photo: null, employee_code: null, job_title: null, department: null },
+    ]);
     expect(await Q.targetAssignableEmployees({}, { search: 'pri' }, admin)).toHaveLength(1);
     expect(await Q.targetAssignableEmployees({}, { search: 'nobody' }, admin)).toEqual([]);
   });

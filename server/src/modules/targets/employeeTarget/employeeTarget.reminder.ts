@@ -1,13 +1,12 @@
 import type { Types } from 'mongoose';
 import { logs } from '@observability/log';
-import { getStatusEnvironment } from '@observability/statusServices';
 import { appDate, appFormat } from '@utils/app-time';
 import { startClusterJob } from '@utils/clusterJob';
 import { isDuplicateKeyError } from '@utils/mongo-error';
 import { UserModel } from '@modules/access/user/user.model';
 import { EmailClaimModel } from '@modules/content/emailLog/emailClaim.model';
 import { notificationService } from '@modules/engagement/notification/notification.service';
-import { PORTAL_REGISTRY } from '@modules/platform/portalMode/portalMode.registry';
+import { consoleUrl } from '@modules/platform/portalMode/portalMode.links';
 import { sendEmail } from '@services/email/email.service';
 import { NOTIFY_USER_FIELDS, recipientName, type NotifyUser } from '@services/notify/notify.recipients';
 import { EmployeeTargetModel, type IEmployeeTarget } from './employeeTarget.model';
@@ -34,11 +33,7 @@ async function claim(targetId: string, day: string): Promise<boolean> {
 
 /** The Employee console's My Targets page, on this environment's host. */
 function myTargetsUrl(): string {
-  const registered = PORTAL_REGISTRY.find((portal) => portal.key === 'employee')?.url ?? 'https://employee.duncit.com/';
-  const url = new URL(registered);
-  if (getStatusEnvironment() === 'staging') url.hostname = `staging.${url.hostname}`;
-  url.pathname = '/targets';
-  return url.toString();
+  return consoleUrl('employee', '/targets') ?? 'https://employee.duncit.com/targets';
 }
 
 /** Noon UTC of a calendar day: the same date in every zone the app is run in. */

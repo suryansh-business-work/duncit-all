@@ -45,6 +45,10 @@ export const BANK_ACCOUNT_NUMBER: RegExp;
  * pattern; mWeb checkout's 14-character variant rejects every valid GSTIN.
  */
 export const GSTIN: RegExp;
+/** Indian PAN (Permanent Account Number) — 5 letters, 4 digits, 1 letter, uppercase. */
+export const PAN: RegExp;
+/** EPFO UAN (Universal Account Number) — exactly 12 digits. */
+export const UAN: RegExp;
 /** FSSAI licence / registration number — exactly 14 digits. */
 export const FSSAI_NUMBER: RegExp;
 /**
@@ -91,6 +95,10 @@ export function isUpiId(value: string): boolean;
 export function isBankAccountNumber(value: string): boolean;
 /** Strict GSTIN check — see the {@link GSTIN} note before using it at checkout. */
 export function isGstin(value: string): boolean;
+/** PAN shape check — uppercase, 10 characters. */
+export function isPan(value: string): boolean;
+/** UAN shape check — 12 digits. */
+export function isUan(value: string): boolean;
 /** FSSAI number shape check — 14 digits. */
 export function isFssaiNumber(value: string): boolean;
 /** True for a YouTube video link the players can embed. */

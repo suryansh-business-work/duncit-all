@@ -48,6 +48,7 @@ import { startMeetingReminderScheduler } from '@modules/survey/meeting.reminder'
 import { startCheckoutNudgeScheduler } from '@modules/finance/payment/payment.checkoutNudge';
 import { startCoinExpiryReminderScheduler } from '@modules/finance/coin/coin.expiryReminder';
 import { startEmployeeTargetReminderScheduler } from '@modules/targets/employeeTarget/employeeTarget.reminder';
+import { startHrExitSweepScheduler } from '@modules/hr/employee/employee.exitSweep';
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
 import { startAppStoreReleaseScheduler } from '@modules/platform/appBuild/appStoreRelease.scheduler';
 import { startStoreReleaseScheduler } from '@modules/platform/appBuild/storeRelease.scheduler';
@@ -878,6 +879,9 @@ async function bootstrap() {
   // Month-end reminders to employees who have not reported on their monthly
   // target yet (Targets > Settings sets the window).
   startEmployeeTargetReminderScheduler();
+  // HR: exits whose notice period has ended become EXITED and lose the
+  // Employee console (HR > Employees > Exit).
+  startHrExitSweepScheduler();
 
   const app = express();
   const httpServer = http.createServer(app);

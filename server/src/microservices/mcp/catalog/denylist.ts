@@ -45,6 +45,9 @@ const DENIED_FIELDS: ReadonlyMap<string, string> = new Map([
   // Retired and always refused: a typed reference must never again mark a
   // rental refund paid. Refunds go out through Razorpay (sendRentalRefund).
   ['markRentalRefunded', 'retired: rental refunds are sent through Razorpay, never marked paid by hand'],
+  // A person's full bank account number and PAN. HR reads them in the console,
+  // where every reveal is written to the worker history; never into a chat.
+  ['hrEmployeeBankDetails', 'returns a full bank account number and PAN'],
   // A signed link to a buyer's private bank screenshot or statement.
   ['failedPaymentEvidenceLink', 'returns a signed link to private payment evidence'],
   // Security Verification. The screen's own operations belong to the person who

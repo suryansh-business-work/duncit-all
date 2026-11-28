@@ -95,6 +95,12 @@ export const BANK_ACCOUNT_NUMBER = /^\d{6,18}$/;
  */
 export const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
 
+/** Indian PAN (Permanent Account Number) — 5 letters, 4 digits, 1 letter, uppercase. */
+export const PAN = /^[A-Z]{5}\d{4}[A-Z]$/;
+
+/** EPFO UAN (Universal Account Number) — exactly 12 digits. */
+export const UAN = /^\d{12}$/;
+
 /**
  * FSSAI licence / registration number — exactly 14 digits. Indian food law
  * makes a food business print it on its menu, so a venue that serves food
@@ -194,6 +200,10 @@ export const isUpiId = (v) => UPI_ID.test(v);
 export const isBankAccountNumber = (v) => BANK_ACCOUNT_NUMBER.test(v);
 /** Strict GSTIN check — see the {@link GSTIN} note before using it at checkout. */
 export const isGstin = (v) => GSTIN.test(v);
+/** PAN shape check — uppercase, 10 characters. */
+export const isPan = (v) => PAN.test(v);
+/** UAN shape check — 12 digits. */
+export const isUan = (v) => UAN.test(v);
 /** FSSAI number shape check — 14 digits. */
 export const isFssaiNumber = (v) => FSSAI_NUMBER.test(v);
 /** True for a YouTube video link the players can embed. */

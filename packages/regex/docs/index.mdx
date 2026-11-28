@@ -26,6 +26,8 @@ exports:
   - 'UPI_ID'
   - 'BANK_ACCOUNT_NUMBER'
   - 'GSTIN'
+  - 'PAN'
+  - 'UAN'
   - 'FSSAI_NUMBER'
   - 'YOUTUBE_URL'
   - 'REFERRAL_CODE'
@@ -212,6 +214,8 @@ above holds for everything you can import.
 | `UPI_ID` | `/^[A-Za-z0-9._-]{2,256}@[A-Za-z][A-Za-z0-9.-]{2,64}$/` | `isUpiId` | `name@bank` |
 | `BANK_ACCOUNT_NUMBER` | `/^\d{6,18}$/` | `isBankAccountNumber` | 6–18 digits |
 | `GSTIN` | `/^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/` | `isGstin` | 15 chars, literal `Z` at 14 |
+| `PAN` | `/^[A-Z]{5}\d{4}[A-Z]$/` | `isPan` | Indian PAN — HR bank & statutory details |
+| `UAN` | `/^\d{12}$/` | `isUan` | EPFO Universal Account Number — HR statutory details |
 | `FSSAI_NUMBER` | `/^\d{14}$/` | `isFssaiNumber` | a venue's FSSAI licence number — 14 digits |
 | `YOUTUBE_URL` | watch / shorts / embed / live / youtu.be link | `isYoutubeUrl` | group 1 = the 11-character video id |
 | `COUPON_CODE` | `/^[A-Z0-9][A-Z0-9_-]{2,29}$/` | `isCouponCode` | a coupon code as stored — `WELCOME10`, `DIWALI_2026`; 3–30 chars, upper case |

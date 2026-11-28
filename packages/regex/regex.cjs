@@ -96,6 +96,12 @@ const BANK_ACCOUNT_NUMBER = /^\d{6,18}$/;
  */
 const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
 
+/** Indian PAN — 5 letters, 4 digits, 1 letter. See regex.mjs. */
+const PAN = /^[A-Z]{5}\d{4}[A-Z]$/;
+
+/** EPFO UAN — 12 digits. See regex.mjs. */
+const UAN = /^\d{12}$/;
+
 /** FSSAI licence / registration number — 14 digits. See regex.mjs. */
 const FSSAI_NUMBER = /^\d{14}$/;
 
@@ -231,6 +237,8 @@ module.exports = {
   UPI_ID,
   BANK_ACCOUNT_NUMBER,
   GSTIN,
+  PAN,
+  UAN,
   FSSAI_NUMBER,
   YOUTUBE_URL,
   PERSON_NAME,
@@ -273,6 +281,8 @@ module.exports = {
   isUpiId: (v) => UPI_ID.test(v),
   isBankAccountNumber: (v) => BANK_ACCOUNT_NUMBER.test(v),
   isGstin: (v) => GSTIN.test(v),
+  isPan: (v) => PAN.test(v),
+  isUan: (v) => UAN.test(v),
   isFssaiNumber: (v) => FSSAI_NUMBER.test(v),
   isYoutubeUrl: (v) => YOUTUBE_URL.test(v),
   isPersonName: (v) => PERSON_NAME.test(v),

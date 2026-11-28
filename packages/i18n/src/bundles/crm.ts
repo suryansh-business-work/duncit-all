@@ -61,6 +61,19 @@ export const CRM_BUNDLE: NestedCatalogue = {
         save: 'Save channels',
         saved: 'Channels saved',
         loadFailed: 'The settings could not be loaded.',
+        slackTitle: 'Build announcements on Slack',
+        // Whether a sign-in to the Duncit CRM app goes through Security Verification.
+        security: {
+          title: 'Sign-in security',
+          label: 'Ask for Security Verification on the Duncit CRM app',
+          hint: 'On: after signing in to the app, people share their location and accept the notice before the app opens. Off: the app opens straight after sign-in. Applies to new sign-ins; the CRM web portal always asks.',
+          confirmTitle: 'Stop asking for Security Verification on the app?',
+          confirmMessage: 'New sign-ins to the Duncit CRM app will open the app straight away, without sharing a location or accepting the notice. The CRM web portal will still ask.',
+          confirmOff: 'Turn off',
+          savedOn: 'The Duncit CRM app will ask for Security Verification at sign-in.',
+          savedOff: 'The Duncit CRM app will no longer ask for Security Verification at sign-in.',
+          loadFailed: 'The sign-in security setting could not be loaded.',
+        },
       },
     },
     // Lead Quality Score values shared by every screen that shows a score.

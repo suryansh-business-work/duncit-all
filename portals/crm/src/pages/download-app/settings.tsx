@@ -12,13 +12,15 @@ import {
   type CrmAppBuildSettings,
 } from '../../api/appDownload.gql';
 import { CrmAppChannelsForm, toCrmAppChannelsForm, type CrmAppChannelsValues } from '../../forms/crm-app-channels';
+import { CrmAppSecurityCard } from './CrmAppSecurityCard';
 
 type SettingsData = { crmAppBuildSettings: CrmAppBuildSettings };
 
 /**
- * CRM → CRM Mobile App → Settings: which Slack channel each new Duncit CRM
- * build is published to, production and staging apart. The same two settings
- * Tech → App Builds → Settings shows, so the screens never disagree.
+ * CRM → CRM Mobile App → Settings: whether the app asks for Security
+ * Verification at sign-in, and which Slack channel each new Duncit CRM build is
+ * published to, production and staging apart. The channels are the same two
+ * settings Tech → App Builds → Settings shows, so the screens never disagree.
  */
 export default function CrmAppSettingsPage() {
   const { t } = useTranslation();
@@ -43,15 +45,21 @@ export default function CrmAppSettingsPage() {
     <Stack spacing={2} sx={{ maxWidth: 720 }}>
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
         <SettingsIcon color="primary" />
-        <Box>
-          <Typography component="h1" variant="h5" sx={{ fontWeight: 800 }}>
-            {t('crm.downloadApp.settings.title')}
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            {t('crm.downloadApp.settings.intro')}
-          </Typography>
-        </Box>
+        <Typography component="h1" variant="h5" sx={{ fontWeight: 800 }}>
+          {t('crm.downloadApp.settings.title')}
+        </Typography>
       </Stack>
+
+      <CrmAppSecurityCard />
+
+      <Box>
+        <Typography component="h2" variant="subtitle1" sx={{ fontWeight: 700 }}>
+          {t('crm.downloadApp.settings.slackTitle')}
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          {t('crm.downloadApp.settings.intro')}
+        </Typography>
+      </Box>
 
       {loading && !settings && (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>

@@ -7,7 +7,7 @@ import { authPayload, toPublic } from '@modules/access/user/user.public';
 import { noteSignIn, type SignInContext } from '@modules/access/user/user.signin';
 import { isAccountLocked } from '@modules/access/accountDeletion/accountDeletion.lock';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
-import { assertPortalLogin, pendingClaimFor } from '@modules/portals';
+import { assertPortalLogin, signInClaimFor } from '@modules/portals';
 import { SIX_DIGIT_CODE } from '@utils/regex';
 import {
   CHALLENGE_TTL_SECONDS,
@@ -181,7 +181,7 @@ export const twoFactorService = {
     );
     const fresh = await UserModel.findById(user._id);
     if (!fresh) throw expired();
-    const payload = await authPayload(fresh, pendingClaimFor(challenge.portalKey));
+    const payload = await authPayload(fresh, await signInClaimFor(challenge.portalKey, signIn));
     // Roles can be revoked between the two steps; this is the moment that grants the session.
     assertPortalLogin(challenge.portalKey, payload.user.roles);
     noteSignIn(fresh, signIn ?? {}).catch(() => undefined);

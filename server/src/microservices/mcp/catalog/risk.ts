@@ -128,6 +128,9 @@ const CONFIRM_FIELDS = new Set([
   // Overwrites the Meta app's own Webhooks setting (the URL Meta calls for
   // every Instagram and Page event), so the person agrees first.
   'registerSocialWebhook',
+  // Turning it off lets every Duncit CRM app sign-in skip Security
+  // Verification (location + consent), so a person agrees first.
+  'updateCrmAppSettings',
 ]);
 
 /** Words that mean a mutation reaches people or systems outside Duncit. */

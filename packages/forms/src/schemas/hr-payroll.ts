@@ -10,7 +10,6 @@ import type { Translate } from './translate';
  * server/src/modules/hr/payroll/payroll.rules.ts and payroll.settings.ts,
  * which re-check every write.
  */
-const P = HR_PAYROLL_LIMITS;
 const DAY_MS = 86_400_000;
 
 const hasTwoDecimalsAtMost = (value: number) => Math.abs(value * 100 - Math.round(value * 100)) < 1e-6;
@@ -25,6 +24,7 @@ export interface PayrollAdjustmentValues {
 export const payrollAdjustmentDefaults: PayrollAdjustmentValues = { label: '', type: 'EARNING', amount: 0, note: '' };
 
 export function makePayrollAdjustmentSchema(t: Translate) {
+  const P = HR_PAYROLL_LIMITS;
   return z.object({
     label: z.string().trim().min(1, t('hrShared.form.required')).max(P.labelMax, t('hrShared.form.tooLong', { vars: { max: P.labelMax } })),
     type: z.enum(HR_ADJUSTMENT_TYPES),
@@ -44,6 +44,7 @@ export interface PayrollReleaseValues {
 
 /** A pay date from `today` up to the release limit ahead; `today` is the admin-zone day key. */
 export function makePayrollReleaseSchema(t: Translate, today: string) {
+  const P = HR_PAYROLL_LIMITS;
   const start = dateOfDayKey(today);
   return z.object({
     pay_on: z
@@ -67,6 +68,7 @@ export interface PayrollSettingsValues {
 }
 
 export function makePayrollSettingsSchema(t: Translate) {
+  const P = HR_PAYROLL_LIMITS;
   const whole = (min: number, max: number, key: string) =>
     z
       .number({ error: t('hrShared.form.numberRequired') })

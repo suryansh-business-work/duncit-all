@@ -10,7 +10,6 @@ import type { Translate } from './translate';
  * One set of rules for every console, matching the server's twins in
  * server/src/modules/hr/leave/leave.rules.ts, which re-check every write.
  */
-const L = HR_LEAVE_LIMITS;
 const DAY_MS = 86_400_000;
 
 const isDayKey = (value: string) => dateOfDayKey(value) !== null;
@@ -47,6 +46,7 @@ export interface LeaveRequestOutput {
 export const leaveRequestDefaults: LeaveRequestValues = { leave_type_id: '', start_date: '', end_date: '', half_day: '', reason: '' };
 
 export function makeLeaveRequestSchema(t: Translate) {
+  const L = HR_LEAVE_LIMITS;
   return z
     .object({
       leave_type_id: z.string().min(1, t('hrShared.form.leaveTypeRequired')),
@@ -82,7 +82,7 @@ export interface HrNoteValues {
 }
 
 /** A note of at most the limit; at least three characters when `required` (declining, HR cancelling). */
-export function makeHrNoteSchema(t: Translate, required: boolean, max: number = L.noteMax) {
+export function makeHrNoteSchema(t: Translate, required: boolean, max: number = HR_LEAVE_LIMITS.noteMax) {
   return z.object({
     note: z
       .string()
@@ -117,6 +117,7 @@ export const leaveTypeDefaults: LeaveTypeValues = {
 };
 
 export function makeLeaveTypeSchema(t: Translate) {
+  const L = HR_LEAVE_LIMITS;
   const days = (label: string) =>
     z
       .number({ error: t('hrShared.form.numberRequired') })
@@ -147,6 +148,7 @@ export interface HolidayValues {
 }
 
 export function makeHolidaySchema(t: Translate) {
+  const L = HR_LEAVE_LIMITS;
   return z.object({
     date: z.string().refine(isDayKey, t('hrShared.form.dateInvalid')),
     name: z
@@ -164,6 +166,7 @@ export interface LeaveSettingsValues {
 }
 
 export function makeLeaveSettingsSchema(t: Translate) {
+  const L = HR_LEAVE_LIMITS;
   return z.object({
     weekly_off_days: z.array(z.number().int().min(0).max(6)).max(6, t('hrShared.form.weeklyOffsMax')),
     leave_year_start_month: z.number().int().min(1, t('hrShared.form.required')).max(12, t('hrShared.form.required')),
@@ -184,6 +187,7 @@ export interface LeaveAdjustmentValues {
 }
 
 export function makeLeaveAdjustmentSchema(t: Translate) {
+  const L = HR_LEAVE_LIMITS;
   return z.object({
     leave_type_id: z.string().min(1, t('hrShared.form.leaveTypeRequired')),
     days: z

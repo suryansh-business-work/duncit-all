@@ -11,7 +11,6 @@ import type { Translate } from './translate';
  * (server/src/modules/hr/bankRequest/bankRequest.service.ts), which re-checks
  * the request and that the proof is the employee's own upload.
  */
-const L = HR_BANK_CHANGE_LIMITS;
 
 export interface BankChangeValues {
   account_holder_name: string;
@@ -45,6 +44,7 @@ export const bankChangeDefaults: BankChangeValues = {
 };
 
 export function makeBankChangeSchema(t: Translate) {
+  const L = HR_BANK_CHANGE_LIMITS;
   return z
     .object({
       account_holder_name: z

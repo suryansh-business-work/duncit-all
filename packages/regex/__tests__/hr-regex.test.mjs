@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { LEAVE_CODE, MONTH_KEY, isLeaveCode, isMonthKey } from '../regex.mjs';
-import * as cjs from '../regex.cjs';
+// The CommonJS twin is checked against these by lockstep.test.mjs (same patterns, same answers).
+import { isLeaveCode, isMonthKey } from '../regex.mjs';
 
 describe('LEAVE_CODE', () => {
   it('takes a capital letter followed by up to 11 capitals, digits or underscores', () => {
@@ -19,10 +19,5 @@ describe('MONTH_KEY', () => {
 
   it('refuses month 00 or 13, a short year, a missing pad and a full date', () => {
     for (const month of ['2026-00', '2026-13', '26-11', '2026-1', '2026-11-01', '']) expect(isMonthKey(month)).toBe(false);
-  });
-
-  it('is the same pattern in the CommonJS build', () => {
-    expect(cjs.MONTH_KEY.source).toBe(MONTH_KEY.source);
-    expect(cjs.LEAVE_CODE.source).toBe(LEAVE_CODE.source);
   });
 });

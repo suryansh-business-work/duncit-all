@@ -10,6 +10,7 @@ import {
   leaveSpanDays,
   leaveTypeDefaults,
   makeBankChangeSchema,
+  makeHolidaySchema,
   makeHrNoteSchema,
   makeLeaveAdjustmentSchema,
   makeLeaveRequestSchema,
@@ -80,6 +81,13 @@ describe('notes, types, settings and adjustments', () => {
     expect(schema.parse({ ...leaveTypeDefaults, name: 'Casual', code: 'cl' }).code).toBe('CL');
     expect(messages(schema.safeParse({ ...leaveTypeDefaults, name: 'Casual', code: '1X' }))).toEqual(['code:hrShared.form.codeInvalid']);
     expect(messages(schema.safeParse({ ...leaveTypeDefaults, name: 'Casual', code: 'CL', annual_quota: 1.25 }))).toEqual(['annual_quota:hrShared.form.halfSteps']);
+  });
+
+  it('takes a holiday on a real date with a name', () => {
+    const schema = makeHolidaySchema(t);
+    expect(schema.parse({ date: '2026-12-25', name: ' Christmas ' })).toEqual({ date: '2026-12-25', name: 'Christmas' });
+    expect(messages(schema.safeParse({ date: '2026-02-30', name: '' }))).toEqual(['date:hrShared.form.dateInvalid', 'name:hrShared.form.required']);
+    expect(messages(schema.safeParse({ date: '2026-12-25', name: 'x'.repeat(81) }))).toEqual(['name:hrShared.form.tooLong:80']);
   });
 
   it('keeps one working day a week and the backdate inside its bounds', () => {

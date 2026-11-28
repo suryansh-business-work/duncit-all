@@ -145,6 +145,7 @@ const EMAIL_SPREAD_FILES = {
   VENUE_OFFER_EMAIL_FALLBACK: "server/src/services/email/catalogue/catalogue.offers.ts",
   HOST_PERFORMANCE_EMAIL_FALLBACK: "server/src/services/email/catalogue/catalogue.hostPerformance.ts",
   TARGETS_EMAIL_FALLBACK: "server/src/services/email/catalogue/catalogue.targets.ts",
+  HR_EMAIL_FALLBACK: "server/src/services/email/catalogue/catalogue.hr.ts",
   PAYOUT_EMAIL_FALLBACK: "server/src/services/email/catalogue/catalogue.payouts.ts",
   RENTAL_EMAIL_FALLBACK: "server/src/services/email/catalogue/catalogue.rentals.ts",
   CRM_EMAIL_FALLBACK: "server/src/services/email/catalogue/catalogue.crm.ts",

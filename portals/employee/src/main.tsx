@@ -4,7 +4,7 @@ import { logs } from '@duncit/logs';
 // Via @duncit/app-settings, which already re-exports the i18n package — the
 // portal gains the copy without gaining a dependency (and without the matching
 // Dockerfile COPY that a new @duncit/* dep would silently require).
-import { EMPLOYEE_EXPENSE_BUNDLE, EMPLOYEE_TARGETS_BUNDLE, flattenCatalogue } from '@duncit/app-settings';
+import { EMPLOYEE_EXPENSE_BUNDLE, EMPLOYEE_TARGETS_BUNDLE, HR_EMPLOYEE_BUNDLE, flattenCatalogue } from '@duncit/app-settings';
 import { urlConfigs } from './config/url-configs';
 import { apolloClient } from './apollo';
 import { appConfig } from './config/app-config';
@@ -18,7 +18,12 @@ mountPortal({
   // The claim copy this console shares with the Finance queue that decides on
   // it, and the monthly-target copy it shares with the Targets console, layered
   // over the shell chrome (rule 38).
-  i18nFallback: { ...flattenCatalogue(EMPLOYEE_EXPENSE_BUNDLE), ...flattenCatalogue(EMPLOYEE_TARGETS_BUNDLE) },
+  i18nFallback: {
+    ...flattenCatalogue(EMPLOYEE_EXPENSE_BUNDLE),
+    ...flattenCatalogue(EMPLOYEE_TARGETS_BUNDLE),
+    // The HR record copy this console shares with the HR console (My HR record).
+    ...flattenCatalogue(HR_EMPLOYEE_BUNDLE),
+  },
   loadUser: createSessionUserLoader(apolloClient),
   children: <App />,
 });

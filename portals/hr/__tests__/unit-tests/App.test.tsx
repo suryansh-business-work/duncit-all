@@ -13,6 +13,13 @@ vi.mock('../../src/pages/DashboardPage', () => ({ default: () => <div>DASHBOARD 
 vi.mock('../../src/pages/team-structure', () => ({ default: () => <div>TEAMS LIST PAGE</div> }));
 vi.mock('../../src/pages/team-structure/TeamPage', () => ({ default: () => <div>TEAM CHART PAGE</div> }));
 vi.mock('../../src/pages/team-structure/PublicTeamPage', () => ({ default: () => <div>PUBLIC TEAM PAGE</div> }));
+vi.mock('../../src/pages/employees/list/EmployeesPage', () => ({ default: () => <div>EMPLOYEES PAGE</div> }));
+vi.mock('../../src/pages/employees/hire/HireEmployeePage', () => ({ default: () => <div>HIRE PAGE</div> }));
+vi.mock('../../src/pages/employees/profile/EmployeeProfilePage', async () => {
+  const { useParams } = await import('react-router');
+  return { default: () => <div>PROFILE OF {useParams().id}</div> };
+});
+vi.mock('../../src/pages/settings/HrSettingsPage', () => ({ default: () => <div>HR SETTINGS PAGE</div> }));
 vi.mock('@duncit/shell', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/shell')>()),
   ProfilePage: () => <div>PROFILE PAGE</div>,
@@ -66,6 +73,29 @@ describe('App routing', () => {
     expect(screen.getByText('PUBLIC TEAM PAGE')).toBeInTheDocument();
     expect(screen.queryByTestId('shell')).not.toBeInTheDocument();
     expect(screen.queryByText('LOGIN PAGE')).not.toBeInTheDocument();
+  });
+
+  it('keeps the employee pages and settings behind sign-in', () => {
+    for (const path of ['/employees', '/employees/new', '/employees/abc', '/settings']) {
+      renderWithProviders(<App />, { initialEntries: [path] });
+      expect(screen.getByText('LOGIN PAGE')).toBeInTheDocument();
+      cleanup();
+    }
+  });
+
+  it('routes the directory, hire, profile and settings pages inside the shell', () => {
+    setToken('tok');
+    const pages: [string, string][] = [
+      ['/employees', 'EMPLOYEES PAGE'],
+      ['/employees/new', 'HIRE PAGE'],
+      ['/employees/abc', 'PROFILE OF abc'],
+      ['/settings', 'HR SETTINGS PAGE'],
+    ];
+    for (const [path, text] of pages) {
+      renderWithProviders(<App />, { initialEntries: [path] });
+      expect(screen.getByTestId('shell')).toHaveTextContent(text);
+      cleanup();
+    }
   });
 
   it('redirects unknown routes to the dashboard', () => {

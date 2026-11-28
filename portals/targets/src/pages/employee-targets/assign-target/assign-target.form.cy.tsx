@@ -25,7 +25,7 @@ const issues = (values: unknown) => {
 const assignableMock: MockedResponse = {
   request: { query: TARGET_ASSIGNABLE_EMPLOYEES, variables: () => true },
   maxUsageCount: Number.POSITIVE_INFINITY,
-  result: { data: { targetAssignableEmployees: [{ __typename: 'EmployeeTargetAssignee', ...PRIYA }] } },
+  result: { data: { targetAssignableEmployees: [{ __typename: 'EmployeeTargetAssignee', ...PRIYA, employee_code: null, job_title: null, department: null }] } },
 };
 
 function renderForm(props: Partial<Parameters<typeof AssignTargetForm>[0]> = {}) {

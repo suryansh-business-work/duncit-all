@@ -1,7 +1,7 @@
 /**
  * Meta's refusals in words a marketer can act on, and which ones mean the
  * account must be reconnected or the send tried again. The raw provider text
- * never comes through.
+ * comes through only for a permission refusal, where it names what to add.
  */
 import { SocialApiError } from '../../providers/http';
 import { mapSendError } from '../../social.errors';
@@ -27,10 +27,19 @@ describe('mapSendError', () => {
     expect(mapSendError(new SocialApiError('Instagram', 401, 'expired', true))).toMatchObject({ reconnect: true });
   });
 
-  it('asks for a reconnect when the messaging permission is missing (10, 200, 230)', () => {
+  it('names Meta’s own reason for a refused permission or feature (10, 200, 230) and keeps the account connected', () => {
     for (const code of [10, 200, 230]) {
-      expect(mapSendError(meta(code))).toMatchObject({ reconnect: true, message: expect.stringContaining('messaging permission') });
+      const mapped = mapSendError(meta(code, undefined, false, '(#200) To send this you need pages_manage_metadata'));
+      expect(mapped).toEqual({
+        message: 'Meta refused this for a missing permission or feature — (#200) To send this you need pages_manage_metadata',
+        reconnect: false,
+        retryable: false,
+      });
     }
+  });
+
+  it('cuts a long permission reason to one short line', () => {
+    expect(mapSendError(meta(10, undefined, false, 'x'.repeat(1000))).message).toHaveLength('Meta refused this for a missing permission or feature — '.length + 300);
   });
 
   it('marks rate limits and Meta-side blips worth another try', () => {

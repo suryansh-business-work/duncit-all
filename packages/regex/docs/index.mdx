@@ -26,6 +26,8 @@ exports:
   - 'UPI_ID'
   - 'BANK_ACCOUNT_NUMBER'
   - 'GSTIN'
+  - 'PAN'
+  - 'UAN'
   - 'FSSAI_NUMBER'
   - 'YOUTUBE_URL'
   - 'REFERRAL_CODE'
@@ -212,6 +214,8 @@ above holds for everything you can import.
 | `UPI_ID` | `/^[A-Za-z0-9._-]{2,256}@[A-Za-z][A-Za-z0-9.-]{2,64}$/` | `isUpiId` | `name@bank` |
 | `BANK_ACCOUNT_NUMBER` | `/^\d{6,18}$/` | `isBankAccountNumber` | 6–18 digits |
 | `GSTIN` | `/^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/` | `isGstin` | 15 chars, literal `Z` at 14 |
+| `PAN` | `/^[A-Z]{5}\d{4}[A-Z]$/` | `isPan` | Indian PAN — HR bank & statutory details |
+| `UAN` | `/^\d{12}$/` | `isUan` | EPFO Universal Account Number — HR statutory details |
 | `FSSAI_NUMBER` | `/^\d{14}$/` | `isFssaiNumber` | a venue's FSSAI licence number — 14 digits |
 | `YOUTUBE_URL` | watch / shorts / embed / live / youtu.be link | `isYoutubeUrl` | group 1 = the 11-character video id |
 | `COUPON_CODE` | `/^[A-Z0-9][A-Z0-9_-]{2,29}$/` | `isCouponCode` | a coupon code as stored — `WELCOME10`, `DIWALI_2026`; 3–30 chars, upper case |
@@ -239,6 +243,8 @@ above holds for everything you can import.
 | `MONGO_DATABASE` | `/^[A-Za-z0-9_-]{1,64}$/` | `isMongoDatabase` | a MongoDB database name — `duncit` |
 | `MONGO_URI` | `/^mongodb(?:\+srv)?:\/\/\S{3,2000}$/` | `isMongoUri` | a MongoDB connection string — Atlas `mongodb+srv://…` or `mongodb://…` (Intel › Settings › Database Connectors, new Atlas connection) |
 | `DB_HOST` | `/^[A-Za-z0-9.-]{1,253}$/` | `isDbHost` | a database host — `db.example.com`, `duncit-mongo` (Intel › Settings › Database Connectors, new self-deployed connection) |
+| `LEAVE_CODE` | `/^[A-Z][A-Z0-9_]{0,11}$/` | `isLeaveCode` | a leave type's short code — `CL`, `SICK_2` (HR › Leave › Types) |
+| `MONTH_KEY` | `/^\d{4}-(?:0[1-9]\|1[0-2])$/` | `isMonthKey` | a calendar month — `2026-11` (HR › Payroll, Employee › Calendar) |
 | `HOSTNAME_LABEL` | `/^(?!-)[a-z\d-]{1,63}(?<!-)$/i` | `isHostname` | one DNS label; `isHostname` checks a whole name — `ns1.example.com`, two labels at least, 253 chars max |
 
 `EMAIL` and `UPI_ID` are bounded on both sides deliberately — the domain labels exclude `.`

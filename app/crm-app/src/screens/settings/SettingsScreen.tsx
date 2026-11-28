@@ -5,6 +5,7 @@ import { Card } from '@/components/Card';
 import { hasPhoneFeatures } from '@/services/permissions';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFeaturesStore } from '@/stores/features.store';
+import { AppSecurityCard } from './AppSecurityCard';
 import { CallLineCard } from './CallLineCard';
 import { CallingCard } from './calling/CallingCard';
 import { HomeScreenCard } from './HomeScreenCard';
@@ -14,9 +15,10 @@ import { ToggleRow } from './ToggleRow';
 
 /**
  * The app's own settings, opened from More: the call features, the CRM call
- * line, permissions, the home-screen dialer icon and the caller-ID sync. The
- * account, sign-out and app version live on More itself. On an iPhone only the
- * CRM call line applies: the rest reads the Android call log.
+ * line, sign-in security, permissions, the home-screen dialer icon and the
+ * caller-ID sync. The account, sign-out and app version live on More itself.
+ * On an iPhone only the CRM call line and sign-in security apply: the rest
+ * reads the Android call log.
  */
 export function SettingsScreen() {
   const { t } = useTranslation();
@@ -72,6 +74,7 @@ export function SettingsScreen() {
         </Card>
       ) : null}
       <CallLineCard />
+      <AppSecurityCard />
       {phone ? (
         <>
           <HomeScreenCard />

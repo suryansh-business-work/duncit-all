@@ -73,7 +73,9 @@ async function requireUserId(ctx: GraphQLContext): Promise<string> {
  * The DUID is the same anonymous device id the clients already send for
  * attribution, so nothing new has to be collected. `x-forwarded-for` is the
  * proxy's word for where the request came from and is used only to write a
- * human-readable line — nothing is decided on it.
+ * human-readable line — nothing is decided on it. `x-duncit-app` decides one
+ * thing: whether a Duncit CRM app sign-in skips Security Verification while a
+ * CRM manager has turned it off (portalSecurity.signInClaim).
  */
 const signInContext = (ctx: GraphQLContext): SignInContext => ({
   deviceId: ctx.device_id,
@@ -83,6 +85,7 @@ const signInContext = (ctx: GraphQLContext): SignInContext => ({
     ?.trim(),
   remoteAddress: ctx.req.socket?.remoteAddress ?? null,
   surface: String(ctx.req.headers['x-duncit-surface'] ?? ''),
+  app: String(ctx.req.headers['x-duncit-app'] ?? '').trim(),
   origin: String(ctx.req.headers.origin ?? ''),
 });
 
@@ -225,9 +228,10 @@ export const authResolvers = {
     // token IS the proof, the consent step supplies the intent.
     linkGoogleAccount: async (
       _p: unknown,
-      args: { input: { id_token: string; portal_key?: string | null } }
+      args: { input: { id_token: string; portal_key?: string | null } },
+      ctx: GraphQLContext
     ) => {
-      return userService.linkGoogleAccount(args.input?.id_token, args.input?.portal_key);
+      return userService.linkGoogleAccount(args.input?.id_token, args.input?.portal_key, signInContext(ctx));
     },
     signupWithGoogle: async (_p: unknown, args: { input: SignupPolicyInput }) => {
       const data = await validate(googleSignupSchema, args.input);
@@ -250,9 +254,10 @@ export const authResolvers = {
     // token IS the proof, the consent step supplies the intent.
     linkAppleAccount: async (
       _p: unknown,
-      args: { input: { id_token: string; portal_key?: string | null } }
+      args: { input: { id_token: string; portal_key?: string | null } },
+      ctx: GraphQLContext
     ) => {
-      return userService.linkAppleAccount(args.input?.id_token, args.input?.portal_key);
+      return userService.linkAppleAccount(args.input?.id_token, args.input?.portal_key, signInContext(ctx));
     },
     signupWithApple: async (_p: unknown, args: { input: SignupPolicyInput }) => {
       const data = await validate(appleSignupSchema, args.input);

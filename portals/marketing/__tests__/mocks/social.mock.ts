@@ -68,8 +68,9 @@ export const socialConnectUrlMock = (
   returnTo: SocialConnectReturn,
   url: string | null,
   appId: string | null = null,
+  reconnect = false,
 ): MockedResponse => ({
-  request: { query: SOCIAL_CONNECT_URL, variables: { provider, return_to: returnTo, app_id: appId } },
+  request: { query: SOCIAL_CONNECT_URL, variables: { provider, return_to: returnTo, app_id: appId, reconnect } },
   result: { data: { socialConnectUrl: url } },
 });
 
@@ -79,7 +80,7 @@ export const socialConnectUrlErrorMock = (
   message: string,
   appId: string | null = null,
 ): MockedResponse => ({
-  request: { query: SOCIAL_CONNECT_URL, variables: { provider, return_to: returnTo, app_id: appId } },
+  request: { query: SOCIAL_CONNECT_URL, variables: { provider, return_to: returnTo, app_id: appId, reconnect: false } },
   ...socialRejection(message),
 });
 

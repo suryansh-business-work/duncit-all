@@ -27,6 +27,10 @@ import {
   isUpiId,
   OTP_6,
   PERSON_NAME,
+  PAN,
+  isPan,
+  UAN,
+  isUan,
   PHONE_INTL,
   PHONE_INTL_PLUS,
   PHONE_E164,
@@ -290,6 +294,35 @@ describe('BANK_ACCOUNT_NUMBER', () => {
     expect(BANK_ACCOUNT_NUMBER.test('12345')).toBe(false);
     expect(BANK_ACCOUNT_NUMBER.test('1234567890123456789')).toBe(false);
     expect(BANK_ACCOUNT_NUMBER.test('1234-5678')).toBe(false);
+  });
+});
+
+describe('PAN', () => {
+  it('accepts a 10-character uppercase PAN', () => {
+    expect(PAN.test('ABCDE1234F')).toBe(true);
+    expect(isPan('AAACS1234K')).toBe(true);
+  });
+
+  it('rejects lowercase, a misplaced digit or the wrong length', () => {
+    expect(isPan('abcde1234f')).toBe(false);
+    expect(isPan('ABCD12345F')).toBe(false);
+    expect(isPan('ABCDE1234')).toBe(false);
+    expect(isPan('ABCDE1234FG')).toBe(false);
+    expect(isPan('ABCDE 1234F')).toBe(false);
+  });
+});
+
+describe('UAN', () => {
+  it('accepts exactly 12 digits', () => {
+    expect(UAN.test('100123456789')).toBe(true);
+    expect(isUan('000000000001')).toBe(true);
+  });
+
+  it('rejects 11 or 13 digits and anything that is not a digit', () => {
+    expect(isUan('10012345678')).toBe(false);
+    expect(isUan('1001234567890')).toBe(false);
+    expect(isUan('10012345678A')).toBe(false);
+    expect(isUan('')).toBe(false);
   });
 });
 

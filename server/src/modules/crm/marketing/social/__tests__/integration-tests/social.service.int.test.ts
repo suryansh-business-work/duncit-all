@@ -1,6 +1,6 @@
 /**
  * Social Accounts against a real database: connecting (OAuth handshake →
- * stored accounts, sealed tokens, a default owner), syncing, disconnecting
+ * the held grant → the ticked accounts stored, sealed tokens, a default owner), syncing, disconnecting
  * (with the network told to forget the token), owners and teams, and the
  * posts / comments tables and post detail. The provider APIs, OAuth state
  * signing, the sync, and every AI call are mocked — no network.
@@ -36,6 +36,11 @@ jest.mock('@modules/crm/marketing/social/social.sync', () => ({
   syncSocialAccount: jest.fn(),
 }));
 jest.mock('@modules/crm/marketing/social/social.ai', () => ({ analyzePendingComments: jest.fn() }));
+// The Page webhook subscription after a pick is real down to the Graph call.
+jest.mock('@modules/crm/marketing/social/providers/meta.messaging', () => ({
+  ...jest.requireActual('@modules/crm/marketing/social/providers/meta.messaging'),
+  subscribePageWebhooks: jest.fn(),
+}));
 jest.mock('@modules/crm/marketing/social/social.analytics', () => ({
   sentimentCounts: jest.fn(),
   socialAnalytics: jest.fn(),
@@ -46,7 +51,7 @@ jest.mock('@modules/crm/marketing/social/social.insights', () => ({
   periodInsights: jest.fn(),
 }));
 
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { logs } from '@observability/log';
 import { UserModel } from '@modules/access/user/user.model';
 import { CONNECTORS } from '../../providers';
@@ -64,6 +69,8 @@ import {
   SocialPostModel,
 } from '../../social.model';
 import { socialService as svc } from '../../social.service';
+import { completePending, pendingConnection } from '../../social.connect.pending';
+import { subscribePageWebhooks } from '../../providers/meta.messaging';
 
 const m = (fn: unknown) => fn as jest.Mock;
 const USER = new Types.ObjectId().toHexString();
@@ -287,8 +294,8 @@ describe('connectUrl', () => {
     expect(await svc.connectUrl('YOUTUBE', USER, 'CALENDAR')).toBe('https://accounts.google.com/o?x=1');
     // No app chosen: the default app's keys, and an empty app in the signed state.
     expect(socialCredentials).toHaveBeenCalledWith('YOUTUBE', '');
-    expect(startConnect).toHaveBeenCalledWith('YOUTUBE', USER, 'CALENDAR', '');
-    expect(CONNECTORS.YOUTUBE.authorizeUrl).toHaveBeenCalledWith({ creds: CREDS, state: 'signed', challenge: 'pkce' });
+    expect(startConnect).toHaveBeenCalledWith('YOUTUBE', USER, 'CALENDAR', '', false);
+    expect(CONNECTORS.YOUTUBE.authorizeUrl).toHaveBeenCalledWith({ creds: CREDS, state: 'signed', challenge: 'pkce', reauth: false });
   });
 
   it('connects through the app the marketer chose, carrying it in the signed state', async () => {
@@ -298,7 +305,7 @@ describe('connectUrl', () => {
     m(CONNECTORS.LINKEDIN.authorizeUrl).mockReturnValue('https://linkedin/o');
     expect(await svc.connectUrl('LINKEDIN', USER, 'ACCOUNTS', `  ${appId} `)).toBe('https://linkedin/o');
     expect(socialCredentials).toHaveBeenCalledWith('LINKEDIN', appId);
-    expect(startConnect).toHaveBeenCalledWith('LINKEDIN', USER, 'ACCOUNTS', appId);
+    expect(startConnect).toHaveBeenCalledWith('LINKEDIN', USER, 'ACCOUNTS', appId, false);
   });
 
   it('says the chosen app is gone, rather than that the network was never set up', async () => {
@@ -310,8 +317,25 @@ describe('connectUrl', () => {
   });
 });
 
-describe('completeConnect', () => {
-  const state = { provider: 'X', userId: USER, verifier: 'v', returnTo: 'ACCOUNTS' };
+describe('connectUrl on a Reconnect', () => {
+  it('signs the reconnect into the state and asks the network to prompt again for declined permissions', async () => {
+    m(socialCredentials).mockResolvedValue(CREDS);
+    m(startConnect).mockReturnValue({ state: 'signed', challenge: 'pkce' });
+    m(CONNECTORS.FACEBOOK.authorizeUrl).mockReturnValue('https://facebook/dialog');
+    expect(await svc.connectUrl('FACEBOOK', USER, 'ACCOUNTS', null, true)).toBe('https://facebook/dialog');
+    expect(startConnect).toHaveBeenCalledWith('FACEBOOK', USER, 'ACCOUNTS', '', true);
+    expect(CONNECTORS.FACEBOOK.authorizeUrl).toHaveBeenCalledWith({ creds: CREDS, state: 'signed', challenge: 'pkce', reauth: true });
+  });
+});
+
+describe('completeConnect → the account picker', () => {
+  const state = { provider: 'X', userId: USER, verifier: 'v', returnTo: 'ACCOUNTS', appId: '', reconnect: false };
+  /** The callback, then the marketer ticking these keys (every found account when none are named). */
+  const connectAndPick = async (keys?: string[]) => {
+    const held = await svc.completeConnect('the-code', 's');
+    const view = await pendingConnection(held.pending_id, USER);
+    return completePending(held.pending_id, USER, keys ?? view.accounts.map((a) => a.key));
+  };
 
   it('refuses a forged or stale state', async () => {
     m(readConnectState).mockReturnValue(null);
@@ -324,7 +348,46 @@ describe('completeConnect', () => {
     await expect(svc.completeConnect('code', 's')).rejects.toThrow('This network is not set up yet');
   });
 
-  it('stores what the handshake found, refreshes a reconnected account in place, and starts the first sync', async () => {
+  it('holds everything the grant found, sealed, and creates nothing until the marketer ticks', async () => {
+    await account('X', { external_id: 'x-1' });
+    m(readConnectState).mockReturnValue(state);
+    m(socialCredentials).mockResolvedValue(CREDS);
+    m(CONNECTORS.X.connect).mockResolvedValue([discovered('x-1'), discovered('x-2')]);
+
+    const held = await svc.completeConnect('the-code', 's');
+    expect(held).toMatchObject({ provider: 'X', count: 2, pending_id: expect.any(String) });
+    expect(CONNECTORS.X.connect).toHaveBeenCalledWith({ code: 'the-code', creds: CREDS, verifier: 'v' });
+    expect(await SocialAccountModel.countDocuments()).toBe(1);
+    expect(syncSocialAccount).not.toHaveBeenCalled();
+
+    const view = await pendingConnection(held.pending_id, USER);
+    expect(view).toMatchObject({ provider: 'X', reconnect: false, found: 2, pages_found: 0, instagram_found: 0 });
+    expect(view.accounts.map((a) => [a.key, a.handle, a.connected])).toEqual([
+      ['X:x-1', '@x-1', true],
+      ['X:x-2', '@x-2', false],
+    ]);
+    const raw = await mongoose.connection.collection('socialpendingconnects').findOne({});
+    expect(raw?.accounts[0].tokens).toMatch(/^enc:v1:/);
+    expect(raw?.accounts[0].tokens).not.toContain('at-x-1');
+    expect(JSON.stringify(view)).not.toContain('at-x-1');
+  });
+
+  it('creates only the ticked new accounts and leaves an already connected one untouched on a plain Connect', async () => {
+    await account('X', { external_id: 'x-1', status: 'EXPIRED', last_error: 'token expired' });
+    m(readConnectState).mockReturnValue(state);
+    m(socialCredentials).mockResolvedValue(CREDS);
+    m(CONNECTORS.X.connect).mockResolvedValue([discovered('x-1'), discovered('x-2'), discovered('x-3')]);
+
+    expect(await connectAndPick(['X:x-1', 'X:x-2'])).toEqual({ provider: 'X', count: 1 });
+    const stored = await SocialAccountModel.find().sort({ external_id: 1 }).lean();
+    expect(stored.map((s) => [s.external_id, s.status])).toEqual([
+      ['x-1', 'EXPIRED'],
+      ['x-2', 'CONNECTED'],
+    ]);
+    expect(m(syncSocialAccount).mock.calls.map((c) => c[0])).toEqual([String(stored[1]._id)]);
+  });
+
+  it('refreshes an already connected account in place on a Reconnect, starting its notes over', async () => {
     const existing = await account('X', {
       external_id: 'x-1',
       status: 'EXPIRED',
@@ -332,33 +395,30 @@ describe('completeConnect', () => {
       health_ok: false,
       health_message: 'X: expired',
       alerted_at: new Date(),
+      dm_error: 'old DM failure',
+      webhook_error: 'old webhook failure',
     });
-    m(readConnectState).mockReturnValue(state);
+    m(readConnectState).mockReturnValue({ ...state, reconnect: true });
     m(socialCredentials).mockResolvedValue(CREDS);
-    m(CONNECTORS.X.connect).mockResolvedValue([discovered('x-1'), discovered('x-2')]);
+    m(CONNECTORS.X.connect).mockResolvedValue([discovered('x-1')]);
 
-    expect(await svc.completeConnect('the-code', 's')).toEqual({ provider: 'X', count: 2 });
-    expect(CONNECTORS.X.connect).toHaveBeenCalledWith({ code: 'the-code', creds: CREDS, verifier: 'v' });
-
-    const stored = await SocialAccountModel.find().select('+access_token +refresh_token').sort({ external_id: 1 }).lean();
-    expect(stored).toHaveLength(2);
+    expect(await connectAndPick([])).toEqual({ provider: 'X', count: 1 });
+    const stored = await SocialAccountModel.find().select('+access_token').lean();
+    expect(stored).toHaveLength(1);
     expect(String(stored[0]._id)).toBe(String(existing._id));
     expect(stored[0]).toMatchObject({
       provider: 'X',
       name: 'Name x-1',
-      token_expires_at: null,
       scopes: ['tweet.read'],
       status: 'CONNECTED',
       last_error: '',
-      // A fresh token starts the health line and the reminders over.
       health_ok: null,
       health_message: '',
       alerted_at: null,
+      dm_error: '',
+      webhook_error: '',
     });
-    expect(String(stored[1].connected_by)).toBe(USER);
-    expect(m(syncSocialAccount).mock.calls.map((c) => c[0]).sort((a, b) => a.localeCompare(b))).toEqual(
-      stored.map((s) => String(s._id)).sort((a, b) => a.localeCompare(b))
-    );
+    expect(openToken(stored[0].access_token)).toBe('at-x-1');
   });
 
   it('keeps the app the account came through, uses its keys, and reports it on the account', async () => {
@@ -366,29 +426,27 @@ describe('completeConnect', () => {
     m(readConnectState).mockReturnValue({ ...state, appId });
     m(socialCredentials).mockResolvedValue(CREDS);
     m(CONNECTORS.X.connect).mockResolvedValue([discovered('x-9')]);
-    await svc.completeConnect('c', 's');
+    await connectAndPick();
     expect(socialCredentials).toHaveBeenCalledWith('X', appId);
     const stored = await SocialAccountModel.findOne({ external_id: 'x-9' }).lean();
     expect(String(stored?.env_entry_id)).toBe(appId);
     expect((await svc.accounts()).find((a) => a.id === String(stored?._id))?.app_id).toBe(appId);
 
     // The default app (no app in the state) is stored as no app, so it follows whichever entry is the default.
-    m(readConnectState).mockReturnValue({ ...state, appId: '' });
-    await svc.completeConnect('c', 's');
+    m(readConnectState).mockReturnValue({ ...state, appId: '', reconnect: true });
+    await connectAndPick();
     expect((await SocialAccountModel.findOne({ external_id: 'x-9' }).lean())?.env_entry_id).toBeNull();
-    expect((await svc.accounts()).find((a) => a.id === String(stored?._id))?.app_id).toBeNull();
   });
 
   it('writes the tokens sealed, and a reader opens them', async () => {
     m(readConnectState).mockReturnValue(state);
     m(socialCredentials).mockResolvedValue(CREDS);
     m(CONNECTORS.X.connect).mockResolvedValue([discovered('x-1')]);
-    await svc.completeConnect('c', 's');
+    await connectAndPick();
 
     const raw = await SocialAccountModel.collection.findOne({ external_id: 'x-1' });
     expect(raw?.access_token).toMatch(/^enc:v1:/);
     expect(raw?.refresh_token).toMatch(/^enc:v1:/);
-    expect(raw?.access_token).not.toContain('at-x-1');
     expect(isSealed(raw?.access_token)).toBe(true);
     expect(openToken(raw?.access_token)).toBe('at-x-1');
 
@@ -397,15 +455,15 @@ describe('completeConnect', () => {
     expect(handle).toMatchObject({ access_token: 'at-x-1', refresh_token: 'rt', external_id: 'x-1' });
   });
 
-  it('makes the connector the owner of a new account, and leaves an existing owner alone', async () => {
+  it('makes the connector the owner of a new account, and leaves an existing owner alone on a Reconnect', async () => {
     const owner = await user('Asha');
     await account('X', { external_id: 'x-1', owner_user_id: owner._id });
     await account('X', { external_id: 'x-2', owner_user_id: null });
-    m(readConnectState).mockReturnValue(state);
+    m(readConnectState).mockReturnValue({ ...state, reconnect: true });
     m(socialCredentials).mockResolvedValue(CREDS);
     m(CONNECTORS.X.connect).mockResolvedValue([discovered('x-1'), discovered('x-2'), discovered('x-3')]);
 
-    await svc.completeConnect('c', 's');
+    await connectAndPick();
     const owners = await SocialAccountModel.find().sort({ external_id: 1 }).select('external_id owner_user_id connected_by').lean();
     expect(owners.map((o) => [o.external_id, String(o.owner_user_id), String(o.connected_by)])).toEqual([
       ['x-1', String(owner._id), USER],
@@ -414,39 +472,72 @@ describe('completeConnect', () => {
     ]);
   });
 
-  it('logs a failed first sync without failing the connect', async () => {
+  it('adds a second account on the same network as its own row, leaving the first one’s token and owner as they were', async () => {
+    const owner = await user('Meera');
+    await account('X', { external_id: 'x-1', owner_user_id: owner._id, access_token: 'first-token' });
+    m(readConnectState).mockReturnValue(state);
+    m(socialCredentials).mockResolvedValue(CREDS);
+    // The same handle on both: identity is the network id, never the handle.
+    m(CONNECTORS.X.connect).mockResolvedValue([discovered('x-1', { handle: '@same' }), discovered('x-2', { handle: '@same' })]);
+    await connectAndPick();
+    const rows = await SocialAccountModel.find().sort({ external_id: 1 }).select('+access_token').lean();
+    expect(rows.map((r) => r.external_id)).toEqual(['x-1', 'x-2']);
+    expect(rows[0].access_token).toBe('first-token');
+    expect(String(rows[0].owner_user_id)).toBe(String(owner._id));
+  });
+
+  it('logs a failed first sync without failing the connection', async () => {
     const error = jest.spyOn(logs.server, 'error').mockImplementation(() => undefined as never);
     m(readConnectState).mockReturnValue(state);
     m(socialCredentials).mockResolvedValue(CREDS);
     m(CONNECTORS.X.connect).mockResolvedValue([discovered('x-9')]);
     m(syncSocialAccount).mockRejectedValue(new Error('rate limited'));
 
-    expect((await svc.completeConnect('c', 's')).count).toBe(1);
+    expect((await connectAndPick()).count).toBe(1);
     for (let i = 0; i < 200 && error.mock.calls.length === 0; i += 1) await new Promise((r) => setTimeout(r, 5));
-    expect(error).toHaveBeenCalledWith('social-accounts', 'firstSync', {
-      error: expect.any(Error),
-      account_id: expect.any(String),
-      msg: 'first sync failed',
-    });
+    expect(error).toHaveBeenCalledWith('social-accounts', 'firstSync', { error: expect.any(Error), account_id: expect.any(String), msg: 'first sync failed' });
     error.mockRestore();
   });
 
-  it('refuses, storing nothing, when the handshake found no account — it is not a success', async () => {
-    m(readConnectState).mockReturnValue(state);
-    m(socialCredentials).mockResolvedValue(CREDS);
-    m(CONNECTORS.X.connect).mockResolvedValue([]);
-    await expect(svc.completeConnect('c', 's')).rejects.toThrow('The network connected no account.');
-    expect(await SocialAccountModel.countDocuments()).toBe(0);
-    expect(syncSocialAccount).not.toHaveBeenCalled();
-  });
-
-  it('says what to check on Meta when a Facebook Login consent granted no Page or Instagram account', async () => {
+  it('holds a grant that found nothing, so the page can say so, and refuses to finish it empty', async () => {
     m(readConnectState).mockReturnValue({ ...state, provider: 'INSTAGRAM' });
     m(socialCredentials).mockResolvedValue(CREDS);
     m(CONNECTORS.INSTAGRAM.connect).mockResolvedValue([]);
-    await expect(svc.completeConnect('c', 's')).rejects.toThrow(
-      'Meta connected no Facebook Page or Instagram professional account. Press Connect again and pick at least one on the consent screen'
-    );
+    const held = await svc.completeConnect('c', 's');
+    expect(held).toMatchObject({ provider: 'INSTAGRAM', count: 0 });
+    expect(await pendingConnection(held.pending_id, USER)).toMatchObject({ found: 0, pages_found: 0, instagram_found: 0, accounts: [] });
+    await expect(completePending(held.pending_id, USER, [])).rejects.toMatchObject({ extensions: { code: 'BAD_USER_INPUT' } });
+    expect(await SocialAccountModel.countDocuments()).toBe(0);
+  });
+
+  it('is only for the person who started it, takes only its own accounts, and is used up once finished', async () => {
+    m(readConnectState).mockReturnValue(state);
+    m(socialCredentials).mockResolvedValue(CREDS);
+    m(CONNECTORS.X.connect).mockResolvedValue([discovered('x-1')]);
+    const held = await svc.completeConnect('c', 's');
+    const code = (c: string) => expect.objectContaining({ extensions: expect.objectContaining({ code: c }) });
+    await expect(pendingConnection(held.pending_id, new Types.ObjectId().toHexString())).rejects.toEqual(code('NOT_FOUND'));
+    await expect(pendingConnection('not-an-id', USER)).rejects.toEqual(code('NOT_FOUND'));
+    await expect(completePending(held.pending_id, USER, ['X:someone-else'])).rejects.toEqual(code('BAD_USER_INPUT'));
+    expect(await completePending(held.pending_id, USER, ['X:x-1'])).toEqual({ provider: 'X', count: 1 });
+    await expect(completePending(held.pending_id, USER, ['X:x-1'])).rejects.toEqual(code('NOT_FOUND'));
+  });
+
+  it('subscribes the Page of a ticked Instagram account to the webhook without creating the Page', async () => {
+    m(readConnectState).mockReturnValue({ ...state, provider: 'FACEBOOK' });
+    m(socialCredentials).mockResolvedValue(CREDS);
+    m(subscribePageWebhooks).mockResolvedValue(undefined);
+    const tokens = { access_token: 'page-token', refresh_token: '', expires_at: null, scopes: ['instagram_manage_messages'] };
+    m(CONNECTORS.FACEBOOK.connect).mockResolvedValue([
+      discovered('page-1', { platform: 'FACEBOOK', meta: { login: 'FACEBOOK', instagram_id: 'ig-1' }, tokens }),
+      discovered('ig-1', { platform: 'INSTAGRAM', meta: { login: 'FACEBOOK', page_id: 'page-1' }, tokens }),
+    ]);
+    expect(await connectAndPick(['INSTAGRAM:ig-1'])).toEqual({ provider: 'FACEBOOK', count: 1 });
+    expect(m(subscribePageWebhooks).mock.calls.map((c) => [c[0], c[1]])).toEqual([['page-1', 'page-token']]);
+    const rows = await SocialAccountModel.find().select('platform external_id webhook_subscribed_at').lean();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ platform: 'INSTAGRAM', external_id: 'ig-1' });
+    expect(rows[0].webhook_subscribed_at).toBeInstanceOf(Date);
   });
 });
 

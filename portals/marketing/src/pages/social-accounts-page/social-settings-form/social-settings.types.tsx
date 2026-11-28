@@ -26,6 +26,7 @@ export interface SocialSettingsFormValues {
   auto_reply_daily_cap: number;
   auto_reply_requires_approval: boolean;
   ai_reply_guidelines: string;
+  human_agent_replies: boolean;
 }
 
 /** "stop, Unsubscribe ,stop" → ["STOP", "UNSUBSCRIBE"]: trimmed, upper-cased, once each — as the server stores them. */
@@ -51,6 +52,7 @@ export const settingsFormValues = (settings: SocialSettings): SocialSettingsForm
   auto_reply_daily_cap: settings.auto_reply_daily_cap,
   auto_reply_requires_approval: settings.auto_reply_requires_approval,
   ai_reply_guidelines: settings.ai_reply_guidelines,
+  human_agent_replies: settings.human_agent_replies,
 });
 
 export const settingsInput = (values: SocialSettingsFormValues): SocialSettingsInput => ({
@@ -93,6 +95,7 @@ export const socialSettingsSchema = (t: Translate) =>
       ai_reply_guidelines: z
         .string()
         .max(SETTINGS_LIMITS.ai_reply_guidelines.max, t('marketing.socialSettings.guidelinesTooLong', { vars: { max: SETTINGS_LIMITS.ai_reply_guidelines.max } })),
+      human_agent_replies: z.boolean(),
     })
     .superRefine((values, ctx) => {
       const out = new Set(keywordList(values.opt_out_keywords));

@@ -211,8 +211,62 @@ export const SOCIAL_SETUP = gql`
 `;
 
 export const SOCIAL_CONNECT_URL = gql`
-  mutation SocialConnectUrl($provider: SocialProvider!, $return_to: SocialConnectReturn!, $app_id: ID) {
-    socialConnectUrl(provider: $provider, return_to: $return_to, app_id: $app_id)
+  mutation SocialConnectUrl($provider: SocialProvider!, $return_to: SocialConnectReturn!, $app_id: ID, $reconnect: Boolean) {
+    socialConnectUrl(provider: $provider, return_to: $return_to, app_id: $app_id, reconnect: $reconnect)
+  }
+`;
+
+/** One account a grant found, for the account picker (no token ever comes back). */
+export interface SocialPendingAccount {
+  key: string;
+  platform: SocialPlatform;
+  external_id: string;
+  name: string;
+  handle: string;
+  avatar_url: string;
+  /** Already connected: shown ticked and fixed; refreshed only on a Reconnect. */
+  connected: boolean;
+}
+
+/** What one grant found, held on the server until the marketer ticks. */
+export interface SocialPendingConnection {
+  id: string;
+  provider: SocialProvider;
+  reconnect: boolean;
+  pages_found: number;
+  instagram_found: number;
+  found: number;
+  accounts: SocialPendingAccount[];
+}
+
+export const SOCIAL_PENDING_CONNECTION = gql`
+  query SocialPendingConnection($id: ID!) {
+    socialPendingConnection(id: $id) {
+      id
+      provider
+      reconnect
+      pages_found
+      instagram_found
+      found
+      accounts {
+        key
+        platform
+        external_id
+        name
+        handle
+        avatar_url
+        connected
+      }
+    }
+  }
+`;
+
+export const COMPLETE_SOCIAL_CONNECTION = gql`
+  mutation CompleteSocialConnection($id: ID!, $account_keys: [String!]!) {
+    completeSocialConnection(id: $id, account_keys: $account_keys) {
+      provider
+      count
+    }
   }
 `;
 

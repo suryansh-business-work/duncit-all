@@ -7,6 +7,7 @@ import { allUsersExist, ownerNamesOf } from '../userNames';
 import { SocialConversationModel, SocialMessageModel, type SocialConversationDoc, type SocialMessageDoc } from './social.conversation.model';
 import { viewFilter } from './social.inbox';
 import { SocialAccountModel } from './social.model';
+import { loadSocialSettings } from './social.settings';
 import type { SocialInboxStatus, SocialInboxView } from './social.types';
 import { DM_LIMIT, messagingWindow, missingDmPermission } from './social.window';
 
@@ -41,13 +42,20 @@ function notFound(): never {
   throw new GraphQLError('Conversation not found', { extensions: { code: 'NOT_FOUND' } });
 }
 
-function pubConversation(o: SocialConversationDoc, accounts: Map<string, string>, people: Map<string, string>, now = Date.now()) {
-  const window = messagingWindow(o.last_inbound_at, now);
+interface Context {
+  accounts: Map<string, string>;
+  people: Map<string, string>;
+  /** Settings' human_agent_replies: whether the 24 h – 7 day human agent reply is offered at all. */
+  humanAgent: boolean;
+}
+
+function pubConversation(o: SocialConversationDoc, ctx: Context, now = Date.now()) {
+  const window = messagingWindow(o.last_inbound_at, now, ctx.humanAgent);
   const assignee = idOrNull(o.assigned_user_id);
   return {
     id: String(o._id),
     account_id: o.account_id,
-    account_name: accounts.get(o.account_id) ?? '',
+    account_name: ctx.accounts.get(o.account_id) ?? '',
     platform: o.platform,
     participant: { username: o.participant?.username ?? '', name: o.participant?.name ?? '', avatar_url: o.participant?.avatar_url ?? '' },
     last_message_at: iso(o.last_message_at),
@@ -56,7 +64,7 @@ function pubConversation(o: SocialConversationDoc, accounts: Map<string, string>
     unread_count: o.unread_count ?? 0,
     status: o.status,
     assigned_user_id: assignee,
-    assigned_name: assignee ? people.get(assignee) ?? null : null,
+    assigned_name: assignee ? ctx.people.get(assignee) ?? null : null,
     ai_status: o.ai_status,
     ai_sentiment: o.ai_sentiment ?? null,
     ai_severity: o.ai_severity ?? null,
@@ -68,13 +76,14 @@ function pubConversation(o: SocialConversationDoc, accounts: Map<string, string>
   };
 }
 
-async function context(docs: SocialConversationDoc[]) {
+async function context(docs: SocialConversationDoc[]): Promise<Context> {
   const ids = [...new Set(docs.map((doc) => doc.account_id))];
-  const [accounts, people] = await Promise.all([
+  const [accounts, people, settings] = await Promise.all([
     SocialAccountModel.find({ _id: { $in: ids } }).select('name handle').lean(),
     ownerNamesOf(docs.map((doc) => ({ owner_user_id: doc.assigned_user_id }))),
+    loadSocialSettings(),
   ]);
-  return { accounts: new Map(accounts.map((a) => [String(a._id), a.name || a.handle || ''])), people };
+  return { accounts: new Map(accounts.map((a) => [String(a._id), a.name || a.handle || ''])), people, humanAgent: settings.human_agent_replies };
 }
 
 const pubMessage = (o: SocialMessageDoc) => ({
@@ -100,7 +109,7 @@ export async function conversationThread(id: string) {
     SocialAccountModel.findById(doc.account_id).select('platform scopes').lean(),
   ]);
   return {
-    conversation: pubConversation(doc, ctx.accounts, ctx.people),
+    conversation: pubConversation(doc, ctx),
     // Read newest first to keep the latest; shown oldest first like any chat.
     messages: [...messages].reverse().map((message) => pubMessage(message)),
     missing_permission: account ? missingDmPermission(account) : 'messaging',
@@ -118,7 +127,7 @@ export const socialConversations = {
   async table(input: TableQueryInput | null | undefined, view: SocialInboxView | null | undefined, userId: string) {
     const { docs, total, page, page_size } = await runTableQuery<SocialConversationDoc>(SocialConversationModel, viewFilter(view, userId), input, CONVERSATION_TABLE);
     const ctx = await context(docs);
-    return { rows: docs.map((doc) => pubConversation(doc, ctx.accounts, ctx.people)), total, page, page_size };
+    return { rows: docs.map((doc) => pubConversation(doc, ctx)), total, page, page_size };
   },
 
   /** The same four counts as the comment queue, for DMs. */

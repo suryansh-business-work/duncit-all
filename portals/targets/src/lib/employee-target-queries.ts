@@ -28,6 +28,9 @@ export const TARGET_ASSIGNABLE_EMPLOYEES = gql`
       id
       name
       email
+      employee_code
+      job_title
+      department
     }
   }
 `;
@@ -97,6 +100,10 @@ export interface AssigneeOption {
   id: string;
   name: string;
   email?: string | null;
+  /** From the HR directory — null when HR has no current record for this account. */
+  employee_code?: string | null;
+  job_title?: string | null;
+  department?: string | null;
 }
 export type TargetSettings = Omit<EmployeeTargetSettings, '__typename'>;
 

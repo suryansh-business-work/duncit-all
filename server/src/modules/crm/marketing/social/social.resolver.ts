@@ -1,6 +1,7 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
+import { completePending, pendingConnection } from './social.connect.pending';
 import { socialService } from './social.service';
 import type { SocialAnalyticsInput } from './social.analytics';
 import type { SocialConnectReturn, SocialProvider, SocialReviewStatus } from './social.types';
@@ -43,11 +44,24 @@ export const socialResolvers = {
       requireRole(ctx, EDITOR_ROLES);
       return socialService.postDetail(args.id);
     },
+    // Only whoever connects (and only the one who started this grant — checked inside).
+    socialPendingConnection: (_p: unknown, args: { id: string }, ctx: Ctx) => {
+      const user = requireRole(ctx, ROLES);
+      return pendingConnection(args.id, user.id);
+    },
   },
   Mutation: {
-    socialConnectUrl: (_p: unknown, args: { provider: SocialProvider; return_to: SocialConnectReturn; app_id?: string | null }, ctx: Ctx) => {
+    socialConnectUrl: (
+      _p: unknown,
+      args: { provider: SocialProvider; return_to: SocialConnectReturn; app_id?: string | null; reconnect?: boolean | null },
+      ctx: Ctx
+    ) => {
       const user = requireRole(ctx, ROLES);
-      return socialService.connectUrl(args.provider, user.id, args.return_to, args.app_id);
+      return socialService.connectUrl(args.provider, user.id, args.return_to, args.app_id, Boolean(args.reconnect));
+    },
+    completeSocialConnection: (_p: unknown, args: { id: string; account_keys: string[] }, ctx: Ctx) => {
+      const user = requireRole(ctx, ROLES);
+      return completePending(args.id, user.id, args.account_keys);
     },
     syncSocialAccount: (_p: unknown, args: { id: string }, ctx: Ctx) => {
       requireRole(ctx, EDITOR_ROLES);

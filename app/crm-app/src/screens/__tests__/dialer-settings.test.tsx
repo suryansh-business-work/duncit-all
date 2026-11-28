@@ -128,6 +128,8 @@ describe('SettingsScreen', () => {
       },
     });
     useFeaturesStore.setState({ callerId: true, autoLog: true, recordings: true, hydrated: true });
+    // Sign-in security reads the CRM portal's switch; the other cards ignore this answer.
+    request.mockResolvedValue({ crmAppSettings: { security_verification: true } });
   });
 
   it('switches a call feature off', async () => {
@@ -148,9 +150,10 @@ describe('SettingsScreen', () => {
     expect(screen.getByText(/cannot add icons from apps/)).toBeOnTheScreen();
   });
 
-  it('on an iPhone keeps the CRM call line, and leaves out the Android call features', () => {
+  it('on an iPhone keeps the CRM call line and sign-in security, and leaves out the Android call features', async () => {
     mockPhoneModule = null;
     renderWithTheme(<SettingsScreen />);
+    expect(await screen.findByTestId('app-security-verification')).toBeChecked();
     // The account and sign-out live on More now, not here.
     expect(screen.queryByTestId('settings-sign-out')).toBeNull();
     expect(screen.getByTestId('settings-call-line')).toBeOnTheScreen();

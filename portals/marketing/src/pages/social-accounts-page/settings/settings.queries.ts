@@ -15,6 +15,8 @@ export interface SocialSettings {
   auto_reply_daily_cap: number;
   auto_reply_requires_approval: boolean;
   ai_reply_guidelines: string;
+  /** A person may reply from 24 hours to 7 days on Meta's human agent tag (the app must be approved for it). */
+  human_agent_replies: boolean;
 }
 
 export type SocialSettingsInput = Omit<SocialSettings, 'default_assignee_name'>;
@@ -34,6 +36,7 @@ const SETTINGS_FIELDS = gql`
     auto_reply_daily_cap
     auto_reply_requires_approval
     ai_reply_guidelines
+    human_agent_replies
   }
 `;
 

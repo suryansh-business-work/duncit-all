@@ -21,9 +21,6 @@ import type {
  * gate can see that each one is used.
  */
 
-/** One app per network, in the order the page lists them. */
-export const PROVIDERS: readonly SocialProvider[] = ['INSTAGRAM', 'FACEBOOK', 'THREADS', 'YOUTUBE', 'LINKEDIN', 'X'];
-
 export const PROVIDER_LABEL: Record<SocialProvider, string> = {
   INSTAGRAM: 'marketing.social.providerInstagram',
   FACEBOOK: 'marketing.social.providerFacebook',
@@ -43,6 +40,7 @@ export const PROVIDER_ADDS: Record<SocialProvider, string> = {
   X: 'marketing.social.addsX',
 };
 
+/** One card per platform, in the order the page lists them. */
 export const PLATFORMS: readonly SocialPlatform[] = ['INSTAGRAM', 'FACEBOOK', 'THREADS', 'YOUTUBE', 'LINKEDIN', 'X'];
 
 export const PLATFORM_LABEL: Record<SocialPlatform, string> = {
@@ -143,14 +141,28 @@ export const IDEA_FORMAT_LABEL: Record<SocialIdeaFormat, string> = {
   VIDEO: 'marketing.social.formatVideo',
 };
 
-/** The network a provider's connection brings in — one each, now that every network has its own app. */
-export const PROVIDER_PLATFORMS: Record<SocialProvider, readonly SocialPlatform[]> = {
-  INSTAGRAM: ['INSTAGRAM'],
-  FACEBOOK: ['FACEBOOK'],
+/**
+ * The apps that can bring an account of each platform, the platform's own
+ * first: an Instagram account arrives through the Instagram app or with its
+ * Page through the Facebook (Meta) app, and the other way round.
+ */
+export const CONNECT_PROVIDERS: Record<SocialPlatform, readonly SocialProvider[]> = {
+  INSTAGRAM: ['INSTAGRAM', 'FACEBOOK'],
+  FACEBOOK: ['FACEBOOK', 'INSTAGRAM'],
   THREADS: ['THREADS'],
   YOUTUBE: ['YOUTUBE'],
   LINKEDIN: ['LINKEDIN'],
   X: ['X'],
+};
+
+/** Where an account came from, as its card says it: the app it was connected through. */
+export const VIA_LABEL: Record<SocialProvider, string> = {
+  INSTAGRAM: 'marketing.social.viaInstagram',
+  FACEBOOK: 'marketing.social.viaMeta',
+  THREADS: 'marketing.social.viaThreads',
+  YOUTUBE: 'marketing.social.viaYoutube',
+  LINKEDIN: 'marketing.social.viaLinkedin',
+  X: 'marketing.social.viaX',
 };
 
 export const STATUS_COLORS = { CONNECTED: 'success', EXPIRED: 'warning', ERROR: 'error' } as const;

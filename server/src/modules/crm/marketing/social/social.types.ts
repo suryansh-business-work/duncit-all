@@ -182,7 +182,8 @@ export interface PostRef {
 
 /** The OAuth half of a provider: the consent screen, the code exchange, and letting go. */
 export interface SocialConnector {
-  authorizeUrl(input: { creds: SocialAppCredentials; state: string; challenge: string }): string;
+  /** `reauth`: a Reconnect — ask again for permissions the person once declined (Meta skips them silently otherwise). */
+  authorizeUrl(input: { creds: SocialAppCredentials; state: string; challenge: string; reauth?: boolean }): string;
   connect(input: { code: string; creds: SocialAppCredentials; verifier: string }): Promise<DiscoveredAccount[]>;
   /**
    * Tell the network the token is no longer wanted, so a disconnect here is a

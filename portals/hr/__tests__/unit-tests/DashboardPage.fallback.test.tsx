@@ -11,6 +11,9 @@ vi.mock('@duncit/shell', () => ({
   },
 }));
 
+// The head-count strip has its own suite (HrOverview.test.tsx); this one is about the modules prop.
+vi.mock('../../src/pages/dashboard/HrOverview', () => ({ default: () => null }));
+
 // Config with no `modules` field, exercising the `appConfig.modules ?? []`
 // fallback branch in DashboardPage.
 vi.mock('../../src/config/app-config', () => ({

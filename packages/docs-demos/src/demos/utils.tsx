@@ -30,6 +30,7 @@ import { healthAppealDemos } from './utils/health-appeal';
 import { askDuncitDemos } from './utils/ask-duncit';
 import { venueKitDemos } from './utils/venue-kit';
 import { screenScrollDemos } from './utils/screen-scroll';
+import { hrPayDemos } from './utils/hr-pay';
 import { defineDemos } from '../types';
 
 export default defineDemos('utils', [
@@ -60,4 +61,5 @@ export default defineDemos('utils', [
   ...askDuncitDemos,
   ...venueKitDemos,
   ...screenScrollDemos,
+  ...hrPayDemos,
 ]);

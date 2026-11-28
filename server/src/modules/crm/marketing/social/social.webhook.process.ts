@@ -39,9 +39,12 @@ async function enrichParticipant(conversationId: string, account: AccountWithTok
   return profile.username;
 }
 
-async function handleDm(event: DmEvent): Promise<boolean> {
+/** What became of one event: stored, already there, our own outbound echo, or for an account nobody connected. */
+export type EventOutcome = 'STORED' | 'DUPLICATE' | 'ECHO' | 'UNKNOWN_ACCOUNT' | 'FAILED';
+
+async function handleDm(event: DmEvent): Promise<EventOutcome> {
   const account = await accountFor(event.platform, event.account_external_id);
-  if (!account) return false;
+  if (!account) return 'UNKNOWN_ACCOUNT';
   const recorded = await recordDm({
     account_id: String(account._id),
     platform: event.platform,
@@ -52,7 +55,7 @@ async function handleDm(event: DmEvent): Promise<boolean> {
     attachments: event.attachments,
     sent_at: event.sent_at,
   });
-  if (recorded.duplicate) return false;
+  if (recorded.duplicate) return 'DUPLICATE';
   if (recorded.created) await welcomeNewConversation(recorded.conversation_id, account, event);
   if (event.direction === 'IN') {
     await autoReplyToDm({
@@ -63,7 +66,8 @@ async function handleDm(event: DmEvent): Promise<boolean> {
       first_message: recorded.created,
     }).catch((error: unknown) => logs.server.error(COMPONENT, 'autoReplyToDm', { error, conversation_id: recorded.conversation_id }));
   }
-  return true;
+  // Our own send (or one typed in the network's app) comes back as an echo: kept as outbound, never as the person writing.
+  return event.direction === 'OUT' ? 'ECHO' : 'STORED';
 }
 
 /** A conversation's first message: who the person is, and whether they are a lead writing back. */
@@ -80,16 +84,16 @@ async function welcomeNewConversation(conversationId: string, account: AccountWi
 }
 
 /** A comment the webhook saw before the sync did: its post is stubbed until the sync fills it in. */
-async function handleComment(event: CommentEvent): Promise<boolean> {
+async function handleComment(event: CommentEvent): Promise<EventOutcome> {
   const account = await accountFor(event.platform, event.account_external_id);
-  if (!account) return false;
+  if (!account) return 'UNKNOWN_ACCOUNT';
   const accountId = String(account._id);
   const post = await SocialPostModel.findOneAndUpdate(
     { account_id: accountId, external_id: event.post_external_id },
     { $setOnInsert: { platform: event.platform, published_at: event.published_at } },
     { upsert: true, returnDocument: 'after', projection: { _id: 1, permalink: 1 } }
   ).lean();
-  if (!post) return false;
+  if (!post) return 'FAILED';
   const stored = await SocialCommentModel.updateOne(
     { account_id: accountId, external_id: event.external_id },
     {
@@ -107,14 +111,14 @@ async function handleComment(event: CommentEvent): Promise<boolean> {
     },
     { upsert: true }
   );
-  if (stored.upsertedCount === 0) return false;
+  if (stored.upsertedCount === 0) return 'DUPLICATE';
   await autoReplyToComment({
     account_id: accountId,
     comment_id: String(stored.upsertedId),
     external_id: event.external_id,
     text: event.text,
   }).catch((error: unknown) => logs.server.error(COMPONENT, 'autoReplyToComment', { error, external_id: event.external_id }));
-  return true;
+  return 'STORED';
 }
 
 /** One AI pass at a time per process: a burst of webhooks leaves the rest to the pass already running. */
@@ -129,20 +133,55 @@ async function triage(): Promise<void> {
   }
 }
 
-export async function processMetaWebhook(payload: unknown): Promise<{ dms: number; comments: number }> {
+/** Counts of what one delivery's events came to, as the delivery log keeps them. */
+export interface DeliveryOutcome {
+  events: number;
+  stored: number;
+  duplicates: number;
+  echoes: number;
+  unknown_account: number;
+  failed: number;
+  /** New DMs (inbound or echo) and new comments — what the processor used to count. */
+  dms: number;
+  comments: number;
+}
+
+const tally = (outcomes: { kind: string; outcome: EventOutcome }[]): DeliveryOutcome => {
+  const count = (outcome: EventOutcome) => outcomes.filter((one) => one.outcome === outcome).length;
+  const fresh = outcomes.filter((one) => one.outcome === 'STORED' || one.outcome === 'ECHO');
+  return {
+    events: outcomes.length,
+    stored: count('STORED'),
+    duplicates: count('DUPLICATE'),
+    echoes: count('ECHO'),
+    unknown_account: count('UNKNOWN_ACCOUNT'),
+    failed: count('FAILED'),
+    dms: fresh.filter((one) => one.kind === 'DM').length,
+    comments: fresh.filter((one) => one.kind === 'COMMENT').length,
+  };
+};
+
+/** Every event of one delivery, each with what became of it; one failing never stops the rest. */
+export async function processMetaWebhookOutcome(payload: unknown): Promise<DeliveryOutcome> {
   // In the order Meta sent them: two messages from one person in one delivery must be stored oldest first.
-  const handled = await inSequence(parseMetaWebhook(payload), async (event) => {
+  const outcomes = await inSequence(parseMetaWebhook(payload), async (event) => {
     try {
-      return (event.kind === 'DM' ? await handleDm(event) : await handleComment(event)) ? event.kind : null;
+      const outcome = event.kind === 'DM' ? await handleDm(event) : await handleComment(event);
+      return { kind: event.kind, outcome };
     } catch (error) {
       logs.server.error(COMPONENT, 'event', { error, kind: event.kind, platform: event.platform, external_id: event.external_id });
-      return null;
+      return { kind: event.kind, outcome: 'FAILED' as const };
     }
   });
-  const dms = handled.filter((kind) => kind === 'DM').length;
-  const comments = handled.filter((kind) => kind === 'COMMENT').length;
-  if (comments > 0 && (await loadSocialSettings()).auto_triage) {
+  const result = tally(outcomes);
+  if (result.comments > 0 && (await loadSocialSettings()).auto_triage) {
     triage().catch((error: unknown) => logs.server.error(COMPONENT, 'triage', { error }));
   }
+  return result;
+}
+
+/** How many new DMs and comments a payload brought. */
+export async function processMetaWebhook(payload: unknown): Promise<{ dms: number; comments: number }> {
+  const { dms, comments } = await processMetaWebhookOutcome(payload);
   return { dms, comments };
 }

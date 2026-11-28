@@ -10,3 +10,4 @@
 export { assertPortalLogin } from './portal.gate';
 export { PORTAL_ROLE_REQUIREMENTS, PORTAL_GATE_EXEMPT_KEYS } from './portal.constants';
 export { pendingClaimFor, requiresPortalSecurity } from './portalSecurity/portalSecurity.claims';
+export { signInClaimFor } from './portalSecurity/portalSecurity.signInClaim';

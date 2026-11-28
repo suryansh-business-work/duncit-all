@@ -44,6 +44,8 @@ export interface SignInContext {
   remoteAddress?: string | null;
   /** The client family it declared (`x-duncit-surface`). */
   surface?: string | null;
+  /** Which app or console it declared (`x-duncit-app`): `crm` for the CRM portal, `crm-app` for the Duncit CRM app. */
+  app?: string | null;
   /** The `origin` header — which console or site the sign-in was made on. */
   origin?: string | null;
 }

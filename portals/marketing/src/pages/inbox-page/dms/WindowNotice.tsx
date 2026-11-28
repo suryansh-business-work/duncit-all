@@ -18,10 +18,14 @@ export default function WindowNotice({ conversation }: Readonly<Props>) {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
   const time = conversation.window_closes_at ? formatDateTime(conversation.window_closes_at) : '';
+  // Closed for someone who wrote: since when, and what is left (their own app). Never wrote: no first message at all.
+  const closed = conversation.last_inbound_at
+    ? t('marketing.inbox.windowExpiredBody', { vars: { time: formatDateTime(conversation.last_inbound_at) } })
+    : t('marketing.inbox.windowClosedBody');
   const message = {
     OPEN: t('marketing.inbox.windowOpenUntil', { vars: { time } }),
     HUMAN_AGENT: t('marketing.inbox.windowHumanAgentUntil', { vars: { time } }),
-    CLOSED: t('marketing.inbox.windowClosedBody'),
+    CLOSED: closed,
   }[conversation.window_state];
   return (
     <Stack spacing={1} data-testid="dm-window">

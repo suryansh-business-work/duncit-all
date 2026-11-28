@@ -34,8 +34,9 @@ export const INTEGRATION_TABS: readonly IntegrationTab[] = [
     social: true,
   },
   {
+    // One Meta grant brings a Page and its Instagram account, so this app is labelled Meta; the tab key (and saved links) stay SOCIAL_FACEBOOK.
     category: 'SOCIAL_FACEBOOK',
-    labelKey: 'marketing.integrations.tabFacebook',
+    labelKey: 'marketing.integrations.tabMeta',
     hintKey: 'marketing.integrations.hintFacebookUnified',
     social: true,
   },

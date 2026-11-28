@@ -102,6 +102,12 @@ export const employeeTargetTypeDefs = /* GraphQL */ `
     name: String!
     email: String
     photo: String
+    "Employee code from the HR directory; null when HR has no current record for this account."
+    employee_code: String
+    "Job title from the HR directory."
+    job_title: String
+    "Department from the HR directory."
+    department: String
   }
 
   "When employees are reminded to report on their month."

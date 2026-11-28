@@ -21,6 +21,12 @@ export const UPI_ID_PATTERN = /^[A-Za-z0-9._-]{2,256}@[A-Za-z][A-Za-z0-9.-]{2,64
 export const BANK_ACCOUNT_NUMBER_PATTERN = /^\d{6,18}$/;
 /** `@duncit/regex` GSTIN — 15 characters with the literal Z at position 14. */
 export const GSTIN_PATTERN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
+/** `@duncit/regex` PAN — 5 letters, 4 digits, 1 letter (Indian Permanent Account Number). */
+export const PAN_PATTERN = /^[A-Z]{5}\d{4}[A-Z]$/;
+/** `@duncit/regex` UAN — the 12-digit EPFO Universal Account Number. */
+export const UAN_PATTERN = /^\d{12}$/;
+/** `@duncit/regex` LEAVE_CODE — a capital letter, then up to 11 capitals, digits or `_` (HR leave types). */
+export const LEAVE_CODE_PATTERN = /^[A-Z][A-Z0-9_]{0,11}$/;
 /** `@duncit/regex` PINCODE_LOOSE — 4 to 10 digits, so a foreign postcode is not refused. */
 export const POSTCODE_PATTERN = /^\d{4,10}$/;
 /**

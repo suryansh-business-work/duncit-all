@@ -16,12 +16,14 @@ import {
   APP_FIELDS,
   SOCIAL_ENV_CATEGORIES,
   credentialsFrom,
+  metaWebhookApps,
   metaWebhookKeys,
   providerOfCategory,
   providerReadiness,
   socialCredentials,
   socialEnvKey,
   socialRedirectUri,
+  socialWebhookUrl,
 } from '../../social.credentials';
 import { SOCIAL_PROVIDERS } from '../../social.types';
 
@@ -216,5 +218,28 @@ describe('metaWebhookKeys', () => {
     );
     expect(await metaWebhookKeys()).toEqual({ secrets: ['main-secret', 'brand-secret'], verifyTokens: ['main-token'] });
     expect(find).toHaveBeenCalledWith({ category: { $in: ['SOCIAL_INSTAGRAM', 'SOCIAL_FACEBOOK'] }, is_active: true });
+  });
+});
+
+describe('metaWebhookApps', () => {
+  it('reads each active Meta entry’s id, keys and Graph version, falling back to the default version', async () => {
+    const id = new Types.ObjectId();
+    find.mockReturnValue(
+      query([
+        { _id: id, name: 'Duncit', category: 'SOCIAL_INSTAGRAM', config: { app_id: ' 2706 ', app_secret: 's', webhook_verify_token: 't', graph_version: 'v24.0' } },
+        { _id: 'x', name: 'Bare', category: 'SOCIAL_FACEBOOK', config: {} },
+      ])
+    );
+    expect(await metaWebhookApps()).toEqual([
+      { entry_id: String(id), name: 'Duncit', provider: 'INSTAGRAM', app_id: '2706', app_secret: 's', verify_token: 't', version: 'v24.0' },
+      { entry_id: 'x', name: 'Bare', provider: 'FACEBOOK', app_id: '', app_secret: '', verify_token: '', version: 'v23.0' },
+    ]);
+  });
+});
+
+describe('socialWebhookUrl', () => {
+  it('is the server address plus /social/webhook, without a doubled slash', async () => {
+    urls.mockResolvedValue({ serverUrl: 'https://server.duncit.com/' });
+    expect(await socialWebhookUrl()).toBe('https://server.duncit.com/social/webhook');
   });
 });

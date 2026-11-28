@@ -271,6 +271,39 @@ export const socialTypeDefs = gql`
     error: String
   }
 
+  "One account a grant found."
+  type SocialPendingAccount {
+    "platform:external_id, what completeSocialConnection takes."
+    key: String!
+    platform: SocialPlatform!
+    external_id: String!
+    name: String!
+    handle: String!
+    avatar_url: String!
+    "Already a connected account (refreshed only on a Reconnect)."
+    connected: Boolean!
+  }
+
+  "What one grant found, held for the account picker."
+  type SocialPendingConnection {
+    id: ID!
+    provider: SocialProvider!
+    reconnect: Boolean!
+    "Facebook Pages found."
+    pages_found: Int!
+    "Instagram professional accounts found (linked to those Pages)."
+    instagram_found: Int!
+    "Every account found, any network."
+    found: Int!
+    accounts: [SocialPendingAccount!]!
+  }
+
+  type SocialConnectionResult {
+    provider: SocialProvider!
+    "Accounts created or refreshed."
+    count: Int!
+  }
+
   input SocialAnalyticsInput {
     "Empty or missing means every connected account."
     account_ids: [ID!]
@@ -287,6 +320,8 @@ export const socialTypeDefs = gql`
     socialPostsTable(query: TableQueryInput): SocialPostTablePage!
     socialCommentsTable(query: TableQueryInput): SocialCommentTablePage!
     socialPost(id: ID!): SocialPostDetail!
+    "What a grant found, held for 30 minutes for the person who started it to pick from. Nothing is created until completeSocialConnection."
+    socialPendingConnection(id: ID!): SocialPendingConnection!
   }
 
   extend type Mutation {
@@ -296,7 +331,11 @@ export const socialTypeDefs = gql`
       return_to: SocialConnectReturn!
       "Which of the network's apps to connect through (SocialProviderStatus.apps); omitted means the default app."
       app_id: ID
+      "A Reconnect: Meta asks again for permissions once declined, and the accounts already connected are refreshed."
+      reconnect: Boolean
     ): String!
+    "Create the ticked accounts of a held grant (SocialPendingConnection.accounts[].key); on a Reconnect the ones already connected are refreshed too. Refused with NOT_FOUND once it expired or was finished."
+    completeSocialConnection(id: ID!, account_keys: [String!]!): SocialConnectionResult!
     "Read the account now instead of waiting for the scheduler."
     syncSocialAccount(id: ID!): SocialAccount!
     "Remove the account, its tokens and everything read from it; the network is asked to forget the token too."

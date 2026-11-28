@@ -63,3 +63,21 @@ export const UPDATE_CRM_APP_BUILD_SETTINGS = gql`
     updateCrmAppBuildSettings(input: $input) { ${SETTINGS_FIELDS} }
   }
 `;
+
+/** The Duncit CRM app's own settings (CrmAppSettings). */
+export interface CrmAppSettings {
+  security_verification: boolean;
+}
+
+/** Whether a Duncit CRM app sign-in asks for Security Verification. */
+export const CRM_APP_SETTINGS = gql`
+  query CrmAppSettings {
+    crmAppSettings { security_verification }
+  }
+`;
+
+export const UPDATE_CRM_APP_SETTINGS = gql`
+  mutation UpdateCrmAppSettings($input: UpdateCrmAppSettingsInput!) {
+    updateCrmAppSettings(input: $input) { security_verification }
+  }
+`;

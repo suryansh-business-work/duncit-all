@@ -10,6 +10,7 @@ import PublishTab from '../social-accounts-page/publish/PublishTab';
 import ComposerDialog, { type ComposerRequest } from '../social-accounts-page/publish/ComposerDialog';
 import PostDetailDrawer from '../social-accounts-page/posts/PostDetailDrawer';
 import ConnectAccountsDrawer from './ConnectAccountsDrawer';
+import ConnectPicker from '../social-accounts-page/accounts/ConnectPicker';
 
 /**
  * Marketing → Social Calendar: the Social Accounts publishing calendar on a
@@ -64,6 +65,8 @@ export default function SocialCalendarPage() {
 
       <ComposerDialog request={composer} accounts={accounts} onClose={() => setComposer(null)} />
       <PostDetailDrawer postId={openPostId} onClose={() => setOpenPostId(null)} />
+      {/* A connect started from the drawer comes back here with the accounts to pick. */}
+      <ConnectPicker onDone={reload} />
       <ConnectAccountsDrawer
         open={settingsOpen}
         providers={providers}

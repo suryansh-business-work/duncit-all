@@ -138,6 +138,16 @@ export function OptOutSection({ control, disabled }: Readonly<SectionProps>) {
   );
 }
 
+/** Whether a person may still reply between 24 hours and 7 days — only for an app Meta approved for its human agent tag. */
+export function MessagingWindowSection({ control, disabled }: Readonly<SectionProps>) {
+  const { t } = useTranslation();
+  return (
+    <SectionCard title={t('marketing.socialSettings.sectionWindow')} subtitle={t('marketing.socialSettings.sectionWindowBody')}>
+      <RhfSwitch control={control} name="human_agent_replies" label={t('marketing.socialSettings.humanAgentReplies')} hint={t('marketing.socialSettings.humanAgentRepliesHint')} disabled={disabled} />
+    </SectionCard>
+  );
+}
+
 /** Auto-replies: the master switch, the daily cap per account, and whether each waits for a person's yes. */
 export function AutoReplySection({ control, disabled }: Readonly<SectionProps>) {
   const { t } = useTranslation();

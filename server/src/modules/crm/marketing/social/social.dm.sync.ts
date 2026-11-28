@@ -1,7 +1,7 @@
 import { logs } from '@observability/log';
 import { inSequence } from '@utils/in-sequence';
 import { isFacebookLogin } from './providers/meta';
-import { recentConversations, subscribePageWebhooks } from './providers/meta.messaging';
+import { PAGE_WEBHOOK_FIELDS, recentConversations, subscribePageWebhooks } from './providers/meta.messaging';
 import { SocialConversationModel } from './social.conversation.model';
 import { recordDm } from './social.dm.ingest';
 import { SocialAccountModel } from './social.model';
@@ -83,8 +83,14 @@ export async function subscribeConnectedPages(found: readonly DiscoveredAccount[
         () => '',
         (error: unknown) => (error instanceof Error ? error.message : String(error)).slice(0, 500)
       );
-      await SocialAccountModel.updateOne({ platform: 'FACEBOOK', external_id: page.external_id }, { $set: { webhook_error: refusal } });
+      // The Page and the Instagram account it links both get their DMs through this one subscription.
+      const linked = { $or: [{ platform: 'FACEBOOK', external_id: page.external_id }, { platform: 'INSTAGRAM', 'meta.page_id': page.external_id }] };
+      const outcome = refusal
+        ? { webhook_error: refusal }
+        : { webhook_error: '', webhook_subscribed_at: new Date(), webhook_fields: [...PAGE_WEBHOOK_FIELDS] };
+      await SocialAccountModel.updateMany(linked, { $set: outcome });
       if (refusal) logs.server.warn('social-accounts', 'subscribePageWebhooks', { page_id: page.external_id, msg: refusal });
+      else logs.server.info('social-accounts', 'subscribePageWebhooks', { page_id: page.external_id, fields: PAGE_WEBHOOK_FIELDS, msg: 'Page subscribed to the webhook' });
     })
   );
 }

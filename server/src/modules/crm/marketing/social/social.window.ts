@@ -5,11 +5,14 @@ import type { SocialPlatform, SocialWindowState } from './social.types';
  * passes through on the server (never only in the UI):
  *
  * - within 24 hours of the person's last message, any reply may go — RESPONSE;
- * - from 24 hours to 7 days, only a PERSON may reply, on the HUMAN_AGENT tag;
- *   an automation never may;
- * - after 7 days, or to someone who never wrote at all, nothing goes. Duncit
- *   sends no cold DM through the API — cold outreach stays hand-sent from the
- *   Instagram app (Instagram Leads, Sequences' DM tasks).
+ * - from 24 hours to 7 days, only a PERSON may reply, on the HUMAN_AGENT tag —
+ *   and only when Settings' human_agent_replies is on, because Meta refuses
+ *   the tag from an app it has not approved for it; an automation never may;
+ * - otherwise (past 24 hours without the tag, past 7 days, or to someone who
+ *   never wrote at all) nothing goes: the conversation is CLOSED and the
+ *   Inbox says why before anyone types. Duncit sends no cold DM through the
+ *   API — cold outreach stays hand-sent from the Instagram app (Instagram
+ *   Leads, Sequences' DM tasks).
  */
 export const STANDARD_WINDOW_MS = 24 * 60 * 60_000;
 export const HUMAN_AGENT_WINDOW_MS = 7 * 24 * 60 * 60_000;
@@ -20,12 +23,13 @@ export interface MessagingWindow {
   closes_at: Date | null;
 }
 
-export function messagingWindow(lastInboundAt: Date | string | null | undefined, now = Date.now()): MessagingWindow {
+/** `humanAgent` is Settings' human_agent_replies; without it the window ends at 24 hours. */
+export function messagingWindow(lastInboundAt: Date | string | null | undefined, now = Date.now(), humanAgent = true): MessagingWindow {
   const last = lastInboundAt ? new Date(lastInboundAt).getTime() : Number.NaN;
   if (!Number.isFinite(last)) return { state: 'CLOSED', closes_at: null };
   const age = now - last;
   if (age < STANDARD_WINDOW_MS) return { state: 'OPEN', closes_at: new Date(last + STANDARD_WINDOW_MS) };
-  if (age < HUMAN_AGENT_WINDOW_MS) return { state: 'HUMAN_AGENT', closes_at: new Date(last + HUMAN_AGENT_WINDOW_MS) };
+  if (humanAgent && age < HUMAN_AGENT_WINDOW_MS) return { state: 'HUMAN_AGENT', closes_at: new Date(last + HUMAN_AGENT_WINDOW_MS) };
   return { state: 'CLOSED', closes_at: null };
 }
 

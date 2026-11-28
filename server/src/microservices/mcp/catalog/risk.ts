@@ -110,6 +110,27 @@ const CONFIRM_FIELDS = new Set([
   'generateReelVoiceover',
   'generateReelSubtitles',
   'recommendNextReel',
+  // HR: a hire grants the Employee console, an exit takes it away, a rehire
+  // gives it back, and a bank change decides where a salary is paid.
+  'hireHrEmployee',
+  'scheduleHrEmployeeExit',
+  'rehireHrEmployee',
+  'restoreHrEmployeeAccess',
+  'updateHrEmployeeBank',
+  // HR payroll, leave and bank changes. A salary adjustment, a hold or sending
+  // an approved run back changes what people are paid; turning the payroll
+  // scheduler on drafts runs by itself; a leave decision can deduct unpaid days;
+  // a bank-change decision or request decides where a salary goes.
+  'addHrPayrollAdjustment',
+  'holdHrPayrollLine',
+  'unholdHrPayrollLine',
+  'returnHrPayrollRun',
+  'updateHrPayrollSettings',
+  'decideLeaveRequest',
+  'applyLeave',
+  'adjustHrLeaveBalance',
+  'decideHrBankChangeRequest',
+  'requestMyBankChange',
   // The social Inbox writing to a real person as the brand: a direct message,
   // and a public reply under their comment. An agent drafts; a person agrees.
   'sendSocialMessage',
@@ -118,6 +139,12 @@ const CONFIRM_FIELDS = new Set([
   // (a trusted rule skips Approvals), so making or changing one is agreed first.
   'createSocialAutoReplyRule',
   'updateSocialAutoReplyRule',
+  // Overwrites the Meta app's own Webhooks setting (the URL Meta calls for
+  // every Instagram and Page event), so the person agrees first.
+  'registerSocialWebhook',
+  // Turning it off lets every Duncit CRM app sign-in skip Security
+  // Verification (location + consent), so a person agrees first.
+  'updateCrmAppSettings',
 ]);
 
 /** Words that mean a mutation reaches people or systems outside Duncit. */

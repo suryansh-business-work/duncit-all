@@ -270,6 +270,13 @@ export const SHIPPED_AFTER_REDESIGN: ReadonlySet<string> = new Set<string>([
   // Monthly employee target reminders and Club Admin host performance, first shipped 2026-11-22.
   'employee-target-reminder',
   'host-monthly-performance',
+  // HR leave, payslips, salary payouts and salary-account changes, first shipped 2026-11-28.
+  'hr-leave-requested',
+  'hr-leave-decided',
+  'hr-payslip-ready',
+  'hr-salary-paid',
+  'hr-payroll-awaiting-release',
+  'hr-bank-change-decided',
   'club-admin-host-performance-alert',
   // The Venue Kit interest form's email code, first shipped 2026-11-22.
   'venue-kit-otp',

@@ -11,6 +11,9 @@
  *   close out any a restart left half-sent.
  * - HEALTH, daily: one profile read per account, and a reminder to the owner
  *   when a token has a week or less to live.
+ * - WEBHOOK-RETRY, every minute: Meta webhook deliveries that were never run,
+ *   failed, or were abandoned mid-run (social.webhook.queue.ts). The queue
+ *   worker that runs fresh deliveries starts here too.
  *
  * Each loop runs one pass at a time. No-ops under NODE_ENV=test.
  */
@@ -20,6 +23,7 @@ import { syncDueAccounts } from './social.sync';
 import { publishDue, recoverStuckPosts } from './social.publisher';
 import { runHealthChecks } from './social.health';
 import { sealLegacyTokens } from './social.tokens';
+import { retryPendingDeliveries, startWebhookWorker } from './social.webhook.queue';
 
 const SYNC_TICK_MS = 15 * 60_000;
 /** Let the server settle after boot before calling out to four networks. */
@@ -28,6 +32,8 @@ const PUBLISH_TICK_MS = 60_000;
 const PUBLISH_FIRST_DELAY_MS = 30_000;
 const HEALTH_TICK_MS = 24 * 60 * 60_000;
 const HEALTH_FIRST_DELAY_MS = 10 * 60_000;
+/** Webhook deliveries a crash or a failure left behind are run again this often. */
+const WEBHOOK_RETRY_TICK_MS = 60_000;
 const COMPONENT = 'social-accounts-scheduler';
 
 async function publishPass(): Promise<void> {
@@ -73,9 +79,20 @@ export function startSocialAccountsScheduler(): () => void {
     intervalMs: HEALTH_TICK_MS,
     run: runHealthChecks,
   });
+  startWebhookWorker();
+  const stopWebhookRetry = startClusterJob({
+    component: COMPONENT,
+    operation: 'webhook-retry',
+    firstDelayMs: WEBHOOK_RETRY_TICK_MS,
+    intervalMs: WEBHOOK_RETRY_TICK_MS,
+    run: async () => {
+      await retryPendingDeliveries();
+    },
+  });
   return () => {
     stopSync();
     stopPublish();
     stopHealth();
+    stopWebhookRetry();
   };
 }

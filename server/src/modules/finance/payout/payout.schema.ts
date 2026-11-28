@@ -42,6 +42,8 @@ export const payoutTypeDefs = /* GraphQL */ `
   enum PayoutSubject {
     WITHDRAWAL
     SEND_MONEY
+    "One salary line of a released HR payroll run."
+    PAYROLL
   }
 
   "A bank or UPI account Duncit has verified for a person (it sits on an approved host, venue or brand)."

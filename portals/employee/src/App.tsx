@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import ExpensesPage, { ExpenseClaimPage } from './pages/expenses';
 import MyTargetsPage, { TargetDetailPage } from './pages/targets';
+import MyHrRecordPage from './pages/my-record/MyHrRecordPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -20,6 +21,7 @@ export default function App() {
       <Route path="/expenses/:expenseId/edit" element={authed(<ExpenseClaimPage />)} />
       <Route path="/targets" element={authed(<MyTargetsPage />)} />
       <Route path="/targets/:targetId" element={authed(<TargetDetailPage />)} />
+      <Route path="/my-record" element={authed(<MyHrRecordPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

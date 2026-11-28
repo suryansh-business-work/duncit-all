@@ -24,7 +24,7 @@ export const MCP_CATEGORIES = [
   { key: 'hosts', label: 'Hosts', description: 'Hosts and host applications.' },
   { key: 'finance', label: 'Finance', description: 'Payments, failed payments and their refunds, payouts, settlements, coupons, expenses, wallets and the pod calculator.' },
   { key: 'loyalty', label: 'Loyalty', description: 'Duncit Coin, Refer & Earn referrals, Smart Incentive, virtual gift cards and printed (physical) gift cards.' },
-  { key: 'employee', label: 'Employee', description: 'Employee expense claims and your own monthly targets: read them and submit your completion and achievements.' },
+  { key: 'employee', label: 'Employee', description: 'Employee expense claims, your own monthly targets (read them and submit your completion and achievements) and your own HR record (read it and update your contact details).' },
   { key: 'partner-brand', label: 'Partner brands', description: 'Partner Brand products, inventory, reviews, pod-shop carts, orders and returns (partners-app.duncit.com/ecomm-brand).' },
   { key: 'ecomm-store', label: 'E-commerce store', description: 'The pet store at ecomm.duncit.com — its catalogue, orders and shipping. Separate from partner brands.' },
   { key: 'engagement', label: 'Engagement', description: 'Member referral codes, leaderboard, membership, badges and posts.' },
@@ -32,7 +32,7 @@ export const MCP_CATEGORIES = [
   { key: 'gig-jobs', label: 'Gig jobs', description: 'Gigs, freelancers and their interests.' },
   { key: 'ai', label: 'AI', description: 'The AI portal dashboard, AI features, the prompt library, usage, monitoring, automations and the Agent.' },
   { key: 'website', label: 'Website & CMS', description: 'Website content, navigation, reels, CMS pages, public pages and newsletter.' },
-  { key: 'hr', label: 'HR', description: 'Job applications and the team structure (seats, salary, share links).' },
+  { key: 'hr', label: 'HR', description: 'Job applications, the team structure (seats, salary, share links), employee records (hire, job changes, pay revisions, bank details, exits, rehires and the worker history, linked to each person’s monthly targets) and HR settings.' },
   { key: 'legal', label: 'Legal', description: 'Policies, acceptances, legal documents, contracts, grievances and account health appeals.' },
   { key: 'support', label: 'Support', description: 'FAQs, tickets and support chats.' },
   { key: 'moderation', label: 'Moderation', description: 'Content moderation and user reports.' },
@@ -172,6 +172,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   walletTypeDefs: 'finance',
   // Withdrawal approvals, Send Money and the payout audit trail.
   payoutTypeDefs: 'finance',
+  financePayrollTypeDefs: 'finance',
   founderTypeDefs: 'finance',
 
   coinTypeDefs: 'loyalty',
@@ -181,6 +182,11 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
 
   employeeExpenseTypeDefs: 'employee',
   myEmployeeTargetTypeDefs: 'employee',
+  myHrEmployeeTypeDefs: 'employee',
+  myHrLeaveTypeDefs: 'employee',
+  myPayrollTypeDefs: 'employee',
+  myBankRequestTypeDefs: 'employee',
+  myHrCalendarTypeDefs: 'employee',
 
   inventoryTypeDefs: 'partner-brand',
   productReviewTypeDefs: 'partner-brand',
@@ -242,6 +248,11 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
 
   jobApplicationTypeDefs: 'hr',
   teamStructureTypeDefs: 'hr',
+  hrEmployeeTypeDefs: 'hr',
+  hrSettingsTypeDefs: 'hr',
+  hrLeaveTypeDefs: 'hr',
+  hrPayrollTypeDefs: 'hr',
+  hrBankRequestTypeDefs: 'hr',
 
   policyTypeDefs: 'legal',
   policyAcceptanceTypeDefs: 'legal',
@@ -275,6 +286,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   waLeadsTypeDefs: 'crm',
   prospectLeadTypeDefs: 'crm',
   leadQualityTypeDefs: 'crm',
+  crmAppSettingsTypeDefs: 'crm',
   leadResearchTypeDefs: 'crm',
   leadMediaTypeDefs: 'crm',
   surveyTypeDefs: 'crm',

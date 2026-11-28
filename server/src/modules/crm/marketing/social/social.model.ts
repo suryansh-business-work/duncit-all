@@ -61,6 +61,9 @@ const accountSchema = new Schema(
     dm_synced_at: { type: Date, default: null },
     dm_error: { type: String, default: '' },
     webhook_error: { type: String, default: '' },
+    /** When Meta last accepted the Page's `subscribed_apps` call (an Instagram account carries its linked Page's), and for which fields. */
+    webhook_subscribed_at: { type: Date, default: null },
+    webhook_fields: { type: [String], default: [] },
   },
   { timestamps }
 );

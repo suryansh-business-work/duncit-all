@@ -95,6 +95,12 @@ export const BANK_ACCOUNT_NUMBER = /^\d{6,18}$/;
  */
 export const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
 
+/** Indian PAN (Permanent Account Number) — 5 letters, 4 digits, 1 letter, uppercase. */
+export const PAN = /^[A-Z]{5}\d{4}[A-Z]$/;
+
+/** EPFO UAN (Universal Account Number) — exactly 12 digits. */
+export const UAN = /^\d{12}$/;
+
 /**
  * FSSAI licence / registration number — exactly 14 digits. Indian food law
  * makes a food business print it on its menu, so a venue that serves food
@@ -194,6 +200,10 @@ export const isUpiId = (v) => UPI_ID.test(v);
 export const isBankAccountNumber = (v) => BANK_ACCOUNT_NUMBER.test(v);
 /** Strict GSTIN check — see the {@link GSTIN} note before using it at checkout. */
 export const isGstin = (v) => GSTIN.test(v);
+/** PAN shape check — uppercase, 10 characters. */
+export const isPan = (v) => PAN.test(v);
+/** UAN shape check — 12 digits. */
+export const isUan = (v) => UAN.test(v);
 /** FSSAI number shape check — 14 digits. */
 export const isFssaiNumber = (v) => FSSAI_NUMBER.test(v);
 /** True for a YouTube video link the players can embed. */
@@ -428,6 +438,18 @@ export const DB_HOST = /^[A-Za-z0-9.-]{1,253}$/;
 
 /** DB_HOST shape check. Trim before calling it. */
 export const isDbHost = (v) => DB_HOST.test(v);
+
+/** A leave type's short code such as `CL` or `SICK_2`: a capital letter, then up to 11 capitals, digits or `_`. One class, bounded count — linear. */
+export const LEAVE_CODE = /^[A-Z][A-Z0-9_]{0,11}$/;
+
+/** LEAVE_CODE shape check. Upper-case and trim before calling it. */
+export const isLeaveCode = (v) => LEAVE_CODE.test(v);
+
+/** A calendar month as `YYYY-MM`, month 01–12, e.g. `2026-11` (payroll and calendar months). Fixed length — linear. */
+export const MONTH_KEY = /^\d{4}-(?:0[1-9]|1[0-2])$/;
+
+/** MONTH_KEY shape check. */
+export const isMonthKey = (v) => MONTH_KEY.test(v);
 
 /**
  * A fully-qualified hostname such as `ns1.example.com`: at least two labels,

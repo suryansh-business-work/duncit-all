@@ -39,7 +39,7 @@ import {
   type SocialProvider,
   type SocialProviderSpec,
 } from '@modules/access/auth/auth.social';
-import { assertPortalLogin, pendingClaimFor } from '@modules/portals';
+import { assertPortalLogin, signInClaimFor } from '@modules/portals';
 import { noteSignIn, type SignInContext } from './user.signin';
 import { authPayload } from './user.public';
 import { twoFactorService } from '@modules/access/auth/two-factor/two-factor.service';
@@ -296,7 +296,7 @@ export const userAuthMethods = {
     const fresh = await UserModel.findById(user._id).select('+auth.password');
     // A console sign-in mints a token that is not a session until the Security
     // Verification screen is completed (see portals/portalSecurity).
-    const payload = await authPayload(fresh, pendingClaimFor(input.portal_key));
+    const payload = await authPayload(fresh, await signInClaimFor(input.portal_key, signIn));
     // Console portals: correct credentials are not enough — the account must
     // also hold a role the admin has granted for the requesting portal.
     assertPortalLogin(input.portal_key, payload.user.roles);
@@ -462,7 +462,7 @@ export const userAuthMethods = {
     if (!user.profile?.profile_photo && info.picture) set['profile.profile_photo'] = info.picture;
     await UserModel.updateOne({ _id: user._id }, { $set: set });
     const fresh = await UserModel.findById(user._id);
-    const payload = await authPayload(fresh, pendingClaimFor(portalKey));
+    const payload = await authPayload(fresh, await signInClaimFor(portalKey, signIn));
     assertPortalLogin(portalKey, payload.user.roles);
     noteSignIn(fresh as any, signIn ?? {}).catch(() => undefined);
     return payload;
@@ -491,12 +491,12 @@ export const userAuthMethods = {
     };
   },
 
-  async linkGoogleAccount(idToken: string, portalKey?: string | null) {
-    return this.linkSocialAccount('GOOGLE', idToken, portalKey);
+  async linkGoogleAccount(idToken: string, portalKey?: string | null, signIn?: SignInContext) {
+    return this.linkSocialAccount('GOOGLE', idToken, portalKey, signIn);
   },
 
-  async linkAppleAccount(idToken: string, portalKey?: string | null) {
-    return this.linkSocialAccount('APPLE', idToken, portalKey);
+  async linkAppleAccount(idToken: string, portalKey?: string | null, signIn?: SignInContext) {
+    return this.linkSocialAccount('APPLE', idToken, portalKey, signIn);
   },
 
   /**
@@ -511,7 +511,12 @@ export const userAuthMethods = {
    * The password is never read or written: the account ends up with both ways
    * in, which is the whole point.
    */
-  async linkSocialAccount(provider: SocialProvider, idToken: string, portalKey?: string | null) {
+  async linkSocialAccount(
+    provider: SocialProvider,
+    idToken: string,
+    portalKey?: string | null,
+    signIn?: SignInContext
+  ) {
     const spec = SOCIAL_PROVIDERS[provider];
     const info = await spec.verify(idToken);
     const email = info.email;
@@ -521,7 +526,7 @@ export const userAuthMethods = {
     // failing on the uniqueness guard below.
     const alreadyLinked = await UserModel.findOne({ [spec.idPath]: info.sub });
     if (alreadyLinked) {
-      return this.loginWithSocial(provider, idToken, portalKey);
+      return this.loginWithSocial(provider, idToken, portalKey, signIn);
     }
 
     const user = await UserModel.findOne({ 'auth.email': email }).select('+auth.password');
@@ -560,7 +565,7 @@ export const userAuthMethods = {
     // After the link is written: linking grants no session by itself, and every
     // later provider sign-in meets this same gate.
     await twoFactorService.requireForPortal(fresh, { provider, portalKey });
-    const payload = await authPayload(fresh, pendingClaimFor(portalKey));
+    const payload = await authPayload(fresh, await signInClaimFor(portalKey, signIn));
     assertPortalLogin(portalKey, payload.user.roles);
     return payload;
   },

@@ -28,6 +28,7 @@ interface Props {
 }
 
 function Points({ title, items }: Readonly<{ title: string; items: readonly string[] }>) {
+  const theme = useTheme();
   if (items.length === 0) return null;
   return (
     <YStack gap="$1">
@@ -36,7 +37,12 @@ function Points({ title, items }: Readonly<{ title: string; items: readonly stri
       </Text>
       {items.map((item) => (
         <XStack key={item} gap="$2" alignItems="center">
-          <MaterialIcons name="fiber-manual-record" size={8} accessibilityElementsHidden />
+          <MaterialIcons
+            name="fiber-manual-record"
+            size={8}
+            color={theme.muted?.val}
+            accessibilityElementsHidden
+          />
           <Text flex={1}>{item}</Text>
         </XStack>
       ))}

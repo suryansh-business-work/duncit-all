@@ -78,6 +78,17 @@ describe('SocialSettingsForm', () => {
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ sync_every_hours: 6, opt_out_keywords: ['STOP', 'QUIT'], auto_reply_enabled: true })));
   });
 
+  it('keeps human agent replies off unless switched on, and saves the switch', async () => {
+    const onSubmit = renderForm();
+    expect(screen.getByTestId('social-settings-meta-rules')).toHaveTextContent('within 24 hours');
+    const toggle = screen.getByLabelText('Human agent replies (24 hours to 7 days)');
+    expect(toggle).not.toBeChecked();
+    fireEvent.click(toggle);
+    await waitFor(() => expect(screen.getByTestId('social-settings-save')).toBeEnabled());
+    fireEvent.click(screen.getByTestId('social-settings-save'));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ human_agent_replies: true })));
+  });
+
   it('says what is wrong instead of saving', async () => {
     const onSubmit = renderForm();
     fireEvent.change(screen.getByRole('textbox', { name: 'Start keywords' }), { target: { value: 'stop' } });

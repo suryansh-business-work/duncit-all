@@ -7,6 +7,7 @@ import { socialInbox, type SocialInboxChannel } from './social.inbox';
 import { inboxItemsTable } from './social.inbox.items';
 import { suggestDirectMessage, suggestReply } from './social.inbox.ai';
 import { replyCapabilities, replyToComment } from './social.replies';
+import { socialWebhookMutations, socialWebhookQueries } from './social.webhook.resolver';
 import type { SocialInboxStatus, SocialInboxView } from './social.types';
 
 /** Everyone who works the social comments reads and works the Inbox — the same gate as the Monitoring tab. */
@@ -40,6 +41,8 @@ export const socialInboxResolvers = {
     // Direct messages and Social Settings (social.conversation.resolver.ts).
     ...socialConversationQueries,
     ...autoReplyQueries,
+    // Meta webhook deliveries and registration (social.webhook.resolver.ts).
+    ...socialWebhookQueries,
   },
   Mutation: {
     assignSocialComment: (_p: unknown, args: { id: string; user_id?: string | null }, ctx: Ctx) => {
@@ -64,5 +67,6 @@ export const socialInboxResolvers = {
     },
     ...socialConversationMutations,
     ...autoReplyMutations,
+    ...socialWebhookMutations,
   },
 };

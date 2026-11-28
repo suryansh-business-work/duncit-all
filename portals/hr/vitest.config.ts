@@ -11,9 +11,10 @@ export default defineConfig({
     environment: 'jsdom',
     globals: false,
     setupFiles: ['./__tests__/unit-tests/setup.ts'],
-    // Vitest specs live under __tests__/unit-tests; Cypress e2e specs (if any)
-    // under __tests__/e2e are discovered separately by Cypress.
-    include: ['__tests__/unit-tests/**/*.{test,spec}.{ts,tsx}'],
+    // Vitest specs live under __tests__/unit-tests, plus each form's own
+    // co-located .form.cy.tsx; Cypress e2e specs (if any) under __tests__/e2e
+    // are discovered separately by Cypress.
+    include: ['__tests__/unit-tests/**/*.{test,spec}.{ts,tsx}', 'src/**/*.cy.{ts,tsx}'],
     exclude: ['node_modules/**', 'dist/**', '__tests__/e2e/**'],
     coverage: {
       provider: 'v8',
@@ -35,6 +36,8 @@ export default defineConfig({
         // Runtime URL config — branches switch on the build-time `DEV` flag;
         // verified by the production build + e2e base URL, not reachable in units.
         'src/config/url-configs.ts',
+        // The co-located form specs themselves.
+        'src/**/*.cy.{ts,tsx}',
         // Type-only declarations.
         'src/**/*.d.ts',
         'src/vite-env.d.ts',

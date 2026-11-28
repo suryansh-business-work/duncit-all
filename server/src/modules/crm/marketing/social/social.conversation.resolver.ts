@@ -1,8 +1,7 @@
 import type { GraphQLContext } from '@context';
-import { getUrlConfigs } from '@config/url-configs';
 import { requireRole } from '@middleware/rbac';
-import { trimTrailingSlash } from '@utils/url';
 import type { TableQueryInput } from '@utils/table-query';
+import { socialWebhookUrl } from './social.credentials';
 import { conversationThread, createLeadFromConversation, socialConversations } from './social.conversations';
 import { inboxComment } from './social.inbox';
 import { sendDirectMessage } from './social.dm.send';
@@ -41,10 +40,9 @@ export const socialConversationQueries = {
     requireRole(ctx, DM_ROLES);
     return loadSocialSettings();
   },
-  socialWebhookUrl: async (_p: unknown, _a: unknown, ctx: Ctx) => {
+  socialWebhookUrl: (_p: unknown, _a: unknown, ctx: Ctx) => {
     requireRole(ctx, DM_ROLES);
-    const { serverUrl } = await getUrlConfigs();
-    return `${trimTrailingSlash(serverUrl)}/social/webhooks/meta`;
+    return socialWebhookUrl();
   },
 };
 

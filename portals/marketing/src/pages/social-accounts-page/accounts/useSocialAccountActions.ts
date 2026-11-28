@@ -21,13 +21,14 @@ export function useSocialAccountActions(onChanged: () => void, returnTo: SocialC
 
   /**
    * Off to the provider's consent screen, through the chosen app (a network can
-   * have several); the server's callback brings the marketer back. No app means
-   * the network's default app.
+   * have several); the server's callback brings the marketer back to the account
+   * picker. No app means the network's default app; `reconnect` has Meta ask
+   * again for declined permissions and refreshes the accounts already there.
    */
   const connect = useCallback(
-    async (provider: SocialProvider, appId?: string | null) => {
+    async (provider: SocialProvider, appId?: string | null, reconnect = false) => {
       try {
-        const { data } = await connectMut({ variables: { provider, return_to: returnTo, app_id: appId ?? null } });
+        const { data } = await connectMut({ variables: { provider, return_to: returnTo, app_id: appId ?? null, reconnect } });
         if (data?.socialConnectUrl) globalThis.location.assign(data.socialConnectUrl);
       } catch (error) {
         notify(parseApiError(error), 'error');

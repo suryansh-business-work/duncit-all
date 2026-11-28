@@ -45,6 +45,10 @@ export const BANK_ACCOUNT_NUMBER: RegExp;
  * pattern; mWeb checkout's 14-character variant rejects every valid GSTIN.
  */
 export const GSTIN: RegExp;
+/** Indian PAN (Permanent Account Number) — 5 letters, 4 digits, 1 letter, uppercase. */
+export const PAN: RegExp;
+/** EPFO UAN (Universal Account Number) — exactly 12 digits. */
+export const UAN: RegExp;
 /** FSSAI licence / registration number — exactly 14 digits. */
 export const FSSAI_NUMBER: RegExp;
 /**
@@ -91,6 +95,10 @@ export function isUpiId(value: string): boolean;
 export function isBankAccountNumber(value: string): boolean;
 /** Strict GSTIN check — see the {@link GSTIN} note before using it at checkout. */
 export function isGstin(value: string): boolean;
+/** PAN shape check — uppercase, 10 characters. */
+export function isPan(value: string): boolean;
+/** UAN shape check — 12 digits. */
+export function isUan(value: string): boolean;
 /** FSSAI number shape check — 14 digits. */
 export function isFssaiNumber(value: string): boolean;
 /** True for a YouTube video link the players can embed. */
@@ -212,6 +220,14 @@ export function isMongoUri(value: string): boolean;
 export const DB_HOST: RegExp;
 /** DB_HOST shape check. Trim before calling it. */
 export function isDbHost(value: string): boolean;
+/** A leave type's short code such as `CL` or `SICK_2`: a capital letter, then up to 11 capitals, digits or `_`. One class, bounded count — linear. */
+export const LEAVE_CODE: RegExp;
+/** LEAVE_CODE shape check. Upper-case and trim before calling it. */
+export function isLeaveCode(value: string): boolean;
+/** A calendar month as `YYYY-MM`, month 01–12, e.g. `2026-11` (payroll and calendar months). Fixed length — linear. */
+export const MONTH_KEY: RegExp;
+/** MONTH_KEY shape check. */
+export function isMonthKey(value: string): boolean;
 /**
  * A fully-qualified hostname such as `ns1.example.com`: at least two labels,
  * each a {@link HOSTNAME_LABEL}, 253 characters at most. A trailing dot (the

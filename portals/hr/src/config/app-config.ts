@@ -24,7 +24,9 @@ export const appConfig = {
   accent: { light: '#d8b4fe', main: '#9333ea', hover: '#7e22ce', active: '#6b21a8' },
   nav: [
     { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/', icon: 'dashboard' },
+    { label: 'Employees', labelKey: 'shell.nav.employees', to: '/employees', icon: 'people' },
     { label: 'Team Structure', labelKey: 'shell.nav.teamStructure', to: '/team-structure', icon: 'hub' },
+    { label: 'Settings', labelKey: 'shell.nav.settings', to: '/settings', icon: 'settings' },
   ],
   modules: [],
 } satisfies AppConfig;

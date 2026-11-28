@@ -22,13 +22,22 @@ describe('WhatsAppConnectCard — stepper start', () => {
     expect(connect.fn).not.toHaveBeenCalled();
   });
 
-  it('does not restart a failed session nobody started on this visit', async () => {
+  it('opens a failed session on Link WhatsApp with its reason, and does not restart it by itself', async () => {
     const restart = connectMock(true);
     renderCard(waConnection({ status: 'ERROR', last_error: 'auth timeout' }), [statusMock('ERROR'), restart.mock]);
 
     expect(await screen.findByText('Error')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Save & continue' })).toBeInTheDocument();
+    expect(screen.getByText('auth timeout')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Restart connection' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save & continue' })).toBeNull();
     expect(restart.fn).not.toHaveBeenCalled();
+  });
+
+  it('says what to do when the gateway kept no reason for the failure', async () => {
+    renderCard(waConnection({ status: 'ERROR' }), [statusMock('ERROR')]);
+
+    expect(await screen.findByText(/WhatsApp stopped after an earlier error/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Restart connection' })).toBeInTheDocument();
   });
 });
 

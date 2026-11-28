@@ -86,6 +86,9 @@ const ROUTES: Record<string, Route> = {
   // Private: a buyer's proof that money left their account. Filed under the
   // uploader only, stored as an ImageKit private file and never AI-scanned.
   'payment-evidence': r(PRIVATE_EVIDENCE_BUCKET, 'self', 'evidence'),
+  // Private: the cancelled cheque or passbook page an employee sends with a
+  // salary bank-account change, for HR to check before approving it.
+  'hr-bank-proof': r(PRIVATE_EVIDENCE_BUCKET, 'self', 'bank_proof'),
 };
 
 /** Where a pod's cover waits before the pod exists. */
@@ -127,19 +130,22 @@ export function resolveUploadFolder(folder: string | null | undefined, placement
   if (!route) return featurePath(key);
   const entity = folderSegment(placement.entityId);
   const user = folderSegment(placement.userId);
-  if (route.owner === 'self') return privateEvidenceFolder(placement.userId);
+  if (route.owner === 'self') return privateFolder(placement.userId, route.kind);
   const owner = route.owner === 'user' ? (entity ?? user) : entity;
   if (owner) return entityFolder(route.bucket, owner, route.kind);
   // An owned feature with no owner yet: park it under the uploader.
   return `${root}/${route.bucket}/${INCOMING}/${user ?? 'anonymous'}/${route.kind}`;
 }
 
-/** The uploader's own private evidence folder, e.g. `/production/payment_evidence/65aa…/evidence`. */
-export function privateEvidenceFolder(userId: string | null | undefined): string {
+/** The uploader's own private folder of one kind, e.g. `/production/payment_evidence/65aa…/bank_proof`. */
+export function privateFolder(userId: string | null | undefined, kind: string): string {
   const user = folderSegment(userId);
-  if (user) return entityFolder(PRIVATE_EVIDENCE_BUCKET, user, 'evidence');
-  return `${mediaRoot()}/${PRIVATE_EVIDENCE_BUCKET}/${INCOMING}/anonymous/evidence`;
+  if (user) return entityFolder(PRIVATE_EVIDENCE_BUCKET, user, kind);
+  return `${mediaRoot()}/${PRIVATE_EVIDENCE_BUCKET}/${INCOMING}/anonymous/${kind}`;
 }
+
+/** The uploader's own private evidence folder, e.g. `/production/payment_evidence/65aa…/evidence`. */
+export const privateEvidenceFolder = (userId: string | null | undefined): string => privateFolder(userId, 'evidence');
 
 /**
  * Whether a RESOLVED folder holds private files: uploaded as ImageKit private

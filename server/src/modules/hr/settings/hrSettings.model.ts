@@ -1,14 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
-import { HR_PAY_COMPONENT_TYPES, type HrPayComponentType } from '@modules/hr/employee/employee.rules';
+import { HR_PAY_COMPONENT_TYPES, HR_TEMPLATE_CALCS, type HrPayComponentType, type HrTemplateCalc } from '@modules/hr/hr.constants';
 
-/**
- * How a salary template line turns an annual CTC into a monthly amount.
- * FIXED is rupees per month; the percents are of the monthly CTC or of the
- * template's first line (the basic); BALANCE takes what is left of the monthly
- * CTC after every other earning and employer contribution.
- */
-export const HR_TEMPLATE_CALCS = ['FIXED', 'PERCENT_OF_CTC', 'PERCENT_OF_BASIC', 'BALANCE'] as const;
-export type HrTemplateCalc = (typeof HR_TEMPLATE_CALCS)[number];
+export { HR_TEMPLATE_CALCS, type HrTemplateCalc } from '@modules/hr/hr.constants';
 
 export interface IHrTemplateLine {
   label: string;

@@ -3,83 +3,50 @@
  * agree on: enums, limits, translation keys and the GraphQL selections. Data
  * and pure helpers only; each console keeps its own UI.
  *
- * TWIN: the enums and `HR_EMPLOYEE_LIMITS` / `HR_SETTINGS_LIMITS` mirror
- * server/src/modules/hr/employee/employee.rules.ts and
- * server/src/modules/hr/settings/hrSettings.rules.ts, which re-check every
- * write (the server imports no @duncit/* package). Change one, change the other.
+ * The enums and limits are not written here: they are GENERATED from the
+ * server's server/src/modules/hr/hr.constants.ts (the server imports no
+ * @duncit/* package) by scripts/generate-hr-constants.mjs, so the consoles and
+ * the API can never disagree on a limit. Edit the server file and regenerate.
  */
+import type {
+  HrCompensationReason,
+  HrEmployeeStatus,
+  HrEmploymentType,
+  HrEventKind,
+  HrExitType,
+  HrGender,
+  HrJobChangeReason,
+  HrPayComponentType,
+  HrTemplateCalc,
+} from './generated/hr-constants';
 
-export const HR_EMPLOYEE_STATUSES = ['ACTIVE', 'ON_NOTICE', 'EXITED'] as const;
-export type HrEmployeeStatus = (typeof HR_EMPLOYEE_STATUSES)[number];
-
-export const HR_EMPLOYMENT_TYPES = ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERN', 'CONSULTANT'] as const;
-export type HrEmploymentType = (typeof HR_EMPLOYMENT_TYPES)[number];
-
-export const HR_GENDERS = ['MALE', 'FEMALE', 'OTHER'] as const;
-export type HrGender = (typeof HR_GENDERS)[number];
-
-export const HR_EXIT_TYPES = ['RESIGNATION', 'TERMINATION', 'END_OF_CONTRACT', 'RETIREMENT', 'OTHER'] as const;
-export type HrExitType = (typeof HR_EXIT_TYPES)[number];
-
-export const HR_JOB_CHANGE_REASONS = ['PROMOTION', 'TRANSFER', 'ROLE_CHANGE', 'MANAGER_CHANGE', 'CORRECTION'] as const;
-export type HrJobChangeReason = (typeof HR_JOB_CHANGE_REASONS)[number];
-
-export const HR_PAY_COMPONENT_TYPES = ['EARNING', 'DEDUCTION', 'EMPLOYER_CONTRIBUTION'] as const;
-export type HrPayComponentType = (typeof HR_PAY_COMPONENT_TYPES)[number];
+export {
+  HR_COMPENSATION_REASONS,
+  HR_EMPLOYEE_LIMITS,
+  HR_EMPLOYEE_STATUSES,
+  HR_EMPLOYMENT_TYPES,
+  HR_EVENT_KINDS,
+  HR_EXIT_TYPES,
+  HR_GENDERS,
+  HR_JOB_CHANGE_REASONS,
+  HR_PAY_COMPONENT_TYPES,
+  HR_SETTINGS_LIMITS,
+  HR_TEMPLATE_CALCS,
+} from './generated/hr-constants';
+export type {
+  HrCompensationReason,
+  HrEmployeeStatus,
+  HrEmploymentType,
+  HrEventKind,
+  HrExitType,
+  HrGender,
+  HrJobChangeReason,
+  HrPayComponentType,
+  HrTemplateCalc,
+} from './generated/hr-constants';
 
 /** The reasons HR may pick for a new revision; HIRE is written by the hire itself. */
-export const HR_REVISION_REASONS = ['REVISION', 'PROMOTION', 'CORRECTION'] as const;
-export type HrCompensationReason = 'HIRE' | (typeof HR_REVISION_REASONS)[number];
-
-export const HR_TEMPLATE_CALCS = ['FIXED', 'PERCENT_OF_CTC', 'PERCENT_OF_BASIC', 'BALANCE'] as const;
-export type HrTemplateCalc = (typeof HR_TEMPLATE_CALCS)[number];
-
-export const HR_EVENT_KINDS = [
-  'HIRED',
-  'PERSONAL_UPDATED',
-  'CONTACT_UPDATED',
-  'JOB_CHANGED',
-  'COMPENSATION_ADDED',
-  'COMPENSATION_REMOVED',
-  'BANK_UPDATED',
-  'BANK_VIEWED',
-  'EXIT_SCHEDULED',
-  'EXIT_CANCELLED',
-  'EXITED',
-  'REHIRED',
-] as const;
-export type HrEventKind = (typeof HR_EVENT_KINDS)[number];
-
-export const HR_EMPLOYEE_LIMITS = {
-  nameMax: 60,
-  titleMax: 120,
-  departmentMax: 80,
-  locationMax: 80,
-  relationMax: 40,
-  addressMax: 500,
-  noteMax: 1000,
-  codeMax: 24,
-  componentsMax: 20,
-  componentLabelMax: 60,
-  amountMax: 100_000_000,
-  noticeDaysMax: 365,
-  bankNameMax: 80,
-  minAgeYears: 14,
-} as const;
-
-export const HR_SETTINGS_LIMITS = {
-  prefixMax: 10,
-  digitsMin: 2,
-  digitsMax: 8,
-  noticeDaysMax: 365,
-  probationMonthsMax: 24,
-  listMax: 100,
-  listItemMax: 80,
-  templateMax: 20,
-  templateLabelMax: 60,
-  percentMax: 100,
-  fixedMax: 100_000_000,
-} as const;
+export const HR_REVISION_REASONS = ['REVISION', 'PROMOTION', 'CORRECTION'] as const satisfies readonly HrCompensationReason[];
 
 /** Chip colour per status, so both consoles mean the same thing by amber. */
 export const HR_EMPLOYEE_STATUS_COLORS = { ACTIVE: 'success', ON_NOTICE: 'warning', EXITED: 'default' } as const;

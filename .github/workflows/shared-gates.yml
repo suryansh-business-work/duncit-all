@@ -87,6 +87,12 @@ jobs:
       - name: Targets growth formulas match the server
         run: node scripts/generate-growth-formula.mjs --check
 
+      # Same direction for HR: the HR and Employee consoles validate with a
+      # GENERATED copy of the server's HR enums and limits (@duncit/utils). A
+      # stale copy could let a form accept what the server refuses.
+      - name: HR constants match the server
+        run: node scripts/generate-hr-constants.mjs --check
+
       # Same direction for the CRM: the Lead Quality Score settings form totals
       # and validates with a GENERATED copy of the server's rules. A stale copy
       # could accept a scoring model the server refuses.

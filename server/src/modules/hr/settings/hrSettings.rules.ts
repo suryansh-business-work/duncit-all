@@ -1,26 +1,13 @@
 /**
  * HR > Settings — what a save may contain.
  *
- * TWIN: `HR_SETTINGS_LIMITS` is mirrored in packages/utils/src/hr-employee.ts,
- * which the settings form validates with. Change one, change the other.
+ * `HR_SETTINGS_LIMITS` lives in hr.constants.ts, copied to @duncit/utils for
+ * the settings form by scripts/generate-hr-constants.mjs.
  */
 import { z } from 'zod';
-import { HR_PAY_COMPONENT_TYPES } from '@modules/hr/employee/employee.rules';
-import { HR_TEMPLATE_CALCS } from './hrSettings.model';
+import { HR_PAY_COMPONENT_TYPES, HR_SETTINGS_LIMITS, HR_TEMPLATE_CALCS } from '@modules/hr/hr.constants';
 
-export const HR_SETTINGS_LIMITS = {
-  prefixMax: 10,
-  digitsMin: 2,
-  digitsMax: 8,
-  noticeDaysMax: 365,
-  probationMonthsMax: 24,
-  listMax: 100,
-  listItemMax: 80,
-  templateMax: 20,
-  templateLabelMax: 60,
-  percentMax: 100,
-  fixedMax: 100_000_000,
-} as const;
+export { HR_SETTINGS_LIMITS } from '@modules/hr/hr.constants';
 
 const L = HR_SETTINGS_LIMITS;
 

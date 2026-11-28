@@ -1,0 +1,92 @@
+/**
+ * HR employee records: the enums and limits the server and both HR consoles
+ * share — the one written copy.
+ *
+ * The server re-checks every write against these; the HR and Employee consoles
+ * validate their forms with the same values. The server imports no `@duncit/*`
+ * package, so instead of a second hand-written copy (which the duplication gate
+ * refuses, and which could drift), `node scripts/generate-hr-constants.mjs`
+ * copies this file to packages/utils/src/generated/hr-constants.ts and CI fails
+ * when the two differ. Keep it import-free and data-only.
+ */
+
+export const HR_EMPLOYEE_STATUSES = ['ACTIVE', 'ON_NOTICE', 'EXITED'] as const;
+export type HrEmployeeStatus = (typeof HR_EMPLOYEE_STATUSES)[number];
+
+export const HR_EMPLOYMENT_TYPES = ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERN', 'CONSULTANT'] as const;
+export type HrEmploymentType = (typeof HR_EMPLOYMENT_TYPES)[number];
+
+export const HR_GENDERS = ['MALE', 'FEMALE', 'OTHER'] as const;
+export type HrGender = (typeof HR_GENDERS)[number];
+
+export const HR_EXIT_TYPES = ['RESIGNATION', 'TERMINATION', 'END_OF_CONTRACT', 'RETIREMENT', 'OTHER'] as const;
+export type HrExitType = (typeof HR_EXIT_TYPES)[number];
+
+/** Why a job record changed — the reason column of the worker history. */
+export const HR_JOB_CHANGE_REASONS = ['PROMOTION', 'TRANSFER', 'ROLE_CHANGE', 'MANAGER_CHANGE', 'CORRECTION'] as const;
+export type HrJobChangeReason = (typeof HR_JOB_CHANGE_REASONS)[number];
+
+export const HR_PAY_COMPONENT_TYPES = ['EARNING', 'DEDUCTION', 'EMPLOYER_CONTRIBUTION'] as const;
+export type HrPayComponentType = (typeof HR_PAY_COMPONENT_TYPES)[number];
+
+/** HIRE is written by the hire itself; HR picks one of the others for a new revision. */
+export const HR_COMPENSATION_REASONS = ['HIRE', 'REVISION', 'PROMOTION', 'CORRECTION'] as const;
+export type HrCompensationReason = (typeof HR_COMPENSATION_REASONS)[number];
+
+/**
+ * How a salary template line turns an annual CTC into a monthly amount.
+ * FIXED is rupees per month; the percents are of the monthly CTC or of the
+ * template's first line (the basic); BALANCE takes what is left of the monthly
+ * CTC after every other earning and employer contribution.
+ */
+export const HR_TEMPLATE_CALCS = ['FIXED', 'PERCENT_OF_CTC', 'PERCENT_OF_BASIC', 'BALANCE'] as const;
+export type HrTemplateCalc = (typeof HR_TEMPLATE_CALCS)[number];
+
+export const HR_EVENT_KINDS = [
+  'HIRED',
+  'PERSONAL_UPDATED',
+  'CONTACT_UPDATED',
+  'JOB_CHANGED',
+  'COMPENSATION_ADDED',
+  'COMPENSATION_REMOVED',
+  'BANK_UPDATED',
+  'BANK_VIEWED',
+  'EXIT_SCHEDULED',
+  'EXIT_CANCELLED',
+  'EXITED',
+  'REHIRED',
+] as const;
+export type HrEventKind = (typeof HR_EVENT_KINDS)[number];
+
+export const HR_EMPLOYEE_LIMITS = {
+  nameMax: 60,
+  titleMax: 120,
+  departmentMax: 80,
+  locationMax: 80,
+  relationMax: 40,
+  addressMax: 500,
+  noteMax: 1000,
+  codeMax: 24,
+  componentsMax: 20,
+  componentLabelMax: 60,
+  /** Rupees per month per pay line. */
+  amountMax: 100_000_000,
+  noticeDaysMax: 365,
+  bankNameMax: 80,
+  minAgeYears: 14,
+} as const;
+
+/** HR > Settings: what a save may contain. */
+export const HR_SETTINGS_LIMITS = {
+  prefixMax: 10,
+  digitsMin: 2,
+  digitsMax: 8,
+  noticeDaysMax: 365,
+  probationMonthsMax: 24,
+  listMax: 100,
+  listItemMax: 80,
+  templateMax: 20,
+  templateLabelMax: 60,
+  percentMax: 100,
+  fixedMax: 100_000_000,
+} as const;

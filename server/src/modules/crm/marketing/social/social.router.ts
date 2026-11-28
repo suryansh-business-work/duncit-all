@@ -47,6 +47,8 @@ export function buildSocialOAuthRouter(): Router {
       const result = await socialService.completeConnect(code, state);
       destination.searchParams.set('connected', result.provider);
       destination.searchParams.set('count', String(result.count));
+      // What the grant found is held for the marketer to tick: the page opens the picker by this id.
+      destination.searchParams.set('pick', result.pending_id);
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
       logs.server.error('social-accounts', 'oauthCallback', { error, msg: 'could not complete the social connection' });

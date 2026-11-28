@@ -171,7 +171,8 @@ function pageAccounts(page: Page, user: UserToken, scopes: string[]): Discovered
 }
 
 export const metaLoginConnector: SocialConnector = {
-  authorizeUrl: ({ creds, state }) =>
+  // A Reconnect sends auth_type=rerequest: Meta never shows a declined permission again without it.
+  authorizeUrl: ({ creds, state, reauth }) =>
     withQuery(`https://www.facebook.com/${creds.version}/dialog/oauth`, {
       client_id: creds.clientId,
       redirect_uri: creds.redirectUri,
@@ -179,6 +180,7 @@ export const metaLoginConnector: SocialConnector = {
       response_type: 'code',
       config_id: creds.configId || undefined,
       scope: creds.configId ? undefined : META_LOGIN_SCOPES.join(','),
+      auth_type: reauth ? 'rerequest' : undefined,
     }),
 
   async connect({ code, creds }) {

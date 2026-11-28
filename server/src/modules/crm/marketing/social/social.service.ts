@@ -13,8 +13,7 @@ import { CONNECTORS } from './providers';
 import { providerReadiness, socialCredentials, socialRedirectUri } from './social.credentials';
 import { readConnectState, startConnect } from './social.oauth';
 import { handleOf, syncSocialAccount, type AccountWithTokens } from './social.sync';
-import { sealToken } from './social.tokens';
-import { subscribeConnectedPages } from './social.dm.sync';
+import { holdDiscovered } from './social.connect.pending';
 import { tokenExpiresInDays } from './social.health';
 import { missingDmPermission } from './social.window';
 import { analyzePendingComments } from './social.ai';
@@ -23,18 +22,10 @@ import { accountAverage, analyzePost, periodInsights } from './social.insights';
 
 /** The latest comments the post detail lists under the post. */
 const RECENT_COMMENTS = 20;
-import type { DiscoveredAccount, SocialConnectReturn, SocialProvider, SocialReviewStatus } from './social.types';
+import type { SocialConnectReturn, SocialProvider, SocialReviewStatus } from './social.types';
 
 const iso = (value: unknown) => (value instanceof Date ? value.toISOString() : null);
 
-const META_NOTHING_GRANTED =
-  'Meta connected no Facebook Page or Instagram professional account. Press Connect again and pick at least one on the consent screen; an Instagram account must be a professional account linked to a Facebook Page.';
-/** Why a finished consent connected nothing, per provider — the Accounts page shows it. */
-const NOTHING_GRANTED: Partial<Record<SocialProvider, string>> = {
-  INSTAGRAM: META_NOTHING_GRANTED,
-  FACEBOOK: META_NOTHING_GRANTED,
-};
-const NOTHING_GRANTED_DEFAULT = 'The network connected no account. Press Connect again and allow access to at least one account.';
 
 function notFound(what: string): never {
   throw new GraphQLError(`${what} not found`, { extensions: { code: 'NOT_FOUND' } });
@@ -252,47 +243,6 @@ export async function commentContext(docs: any[]) {
   return { names, posts: postMap, people };
 }
 
-/**
- * Store what a handshake found. Reconnecting an account refreshes its tokens
- * in place; the tokens are sealed before they are written. Whoever connects
- * becomes the owner unless somebody already is — a reconnect by a colleague
- * must not quietly take an account away from the person looking after it.
- * The app it came through is kept with it ('' — the default — is stored as
- * null), since its tokens only work with that app.
- */
-async function saveDiscovered(provider: SocialProvider, accounts: DiscoveredAccount[], userId: string, appId: string): Promise<string[]> {
-  const ids: string[] = [];
-  for (const account of accounts) {
-    const { tokens, ...profile } = account;
-    const doc = await SocialAccountModel.findOneAndUpdate(
-      { platform: account.platform, external_id: account.external_id },
-      {
-        $set: {
-          ...profile,
-          provider,
-          access_token: sealToken(tokens.access_token),
-          refresh_token: sealToken(tokens.refresh_token),
-          token_expires_at: tokens.expires_at,
-          scopes: tokens.scopes,
-          status: 'CONNECTED',
-          last_error: '',
-          connected_by: userId,
-          env_entry_id: appId || null,
-          // A fresh token is a fresh start for the health line and the reminders.
-          health_ok: null,
-          health_message: '',
-          alerted_at: null,
-        },
-      },
-      { upsert: true, returnDocument: 'after', projection: { _id: 1 } }
-    );
-    if (!doc) continue;
-    await SocialAccountModel.updateOne({ _id: doc._id, owner_user_id: null }, { $set: { owner_user_id: userId } });
-    ids.push(String(doc._id));
-  }
-  return ids;
-}
-
 async function account(id: string) {
   const doc = await SocialAccountModel.findById(id).lean();
   if (!doc) notFound('Social account');
@@ -349,9 +299,11 @@ export const socialService = {
   /**
    * The provider's consent screen, for the button the marketer just pressed.
    * `appId` picks which of the network's apps to connect through (several can
-   * be set up); without one it is the default app, as before.
+   * be set up); without one it is the default app, as before. `reconnect`
+   * asks again for permissions once declined and refreshes the accounts
+   * already connected (social.connect.pending.ts).
    */
-  async connectUrl(provider: SocialProvider, userId: string, returnTo: SocialConnectReturn, appId?: string | null): Promise<string> {
+  async connectUrl(provider: SocialProvider, userId: string, returnTo: SocialConnectReturn, appId?: string | null, reconnect = false): Promise<string> {
     const app = appId?.trim() ?? '';
     const creds = await socialCredentials(provider, app);
     if (!creds) {
@@ -360,29 +312,24 @@ export const socialService = {
         : 'This network is not set up yet — add its app under Marketing › Settings › Integrations.';
       throw new GraphQLError(message, { extensions: { code: 'SOCIAL_APP_NOT_CONFIGURED' } });
     }
-    const { state, challenge } = startConnect(provider, userId, returnTo, app);
-    return CONNECTORS[provider].authorizeUrl({ creds, state, challenge });
+    const { state, challenge } = startConnect(provider, userId, returnTo, app, reconnect);
+    return CONNECTORS[provider].authorizeUrl({ creds, state, challenge, reauth: reconnect });
   },
 
-  /** The callback's half: trade the code, store what came back, start the first read. */
-  async completeConnect(code: string, state: string): Promise<{ provider: SocialProvider; count: number }> {
+  /**
+   * The callback's half: trade the code and hold everything the grant reached
+   * (every Page and its Instagram account on Meta, every channel or profile
+   * elsewhere) for the marketer to tick on the Accounts page. Nothing becomes
+   * an account until they choose (social.connect.pending.ts), and a grant that
+   * found nothing is shown there with its likely causes, not thrown.
+   */
+  async completeConnect(code: string, state: string): Promise<{ provider: SocialProvider; count: number; pending_id: string }> {
     const parsed = readConnectState(state);
     if (!parsed) throw new Error('This connect link has expired or did not start here. Press Connect again.');
     const creds = await socialCredentials(parsed.provider, parsed.appId);
     if (!creds) throw new Error('This network is not set up yet — add its app under Marketing › Settings › Integrations.');
     const found = await CONNECTORS[parsed.provider].connect({ code, creds, verifier: parsed.verifier });
-    // A consent that granted nothing used to come back as "0 connected" and look like success.
-    if (found.length === 0) throw new Error(NOTHING_GRANTED[parsed.provider] ?? NOTHING_GRANTED_DEFAULT);
-    const ids = await saveDiscovered(parsed.provider, found, parsed.userId, parsed.appId);
-    await subscribeConnectedPages(found, creds);
-    // In the background: the marketer is being sent back to the page now, and
-    // the first read is several API calls per account.
-    for (const id of ids) {
-      syncSocialAccount(id).catch((error: unknown) => {
-        logs.server.error('social-accounts', 'firstSync', { error, account_id: id, msg: 'first sync failed' });
-      });
-    }
-    return { provider: parsed.provider, count: ids.length };
+    return { provider: parsed.provider, count: found.length, pending_id: await holdDiscovered(parsed, found) };
   },
 
   async sync(id: string) {

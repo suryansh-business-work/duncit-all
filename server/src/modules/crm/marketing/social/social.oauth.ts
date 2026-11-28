@@ -21,6 +21,8 @@ const isProvider = (value: string): value is SocialProvider => PROVIDERS.has(val
 const RETURNS = new Set<string>(SOCIAL_CONNECT_RETURNS);
 const isReturn = (value: string): value is SocialConnectReturn => RETURNS.has(value);
 
+const RECONNECT = 'r';
+
 const verifierFor = (nonce: string) => purposeDigest('social_pkce', nonce);
 const challengeFor = (verifier: string) => createHash('sha256').update(verifier).digest('base64url');
 
@@ -29,11 +31,15 @@ export interface ConnectStart {
   challenge: string;
 }
 
-/** `appId` is the environment entry the marketer chose to connect through; '' means the category's default. */
-export function startConnect(provider: SocialProvider, userId: string, returnTo: SocialConnectReturn, appId = ''): ConnectStart {
+/**
+ * `appId` is the environment entry the marketer chose to connect through; '' means the category's default.
+ * `reconnect` marks a Reconnect: the consent screen asks again for permissions once declined, and the
+ * accounts already connected are refreshed with the new token.
+ */
+export function startConnect(provider: SocialProvider, userId: string, returnTo: SocialConnectReturn, appId = '', reconnect = false): ConnectStart {
   const nonce = randomUUID();
   return {
-    state: stateLink.sign(`${provider}.${userId}.${nonce}.${returnTo}.${appId}`),
+    state: stateLink.sign(`${provider}.${userId}.${nonce}.${returnTo}.${appId}.${reconnect ? RECONNECT : ''}`),
     challenge: challengeFor(verifierFor(nonce)),
   };
 }
@@ -45,13 +51,15 @@ export interface ConnectState {
   returnTo: SocialConnectReturn;
   /** The chosen app's entry id, or '' for the default (and for a link signed before apps could be chosen). */
   appId: string;
+  /** Started from a Reconnect (false for a link signed before reconnects were marked). */
+  reconnect: boolean;
 }
 
 /** The state's contents, or null when it is forged, stale or malformed. */
 export function readConnectState(state: string): ConnectState | null {
   const payload = stateLink.verify(state);
   if (!payload) return null;
-  const [provider, userId, nonce, returnTo, appId = ''] = payload.split('.');
+  const [provider, userId, nonce, returnTo, appId = '', reconnect = ''] = payload.split('.');
   if (!isProvider(provider) || !userId || !nonce || !isReturn(returnTo)) return null;
-  return { provider, userId, verifier: verifierFor(nonce), returnTo, appId };
+  return { provider, userId, verifier: verifierFor(nonce), returnTo, appId, reconnect: reconnect === RECONNECT };
 }

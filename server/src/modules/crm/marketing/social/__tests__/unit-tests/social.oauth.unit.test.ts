@@ -22,6 +22,14 @@ describe('startConnect / readConnectState', () => {
     expect(readConnectState(startConnect('X', 'user-2', 'ACCOUNTS').state)?.appId).toBe('');
   });
 
+  it('carries a Reconnect through the round trip, and reads a plain Connect (or an older link) as none', () => {
+    expect(readConnectState(startConnect('FACEBOOK', 'user-5', 'ACCOUNTS', APP, true).state)).toMatchObject({ appId: APP, reconnect: true });
+    expect(readConnectState(startConnect('FACEBOOK', 'user-5', 'ACCOUNTS', '', true).state)).toMatchObject({ appId: '', reconnect: true });
+    expect(readConnectState(startConnect('FACEBOOK', 'user-5', 'ACCOUNTS', APP).state)?.reconnect).toBe(false);
+    const fivePart = signedLink('social_connect', 60_000).sign(`FACEBOOK.user-6.nonce-2.ACCOUNTS.${APP}`);
+    expect(readConnectState(fivePart)).toMatchObject({ appId: APP, reconnect: false });
+  });
+
   it('still reads a state signed before apps could be chosen, as the default app', () => {
     const legacy = signedLink('social_connect', 60_000).sign('LINKEDIN.user-3.nonce-1.ACCOUNTS');
     expect(readConnectState(legacy)).toMatchObject({ provider: 'LINKEDIN', userId: 'user-3', returnTo: 'ACCOUNTS', appId: '' });

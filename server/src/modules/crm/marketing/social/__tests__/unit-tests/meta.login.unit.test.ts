@@ -57,6 +57,14 @@ describe('authorizeUrl', () => {
     expect(url.searchParams.get('scope')).toContain('instagram_manage_messages');
     expect(url.searchParams.get('scope')).not.toContain('instagram_business_');
   });
+
+  it('asks Meta to prompt again for declined permissions on a Reconnect, and only then', () => {
+    const reconnect = new URL(metaLoginConnector.authorizeUrl({ creds: WITH_CONFIG, state: 'st-3', challenge: 'unused', reauth: true }));
+    expect(reconnect.searchParams.get('auth_type')).toBe('rerequest');
+    expect(reconnect.searchParams.get('config_id')).toBe('29334365832857529');
+    const plain = new URL(metaLoginConnector.authorizeUrl({ creds: WITH_CONFIG, state: 'st-4', challenge: 'unused', reauth: false }));
+    expect(plain.searchParams.get('auth_type')).toBeNull();
+  });
 });
 
 describe('debugToken', () => {

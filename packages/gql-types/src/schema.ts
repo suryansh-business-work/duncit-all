@@ -15686,6 +15686,7 @@ export type HrCompensationTotals = {
   variable_monthly: Scalars['Float']['output'];
 };
 
+/** Replaces every contact field: send the ones you keep as well as the ones you change. */
 export type HrContactInput = {
   current_address?: InputMaybe<Scalars['String']['input']>;
   emergency_contact?: InputMaybe<HrEmergencyContactInput>;
@@ -20118,6 +20119,8 @@ export type Mutation = {
    */
   completePasswordReset: Scalars['Boolean']['output'];
   completePodSettlement: PodSettlementResult;
+  /** Create the ticked accounts of a held grant (SocialPendingConnection.accounts[].key); on a Reconnect the ones already connected are refreshed too. Refused with NOT_FOUND once it expired or was finished. */
+  completeSocialConnection: SocialConnectionResult;
   /**
    * The second step of a console sign-in.
    *
@@ -23623,6 +23626,12 @@ export type MutationCompletePasswordResetArgs = {
 
 export type MutationCompletePodSettlementArgs = {
   input: CompletePodInput;
+};
+
+
+export type MutationCompleteSocialConnectionArgs = {
+  account_keys: Array<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
 };
 
 
@@ -27970,6 +27979,7 @@ export type MutationSignupWithGoogleArgs = {
 export type MutationSocialConnectUrlArgs = {
   app_id?: InputMaybe<Scalars['ID']['input']>;
   provider: SocialProvider;
+  reconnect?: InputMaybe<Scalars['Boolean']['input']>;
   return_to: SocialConnectReturn;
 };
 
@@ -39356,6 +39366,8 @@ export type Query = {
   socialInboxSummary: SocialInboxSummary;
   /** Every comment from every connected account, newest first; view pins a summary card's slice. */
   socialInboxTable: SocialCommentTablePage;
+  /** What a grant found, held for 30 minutes for the person who started it to pick from. Nothing is created until completeSocialConnection. */
+  socialPendingConnection: SocialPendingConnection;
   socialPost: SocialPostDetail;
   socialPostsTable: SocialPostTablePage;
   socialProviders: Array<SocialProviderStatus>;
@@ -43903,6 +43915,11 @@ export type QuerySocialInboxTableArgs = {
 };
 
 
+export type QuerySocialPendingConnectionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type QuerySocialPostArgs = {
   id: Scalars['ID']['input'];
 };
@@ -48320,6 +48337,13 @@ export type SocialConnectReturn =
   | 'ACCOUNTS'
   | 'CALENDAR';
 
+export type SocialConnectionResult = {
+  __typename?: 'SocialConnectionResult';
+  /** Accounts created or refreshed. */
+  count: Scalars['Int']['output'];
+  provider: SocialProvider;
+};
+
 /** A direct-message conversation between a connected account and one person. */
 export type SocialConversation = {
   __typename?: 'SocialConversation';
@@ -48529,6 +48553,35 @@ export type SocialMessageStatus =
   | 'FAILED'
   | 'RECEIVED'
   | 'SENT';
+
+/** One account a grant found. */
+export type SocialPendingAccount = {
+  __typename?: 'SocialPendingAccount';
+  avatar_url: Scalars['String']['output'];
+  /** Already a connected account (refreshed only on a Reconnect). */
+  connected: Scalars['Boolean']['output'];
+  external_id: Scalars['String']['output'];
+  handle: Scalars['String']['output'];
+  /** platform:external_id, what completeSocialConnection takes. */
+  key: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  platform: SocialPlatform;
+};
+
+/** What one grant found, held for the account picker. */
+export type SocialPendingConnection = {
+  __typename?: 'SocialPendingConnection';
+  accounts: Array<SocialPendingAccount>;
+  /** Every account found, any network. */
+  found: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  /** Instagram professional accounts found (linked to those Pages). */
+  instagram_found: Scalars['Int']['output'];
+  /** Facebook Pages found. */
+  pages_found: Scalars['Int']['output'];
+  provider: SocialProvider;
+  reconnect: Scalars['Boolean']['output'];
+};
 
 /** The network an account lives on. */
 export type SocialPlatform =

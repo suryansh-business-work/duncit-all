@@ -100,7 +100,7 @@ describe('WebhooksTab', () => {
     expect(within(card).getByTestId('webhook-register-2706')).toBeEnabled();
   });
 
-  it('names another HOOK_URL, a paused registration, missing keys and Meta’s refusal', async () => {
+  it('names another URL, a paused registration, missing keys and Meta’s refusal', async () => {
     const other = app({
       app_id: '99',
       verify_token_set: false,
@@ -109,7 +109,7 @@ describe('WebhooksTab', () => {
     });
     renderWithProviders(<WebhooksTab />, { mocks: [setupMock([other]), deliveriesMock()] });
     const card = await screen.findByTestId('webhook-app-99');
-    expect(within(card).getByTestId('webhook-state-instagram')).toHaveTextContent('Registered to another HOOK_URL');
+    expect(within(card).getByTestId('webhook-state-instagram')).toHaveTextContent('Registered to another URL');
     expect(within(card).getByTestId('webhook-state-page')).toHaveTextContent('Paused');
     expect(within(card).getByTestId('webhook-app-not-ready')).toBeInTheDocument();
     expect(within(card).getByTestId('webhook-app-error')).toHaveTextContent('(#100) bad app');

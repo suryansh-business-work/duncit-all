@@ -1,6 +1,6 @@
 import { CRM_EMAIL_BRAND_GROUPS } from '@duncit/utils';
 
-import type { SheetAction } from '@/components/email-templates/ActionSheet';
+import type { SheetAction } from '@/components/ActionSheet';
 import type { BrandAsset, BrandAssetKind } from '@/features/email-templates/useEmailSettings';
 
 type Translate = (key: string) => string;

@@ -76,7 +76,6 @@ export function CallPromptsScreen() {
       contentContainerStyle={{ padding: 16, gap: 8 }}
       ListHeaderComponent={
         <YStack gap="$3" marginBottom="$2">
-          <Text color="$muted">{t('crm.callPrompts.intro')}</Text>
           <Input
             value={search}
             onChangeText={setSearch}
@@ -127,7 +126,7 @@ export function CallPromptsScreen() {
         />
       }
       ListFooterComponent={
-        prompts.rows.length > 0 && prompts.loading ? <StateView loading /> : null
+        prompts.rows.length > 0 && prompts.loading ? <StateView loading inline /> : null
       }
     />
   );

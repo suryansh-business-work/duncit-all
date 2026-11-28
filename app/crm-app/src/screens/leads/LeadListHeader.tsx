@@ -1,12 +1,12 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Input, Text, XStack, YStack, useTheme } from 'tamagui';
+import { Text, XStack, YStack, useTheme } from 'tamagui';
 
-import { DuncitButton } from '@/components/DuncitButton';
-import type { LeadListKind } from '@/features/leads-list/listKinds';
+import { IconButton } from '@/components/mobile/IconButton';
+import { SearchBar } from '@/components/mobile/SearchBar';
+import { MOBILE, RADII } from '@/constants/design';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
-  definition: LeadListKind;
   search: string;
   onSearch: (text: string) => void;
   total: number;
@@ -15,136 +15,100 @@ interface Props {
   nearbyLabel: string | null;
   /** What just happened (deleted, created, imported), announced. */
   status: string | null;
-  onNew: () => void;
   onFilters: () => void;
+  /** Changes the nearby search (radius, place). */
   onNearby: () => void;
   onClearNearby: () => void;
-  onRecalculate: () => void;
-  onFillWithAi: () => void;
-  onImport: () => void;
-  /** Venue, host and ecomm listings open Data › Services Offered, as the portal's do. */
-  onManageServices?: () => void;
 }
 
-/** A lead listing's head: its title, the page tools, search, filters and the count — the portal's toolbar. */
+const BADGE = 18;
+
+/**
+ * A lead listing's head, phone-sized: the search and a filter button (a count
+ * badge while filters are on), the nearby search as a removable chip, what
+ * just happened, and the count. The page's tools live in the app bar's ⋯
+ * menu and New lead is the floating button, so the leads start near the top.
+ */
 export function LeadListHeader(props: Readonly<Props>) {
-  const { definition, nearbyLabel, filterCount } = props;
+  const { nearbyLabel, filterCount } = props;
   const { t } = useTranslation();
   const theme = useTheme();
-  const icon = (
-    name: 'add' | 'near-me' | 'autorenew' | 'auto-fix-high' | 'file-upload' | 'tune' | 'handyman',
-    solid = false,
-  ) => (
-    <MaterialIcons
-      name={name}
-      size={18}
-      color={solid ? theme.onPrimary?.val : theme.accentText?.val}
-    />
-  );
+  const filtersLabel =
+    filterCount > 0 ? `${t('shell.table.filters')} (${filterCount})` : t('shell.table.filters');
   return (
-    <YStack gap="$2" marginBottom="$3">
-      {/* The screen header already names the page; the subtitle says what it is for. */}
-      <Text color="$muted">{t(definition.copy.subtitle)}</Text>
-      <DuncitButton
-        label={t(definition.copy.newLead)}
-        onPress={props.onNew}
-        icon={icon('add', true)}
-        testID="lead-list-new"
-      />
-      <XStack flexWrap="wrap" gap="$2">
-        {nearbyLabel ? null : (
-          <DuncitButton
-            label={t('crm.nearby.button')}
-            onPress={props.onNearby}
-            variant="outline"
-            size="sm"
-            icon={icon('near-me')}
-            testID="nearby-open"
+    <YStack gap="$2" marginBottom="$2">
+      <XStack gap="$2" alignItems="center">
+        <YStack flex={1}>
+          <SearchBar
+            value={props.search}
+            onChange={props.onSearch}
+            placeholder={t('crmApp.leads.search')}
+            testID="lead-list-search"
           />
-        )}
-        <DuncitButton
-          label={t('crm.leadQualityTab.recalculateScores')}
-          onPress={props.onRecalculate}
-          variant="outline"
-          size="sm"
-          icon={icon('autorenew')}
-          testID="lead-quality-recalculate-all"
-        />
-        {definition.bulkCreate ? (
-          <>
-            <DuncitButton
-              label={t('crm.aiFill.button')}
-              onPress={props.onFillWithAi}
-              variant="outline"
-              size="sm"
-              icon={icon('auto-fix-high')}
-              testID="lead-list-ai"
-            />
-            <DuncitButton
-              label={t('crm.userLeads.import')}
-              onPress={props.onImport}
-              variant="outline"
-              size="sm"
-              icon={icon('file-upload')}
-              testID="lead-list-import"
-            />
-          </>
-        ) : null}
-        {props.onManageServices ? (
-          <DuncitButton
-            label={t('crm.components.manageServices')}
-            onPress={props.onManageServices}
-            variant="outline"
-            size="sm"
-            icon={icon('handyman')}
-            testID="lead-list-services"
+        </YStack>
+        <YStack>
+          <IconButton
+            icon={{ name: 'tune' }}
+            label={filtersLabel}
+            variant={filterCount > 0 ? 'filled' : 'plain'}
+            onPress={props.onFilters}
+            testID="lead-list-filters"
           />
-        ) : null}
+          {filterCount > 0 ? (
+            <YStack
+              position="absolute"
+              top={2}
+              right={2}
+              minWidth={BADGE}
+              height={BADGE}
+              paddingHorizontal="$1"
+              borderRadius={BADGE / 2}
+              backgroundColor="$primary"
+              alignItems="center"
+              justifyContent="center"
+              pointerEvents="none"
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              testID="lead-list-filter-count"
+            >
+              <Text color="$onPrimary" fontSize={11} fontWeight="700">
+                {filterCount}
+              </Text>
+            </YStack>
+          ) : null}
+        </YStack>
       </XStack>
       {nearbyLabel ? (
-        <XStack alignItems="center" gap="$2" testID="nearby-chip">
-          <DuncitButton
-            label={nearbyLabel}
-            onPress={props.onNearby}
-            variant="outline"
-            size="sm"
-            icon={icon('near-me')}
-            testID="nearby-change-open"
-          />
-          <DuncitButton
-            label={t('crm.nearby.clear')}
-            onPress={props.onClearNearby}
-            variant="ghost"
-            size="sm"
-            testID="nearby-clear"
-          />
+        <XStack testID="nearby-chip">
+          <XStack
+            alignItems="center"
+            gap="$1.5"
+            paddingLeft="$3"
+            borderRadius={RADII.pill}
+            backgroundColor="$primarySoft"
+          >
+            <MaterialIcons name="near-me" size={MOBILE.iconSm} color={theme.onPrimarySoft?.val} />
+            <Text
+              role="button"
+              aria-label={nearbyLabel}
+              onPress={props.onNearby}
+              color="$onPrimarySoft"
+              fontWeight="600"
+              paddingVertical="$2"
+              testID="nearby-change-open"
+            >
+              {nearbyLabel}
+            </Text>
+            <IconButton
+              icon={{ name: 'close' }}
+              label={t('crm.nearby.clear')}
+              color={theme.onPrimarySoft?.val}
+              onPress={props.onClearNearby}
+              testID="nearby-clear"
+            />
+          </XStack>
         </XStack>
       ) : null}
-      <XStack gap="$2" alignItems="center">
-        <Input
-          flex={1}
-          value={props.search}
-          onChangeText={props.onSearch}
-          placeholder={t('crmApp.leads.search')}
-          aria-label={t('crmApp.leads.search')}
-          placeholderTextColor="$muted"
-          borderColor="$inputBorder"
-          autoCorrect={false}
-          testID="lead-list-search"
-        />
-        <DuncitButton
-          label={
-            filterCount > 0
-              ? `${t('shell.table.filters')} (${filterCount})`
-              : t('shell.table.filters')
-          }
-          onPress={props.onFilters}
-          variant={filterCount > 0 ? 'solid' : 'outline'}
-          size="sm"
-          icon={icon('tune', filterCount > 0)}
-          testID="lead-list-filters"
-        />
-      </XStack>
       {props.status ? (
         <Text color="$success" aria-live="polite" testID="lead-list-status">
           {props.status}

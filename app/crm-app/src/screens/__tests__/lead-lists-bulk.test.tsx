@@ -5,13 +5,18 @@ import * as editorDocs from '@/graphql/leadEditor';
 import * as docs from '@/graphql/leadLists';
 import { readFileBase64 } from '@/features/leads-list/readFileBase64';
 import { gqlRequest } from '@/services/graphql.client';
-import { renderWithTheme } from '@/test-utils';
+import { pressHeaderRight, renderWithTheme } from '@/test-utils';
 import { LeadListScreen } from '../leads/LeadListScreen';
 
 jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
 jest.mock('@/features/leads-list/readFileBase64', () => ({ readFileBase64: jest.fn() }));
 const mockNav = { navigate: jest.fn(), setOptions: jest.fn() };
+
+const openTool = (key: string) => {
+  pressHeaderRight(mockNav.setOptions);
+  fireEvent.press(screen.getByTestId(`lead-list-tools-${key}`));
+};
 let mockKind = 'VENUE_LEAD';
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => mockNav,
@@ -85,7 +90,7 @@ describe('LeadListScreen › Fill with AI', () => {
       ]),
     );
     await open();
-    fireEvent.press(screen.getByTestId('lead-list-ai'));
+    openTool('ai');
     expect(screen.getByText('Fill venue leads with AI')).toBeOnTheScreen();
     await act(async () => fireEvent.press(screen.getByTestId('ai-parse')));
     expect(
@@ -148,7 +153,7 @@ describe('LeadListScreen › Fill with AI', () => {
       ]),
     );
     await open();
-    fireEvent.press(screen.getByTestId('lead-list-ai'));
+    openTool('ai');
     fireEvent.changeText(screen.getByTestId('ai-text'), 'runners');
     await act(async () => fireEvent.press(screen.getByTestId('ai-parse')));
     expect(
@@ -198,7 +203,7 @@ describe('LeadListScreen › Import from Excel', () => {
       ]),
     );
     await open();
-    fireEvent.press(screen.getByTestId('lead-list-import'));
+    openTool('import');
     expect(screen.getByTestId('import-file-name')).toHaveTextContent('No file selected');
     await act(async () => fireEvent.press(screen.getByTestId('import-choose')));
     expect(readFileBase64).toHaveBeenCalledWith('file:///cache/leads.xlsx');
@@ -251,7 +256,7 @@ describe('LeadListScreen › Import from Excel', () => {
       ]),
     );
     await open();
-    fireEvent.press(screen.getByTestId('lead-list-import'));
+    openTool('import');
     await act(async () => fireEvent.press(screen.getByTestId('import-choose')));
     expect(readFileBase64).not.toHaveBeenCalled();
     (DocumentPicker.getDocumentAsync as jest.Mock).mockResolvedValueOnce(picked);

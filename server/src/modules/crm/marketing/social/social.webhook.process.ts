@@ -28,7 +28,7 @@ function accountFor(platform: string, externalId: string) {
 
 /** The person's name, username and picture, onto the conversation; the username is what leads are matched on. */
 async function enrichParticipant(conversationId: string, account: AccountWithTokens, participantId: string): Promise<string> {
-  const creds = await socialCredentials(account.provider);
+  const creds = await socialCredentials(account.provider, account.env_entry_id);
   if (!creds) return '';
   const handle = await freshHandle(account, READERS[account.platform], creds);
   const profile = await participantProfile(handle, participantId, creds);

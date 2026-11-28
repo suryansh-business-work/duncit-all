@@ -7,6 +7,9 @@ import { CallControls } from '../call/CallControls';
 import { CallSetupSection } from '../call/CallSetupSection';
 import { CallTranscript } from '../call/CallTranscript';
 
+const mockNav = { navigate: jest.fn() };
+jest.mock('@react-navigation/native', () => ({ useNavigation: () => mockNav }));
+
 jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
 
 /** The call screen's parts on their own: controls, transcript and every setup state. */

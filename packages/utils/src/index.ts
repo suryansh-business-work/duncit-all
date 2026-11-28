@@ -2738,3 +2738,9 @@ export {
   type CrmEmailTemplateVariable,
   type CrmEmailVariableOption,
 } from './crm-email-templates';
+export {
+  isTabEntry,
+  scrollToTop,
+  type ScrollableToTop,
+  type TabStateLike,
+} from './screen-scroll';

@@ -97,7 +97,7 @@ describe('EmailTemplateEditorScreen', () => {
   it('saves what was changed, with the template as the portal sends it', async () => {
     await open();
     fireEvent.changeText(screen.getByTestId('template-name'), 'Venue hello');
-    fireEvent(screen.getByTestId('template-active'), 'onCheckedChange', false);
+    fireEvent.press(screen.getByTestId('template-active'));
     expect(screen.getByText('Unsaved changes')).toBeOnTheScreen();
     await press('template-save');
     expect(callsTo(docs.CrmAppEmailTemplateUpdateDocument)[0]?.[1]).toEqual({

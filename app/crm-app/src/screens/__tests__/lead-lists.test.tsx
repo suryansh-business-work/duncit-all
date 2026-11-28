@@ -4,13 +4,25 @@ import * as editorDocs from '@/graphql/leadEditor';
 import * as docs from '@/graphql/leadLists';
 import { CrmAppLeadSearchDocument } from '@/graphql/leads';
 import { gqlRequest } from '@/services/graphql.client';
-import { renderWithTheme } from '@/test-utils';
+import { pressHeaderRight, renderWithTheme } from '@/test-utils';
 import { LeadListScreen } from '../leads/LeadListScreen';
 import { LeadsScreen } from '../leads/LeadsScreen';
 
 jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
-const mockNav = { navigate: jest.fn(), setOptions: jest.fn(), setParams: jest.fn() };
+const mockNav = {
+  // A tab screen also reads its tab navigator (useScrollTopOnTabEntry).
+  getState: () => undefined,
+  addListener: () => () => undefined,
+  navigate: jest.fn(),
+  setOptions: jest.fn(),
+  setParams: jest.fn(),
+};
+
+const openTool = (key: string) => {
+  pressHeaderRight(mockNav.setOptions);
+  fireEvent.press(screen.getByTestId(`lead-list-tools-${key}`));
+};
 let mockParams: Record<string, unknown> = {};
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => mockNav,
@@ -86,7 +98,9 @@ describe('LeadListScreen', () => {
     serve();
     renderWithTheme(<LeadListScreen />);
     expect(await screen.findByText('Smash Arena', {}, WAIT)).toBeOnTheScreen();
-    expect(mockNav.setOptions).toHaveBeenCalledWith({ title: 'Venue Leads' });
+    expect(mockNav.setOptions).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Venue Leads' }),
+    );
     expect(lastQuery()).toEqual({
       query: {
         search: null,
@@ -114,11 +128,41 @@ describe('LeadListScreen', () => {
     renderWithTheme(<LeadListScreen />);
     fireEvent.press(await screen.findByText('Smash Arena', {}, WAIT));
     expect(mockNav.navigate).toHaveBeenCalledWith('LeadDetail', { kind: 'VENUE_LEAD', id: 'v1' });
-    fireEvent.press(screen.getByTestId('lead-list-edit-v1'));
+    fireEvent.press(screen.getByTestId('lead-list-more-v1'));
+    fireEvent.press(screen.getByTestId('lead-list-actions-edit'));
     expect(mockNav.navigate).toHaveBeenCalledWith('LeadEditor', { kind: 'VENUE_LEAD', id: 'v1' });
+    // A long press opens the same sheet: log a note or schedule a follow-up from the list.
+    fireEvent(screen.getByTestId('lead-list-row-v1'), 'onLongPress');
+    fireEvent.press(screen.getByTestId('lead-list-actions-note'));
+    expect(mockNav.navigate).toHaveBeenCalledWith('AddNote', {
+      kind: 'VENUE_LEAD',
+      id: 'v1',
+      name: 'Smash Arena',
+    });
+    fireEvent.press(screen.getByTestId('lead-list-more-v1'));
+    fireEvent.press(screen.getByTestId('lead-list-actions-follow-up'));
+    expect(mockNav.navigate).toHaveBeenCalledWith('AddReminder', {
+      kind: 'VENUE_LEAD',
+      id: 'v1',
+      name: 'Smash Arena',
+    });
+    fireEvent.press(screen.getByTestId('lead-list-more-v1'));
+    fireEvent.press(screen.getByTestId('lead-list-actions-open'));
+    expect(mockNav.navigate).toHaveBeenLastCalledWith('LeadDetail', {
+      kind: 'VENUE_LEAD',
+      id: 'v1',
+    });
+    fireEvent.press(screen.getByTestId('lead-list-call-v1'));
+    expect(mockNav.navigate).toHaveBeenLastCalledWith('Call', {
+      kind: 'VENUE_LEAD',
+      id: 'v1',
+      to: '9811000001',
+      leadName: 'Smash Arena',
+      contactName: 'Smash Arena',
+    });
     fireEvent.press(screen.getByTestId('lead-list-new'));
     expect(mockNav.navigate).toHaveBeenCalledWith('LeadEditor', { kind: 'VENUE_LEAD' });
-    fireEvent.press(screen.getByTestId('lead-list-services'));
+    openTool('services');
     expect(mockNav.navigate).toHaveBeenCalledWith('ServicesOffered');
   });
 
@@ -144,7 +188,8 @@ describe('LeadListScreen', () => {
       ]),
     );
     renderWithTheme(<LeadListScreen />);
-    fireEvent.press(await screen.findByTestId('lead-list-delete-v1', {}, WAIT));
+    fireEvent.press(await screen.findByTestId('lead-list-more-v1', {}, WAIT));
+    fireEvent.press(screen.getByTestId('lead-list-actions-delete'));
     expect(screen.getByText('Delete "Smash Arena"? This cannot be undone.')).toBeOnTheScreen();
     await act(async () => fireEvent.press(screen.getByTestId('lead-list-delete-dialog-confirm')));
     expect(screen.getByTestId('lead-list-delete-dialog-error')).toHaveTextContent('Not allowed');
@@ -152,7 +197,8 @@ describe('LeadListScreen', () => {
     await act(async () => fireEvent.press(screen.getByTestId('lead-list-delete-dialog-confirm')));
     expect(request).toHaveBeenCalledWith(docs.CrmAppDeleteVenueLeadDocument, { id: 'v1' });
     expect(screen.getByTestId('lead-list-status')).toHaveTextContent('Venue lead deleted');
-    fireEvent.press(screen.getByTestId('lead-list-delete-v1'));
+    fireEvent.press(screen.getByTestId('lead-list-more-v1'));
+    fireEvent.press(screen.getByTestId('lead-list-actions-delete'));
     fireEvent.press(screen.getByTestId('lead-list-delete-dialog-cancel'));
     expect(screen.queryByTestId('lead-list-delete-dialog-error')).toBeNull();
   });
@@ -169,7 +215,7 @@ describe('LeadListScreen', () => {
     renderWithTheme(<LeadListScreen />);
     await screen.findByText('Smash Arena', {}, WAIT);
     const run = async () => {
-      fireEvent.press(screen.getByTestId('lead-quality-recalculate-all'));
+      openTool('recalculate');
       await act(async () => fireEvent.press(screen.getByTestId('recalculate-dialog-confirm')));
     };
     await run();
@@ -202,10 +248,14 @@ describe('LeadListScreen', () => {
         WAIT,
       ),
     ).toBeOnTheScreen();
-    expect(mockNav.setOptions).toHaveBeenCalledWith({ title: 'Creators Leads' });
-    expect(screen.queryByTestId('lead-list-ai')).toBeNull();
-    expect(screen.queryByTestId('lead-list-import')).toBeNull();
-    expect(screen.queryByTestId('lead-list-services')).toBeNull();
+    expect(mockNav.setOptions).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Creators Leads' }),
+    );
+    pressHeaderRight(mockNav.setOptions);
+    expect(screen.getByTestId('lead-list-tools-recalculate')).toBeOnTheScreen();
+    expect(screen.queryByTestId('lead-list-tools-ai')).toBeNull();
+    expect(screen.queryByTestId('lead-list-tools-import')).toBeNull();
+    expect(screen.queryByTestId('lead-list-tools-services')).toBeNull();
   });
 
   it('shows a failed read with a retry', async () => {
@@ -236,7 +286,8 @@ describe('LeadListScreen', () => {
     expect(await screen.findByText('Smash Arena', {}, WAIT)).toBeOnTheScreen();
     expect(screen.queryByTestId('lead-duplicate-chip')).toBeNull();
     expect(screen.getByText('Not scored yet')).toBeOnTheScreen();
-    expect(screen.getByText('Devices: Not on Duncit')).toBeOnTheScreen();
+    // No Duncit account: the card stays quiet instead of saying so.
+    expect(screen.queryByText(/Not on Duncit/)).toBeNull();
   });
 });
 

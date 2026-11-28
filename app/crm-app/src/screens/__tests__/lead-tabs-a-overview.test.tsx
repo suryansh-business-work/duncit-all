@@ -8,6 +8,7 @@ import * as docs from '@/graphql/leadTabs';
 import { gqlRequest } from '@/services/graphql.client';
 import { renderWithTheme } from '@/test-utils';
 import { LeadOverviewDetails } from '../lead/tabs/LeadOverviewDetails';
+import { LeadContactActions } from '../lead/tabs/contacts/LeadContactActions';
 
 jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
@@ -108,7 +109,12 @@ const serve = (overview: Record<string, unknown>, extra: Map<unknown, Handler> =
     if (doc === docs.CrmAppComposeProvidersDocument) return { commsProviderOptions: [] };
     throw new Error('unexpected operation');
   });
-const render = (kind: LeadKind, onOpenTab?: (tab: string) => void, cardLead: Lead = lead) =>
+const render = (
+  kind: LeadKind,
+  onOpenTab?: (tab: string) => void,
+  cardLead: Lead = lead,
+  onLeadValues?: (values: Readonly<Record<string, string>>) => void,
+) =>
   renderWithTheme(
     <LeadOverviewDetails
       kind={kind}
@@ -116,8 +122,24 @@ const render = (kind: LeadKind, onOpenTab?: (tab: string) => void, cardLead: Lea
       lead={cardLead}
       onChanged={jest.fn()}
       onOpenTab={onOpenTab}
+      onLeadValues={onLeadValues}
     />,
   );
+
+/** The lead page's bottom bar, on its own (the page puts it under every tab). */
+const renderBar = (cardLead: Lead = lead) => {
+  const handlers = { onAddNote: jest.fn(), onAddReminder: jest.fn() };
+  renderWithTheme(
+    <LeadContactActions
+      kind="VENUE_LEAD"
+      id="v1"
+      name={cardLead.name}
+      lead={cardLead}
+      {...handlers}
+    />,
+  );
+  return handlers;
+};
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -210,10 +232,19 @@ describe('LeadOverviewDetails — venue', () => {
     });
   });
 
+  it('hands the lead’s template values up for the bottom bar’s Email action', async () => {
+    serve({ venue });
+    const onLeadValues = jest.fn();
+    render('VENUE_LEAD', undefined, lead, onLeadValues);
+    await screen.findByTestId('lead-overview-details');
+    expect(onLeadValues).toHaveBeenCalledWith(expect.any(Object));
+    expect(screen.queryByTestId('lead-action-call')).toBeNull();
+  });
+
   it('calls, opens WhatsApp and opens the composer for the primary contact', async () => {
     serve({ venue });
-    render('VENUE_LEAD');
-    fireEvent.press(await screen.findByTestId('lead-action-call'));
+    const bar = renderBar();
+    fireEvent.press(screen.getByTestId('lead-action-call'));
     expect(mockNav.navigate).toHaveBeenCalledWith('Call', {
       kind: 'VENUE_LEAD',
       id: 'v1',
@@ -227,6 +258,10 @@ describe('LeadOverviewDetails — venue', () => {
     expect(await screen.findByText('Email · Grand Hall')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('compose-cancel'));
     expect(screen.queryByText('Email · Grand Hall')).toBeNull();
+    fireEvent.press(screen.getByTestId('lead-add-note'));
+    fireEvent.press(screen.getByTestId('lead-add-reminder'));
+    expect(bar.onAddNote).toHaveBeenCalledTimes(1);
+    expect(bar.onAddReminder).toHaveBeenCalledTimes(1);
   });
 
   it('says where to add an address, and turns the actions off without contact details', async () => {
@@ -246,6 +281,8 @@ describe('LeadOverviewDetails — venue', () => {
       'Add an address to preview the map.',
     );
     expect(screen.queryByTestId('matched-user-box')).toBeNull();
+    renderBar({ ...lead, contacts: [] });
+    expect(screen.getByTestId('lead-action-call')).toBeDisabled();
     fireEvent.press(screen.getByTestId('lead-action-call'));
     fireEvent.press(screen.getByTestId('lead-action-whatsapp'));
     fireEvent.press(screen.getByTestId('lead-action-email'));

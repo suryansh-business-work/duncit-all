@@ -36,6 +36,7 @@ export function AskAiComposer({ busy, onSend }: Readonly<Props>) {
         aria-label={t('crm.components.askAboutThisLead')}
         borderColor="$inputBorder"
         minHeight={48}
+        maxHeight={120}
         testID="crm-ask-ai-input"
       />
       <TabIconButton

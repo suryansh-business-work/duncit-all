@@ -8,6 +8,7 @@ import { Card } from '@/components/Card';
 import { DuncitButton } from '@/components/DuncitButton';
 import { useTranslation } from '@/hooks/useTranslation';
 import { syncDeviceCalls } from '@/services/call-sync';
+import { requestPermission } from '@/services/permissions';
 import { callingRows, type CallingRow, type RowAction } from './callingRows';
 import { DiagnosticRow } from './DiagnosticRow';
 import { SyncHealth } from './SyncHealth';
@@ -35,6 +36,15 @@ export function CallingCard() {
   const act = (action: RowAction) => {
     if (action === 'redirectionRole') {
       if (!CrmTelephony?.requestRedirectionRole()) setMessage(t('crmApp.calling.roleUnavailable'));
+      return;
+    }
+    if (action === 'grantAudio') {
+      fireAndForget(
+        requestPermission('audio').finally(refresh),
+        logs.mobileApp,
+        SCOPE,
+        'grantAudio',
+      );
       return;
     }
     fireAndForget(Linking.openSettings(), logs.mobileApp, SCOPE, 'openSettings');
@@ -67,7 +77,7 @@ export function CallingCard() {
     action
       ? {
           label: t(
-            action === 'redirectionRole' ? 'crmApp.settings.allow' : 'crmApp.calling.openSettings',
+            action === 'appSettings' ? 'crmApp.calling.openSettings' : 'crmApp.settings.allow',
           ),
           onPress: () => act(action),
         }
@@ -81,7 +91,7 @@ export function CallingCard() {
         </Text>
       ) : null}
       {health?.phone
-        ? callingRows(health.phone, health.folders).map((row) => (
+        ? callingRows(health.phone, health.folders, health.audioAccess).map((row) => (
             <DiagnosticRow
               key={row.id}
               label={t(row.labelKey)}

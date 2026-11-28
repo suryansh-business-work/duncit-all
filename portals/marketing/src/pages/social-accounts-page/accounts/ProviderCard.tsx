@@ -1,23 +1,35 @@
 import { Alert, Card, CardContent, Divider, Link, Stack, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router';
-import AddLinkIcon from '@mui/icons-material/AddLink';
-import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import PlatformIcon from '../PlatformIcon';
 import { PROVIDER_ADDS, PROVIDER_LABEL, PROVIDER_PLATFORMS } from '../copy';
-import type { SocialAccount, SocialProvider } from '../queries';
-import AccountRow from './AccountRow';
+import type { SocialAccount, SocialApp, SocialProvider } from '../queries';
+import AccountRow, { type AccountApp } from './AccountRow';
+import ConnectButton from './ConnectButton';
 
 interface Props {
   provider: SocialProvider;
   configured: boolean;
+  /** Every app the network can be connected through, the default first. */
+  apps: SocialApp[];
   accounts: SocialAccount[];
   /** Where this network's app is set up — the Settings › Integrations tab for it. */
   settingsTo?: string;
-  onConnect: (provider: SocialProvider) => Promise<void>;
+  onConnect: (provider: SocialProvider, appId?: string | null) => Promise<void>;
   onSync: (account: SocialAccount) => Promise<void>;
   onSetOwner: (account: SocialAccount) => void;
   onDisconnect: (account: SocialAccount) => void;
+}
+
+/**
+ * The app an account row names: only once the network has more than one app,
+ * or when the account's own app is gone (then it must be brought back through
+ * another). An account with no app was connected through the default.
+ */
+function appOf(account: SocialAccount, apps: SocialApp[]): AccountApp | null {
+  const app = account.app_id ? apps.find((candidate) => candidate.id === account.app_id) : apps.find((candidate) => candidate.is_default);
+  if (account.app_id && !app) return { name: '', missing: true };
+  return apps.length > 1 && app ? { name: app.name, missing: false } : null;
 }
 
 /**
@@ -28,6 +40,7 @@ interface Props {
 export default function ProviderCard({
   provider,
   configured,
+  apps,
   accounts,
   settingsTo,
   onConnect,
@@ -37,7 +50,6 @@ export default function ProviderCard({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const titleId = `social-provider-title-${provider.toLowerCase()}`;
-  const connect = () => onConnect(provider);
   const connectLabel = accounts.length > 0 ? t('marketing.social.connectAnother') : t('marketing.social.connect');
 
   return (
@@ -59,16 +71,8 @@ export default function ProviderCard({
               </Typography>
             </div>
           </Stack>
-          {configured && (
-            <DuncitButton
-              size="small"
-              variant={accounts.length > 0 ? 'outlined' : 'contained'}
-              startIcon={<AddLinkIcon />}
-              onClick={connect}
-              data-testid={`social-connect-${provider.toLowerCase()}`}
-            >
-              {connectLabel}
-            </DuncitButton>
+          {configured && apps.length > 0 && (
+            <ConnectButton provider={provider} apps={apps} label={connectLabel} primary={accounts.length === 0} onConnect={onConnect} />
           )}
         </Stack>
 
@@ -98,8 +102,10 @@ export default function ProviderCard({
               <AccountRow
                 key={account.id}
                 account={account}
+                app={appOf(account, apps)}
                 onSync={onSync}
-                onReconnect={connect}
+                // A reconnect goes through the account's own app: its tokens only work with that app.
+                onReconnect={() => onConnect(provider, account.app_id)}
                 onSetOwner={onSetOwner}
                 onDisconnect={onDisconnect}
               />

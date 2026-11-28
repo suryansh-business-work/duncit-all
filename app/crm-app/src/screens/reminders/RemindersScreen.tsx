@@ -1,17 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { FlatList } from 'react-native';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
-import { format, isSameDay, isSameMonth, startOfMonth } from 'date-fns';
-import { useTheme } from 'tamagui';
+import { format } from 'date-fns';
+import { YStack, useTheme } from 'tamagui';
 
+import { Fab } from '@/components/mobile/Fab';
 import { StateView } from '@/components/StateView';
-import {
-  agendaDays,
-  type CalendarEvent,
-  type CalendarView,
-} from '@/features/reminders/calendarView';
+import { MOBILE } from '@/constants/design';
+import type { CalendarEvent } from '@/features/reminders/calendarView';
+import { useCalendarAgenda } from '@/features/reminders/useCalendarAgenda';
 import { useRemindersCalendar } from '@/features/reminders/useRemindersCalendar';
 import { isLeadKind } from '@/features/leads/leadKinds';
+import { useScrollTopOnTabEntry } from '@/hooks/useScrollTopOnTabEntry';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AppStackParamList } from '@/navigation/types';
 import type { ReminderItem } from './ReminderRow';
@@ -34,32 +34,10 @@ export function RemindersScreen() {
   const navigation = useNavigation<NavigationProp<AppStackParamList>>();
   const calendar = useRemindersCalendar(t);
   const { view, cursor, events } = calendar;
-  const [selectedDay, setSelectedDay] = useState(() => new Date());
+  const agenda = useCalendarAgenda(calendar);
+  const { groups, selectedDay, setSelectedDay, changeView, changeCursor } = agenda;
   const [selected, setSelected] = useState<Event | null>(null);
-
-  // The month view lists the picked day; every other view lists its days.
-  const groups = useMemo(
-    () =>
-      view === 'month'
-        ? agendaDays(
-            events.filter((e) => isSameDay(e.date, selectedDay)),
-            'day',
-            selectedDay,
-          )
-        : agendaDays(events, view, cursor),
-    [events, view, cursor, selectedDay],
-  );
-
-  const changeView = (next: CalendarView) => {
-    calendar.setView(next);
-    if (next === 'month') setSelectedDay(cursor);
-  };
-  const changeCursor = (next: Date) => {
-    calendar.setCursor(next);
-    // In the month view, paging keeps a day of the shown month picked.
-    if (view === 'month' && !isSameMonth(next, selectedDay))
-      setSelectedDay(isSameMonth(next, new Date()) ? new Date() : startOfMonth(next));
-  };
+  const listRef = useScrollTopOnTabEntry<FlatList<(typeof groups)[number]>>();
   const openLead = (event: Event) => {
     const kind = event.entity;
     const id = event.leadId;
@@ -67,12 +45,17 @@ export function RemindersScreen() {
   };
 
   return (
-    <>
+    <YStack flex={1}>
       <FlatList
+        ref={listRef}
         style={{ flex: 1, backgroundColor: theme.background?.val }}
         data={groups}
         keyExtractor={(group) => format(group.day, 'yyyy-MM-dd')}
-        contentContainerStyle={{ padding: 16, gap: 8 }}
+        contentContainerStyle={{
+          padding: 16,
+          gap: 8,
+          paddingBottom: MOBILE.fab + MOBILE.gutter * 2,
+        }}
         refreshing={calendar.loading && calendar.loaded}
         onRefresh={calendar.refresh}
         ListHeaderComponent={
@@ -87,7 +70,6 @@ export function RemindersScreen() {
               onCursor={changeCursor}
               onEntity={calendar.setEntity}
               onStatus={calendar.setStatus}
-              onAdd={() => navigation.navigate('AddReminder', {})}
             />
             {view === 'month' ? (
               <RemindersMonthGrid
@@ -112,6 +94,7 @@ export function RemindersScreen() {
             loading={!calendar.loaded && !calendar.error}
             error={calendar.error}
             empty={calendar.loaded ? t('crm.calendar.nothingScheduled') : null}
+            emptyIcon="event-available"
             onRetry={calendar.refresh}
           />
         }
@@ -122,6 +105,12 @@ export function RemindersScreen() {
         onChanged={calendar.refresh}
         onOpenLead={openLead}
       />
-    </>
+      <Fab
+        icon="add-alarm"
+        label={t('crmApp.reminder.title')}
+        onPress={() => navigation.navigate('AddReminder', {})}
+        testID="reminders-add"
+      />
+    </YStack>
   );
 }

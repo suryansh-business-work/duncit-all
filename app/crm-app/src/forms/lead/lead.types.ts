@@ -25,6 +25,8 @@ export interface LeadFormProps {
   options: LeadEditorOptions;
   onSubmit: (values: LeadFormValues) => Promise<void>;
   error?: string | null;
+  /** A line above the fields (how a new lead is filled in). */
+  intro?: string;
 }
 
 export type { LeadFormValues };

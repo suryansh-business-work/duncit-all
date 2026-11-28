@@ -170,7 +170,7 @@ export async function syncSocialAccount(accountId: string): Promise<void> {
   const doc = await SocialAccountModel.findById(accountId).select('+access_token +refresh_token').lean<AccountWithTokens>();
   if (!doc) return;
   try {
-    const creds = await socialCredentials(doc.provider);
+    const creds = await socialCredentials(doc.provider, doc.env_entry_id);
     if (!creds) {
       throw new Error('This network’s app is not set up yet — add it under Marketing › Settings › Integrations.');
     }

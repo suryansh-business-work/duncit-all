@@ -292,13 +292,22 @@ describe('duplicate check', () => {
 });
 
 describe('NewLeadPicker', () => {
-  it('asks for the kind, then hands it on and closes', () => {
+  it('asks for the kind in a bottom sheet, then hands it on and closes', () => {
     const onPick = jest.fn();
     renderWithTheme(<NewLeadPicker onPick={onPick} />);
-    expect(screen.queryByTestId('leads-new-HOST_LEAD')).toBeNull();
+    expect(screen.queryByTestId('leads-new-kind-HOST_LEAD')).toBeNull();
     fireEvent.press(screen.getByTestId('leads-new'));
-    fireEvent.press(screen.getByTestId('leads-new-HOST_LEAD'));
+    fireEvent.press(screen.getByTestId('leads-new-kind-HOST_LEAD'));
     expect(onPick).toHaveBeenCalledWith('HOST_LEAD');
-    expect(screen.queryByTestId('leads-new-HOST_LEAD')).toBeNull();
+    expect(screen.queryByTestId('leads-new-kind-HOST_LEAD')).toBeNull();
+  });
+
+  it('closes without a kind on Cancel', () => {
+    const onPick = jest.fn();
+    renderWithTheme(<NewLeadPicker onPick={onPick} />);
+    fireEvent.press(screen.getByTestId('leads-new'));
+    fireEvent.press(screen.getByTestId('leads-new-kind-cancel'));
+    expect(onPick).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('leads-new-kind-VENUE_LEAD')).toBeNull();
   });
 });

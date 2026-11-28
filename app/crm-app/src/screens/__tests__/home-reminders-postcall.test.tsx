@@ -1,9 +1,9 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import * as SecureStore from 'expo-secure-store';
 
 import { gqlRequest } from '@/services/graphql.client';
 import { syncDeviceCalls } from '@/services/call-sync';
-import { hasPhoneFeatures, readPermissions } from '@/services/permissions';
+import { hasPhoneFeatures, readPermissions, requestGroups } from '@/services/permissions';
 import { STORAGE_KEYS } from '@/services/secure-storage';
 import { renderWithTheme } from '@/test-utils';
 import { useAuthStore } from '@/stores/auth.store';
@@ -17,14 +17,19 @@ jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
 jest.mock('@/services/call-sync', () => ({ syncDeviceCalls: jest.fn() }));
 jest.mock('@/services/permissions', () => ({
+  ...jest.requireActual('@/services/permissions'),
   readPermissions: jest.fn(),
   hasPhoneFeatures: jest.fn(),
+  requestGroups: jest.fn().mockResolvedValue(undefined),
 }));
 const mockNav = {
   navigate: jest.fn(),
   goBack: jest.fn(),
   canGoBack: jest.fn(() => true),
   setOptions: jest.fn(),
+  // The tab screens listen for being switched to (scroll back to the top).
+  getState: jest.fn(() => ({ index: 0 })),
+  addListener: jest.fn(() => jest.fn()),
 };
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => mockNav,
@@ -36,6 +41,12 @@ jest.mock('@react-navigation/native', () => ({
 const request = gqlRequest as jest.Mock;
 const future = new Date(Date.now() + 3_600_000).toISOString();
 const past = new Date(Date.now() - 3_600_000).toISOString();
+/** Noon today: inside Home's Day view whatever time the suite runs (an hour ahead can be tomorrow). */
+const todayNoon = (() => {
+  const day = new Date();
+  day.setHours(12, 0, 0, 0);
+  return day.toISOString();
+})();
 const reminder = (over: Record<string, unknown> = {}) => ({
   id: 'r1',
   entity_type: 'VENUE_LEAD',
@@ -62,7 +73,7 @@ beforeEach(() => {
 describe('HomeScreen', () => {
   it('greets by name and lists what is due today', async () => {
     useAuthStore.setState({ user: { user_id: 'u1', first_name: 'Asha', roles: ['CRM_MANAGER'] } });
-    request.mockResolvedValue({ crmReminders: [reminder()] });
+    request.mockResolvedValue({ crmReminders: [reminder({ due_at: todayNoon })] });
     renderWithTheme(<HomeScreen />);
     expect(screen.getByText('Hello, Asha')).toBeOnTheScreen();
     expect(await screen.findByText('Call Rohit')).toBeOnTheScreen();
@@ -74,16 +85,81 @@ describe('HomeScreen', () => {
     request.mockResolvedValue({ crmReminders: [] });
     renderWithTheme(<HomeScreen />);
     expect(await screen.findByTestId('home-setup')).toBeOnTheScreen();
-    expect(screen.getByText('Nothing due today.')).toBeOnTheScreen();
+    expect(screen.getByText('Nothing scheduled in this range.')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('home-dialer'));
     expect(mockNav.navigate).toHaveBeenCalledWith('Tabs', { screen: 'Dialer' });
+  });
+
+  it('opens the dialer, the lead search, a new follow-up and the dashboard from its quick actions', async () => {
+    request.mockResolvedValue({ crmReminders: [] });
+    renderWithTheme(<HomeScreen />);
+    await screen.findByText('Nothing scheduled in this range.');
+    fireEvent.press(screen.getByTestId('home-leads'));
+    expect(mockNav.navigate).toHaveBeenLastCalledWith('Tabs', { screen: 'Leads' });
+    fireEvent.press(screen.getByTestId('home-add-reminder'));
+    expect(mockNav.navigate).toHaveBeenLastCalledWith('AddReminder', {});
+    fireEvent.press(screen.getByTestId('home-dashboard'));
+    expect(mockNav.navigate).toHaveBeenLastCalledWith('Dashboard');
+  });
+
+  it('lists today’s pending items, and Set up asks for every missing permission in one prompt', async () => {
+    (readPermissions as jest.Mock)
+      .mockResolvedValueOnce({ phone: true, call: false, audio: true })
+      .mockResolvedValue({ phone: true, call: true, audio: true });
+    request.mockResolvedValue({
+      crmReminders: [
+        reminder({ due_at: todayNoon }),
+        reminder({ id: 'r2', title: 'Later', due_at: todayNoon }),
+      ],
+    });
+    renderWithTheme(<HomeScreen />);
+    expect(await screen.findByText('Call Rohit')).toBeOnTheScreen();
+    expect(screen.getByText('Later')).toBeOnTheScreen();
+    fireEvent.press(within(screen.getByTestId('home-setup')).getByText('Set up'));
+    // Recordings are on by default, so audio access is asked for with the rest.
+    expect(requestGroups).toHaveBeenCalledWith(['phone', 'call', 'notifications', 'audio']);
+    // Once granted, the nudge goes away on the re-check.
+    await waitFor(() => expect(screen.queryByTestId('home-setup')).toBeNull());
+    expect(mockNav.navigate).not.toHaveBeenCalledWith('Settings');
+  });
+
+  it('nudges while audio access is missing and recordings are on, not once they are off', async () => {
+    (readPermissions as jest.Mock).mockResolvedValue({ phone: true, call: true, audio: false });
+    request.mockResolvedValue({ crmReminders: [] });
+    const { unmount } = renderWithTheme(<HomeScreen />);
+    expect(await screen.findByTestId('home-setup')).toBeOnTheScreen();
+    unmount();
+    useFeaturesStore.setState({ recordings: false });
+    renderWithTheme(<HomeScreen />);
+    await screen.findByText('Nothing scheduled in this range.');
+    expect(screen.queryByTestId('home-setup')).toBeNull();
+    useFeaturesStore.setState({ recordings: true });
+  });
+
+  it('shows the calendar by day, week or month, and pages through it', async () => {
+    request.mockResolvedValue({ crmReminders: [reminder({ due_at: todayNoon })] });
+    renderWithTheme(<HomeScreen />);
+    expect(await screen.findByText('Call Rohit')).toBeOnTheScreen();
+    // Day is first; Year and Upcoming stay on the Reminders tab.
+    expect(screen.getByTestId('home-calendar-view-day')).toBeChecked();
+    expect(screen.queryByTestId('home-calendar-view-year')).toBeNull();
+    fireEvent.press(screen.getByTestId('home-calendar-view-week'));
+    expect(screen.getByTestId('home-calendar-view-week')).toBeChecked();
+    expect(screen.getByText('Call Rohit')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('home-calendar-view-month'));
+    expect(screen.getByTestId('calendar-month')).toBeOnTheScreen();
+    // Next month has nothing; Today comes back to it.
+    fireEvent.press(screen.getByTestId('calendar-next'));
+    expect(screen.getByText('Nothing scheduled in this range.')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('calendar-today'));
+    expect(screen.getByText('Call Rohit')).toBeOnTheScreen();
   });
 
   it('on an iPhone never asks for the Android phone permissions or nudges about them', async () => {
     (hasPhoneFeatures as jest.Mock).mockReturnValue(false);
     request.mockResolvedValue({ crmReminders: [] });
     renderWithTheme(<HomeScreen />);
-    expect(await screen.findByText('Nothing due today.')).toBeOnTheScreen();
+    expect(await screen.findByText('Nothing scheduled in this range.')).toBeOnTheScreen();
     expect(readPermissions).not.toHaveBeenCalled();
     expect(screen.queryByTestId('home-setup')).toBeNull();
     expect(screen.getByTestId('home-dialer')).toBeOnTheScreen();

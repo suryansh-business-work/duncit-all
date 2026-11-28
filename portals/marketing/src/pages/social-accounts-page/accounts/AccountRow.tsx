@@ -11,8 +11,16 @@ import { STATUS_COLORS, STATUS_LABEL } from '../copy';
 import type { SocialAccount } from '../queries';
 import { ExpiryChip, HealthLine, MessagingLine } from './AccountHealth';
 
+/** The app the account posts and messages through, as its row names it; `missing` when that app was removed or switched off. */
+export interface AccountApp {
+  name: string;
+  missing: boolean;
+}
+
 interface Props {
   account: SocialAccount;
+  /** Shown only when it matters: several apps on the network, or the account's app is gone. */
+  app?: AccountApp | null;
   onSync: (account: SocialAccount) => Promise<void>;
   onReconnect: () => Promise<void>;
   onSetOwner: (account: SocialAccount) => void;
@@ -20,7 +28,7 @@ interface Props {
 }
 
 /** One connected Page, channel or profile: who it is, who answers for it, how it is doing, and what can be done to it. */
-export default function AccountRow({ account, onSync, onReconnect, onSetOwner, onDisconnect }: Readonly<Props>) {
+export default function AccountRow({ account, app, onSync, onReconnect, onSetOwner, onDisconnect }: Readonly<Props>) {
   const { t, locale } = useTranslation();
   const { formatDateTime } = useDateFormat();
   const expired = account.status === 'EXPIRED';
@@ -64,6 +72,16 @@ export default function AccountRow({ account, onSync, onReconnect, onSetOwner, o
         <Typography variant="caption" component="p" sx={{ color: 'text.secondary' }} data-testid={`social-owner-line-${account.id}`}>
           {owner}
         </Typography>
+        {app && !app.missing && (
+          <Typography variant="caption" component="p" sx={{ color: 'text.secondary' }} data-testid={`social-app-line-${account.id}`}>
+            {t('marketing.social.appLine', { vars: { name: app.name } })}
+          </Typography>
+        )}
+        {app?.missing && (
+          <Typography variant="caption" component="p" sx={{ color: 'warning.main' }} role="status" data-testid={`social-app-missing-${account.id}`}>
+            {t('marketing.social.appRemoved')}
+          </Typography>
+        )}
         <HealthLine account={account} />
         <MessagingLine account={account} />
         {account.status !== 'CONNECTED' && account.last_error && (

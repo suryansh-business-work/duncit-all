@@ -203,7 +203,7 @@ describe('CandidateScreen', () => {
     );
     renderWithTheme(<CandidateScreen />);
     fireEvent.press(await screen.findByTestId('candidate-approve'));
-    fireEvent(screen.getByTestId('allow-unqualified'), 'onCheckedChange', true);
+    fireEvent.press(screen.getByTestId('allow-unqualified'));
     await act(async () => fireEvent.press(screen.getByTestId('approve-dialog-confirm')));
     expect(callsTo(docs.CrmAppApproveCandidatesDocument)[0]?.[1]).toEqual({
       ids: ['k1'],

@@ -41,6 +41,14 @@ jest.mock('expo-task-manager', () => ({
   isTaskRegisteredAsync: jest.fn().mockResolvedValue(false),
 }));
 
+jest.mock('expo-haptics', () => ({
+  selectionAsync: jest.fn().mockResolvedValue(undefined),
+  notificationAsync: jest.fn().mockResolvedValue(undefined),
+  impactAsync: jest.fn().mockResolvedValue(undefined),
+  NotificationFeedbackType: { Success: 'success', Warning: 'warning', Error: 'error' },
+  ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy' },
+}));
+
 jest.mock('expo-crypto', () => ({ randomUUID: jest.fn(() => 'install-uuid') }));
 
 // The library's own mock: no system bars unless a spec wraps the tree in a

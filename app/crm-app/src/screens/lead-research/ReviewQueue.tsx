@@ -6,6 +6,7 @@ import { CRM_CANDIDATE_STATUS_KEY, CRM_CANDIDATE_STATUS_TONE, crmFormatScore } f
 
 import { SURFACE } from '@/components/surface';
 import { DuncitButton } from '@/components/DuncitButton';
+import { SelectChip } from '@/components/mobile/SelectChip';
 import { StateView } from '@/components/StateView';
 import { ToneChip } from '@/components/ToneChip';
 import { CrmAppLeadCandidatesDocument } from '@/graphql/leadResearch';
@@ -99,20 +100,18 @@ export function ReviewQueue({ jobId, onClearJob }: Readonly<Props>) {
           />
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <XStack gap="$2" role="radiogroup">
-              <DuncitButton
+              <SelectChip
                 label={t('crmApp.leads.all')}
                 onPress={() => setStatus(null)}
-                size="sm"
-                variant={status ? 'outline' : 'solid'}
+                selected={!status}
                 testID="queue-status-all"
               />
               {STATUSES.map((s) => (
-                <DuncitButton
+                <SelectChip
                   key={s}
                   label={t(CRM_CANDIDATE_STATUS_KEY[s] ?? s)}
                   onPress={() => setStatus(s)}
-                  size="sm"
-                  variant={status === s ? 'solid' : 'outline'}
+                  selected={status === s}
                   testID={`queue-status-${s}`}
                 />
               ))}
@@ -155,7 +154,9 @@ export function ReviewQueue({ jobId, onClearJob }: Readonly<Props>) {
           onRetry={queue.refresh}
         />
       }
-      ListFooterComponent={queue.rows.length > 0 && queue.loading ? <StateView loading /> : null}
+      ListFooterComponent={
+        queue.rows.length > 0 && queue.loading ? <StateView loading inline /> : null
+      }
     />
   );
 }

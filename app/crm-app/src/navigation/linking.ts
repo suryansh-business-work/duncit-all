@@ -30,9 +30,11 @@ export const linking: LinkingOptions<AppStackParamList> = {
           Leads: 'leads',
           Dialer: 'dialer',
           Reminders: 'reminders',
-          Settings: 'settings',
+          More: 'more',
         },
       },
+      // Settings left the tab bar for More; its old link still opens it.
+      Settings: 'settings',
       LeadDetail: 'lead/:kind/:id',
       PostCall: 'post-call',
     },

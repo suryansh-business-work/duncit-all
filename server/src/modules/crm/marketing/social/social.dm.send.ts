@@ -76,7 +76,7 @@ export async function messagingAccount(accountId: string): Promise<{ account: Ac
   if (!messagingPageOf({ ...account, meta: (account.meta ?? {}) as Record<string, string> })) {
     refuse('NOT_CONFIGURED', 'Messaging needs this Instagram account to be linked to a Facebook Page. Link it in Meta, then reconnect.');
   }
-  const creds = await socialCredentials(account.provider);
+  const creds = await socialCredentials(account.provider, account.env_entry_id);
   if (!creds) refuse('NOT_CONFIGURED', 'This network’s app is not set up yet — add it under Marketing › Settings › Integrations.');
   return { account, creds };
 }

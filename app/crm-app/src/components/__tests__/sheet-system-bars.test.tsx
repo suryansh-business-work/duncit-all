@@ -4,7 +4,7 @@ import { screen } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Text } from 'tamagui';
 
-import { ActionSheet } from '@/components/email-templates/ActionSheet';
+import { ActionSheet } from '@/components/ActionSheet';
 import { TabSheet } from '@/screens/lead/tabs/TabSheet';
 import { SheetModal } from '@/screens/lead/tabs/parts/SheetModal';
 import { renderWithTheme } from '@/test-utils';

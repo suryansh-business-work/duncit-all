@@ -31,6 +31,7 @@ import { useCreatePodForm } from './useCreatePodForm';
 import { useStepperFormSync } from './useStepperFormSync';
 import { useDraftAutosave } from './useDraftAutosave';
 import { useStepperSelections } from './useStepperSelections';
+import { useScrollTopOnChange } from '../../../../app/pageScroll';
 
 /** Host Create Pod stepper: What (category, mode) → Where & when (locality,
  * club, venue and slot from the venue partner's availability calendar, or a
@@ -66,6 +67,7 @@ export default function CreatePodStepper({
   const smartIncentiveOn = useSmartIncentiveSettings().enabled;
 
   const [step, setStep] = useState(() => clampCreatePodStep(initialStep));
+  useScrollTopOnChange(step); // each step opens at its top, like a new page
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<BlockedViolation[]>([]);

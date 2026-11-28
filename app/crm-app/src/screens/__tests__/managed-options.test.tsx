@@ -83,9 +83,7 @@ describe('ManagedOptionsScreen', () => {
       id: 'a1',
       input: { name: 'Car parking', sort_order: 1, is_active: true },
     });
-    await act(async () =>
-      fireEvent(screen.getByTestId('option-active-a2'), 'onCheckedChange', true),
-    );
+    await act(async () => fireEvent.press(screen.getByTestId('option-active-a2')));
     expect(callsTo(docs.CrmAppUpdateManagedOptionDocument)[1]?.[1]).toEqual({
       id: 'a2',
       input: { is_active: true },

@@ -25,6 +25,7 @@ import SocialHandlesSection from './SocialHandlesSection';
 import { getGateDraft, setGateDraft, clearGateDraft } from './draft';
 import { formatDateTime } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
+import { useScrollTopOnChange } from '../../app/pageScroll';
 
 /**
  * Gate before "Register a Venue" / "Become a Host" / "List your product": pick
@@ -47,6 +48,7 @@ export default function SurveyGatePage() {
   const knownKind = kind === 'VENUE' || kind === 'HOST' || kind === 'ECOMM' || kind === 'CLUB_ADMIN';
   const valid = knownKind && (kind !== 'ECOMM' || productsVisible);
   const [step, setStep] = useState<Step>('loading');
+  useScrollTopOnChange(step); // intro → category → survey → meeting: each opens at the top
   const [survey, setSurvey] = useState<ActiveSurvey | null>(null);
   const [submittedAnswers, setSubmittedAnswers] = useState<SurveyAnswerInput[]>([]);
   const [surveyAnswers, setSurveyAnswers] = useState<SurveyAnswerState>({});

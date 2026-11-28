@@ -1,6 +1,7 @@
+import { Types, isValidObjectId } from 'mongoose';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getUrlConfigs } from '@config/url-configs';
-import type { EnvCategory } from '@modules/platform/envEntry/envEntry.model';
+import { EnvEntryModel, type EnvCategory } from '@modules/platform/envEntry/envEntry.model';
 import { trimTrailingSlash } from '@utils/url';
 import { SOCIAL_PROVIDERS, type SocialAppCredentials, type SocialProvider } from './social.types';
 
@@ -105,19 +106,85 @@ export async function credentialsFrom(
   return fields.config ? { ...creds, configId: configId.trim() } : creds;
 }
 
-/** A provider's app as the running server uses it — the active default entry of its category. */
-export async function socialCredentials(provider: SocialProvider): Promise<SocialAppCredentials | null> {
+/** Reads one entry's stored config the way `credentialsFrom` asks for fields. */
+const configReader =
+  (config: unknown) =>
+  (field: string): string => {
+    const raw = (config as Record<string, unknown> | null | undefined)?.[field];
+    return typeof raw === 'string' || typeof raw === 'number' ? String(raw) : '';
+  };
+
+/** An id stored on an account (ObjectId or string), or '' when there is none. */
+const entryIdOf = (entryId: unknown): string => {
+  if (typeof entryId === 'string') return entryId.trim();
+  return entryId instanceof Types.ObjectId ? entryId.toHexString() : '';
+};
+
+/**
+ * A provider's app as the running server uses it. With no entry id it is the
+ * active default entry of its category (accounts connected before apps could
+ * be chosen carry none). With one, it is that entry — and only while it is
+ * active and belongs to this provider's category, so an id from another
+ * category, or a switched-off app, never lends its keys.
+ *
+ * Tokens are bound to the app that issued them, so every read, refresh, post
+ * and message for an account goes through the entry it was connected with.
+ */
+export async function socialCredentials(provider: SocialProvider, entryId?: unknown): Promise<SocialAppCredentials | null> {
   const redirectUri = await socialRedirectUri();
-  return credentialsFrom(provider, (field) => getRuntimeEnvValue(socialEnvKey(provider, field)), redirectUri);
+  const id = entryIdOf(entryId);
+  if (!id) return credentialsFrom(provider, (field) => getRuntimeEnvValue(socialEnvKey(provider, field)), redirectUri);
+  if (!isValidObjectId(id)) return null;
+  const entry = await EnvEntryModel.findOne({ _id: id, category: APP_FIELDS[provider].category, is_active: true }).select('config').lean();
+  return entry ? credentialsFrom(provider, configReader(entry.config), redirectUri) : null;
 }
 
-/** Which providers Marketing can offer a Connect button for right now, and where each one's app is set up. */
-export async function providerReadiness(): Promise<{ provider: SocialProvider; configured: boolean; category: EnvCategory }[]> {
+/** One app a marketer can connect through: a named, active, complete entry. */
+export interface SocialAppOption {
+  id: string;
+  name: string;
+  is_default: boolean;
+}
+
+/**
+ * Which providers Marketing can offer a Connect button for right now, where
+ * each one's app is set up, and every app it can connect through — a category
+ * may hold several entries (a second Meta app for another brand, a second
+ * LinkedIn app), each added and tested in Tech › Environment Variables or
+ * Marketing › Settings › Integrations. Only the id and name leave the server.
+ */
+export async function providerReadiness(): Promise<
+  { provider: SocialProvider; configured: boolean; category: EnvCategory; apps: SocialAppOption[] }[]
+> {
+  const redirectUri = await socialRedirectUri();
+  const entries = await EnvEntryModel.find({ category: { $in: SOCIAL_ENV_CATEGORIES }, is_active: true })
+    .select('name category is_default config')
+    .sort({ is_default: -1, name: 1 })
+    .lean();
   return Promise.all(
-    SOCIAL_PROVIDERS.map(async (provider) => ({
-      provider,
-      configured: (await socialCredentials(provider)) !== null,
-      category: APP_FIELDS[provider].category,
-    }))
+    SOCIAL_PROVIDERS.map(async (provider) => {
+      const { category } = APP_FIELDS[provider];
+      const mine = entries.filter((entry) => entry.category === category);
+      const complete = await Promise.all(mine.map((entry) => credentialsFrom(provider, configReader(entry.config), redirectUri)));
+      const apps = mine
+        .filter((_entry, index) => complete[index] !== null)
+        .map((entry) => ({ id: String(entry._id), name: entry.name, is_default: !!entry.is_default }));
+      return { provider, configured: apps.length > 0, category, apps };
+    })
   );
+}
+
+/** The Meta apps whose events (DMs and comments) arrive by webhook. */
+const META_WEBHOOK_PROVIDERS = ['INSTAGRAM', 'FACEBOOK'] as const satisfies readonly SocialProvider[];
+
+/**
+ * Every active Meta app's webhook secret and verify token. Meta signs each
+ * delivery with the secret of the app the Page is subscribed through, so a
+ * Page connected through a second app is signed with that app's secret.
+ */
+export async function metaWebhookKeys(): Promise<{ secrets: string[]; verifyTokens: string[] }> {
+  const categories = META_WEBHOOK_PROVIDERS.map((provider) => APP_FIELDS[provider].category);
+  const entries = await EnvEntryModel.find({ category: { $in: categories }, is_active: true }).select('config').lean();
+  const pick = (field: string) => entries.map((entry) => configReader(entry.config)(field).trim()).filter(Boolean);
+  return { secrets: pick('app_secret'), verifyTokens: pick('webhook_verify_token') };
 }

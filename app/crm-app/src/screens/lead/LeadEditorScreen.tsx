@@ -1,5 +1,4 @@
 import { useLayoutEffect, useMemo, useState } from 'react';
-import { ScrollView } from 'react-native';
 import {
   StackActions,
   useNavigation,
@@ -7,13 +6,13 @@ import {
   type NavigationProp,
   type RouteProp,
 } from '@react-navigation/native';
-import { Text } from 'tamagui';
 
 import { StateView } from '@/components/StateView';
 import { LeadForm, type LeadFormValues } from '@/forms/lead';
 import { CrmAppLeadEditDocument } from '@/graphql/leadEditor';
 import { useGqlQuery } from '@/hooks/useGqlQuery';
 import { useTranslation } from '@/hooks/useTranslation';
+import { haptics } from '@/services/haptics';
 import {
   isLeadKind,
   LEAD_QUERY_FIELD,
@@ -70,30 +69,27 @@ function LeadEditor({ kind, id }: Readonly<{ kind: LeadKind; id: string | null }
     setError(null);
     try {
       const savedId = await saveLead(kind, id, values);
+      haptics.success();
       // A new lead opens on its card; an edit returns to the card it came from, which re-reads on focus.
       if (id) navigation.goBack();
       else navigation.dispatch(StackActions.replace('LeadDetail', { kind, id: savedId }));
     } catch (err) {
+      haptics.error();
       setError(errorMessage(err, t('crmApp.common.saveFailed')));
     }
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={{ padding: 16, gap: 12 }}
-      keyboardShouldPersistTaps="handled"
-    >
-      {id ? null : <Text color="$muted">{t('crmApp.editor.newHint')}</Text>}
-      <LeadForm
-        key={id ?? 'new'}
-        kind={kind}
-        leadId={id}
-        initial={initial}
-        options={options}
-        onSubmit={submit}
-        error={error}
-      />
-    </ScrollView>
+    <LeadForm
+      key={id ?? 'new'}
+      kind={kind}
+      leadId={id}
+      initial={initial}
+      options={options}
+      onSubmit={submit}
+      error={error}
+      intro={id ? undefined : t('crmApp.editor.newHint')}
+    />
   );
 }
 

@@ -66,6 +66,8 @@ describe('IntegrationsPage', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Integrations' })).toBeInTheDocument();
     expect(screen.getAllByRole('tab')).toHaveLength(8);
     expect(screen.getByTestId('integration-hint')).toHaveTextContent(/Unified login/);
+    // A social tab says a second app can be added here and chosen when connecting.
+    expect(screen.getByTestId('integration-multiple-apps')).toHaveTextContent(/Add another entry here/);
     expect(screen.getByTestId('env-gate')).toBeInTheDocument();
     expect(screen.getByTestId('env-tab')).toHaveTextContent('SOCIAL_INSTAGRAM');
     await waitFor(() => expect(screen.getByTestId('redirect-url-field')).toHaveValue(CALLBACK));
@@ -76,6 +78,7 @@ describe('IntegrationsPage', () => {
     renderWithProviders(<IntegrationsPage />, { mocks: [], initialEntries: ['/settings/integrations?selectedtab=ANTHROPIC'] });
     expect(screen.getByRole('tab', { name: 'Claude (Anthropic)', selected: true })).toBeInTheDocument();
     expect(screen.getByTestId('integration-hint')).toHaveTextContent(/claude-/);
+    expect(screen.queryByTestId('integration-multiple-apps')).not.toBeInTheDocument();
     expect(screen.getByTestId('env-tab')).toHaveTextContent('ANTHROPIC');
     expect(screen.queryByTestId('redirect-url-field')).not.toBeInTheDocument();
     expect(screen.queryByTestId('webhook-url-field')).not.toBeInTheDocument();

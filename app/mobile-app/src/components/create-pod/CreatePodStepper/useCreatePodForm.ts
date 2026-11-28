@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { clampCreatePodStep } from '@duncit/utils';
 
+import { useScrollTopOnChange } from '@/components/ScreenScroll';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useSmartIncentiveSettings } from '@/hooks/useSmartIncentiveSettings';
@@ -67,6 +68,8 @@ export function useCreatePodForm({
   const showProducts = useFeatureFlag('is_product_visible');
 
   const [step, setStep] = useState(() => clampCreatePodStep(initialStep));
+  // Each step is a page of its own: Next / Back / a jump opens it at the top.
+  useScrollTopOnChange(step);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [blocked, setBlocked] = useState<BlockedViolation[]>([]);

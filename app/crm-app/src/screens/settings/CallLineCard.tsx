@@ -1,3 +1,4 @@
+import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { Card } from '@/components/Card';
@@ -5,7 +6,9 @@ import { StateView } from '@/components/StateView';
 import { ToneChip } from '@/components/ToneChip';
 import { CrmAppCallSetupDocument } from '@/graphql/call';
 import { useGqlQuery } from '@/hooks/useGqlQuery';
+import { ListRow } from '@/components/mobile/ListRow';
 import { useTranslation } from '@/hooks/useTranslation';
+import type { AppStackParamList } from '@/navigation/types';
 import { TwilioSetupNotice } from '@/screens/call/TwilioSetupNotice';
 
 function Row({ label, value }: Readonly<{ label: string; value: string }>) {
@@ -26,6 +29,7 @@ function Row({ label, value }: Readonly<{ label: string; value: string }>) {
  */
 export function CallLineCard() {
   const { t } = useTranslation();
+  const navigation = useNavigation<NavigationProp<AppStackParamList>>();
   const { data, loading, error, refetch } = useGqlQuery(
     CrmAppCallSetupDocument,
     {},
@@ -58,9 +62,17 @@ export function CallLineCard() {
               <ToneChip label={t('crm.call.transcriptionOn')} tone="info" />
             ) : null}
           </XStack>
+          {setup.can_configure ? (
+            <ListRow
+              icon="settings-phone"
+              title={t('crmApp.twilio.editSettings')}
+              onPress={() => navigation.navigate('TwilioSetup')}
+              testID="settings-twilio"
+            />
+          ) : null}
         </YStack>
       ) : (
-        <StateView loading={loading} error={error} onRetry={refetch} />
+        <StateView loading={loading} error={error} onRetry={refetch} inline />
       )}
     </Card>
   );

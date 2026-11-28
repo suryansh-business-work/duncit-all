@@ -19,11 +19,15 @@ export function useSocialAccountActions(onChanged: () => void, returnTo: SocialC
   const [syncMut] = useMutation<{ syncSocialAccount: SocialAccount }>(SYNC_SOCIAL_ACCOUNT);
   const [disconnectMut, disconnectState] = useMutation<{ disconnectSocialAccount: boolean }>(DISCONNECT_SOCIAL_ACCOUNT);
 
-  /** Off to the provider's consent screen; the server's callback brings the marketer back. */
+  /**
+   * Off to the provider's consent screen, through the chosen app (a network can
+   * have several); the server's callback brings the marketer back. No app means
+   * the network's default app.
+   */
   const connect = useCallback(
-    async (provider: SocialProvider) => {
+    async (provider: SocialProvider, appId?: string | null) => {
       try {
-        const { data } = await connectMut({ variables: { provider, return_to: returnTo } });
+        const { data } = await connectMut({ variables: { provider, return_to: returnTo, app_id: appId ?? null } });
         if (data?.socialConnectUrl) globalThis.location.assign(data.socialConnectUrl);
       } catch (error) {
         notify(parseApiError(error), 'error');

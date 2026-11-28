@@ -137,9 +137,7 @@ describe('DynamicFieldsScreen', () => {
     ];
     renderWithTheme(<DynamicFieldsScreen />);
     await screen.findByText('Budget Band');
-    await act(async () =>
-      fireEvent(screen.getByTestId('dynamic-field-active-budget_band'), 'onCheckedChange', false),
-    );
+    await act(async () => fireEvent.press(screen.getByTestId('dynamic-field-active-budget_band')));
     expect(callsTo(docs.CrmAppUpdateDynamicFieldDocument)[0]?.[1]).toEqual({
       id: 'f1',
       input: expect.objectContaining({
@@ -150,9 +148,7 @@ describe('DynamicFieldsScreen', () => {
         options: [{ value: 'low', label: 'Low' }],
       }),
     });
-    await act(async () =>
-      fireEvent(screen.getByTestId('dynamic-field-active-broken'), 'onCheckedChange', false),
-    );
+    await act(async () => fireEvent.press(screen.getByTestId('dynamic-field-active-broken')));
     expect(screen.getByText('Add at least one option for a Select field.')).toBeOnTheScreen();
     expect(callsTo(docs.CrmAppUpdateDynamicFieldDocument)).toHaveLength(1);
   });
@@ -198,8 +194,8 @@ describe('DynamicFieldEditorScreen', () => {
     renderWithTheme(<DynamicFieldEditorScreen />);
     await screen.findByTestId('dynamic-field-label');
     expect(mockNav.setOptions).toHaveBeenCalledWith({ title: 'New field' });
-    fireEvent(screen.getByTestId('dynamic-field-applies_to_venue'), 'onCheckedChange', false);
-    fireEvent(screen.getByTestId('dynamic-field-applies_to_host'), 'onCheckedChange', false);
+    fireEvent.press(screen.getByTestId('dynamic-field-applies_to_venue'));
+    fireEvent.press(screen.getByTestId('dynamic-field-applies_to_host'));
     await press('dynamic-field-save');
     expect(screen.getByText('Label is required')).toBeOnTheScreen();
     expect(
@@ -208,8 +204,8 @@ describe('DynamicFieldEditorScreen', () => {
       ),
     ).toBeOnTheScreen();
     fireEvent.changeText(screen.getByTestId('dynamic-field-label'), 'Venue Size');
-    fireEvent(screen.getByTestId('dynamic-field-applies_to_community'), 'onCheckedChange', true);
-    fireEvent(screen.getByTestId('dynamic-field-required'), 'onCheckedChange', true);
+    fireEvent.press(screen.getByTestId('dynamic-field-applies_to_community'));
+    fireEvent.press(screen.getByTestId('dynamic-field-required'));
     await press('dynamic-field-save');
     expect(callsTo(docs.CrmAppCreateDynamicFieldDocument)[0]?.[1]).toEqual({
       input: expect.objectContaining({

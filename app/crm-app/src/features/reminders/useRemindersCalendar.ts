@@ -21,12 +21,17 @@ const SCOPE = 'crm-app/RemindersCalendar';
  * lead's next follow-up, filtered by kind and reminder status, in a view
  * (day, week, month, year, upcoming) around a date. Both reads run again each
  * time the tab is shown, so a reminder added elsewhere is already here.
+ * The initial view and status pick what it opens on (Home: today's
+ * pending items; the Reminders tab on everything upcoming).
  */
-export function useRemindersCalendar(t: Translate) {
-  const [view, setView] = useState<CalendarView>('upcoming');
+export function useRemindersCalendar(
+  t: Translate,
+  initial: { view?: CalendarView; status?: CrmCalendarStatusFilter } = {},
+) {
+  const [view, setView] = useState<CalendarView>(initial.view ?? 'upcoming');
   const [cursor, setCursor] = useState(() => new Date());
   const [entity, setEntity] = useState<CrmCalendarEntityFilter>('ALL');
-  const [status, setStatus] = useState<CrmCalendarStatusFilter>('ALL');
+  const [status, setStatus] = useState<CrmCalendarStatusFilter>(initial.status ?? 'ALL');
   const fallbackError = t('crmApp.common.loadFailed');
   const reminderVars = useMemo(() => ({ filter: status === 'ALL' ? {} : { status } }), [status]);
   const reminders = useGqlQuery(CrmAppRemindersDocument, reminderVars, {

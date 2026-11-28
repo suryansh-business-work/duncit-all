@@ -11,7 +11,8 @@ export type TabParamList = {
   Leads: { kind?: LeadKind } | undefined;
   Dialer: { number?: string } | undefined;
   Reminders: undefined;
-  Settings: undefined;
+  /** Every other CRM page, the app's settings and sign-out (replaces the old side menu). */
+  More: undefined;
 };
 
 export type AppStackParamList = {
@@ -29,8 +30,10 @@ export type AppStackParamList = {
    * rings this phone, joins the contact in, records and transcribes.
    */
   Call: { kind: LeadKind; id: string; to: string; leadName: string; contactName?: string };
-  /** The side menu: the CRM portal's sidebar, every item. */
-  Menu: undefined;
+  /** The app's own settings (calls, caller ID, permissions, sync), opened from More. */
+  Settings: undefined;
+  /** The CRM call line's Twilio settings (SUPER_ADMIN / TECH_MANAGER, after the emailed-code unlock). */
+  TwilioSetup: undefined;
   /** The portal's Dashboard: KPIs and charts for venue and host leads. */
   Dashboard: undefined;
   /** CRM › User Leads › WhatsApp Leads, one lead, and adding or editing one. */

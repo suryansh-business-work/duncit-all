@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack, useTheme } from 'tamagui';
 import { formatDate } from '@duncit/datetime';
@@ -11,11 +12,14 @@ import {
   type CrmTone,
 } from '@duncit/utils';
 
-import { DuncitButton } from '@/components/DuncitButton';
+import { LeadAvatar } from '@/components/LeadAvatar';
+import { IconButton } from '@/components/mobile/IconButton';
 import { SURFACE } from '@/components/surface';
 import { ToneChip } from '@/components/ToneChip';
+import { MOBILE } from '@/constants/design';
 import type { LeadListRow as Row } from '@/features/leads-list/listKinds';
 import { useTranslation } from '@/hooks/useTranslation';
+import { haptics } from '@/services/haptics';
 import { LeadListRowMatched } from './LeadListRowMatched';
 
 /** The score band's colour (success, warning or error), `default` for one this build does not know. */
@@ -34,15 +38,23 @@ interface Props {
   /** The kind matches Duncit accounts, so its card shows Devices and Last activity. */
   matchedUser: boolean;
   onOpen: (row: Row) => void;
-  onEdit: (row: Row) => void;
-  onDelete: (row: Row) => void;
+  /** Rings the primary contact's mobile on the CRM call line. */
+  onCall: (row: Row, number: string) => void;
+  /** Opens the row's actions sheet (Edit, Delete…); a long press on the card does too. */
+  onMore: (row: Row) => void;
 }
 
-/** One lead on a listing — the portal table's row as a card; a duplicate lead's card is red. */
-export function LeadListRow({ row, matchedUser, onOpen, onEdit, onDelete }: Readonly<Props>) {
+/**
+ * One lead on a kind's listing — the portal table's row as a mobile card:
+ * who and how to reach them first, status and score next, the rest under it.
+ * Call sits at the thumb's side; Edit and Delete live in the ⋯ sheet so a
+ * stray tap cannot delete. A duplicate lead's card is red.
+ */
+function LeadListRowImpl({ row, matchedUser, onOpen, onCall, onMore }: Readonly<Props>) {
   const { t } = useTranslation();
   const theme = useTheme();
   const contact = row.contacts[0];
+  const mobile = contact?.mobile_number ?? '';
   const precision = row.geo_precision ? CRM_GEO_PRECISION_KEY[row.geo_precision] : undefined;
   const duplicate = Boolean(row.is_duplicate);
   const details = [row.extra, row.city, contact?.email].filter(Boolean).join(' · ');
@@ -51,44 +63,63 @@ export function LeadListRow({ row, matchedUser, onOpen, onEdit, onDelete }: Read
     row.assigned_to ? `${t('crm.forms.assignedTo')}: ${row.assigned_to}` : '',
     followUp ? `${t('crm.leadList.followUp')}: ${followUp}` : '',
   ].filter(Boolean);
+  const more = () => {
+    haptics.heavy();
+    onMore(row);
+  };
   return (
     <YStack
       {...SURFACE}
       gap="$2"
       borderColor={duplicate ? '$danger' : SURFACE.borderColor}
       backgroundColor={duplicate ? '$dangerSoft' : SURFACE.backgroundColor}
+      role="button"
+      aria-label={row.name}
+      onPress={() => onOpen(row)}
+      onLongPress={more}
+      pressStyle={{ backgroundColor: duplicate ? '$dangerSoft' : '$soft' }}
       testID={`lead-list-row-${row.id}`}
     >
-      <XStack
-        role="button"
-        aria-label={row.name}
-        onPress={() => onOpen(row)}
-        gap="$2"
-        alignItems="flex-start"
-      >
-        <YStack flex={1} gap="$1">
+      <XStack gap="$3" alignItems="center">
+        <LeadAvatar name={row.name} size={MOBILE.avatar} />
+        <YStack flex={1} gap="$0.5">
           <Text fontWeight="700" numberOfLines={1}>
             {row.name}
           </Text>
           <Text color="$muted" fontSize="$2">
-            {contact?.mobile_number || t('crmApp.common.dash')}
+            {mobile || t('crmApp.common.dash')}
           </Text>
         </YStack>
-        {duplicate ? (
-          <XStack
-            aria-label={`${t('crm.duplicates.rowLabel')}: ${t('crm.duplicates.rowHint')}`}
-            alignItems="center"
-            gap="$1"
-          >
-            <MaterialIcons name="content-copy" size={14} color={theme.danger?.val} />
-            <ToneChip
-              label={t('crm.duplicates.rowLabel')}
-              tone="error"
-              testID="lead-duplicate-chip"
-            />
-          </XStack>
+        {mobile ? (
+          <IconButton
+            icon={{ name: 'phone' }}
+            variant="filled"
+            label={t('crm.leadDetail.callNumber', { vars: { number: mobile } })}
+            onPress={() => onCall(row, mobile)}
+            testID={`lead-list-call-${row.id}`}
+          />
         ) : null}
+        <IconButton
+          icon={{ name: 'more-vert' }}
+          label={t('crmApp.mobile.moreActionsFor', { vars: { name: row.name } })}
+          onPress={() => onMore(row)}
+          testID={`lead-list-more-${row.id}`}
+        />
       </XStack>
+      {duplicate ? (
+        <XStack
+          aria-label={`${t('crm.duplicates.rowLabel')}: ${t('crm.duplicates.rowHint')}`}
+          alignItems="center"
+          gap="$1"
+        >
+          <MaterialIcons name="content-copy" size={14} color={theme.danger?.val} />
+          <ToneChip
+            label={t('crm.duplicates.rowLabel')}
+            tone="error"
+            testID="lead-duplicate-chip"
+          />
+        </XStack>
+      ) : null}
       {typeof row.distance_km === 'number' ? (
         <Text fontSize="$2" fontWeight="600" testID={`lead-list-distance-${row.id}`}>
           {[
@@ -99,7 +130,7 @@ export function LeadListRow({ row, matchedUser, onOpen, onEdit, onDelete }: Read
             .join(' · ')}
         </Text>
       ) : null}
-      <XStack flexWrap="wrap" gap="$2">
+      <XStack flexWrap="wrap" gap="$1.5">
         <ToneChip label={row.lead_status} tone={crmToneOf(CRM_LEAD_STATUS_TONE, row.lead_status)} />
         <ToneChip label={row.priority} tone={crmToneOf(CRM_LEAD_PRIORITY_TONE, row.priority)} />
         {row.quality ? (
@@ -132,25 +163,9 @@ export function LeadListRow({ row, matchedUser, onOpen, onEdit, onDelete }: Read
         </Text>
       ) : null}
       {matchedUser ? <LeadListRowMatched matched={row.matched_user ?? null} /> : null}
-      <XStack justifyContent="flex-end" gap="$2">
-        <DuncitButton
-          label={t('shell.common.edit')}
-          accessibilityLabel={`${t('shell.common.edit')} ${row.name}`}
-          onPress={() => onEdit(row)}
-          variant="ghost"
-          size="sm"
-          testID={`lead-list-edit-${row.id}`}
-        />
-        <DuncitButton
-          label={t('shell.common.delete')}
-          accessibilityLabel={`${t('shell.common.delete')} ${row.name}`}
-          onPress={() => onDelete(row)}
-          variant="ghost"
-          tone="danger"
-          size="sm"
-          testID={`lead-list-delete-${row.id}`}
-        />
-      </XStack>
     </YStack>
   );
 }
+
+/** Memoised: paging in more leads re-renders only the new cards. */
+export const LeadListRow = memo(LeadListRowImpl);

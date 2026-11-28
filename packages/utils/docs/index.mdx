@@ -5057,3 +5057,27 @@ groupSolutions(items); // every audience in order: VENUE, HOST, CLUB_ADMIN, CREA
 | `VENUE_KIT_SOLUTION_SLUG` / `VENUE_KIT_CATEGORY_SLUG` | The slug that renders the Venue Kit's own page, and the category it is seeded under. |
 
 Renderers: website `pages/solutions/*`; Website portal → Solutions (content manager).
+
+## A new page opens at the top — `screen-scroll`
+
+`screen-scroll.ts` holds the rule both native apps (member app and Duncit CRM app) follow so a page
+the user moves to never opens at the previous page's scroll offset. mWeb applies the same rule in
+`app/mweb/src/app/RouteScroll.tsx`. The scroll views are typed structurally, so nothing here imports
+React Native.
+
+```ts
+import { isTabEntry, scrollToTop } from '@duncit/utils';
+
+scrollToTop(listRef.current); // FlatList → scrollToOffset({ offset: 0 }), ScrollView → scrollTo({ y: 0 })
+isTabEntry(0, { index: 1, routes }, routes[1].key); // true: the user just switched to this tab
+isTabEntry(1, { index: 1, routes }, routes[1].key); // false: same tab (Back from a pushed screen)
+```
+
+| Export | What it is |
+| --- | --- |
+| `scrollToTop(target, animated = false)` | Puts a `ScrollView` / `FlatList` / `SectionList` back at the top; `false` when there is no view. |
+| `isTabEntry(previousIndex, state, routeKey)` | The tab navigator's active tab changed and is now `routeKey`. Back to a tab keeps its place. |
+| `ScrollableToTop` / `TabStateLike` | The structural shapes the two helpers read. |
+
+Renderers: member app `components/ScreenScroll` (every `RefreshScrollView` registers with its screen;
+tab entry and wizard steps scroll it), CRM app `hooks/useScrollTopOnTabEntry`.

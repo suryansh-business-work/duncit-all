@@ -4,7 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { crmIsEmptyAnalytics } from '@duncit/utils';
 
 import { Card } from '@/components/Card';
-import { DuncitButton } from '@/components/DuncitButton';
+import { SelectChip } from '@/components/mobile/SelectChip';
 import { StateView } from '@/components/StateView';
 import { LEAD_KINDS, type LeadKind } from '@/features/leads/leadKinds';
 import { displayDateTime } from '@/features/reminders/reminderTime';
@@ -39,19 +39,14 @@ export function QualityAnalyticsScreen() {
       contentContainerStyle={{ padding: 16, gap: 12 }}
       refreshControl={<RefreshControl refreshing={false} onRefresh={refetch} />}
     >
-      {/* The screen header names the page; the subtitle says what it shows. */}
-      <Text color="$muted" fontSize="$2">
-        {t('crm.leadQualityAnalytics.subtitle')}
-      </Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <XStack gap="$2" role="tablist">
           {choices.map((c) => (
-            <DuncitButton
+            <SelectChip
               key={c}
               label={c === ALL ? t('crm.leadQualityAnalytics.allTypes') : t(`crmApp.kind.${c}`)}
               onPress={() => setChoice(c)}
-              size="sm"
-              variant={choice === c ? 'solid' : 'outline'}
+              selected={choice === c}
               testID={`analytics-type-${c}`}
             />
           ))}

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { YStack } from 'tamagui';
 import { CRM_DASH } from '@duncit/utils';
 
@@ -21,15 +21,17 @@ import { kindVars, type LeadTabProps } from './parts/tabTypes';
 interface Props extends LeadTabProps {
   /** Opens another tab of the lead page (the score ring opens 'quality'). */
   onOpenTab?: (tab: string) => void;
+  /** Hands the lead's template values up to the page's Email action once they load. */
+  onLeadValues?: (values: Readonly<Record<string, string>>) => void;
 }
 
 /**
  * The portal's lead page above and in its Overview tab, for every kind: the
- * hero (photo, chips, tags, quick contact actions, score ring), the "Also a
+ * hero (photo, chips, tags, score ring), the "Also a
  * Duncit user" box, the stat tiles, the kind's overview cards and the Lead
  * tracking card.
  */
-export function LeadOverviewDetails({ kind, id, lead, onOpenTab }: Readonly<Props>) {
+export function LeadOverviewDetails({ kind, id, lead, onOpenTab, onLeadValues }: Readonly<Props>) {
   const { t } = useTranslation();
   const query = useGqlQuery(CrmAppLeadOverviewDocument, kindVars(kind, id), {
     fallbackError: t('crmApp.common.loadFailed'),
@@ -40,6 +42,9 @@ export function LeadOverviewDetails({ kind, id, lead, onOpenTab }: Readonly<Prop
     () => (overview ? templateValues(overview, lead, lead.name) : undefined),
     [overview, lead],
   );
+  useEffect(() => {
+    if (leadValues) onLeadValues?.(leadValues);
+  }, [leadValues, onLeadValues]);
   if (!overview) return <TabLoad query={query} />;
 
   const hero = heroModel(overview);
@@ -48,10 +53,8 @@ export function LeadOverviewDetails({ kind, id, lead, onOpenTab }: Readonly<Prop
       <LeadHero
         kind={kind}
         id={id}
-        name={lead.name}
         lead={lead}
         hero={hero}
-        leadValues={leadValues}
         onOpenQuality={onOpenTab ? () => onOpenTab('quality') : undefined}
       />
       {hero.matched ? <MatchedUserCard matched={hero.matched} /> : null}

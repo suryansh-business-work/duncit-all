@@ -115,7 +115,7 @@ async function publishTarget(target: Target, content: PublishContent): Promise<O
   if (doc.status === 'EXPIRED') return failed('This account needs reconnecting in Social Accounts.');
   const problems = publishProblems(doc.platform, content);
   if (problems.length > 0) return failed(problems.join('; '));
-  const creds = await socialCredentials(doc.provider);
+  const creds = await socialCredentials(doc.provider, doc.env_entry_id);
   if (!creds) return failed('This network’s app is not set up yet — add it under Marketing › Settings › Integrations.');
   try {
     const handle = await freshHandle(doc, READERS[doc.platform], creds);

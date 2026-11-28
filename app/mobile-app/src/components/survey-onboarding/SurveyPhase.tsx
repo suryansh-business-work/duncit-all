@@ -10,6 +10,7 @@ import { CALM_FIELD } from './calmField';
 import { SurveyOption } from './SurveyOption';
 import { splitSections } from './surveySections';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { useScrollTopOnChange } from '@/components/ScreenScroll';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
@@ -37,6 +38,8 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit, footer }: R
     [survey],
   );
   const [step, setStep] = useState(0);
+  // Each section is a page of its own: Next / Back opens it at the top.
+  useScrollTopOnChange(step);
   const [localError, setLocalError] = useState<string | null>(null);
   const [missing, setMissing] = useState<Set<string>>(new Set());
 

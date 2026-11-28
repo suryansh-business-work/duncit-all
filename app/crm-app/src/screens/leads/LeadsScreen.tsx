@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { FlatList, ScrollView } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { FlatList, RefreshControl } from 'react-native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import {
   useNavigation,
@@ -9,18 +9,30 @@ import {
   type RouteProp,
 } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Input, Text, XStack, YStack, useTheme } from 'tamagui';
+import { Text, XStack, YStack, useTheme } from 'tamagui';
+import { fireAndForget, logs } from '@duncit/logs';
 
-import { SURFACE } from '@/components/surface';
-import { DuncitButton } from '@/components/DuncitButton';
+import { FilterChips, type ChipOption } from '@/components/mobile/FilterChips';
+import { SearchBar } from '@/components/mobile/SearchBar';
 import { StateView } from '@/components/StateView';
+import { MOBILE } from '@/constants/design';
 import { LEAD_KINDS, isLeadKind, type LeadKind } from '@/features/leads/leadKinds';
-import { useLeadSearch } from '@/features/leads/useLeadSearch';
+import { useLeadSearch, type LeadRow } from '@/features/leads/useLeadSearch';
+import { useScrollTopOnTabEntry } from '@/hooks/useScrollTopOnTabEntry';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AppStackParamList, TabParamList } from '@/navigation/types';
+import { LeadSearchRow } from './LeadSearchRow';
 import { NewLeadPicker } from './NewLeadPicker';
 
-/** Every lead the CRM holds, searchable by name, city, phone or email, filterable by kind. */
+type Filter = 'all' | LeadKind;
+/** Room under the last row so the floating New lead button never covers it. */
+const FAB_CLEARANCE = MOBILE.fab + MOBILE.gutter * 2;
+
+/**
+ * Every lead the CRM holds: search by name, city, phone or email, narrow to a
+ * kind with the chips, call straight from a row, add one from the floating
+ * button. A kind's full list (filters, bulk tools, import) is one tap away.
+ */
 export function LeadsScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -32,109 +44,130 @@ export function LeadsScreen() {
       >
     >();
   const [search, setSearch] = useState('');
-  // The kind lives in the route, so the side menu's per-kind pages and the chips agree.
+  const [pulling, setPulling] = useState(false);
+  // The kind lives in the route, so a deep link, the More tab and the chips agree.
   const kind: LeadKind | null = useRoute<RouteProp<TabParamList, 'Leads'>>().params?.kind ?? null;
-  const setKind = (next: LeadKind | null) => navigation.setParams({ kind: next ?? undefined });
   const leads = useLeadSearch(search, kind, t('crmApp.common.loadFailed'));
+  const listRef = useScrollTopOnTabEntry<FlatList<LeadRow>>();
+  const chips = useMemo<ChipOption<Filter>[]>(
+    () => [
+      { key: 'all', label: t('crmApp.leads.all') },
+      ...LEAD_KINDS.map((k) => ({ key: k, label: t(`crmApp.kind.${k}`) })),
+    ],
+    [t],
+  );
+
+  const open = useCallback(
+    (row: LeadRow) => {
+      if (isLeadKind(row.entity_type))
+        navigation.navigate('LeadDetail', { kind: row.entity_type, id: row.id });
+    },
+    [navigation],
+  );
+  const call = useCallback(
+    (row: LeadRow, to: string) => {
+      if (isLeadKind(row.entity_type))
+        navigation.navigate('Call', {
+          kind: row.entity_type,
+          id: row.id,
+          to,
+          leadName: row.name,
+          contactName: row.name,
+        });
+    },
+    [navigation],
+  );
+  const refresh = async () => {
+    setPulling(true);
+    try {
+      await leads.refresh();
+    } finally {
+      setPulling(false);
+    }
+  };
 
   return (
     <YStack flex={1} backgroundColor="$background">
-      <YStack paddingTop="$4" paddingBottom="$3" gap="$2">
-        <YStack paddingHorizontal="$4" gap="$2">
-          <NewLeadPicker onPick={(k) => navigation.navigate('LeadEditor', { kind: k })} />
-          <Input
+      <YStack paddingTop="$3" paddingBottom="$2" gap="$2.5">
+        <YStack paddingHorizontal="$4">
+          <SearchBar
             value={search}
-            onChangeText={setSearch}
+            onChange={setSearch}
             placeholder={t('crmApp.leads.search')}
-            aria-label={t('crmApp.leads.search')}
-            placeholderTextColor="$muted"
-            borderColor="$inputBorder"
-            autoCorrect={false}
             testID="leads-search"
           />
         </YStack>
-        {/* The chips scroll under the screen edges, starting in line with the content. */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16 }}
-        >
-          <XStack gap="$2" role="radiogroup">
-            <DuncitButton
-              label={t('crmApp.leads.all')}
-              onPress={() => setKind(null)}
-              size="sm"
-              variant={kind ? 'outline' : 'solid'}
-              testID="leads-kind-all"
-            />
-            {LEAD_KINDS.map((k) => (
-              <DuncitButton
-                key={k}
-                label={t(`crmApp.kind.${k}`)}
-                onPress={() => setKind(k)}
-                size="sm"
-                variant={kind === k ? 'solid' : 'outline'}
-                testID={`leads-kind-${k}`}
-              />
-            ))}
-          </XStack>
-        </ScrollView>
-        <YStack paddingHorizontal="$4" gap="$2">
+        <FilterChips
+          options={chips}
+          value={kind ?? 'all'}
+          onChange={(next) => navigation.setParams({ kind: next === 'all' ? undefined : next })}
+          label={t('crmApp.mobile.leadKind')}
+          testID="leads-kind"
+        />
+        <XStack paddingHorizontal="$4" alignItems="center" minHeight={24}>
+          <Text flex={1} color="$muted" fontSize="$2" aria-live="polite">
+            {leads.total > 0 ? t('crmApp.leads.count', { count: leads.total }) : ''}
+          </Text>
           {kind ? (
-            <DuncitButton
-              label={t('crmApp.leadList.openList')}
+            <XStack
+              role="button"
+              aria-label={t('crmApp.leadList.openList')}
               onPress={() => navigation.navigate('LeadList', { kind })}
-              variant="outline"
-              size="sm"
-              icon={<MaterialIcons name="tune" size={18} color={theme.accentText?.val} />}
+              alignItems="center"
+              gap="$1"
+              minHeight={MOBILE.touch}
+              paddingLeft="$2"
               testID="leads-open-list"
-            />
+            >
+              <MaterialIcons name="tune" size={MOBILE.iconSm} color={theme.accentText?.val} />
+              <Text color="$accentText" fontWeight="600" fontSize="$3">
+                {t('crmApp.leadList.openList')}
+              </Text>
+            </XStack>
           ) : null}
-          {leads.total > 0 ? (
-            <Text color="$muted" fontSize="$2" aria-live="polite">
-              {t('crmApp.leads.count', { count: leads.total })}
-            </Text>
-          ) : null}
-        </YStack>
+        </XStack>
       </YStack>
       <FlatList
+        ref={listRef}
         data={leads.rows}
         keyExtractor={(row) => `${row.entity_type}:${row.id}`}
         onEndReached={leads.loadMore}
         onEndReachedThreshold={0.4}
-        refreshing={false}
-        onRefresh={leads.refresh}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24, gap: 8 }}
-        renderItem={({ item }) => (
-          <YStack
-            role="button"
-            aria-label={item.name}
-            onPress={() => {
-              if (isLeadKind(item.entity_type))
-                navigation.navigate('LeadDetail', { kind: item.entity_type, id: item.id });
-            }}
-            {...SURFACE}
-            pressStyle={{ backgroundColor: '$soft' }}
-            testID={`lead-row-${item.id}`}
-          >
-            <Text fontWeight="700">{item.name}</Text>
-            <Text color="$muted" fontSize="$2">
-              {[t(`crmApp.kind.${item.entity_type}`), item.city, item.lead_status]
-                .filter(Boolean)
-                .join(' · ')}
-            </Text>
-          </YStack>
-        )}
+        refreshControl={
+          <RefreshControl
+            refreshing={pulling}
+            onRefresh={() =>
+              fireAndForget(refresh(), logs.mobileApp, 'crm-app/LeadsScreen', 'refresh')
+            }
+            colors={[theme.primary?.val ?? '']}
+            tintColor={theme.accentText?.val}
+          />
+        }
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        initialNumToRender={12}
+        windowSize={7}
+        removeClippedSubviews
+        contentContainerStyle={{
+          paddingHorizontal: MOBILE.gutter,
+          paddingBottom: FAB_CLEARANCE,
+          gap: 8,
+        }}
+        renderItem={({ item }) => <LeadSearchRow row={item} onOpen={open} onCall={call} />}
         ListEmptyComponent={
           <StateView
             loading={leads.loading}
             error={leads.error}
             empty={t('crmApp.leads.empty')}
+            emptyIcon="person-search"
             onRetry={leads.refresh}
           />
         }
-        ListFooterComponent={leads.rows.length > 0 && leads.loading ? <StateView loading /> : null}
+        ListFooterComponent={
+          leads.rows.length > 0 && leads.loading ? <StateView loading inline /> : null
+        }
       />
+      <NewLeadPicker onPick={(k) => navigation.navigate('LeadEditor', { kind: k })} />
     </YStack>
   );
 }

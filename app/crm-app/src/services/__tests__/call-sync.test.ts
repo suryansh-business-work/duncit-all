@@ -29,6 +29,8 @@ jest.mock('@/services/upload', () => ({
   RECORDINGS_FOLDER: 'call-recordings',
   uploadFile: jest.fn(),
 }));
+const mockAudioAccess = jest.fn();
+jest.mock('@/services/permissions', () => ({ hasAudioAccess: () => mockAudioAccess() }));
 jest.mock('@/services/directory-sync', () => ({
   readDirectoryStatus: jest.fn(),
   syncDirectory: jest.fn(),
@@ -76,6 +78,7 @@ beforeEach(() => {
   store.set(STORAGE_KEYS.callCheckpoint, String(START - 1));
   store.set(STORAGE_KEYS.installId, 'install-a');
   useFeaturesStore.setState({ autoLog: true, recordings: true, callerId: true, hydrated: true });
+  mockAudioAccess.mockResolvedValue(true);
   // A directory synced a moment ago: an unknown number is a personal call, not a stale directory.
   (readDirectoryStatus as jest.Mock).mockResolvedValue({ syncedAt: Date.now(), count: 1 });
   mockPhone.lookupNumber.mockImplementation(async (n: string) =>
@@ -108,6 +111,7 @@ it('logs the CRM call, skips the personal one without sending its number, and mo
     skipped: 1,
     refused: 0,
     pendingRecordings: 1,
+    recordingsBlocked: false,
     failed: false,
   });
   expect(request).toHaveBeenCalledTimes(1);
@@ -198,6 +202,40 @@ it('keeps a recording that is not saved yet, and attaches it on a later run', as
   expect((await readSyncStatus()).recordingAt).toEqual(expect.any(Number));
 });
 
+it('holds waiting recordings while the phone hides audio files, and attaches them once access is given', async () => {
+  mockAudioAccess.mockResolvedValue(false);
+  mockPhone.getCallLog.mockResolvedValueOnce([crmCall]).mockResolvedValue([]);
+
+  const blocked = await syncDeviceCalls();
+
+  // Nothing can be found without access, so nothing is looked for, and the call is not aged out.
+  expect(blocked).toMatchObject({ logged: 1, recordingsBlocked: true, pendingRecordings: 1 });
+  expect(mockPhone.findRecordings).not.toHaveBeenCalled();
+  expect((await readQueue()).map((q) => q.logId)).toEqual(['log-1']);
+
+  mockAudioAccess.mockResolvedValue(true);
+  mockPhone.findRecordings.mockResolvedValue([
+    {
+      uri: 'content://3',
+      name: 'Rohit_241124_1000.m4a',
+      sizeBytes: 900,
+      // Indexed long after the call; the recorder finished writing it at hang-up.
+      addedAtMs: START + 5 * 60 * 60 * 1000,
+      modifiedAtMs: START + 95_000,
+      durationMs: 90_000,
+      mimeType: 'audio/mp4',
+      relativePath: 'Recordings/Call/',
+    },
+  ]);
+  mockPhone.copyRecordingToCache.mockResolvedValue('file:///cache/recordings/r.m4a');
+  upload.mockResolvedValue('https://ik.imagekit.io/r.m4a');
+
+  const allowed = await syncDeviceCalls();
+
+  expect(allowed).toMatchObject({ recordings: 1, pendingRecordings: 0, recordingsBlocked: false });
+  expect(await readQueue()).toEqual([]);
+});
+
 it('drops what was waiting when recordings are switched off', async () => {
   mockPhone.getCallLog.mockResolvedValueOnce([crmCall]).mockResolvedValue([]);
   await syncDeviceCalls();
@@ -282,6 +320,7 @@ it('starts logging from now the first time, never from the phone history', async
     skipped: 0,
     refused: 0,
     pendingRecordings: 0,
+    recordingsBlocked: false,
     failed: false,
   });
   expect(mockPhone.getCallLog).not.toHaveBeenCalled();

@@ -1,7 +1,8 @@
-import { forwardRef, type ComponentProps } from 'react';
+import { forwardRef, useCallback, useRef, type ComponentProps } from 'react';
 import type { ScrollView as RNScrollView } from 'react-native';
 import { ScrollView } from 'tamagui';
 
+import { useScreenScroll } from '@/components/ScreenScroll';
 import { useScreenRefreshControl } from './useAppRefreshControl';
 
 type Props = ComponentProps<typeof ScrollView>;
@@ -20,12 +21,27 @@ type Props = ComponentProps<typeof ScrollView>;
  * has no working pull rather than a spinner that does nothing. An explicit
  * `refreshControl` prop still wins, for a surface that has to word the spinner
  * differently.
+ *
+ * A vertical one also joins the screen's scroll registry (`ScreenScroll`), so
+ * a tab the user switches to, or a wizard's next step, opens at the top.
  */
 export const RefreshScrollView = forwardRef<RNScrollView, Props>(
   function RefreshScrollView(props, ref) {
     const screenControl = useScreenRefreshControl();
+    const screenScroll = useScreenScroll();
+    const unregister = useRef<(() => void) | undefined>(undefined);
+    const vertical = !props.horizontal;
+    const attach = useCallback(
+      (view: RNScrollView | null) => {
+        unregister.current?.();
+        unregister.current = view && vertical ? screenScroll?.register(view) : undefined;
+        if (typeof ref === 'function') ref(view);
+        else if (ref) ref.current = view;
+      },
+      [ref, screenScroll, vertical],
+    );
     // A sideways pull is a swipe through a rail, never a refresh of the page.
-    const refreshControl = props.horizontal ? undefined : screenControl;
-    return <ScrollView ref={ref} refreshControl={refreshControl} {...props} />;
+    const refreshControl = vertical ? screenControl : undefined;
+    return <ScrollView ref={attach} refreshControl={refreshControl} {...props} />;
   },
 );

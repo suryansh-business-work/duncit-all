@@ -92,7 +92,9 @@ export function ServicesOfferedScreen() {
             onRetry={list.refresh}
           />
         }
-        ListFooterComponent={list.rows.length > 0 && list.loading ? <StateView loading /> : null}
+        ListFooterComponent={
+          list.rows.length > 0 && list.loading ? <StateView loading inline /> : null
+        }
       />
       {removing ? (
         <ConfirmDialog

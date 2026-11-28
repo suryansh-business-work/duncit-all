@@ -30,6 +30,7 @@ import request from 'supertest';
 import { Types } from 'mongoose';
 import { makeContext } from '@test/harness';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
 import { IgLeadModel } from '../../../igLeads/igLead.model';
 import { MarketingRunModel } from '../../../runs/marketingRun.model';
 import { SocialApiError } from '../../providers/http';
@@ -229,23 +230,42 @@ describe('processMetaWebhook', () => {
 describe('the webhook route', () => {
   const app = express().use('/social', buildSocialOAuthRouter());
   const sign = (body: string, secret = 'app-secret') => `sha256=${createHmac('sha256', secret).update(body).digest('hex')}`;
+  const verify = (token: string) => request(app).get('/social/webhooks/meta').query({ 'hub.mode': 'subscribe', 'hub.verify_token': token, 'hub.challenge': '12345' });
+  const deliver = (body: string, signature: string) =>
+    request(app).post('/social/webhooks/meta').set('content-type', 'application/json').set('x-hub-signature-256', signature).send(body);
 
-  it('echoes the challenge only for one of our verify tokens', async () => {
-    m(getRuntimeEnvValue).mockImplementation(async (key: string) => (key === 'SOCIAL_FACEBOOK_WEBHOOK_VERIFY_TOKEN' ? 'verify-me' : ''));
-    const ok = await request(app).get('/social/webhooks/meta').query({ 'hub.mode': 'subscribe', 'hub.verify_token': 'verify-me', 'hub.challenge': '12345' });
-    expect(ok.status).toBe(200);
-    expect(ok.text).toBe('12345');
-    expect((await request(app).get('/social/webhooks/meta').query({ 'hub.mode': 'subscribe', 'hub.verify_token': 'guess', 'hub.challenge': '1' })).status).toBe(403);
-    expect((await request(app).get('/social/webhooks/meta').query({ 'hub.mode': 'unsubscribe', 'hub.verify_token': 'verify-me' })).status).toBe(403);
-    m(getRuntimeEnvValue).mockResolvedValue('');
-    expect((await request(app).get('/social/webhooks/meta').query({ 'hub.mode': 'subscribe', 'hub.verify_token': '' })).status).toBe(403);
+  // The default Facebook app, a second (non-default) Meta app for another brand's Pages, and one switched off.
+  beforeEach(async () => {
+    await EnvEntryModel.deleteMany({});
+    await EnvEntryModel.create([
+      { name: 'Duncit', category: 'SOCIAL_FACEBOOK', is_default: true, config: { app_id: '1', app_secret: 'app-secret', webhook_verify_token: 'verify-me' } },
+      { name: 'Brand two', category: 'SOCIAL_INSTAGRAM', config: { app_id: '2', app_secret: 'brand-secret', webhook_verify_token: 'brand-token' } },
+      { name: 'Retired', category: 'SOCIAL_FACEBOOK', is_active: false, config: { app_id: '3', app_secret: 'off-secret', webhook_verify_token: 'off-token' } },
+    ]);
   });
 
-  it('refuses an unsigned or wrongly signed delivery, and a signed one that is not JSON', async () => {
+  it('echoes the challenge only for an active Meta app’s verify token, the default or another one', async () => {
+    const ok = await verify('verify-me');
+    expect(ok.status).toBe(200);
+    expect(ok.text).toBe('12345');
+    expect((await verify('brand-token')).text).toBe('12345');
+    expect((await verify('off-token')).status).toBe(403);
+    expect((await verify('guess')).status).toBe(403);
+    expect((await request(app).get('/social/webhooks/meta').query({ 'hub.mode': 'unsubscribe', 'hub.verify_token': 'verify-me' })).status).toBe(403);
+    expect((await verify('')).status).toBe(403);
+  });
+
+  it('refuses an unsigned delivery, one signed by a switched-off or unknown app, and a signed one that is not JSON', async () => {
     const body = JSON.stringify({ object: 'instagram', entry: [] });
     expect((await request(app).post('/social/webhooks/meta').set('content-type', 'application/json').send(body)).status).toBe(401);
-    expect((await request(app).post('/social/webhooks/meta').set('content-type', 'application/json').set('x-hub-signature-256', sign(body, 'other')).send(body)).status).toBe(401);
-    expect((await request(app).post('/social/webhooks/meta').set('content-type', 'application/json').set('x-hub-signature-256', sign('{oops')).send('{oops')).status).toBe(400);
+    expect((await deliver(body, sign(body, 'other'))).status).toBe(401);
+    expect((await deliver(body, sign(body, 'off-secret'))).status).toBe(401);
+    expect((await deliver('{oops', sign('{oops'))).status).toBe(400);
+  });
+
+  it('accepts a delivery signed by the second Meta app a Page was connected through', async () => {
+    const body = JSON.stringify({ object: 'instagram', entry: [] });
+    expect((await deliver(body, sign(body, 'brand-secret'))).status).toBe(200);
   });
 
   it('answers a signed delivery at once and stores what it carried just after', async () => {

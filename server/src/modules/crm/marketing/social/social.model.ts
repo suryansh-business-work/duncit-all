@@ -39,6 +39,10 @@ const accountSchema = new Schema(
     last_error: { type: String, default: '' },
     last_synced_at: { type: Date, default: null, index: true },
     connected_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    // The app (environment entry) the account was connected through. Its
+    // tokens only work with that app's keys, so every later call uses it.
+    // null: connected before apps could be chosen — the category's default.
+    env_entry_id: { type: Schema.Types.ObjectId, ref: 'EnvEntry', default: null },
     // Who answers for the account: the owner gets the expiry reminders and is
     // the one expected to reconnect; the team are the others who look after it.
     owner_user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },

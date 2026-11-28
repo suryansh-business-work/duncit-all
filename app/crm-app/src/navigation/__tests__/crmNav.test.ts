@@ -1,8 +1,8 @@
 import { portalOrigin } from '@/constants/config';
-import { CRM_NAV, findNavKey, navPath, type NavItem } from '../crmNav';
-import { activeNavKey, goTo } from '@/screens/menu/menuRoutes';
+import { CRM_NAV, moreSections, type NavItem } from '../crmNav';
+import { openNavTarget } from '../navTarget';
 
-/** The side menu is the CRM portal's sidebar; these pin its shape and where each item goes. */
+/** The More tab lists the CRM portal's sidebar; these pin its shape and where each item goes. */
 
 const leaves = (items: readonly NavItem[]): NavItem[] =>
   items.flatMap((item) => (item.children ? leaves(item.children) : [item]));
@@ -43,72 +43,79 @@ describe('CRM_NAV — the portal sidebar', () => {
       'COMMUNITY_LEAD',
     ]);
   });
+});
 
-  it('finds an item and the groups on the way to it', () => {
-    expect(findNavKey(CRM_NAV, (t) => t.type === 'options' && t.group === 'AMENITY')).toBe(
+describe('moreSections — the More tab', () => {
+  const sections = moreSections(CRM_NAV);
+
+  it('puts the top-level pages first untitled, then one titled section per portal group', () => {
+    expect(sections.map((section) => section.key)).toEqual([
+      'top',
+      'leads',
+      'tools',
+      'data',
+      'emailTemplates',
+      'aiCallPrompts',
+      'settings',
+    ]);
+    expect(sections[0]?.labelKey).toBeUndefined();
+    expect(sections[0]?.items.map((item) => item.key)).toEqual(['dashboard']);
+    expect(sections[1]?.labelKey).toBe('shell.nav.leads');
+  });
+
+  it('flattens nested groups in order and leaves out pages a bottom tab holds', () => {
+    const keys = sections.flatMap((section) => section.items.map((item) => item.key));
+    expect(keys).not.toContain('reminders');
+    expect(sections.find((section) => section.key === 'data')?.items.map((i) => i.key)).toEqual([
+      'servicesOffered',
       'amenities',
-    );
-    expect(navPath(CRM_NAV, 'amenities')).toEqual(['data', 'venues']);
-    expect(navPath(CRM_NAV, 'dashboard')).toEqual([]);
-    expect(navPath(CRM_NAV, 'nope')).toBeNull();
-    expect(findNavKey(CRM_NAV, () => false)).toBeNull();
-  });
-});
-
-describe('activeNavKey — "you are here"', () => {
-  const tabs = (name: string, params?: object) => ({
-    name: 'Tabs',
-    state: { index: 0, routes: [{ name, params }] },
-  });
-
-  it('marks a page by its screen, a lead page by its kind, and Reminders', () => {
-    expect(activeNavKey({ name: 'EmailTemplates' })).toBe('templates');
-    expect(activeNavKey({ name: 'WhatsAppGenerator' })).toBe('whatsappLeadGenerator');
-    expect(activeNavKey({ name: 'DynamicFields' })).toBe('dynamicFields');
-    expect(activeNavKey({ name: 'LeadQualitySettings' })).toBe('leadQualityScore');
-    expect(activeNavKey({ name: 'LeadList', params: { kind: 'VENUE_LEAD' } })).toBe('venueLeads');
-    expect(activeNavKey({ name: 'CallPrompts' })).toBe('staticContent');
-    expect(activeNavKey(tabs('Leads', { kind: 'HOST_LEAD' }))).toBe('hostLeads');
-    expect(activeNavKey(tabs('Reminders'))).toBe('reminders');
-    expect(activeNavKey({ name: 'Dashboard' })).toBe('dashboard');
-    expect(activeNavKey({ name: 'UserLeads' })).toBe('whatsappLeads');
-    expect(activeNavKey({ name: 'ManagedOptions', params: { group: 'EVENT_SUITABILITY' } })).toBe(
       'eventSuitability',
-    );
+    ]);
+    // Every sidebar page but Reminders is reachable from More.
+    expect(keys).toHaveLength(leaves(CRM_NAV).length - 1);
   });
 
-  it('marks nothing for screens the portal has no page for, or an unfiltered lead list', () => {
-    expect(activeNavKey(undefined)).toBeNull();
-    expect(activeNavKey({ name: 'LeadDetail' })).toBeNull();
-    expect(activeNavKey(tabs('Dialer'))).toBeNull();
-    expect(activeNavKey(tabs('Leads'))).toBeNull();
-    expect(activeNavKey({ name: 'Tabs', state: { routes: [] } })).toBeNull();
+  it('drops a group whose every page is a tab, and has no top section without top pages', () => {
+    const tabOnly: NavItem[] = [
+      {
+        key: 'g',
+        labelKey: 'shell.nav.tools',
+        icon: { set: 'material', name: 'build' },
+        children: [
+          {
+            key: 'r',
+            labelKey: 'shell.nav.reminders',
+            icon: { set: 'material', name: 'event' },
+            target: { type: 'tab', tab: 'Reminders' },
+          },
+        ],
+      },
+    ];
+    expect(moreSections(tabOnly)).toEqual([]);
   });
 });
 
-describe('goTo', () => {
-  const navigation = () => ({ goBack: jest.fn(), navigate: jest.fn() });
+describe('openNavTarget', () => {
   const item = (key: string) => leaves(CRM_NAV).find((page) => page.key === key) as NavItem;
 
-  it('closes the menu, then opens a screen, a tab, a kind of lead or a managed list', () => {
-    const nav = navigation();
-    goTo(nav as never, item('dashboard'));
+  it('opens a screen, a tab, a kind of lead or a managed list', () => {
+    const nav = { navigate: jest.fn() };
+    openNavTarget(nav as never, item('dashboard').target);
     expect(nav.navigate).toHaveBeenLastCalledWith('Dashboard');
-    goTo(nav as never, item('reminders'));
-    expect(nav.goBack).toHaveBeenCalled();
+    openNavTarget(nav as never, item('reminders').target);
     expect(nav.navigate).toHaveBeenLastCalledWith('Tabs', { screen: 'Reminders' });
-    goTo(nav as never, item('creatorLeads'));
+    openNavTarget(nav as never, item('creatorLeads').target);
     expect(nav.navigate).toHaveBeenLastCalledWith('LeadList', { kind: 'CREATOR_LEAD' });
-    goTo(nav as never, item('amenities'));
+    openNavTarget(nav as never, item('amenities').target);
     expect(nav.navigate).toHaveBeenLastCalledWith('ManagedOptions', { group: 'AMENITY' });
-    goTo(nav as never, item('templates'));
+    openNavTarget(nav as never, item('templates').target);
     expect(nav.navigate).toHaveBeenLastCalledWith('EmailTemplates');
   });
 
-  it('does nothing for a group', () => {
-    const nav = navigation();
-    goTo(nav as never, CRM_NAV[1] as NavItem);
-    expect(nav.goBack).not.toHaveBeenCalled();
+  it('does nothing for a group, which has no target', () => {
+    const nav = { navigate: jest.fn() };
+    openNavTarget(nav as never, CRM_NAV[1]?.target);
+    expect(nav.navigate).not.toHaveBeenCalled();
   });
 });
 

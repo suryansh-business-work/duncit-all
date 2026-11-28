@@ -29,6 +29,8 @@ import {
   PERSON_NAME,
   PHONE_INTL,
   PHONE_INTL_PLUS,
+  PHONE_E164,
+  isPhoneE164,
   PHONE_NUMBER,
   PHONE_NUMBER_IN,
   PINCODE,
@@ -179,6 +181,25 @@ describe('EMAIL (hardened)', () => {
     expect(EMAIL.test('@b.com')).toBe(false);
     expect(EMAIL.test('ab.com')).toBe(false);
     expect(EMAIL.test('a@@b.com')).toBe(false);
+  });
+});
+
+describe('PHONE_E164 (strict international number)', () => {
+  it('accepts a + with 7 to 15 digits that do not start with 0', () => {
+    expect(PHONE_E164.test('+14155552671')).toBe(true);
+    expect(PHONE_E164.test('+919876543210')).toBe(true);
+    expect(PHONE_E164.test('+1234567')).toBe(true);
+    expect(PHONE_E164.test('+123456789012345')).toBe(true);
+    expect(isPhoneE164('+447911123456')).toBe(true);
+  });
+
+  it('rejects a missing +, a leading 0, too few or too many digits, and spaces', () => {
+    expect(PHONE_E164.test('14155552671')).toBe(false);
+    expect(PHONE_E164.test('+04155552671')).toBe(false);
+    expect(PHONE_E164.test('+123456')).toBe(false);
+    expect(PHONE_E164.test('+1234567890123456')).toBe(false);
+    expect(PHONE_E164.test('+1 415 555 2671')).toBe(false);
+    expect(isPhoneE164('')).toBe(false);
   });
 });
 

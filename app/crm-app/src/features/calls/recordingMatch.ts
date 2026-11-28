@@ -27,6 +27,20 @@ export function recordingWindow(call: Pick<PlannedCall, 'entry'>): {
   return { fromMs: call.entry.date - CLOCK_SLACK_MS, toMs: end + RECORDING_GRACE_MS };
 }
 
+/**
+ * Whether the file was saved during or just after the call: either when the
+ * media store first indexed it or when the recorder last wrote it. A recorder
+ * whose folder is indexed late has a late "added" time but a modified time at
+ * hang-up, so the modified time is what finds it.
+ */
+export function inRecordingWindow(
+  file: Pick<RecordingFile, 'addedAtMs' | 'modifiedAtMs'>,
+  { fromMs, toMs }: { fromMs: number; toMs: number },
+): boolean {
+  const inside = (ms: number | undefined) => typeof ms === 'number' && ms >= fromMs && ms <= toMs;
+  return inside(file.addedAtMs) || inside(file.modifiedAtMs);
+}
+
 const simplify = (text: string) => text.toLowerCase().replace(/[^a-z0-9]/g, '');
 
 /** How strongly a file looks like this call's recording; 0 means "no sign at all". */
@@ -53,12 +67,12 @@ export function pickRecording(
   files: readonly RecordingFile[],
 ): RecordingFile | null {
   if (call.outcome !== 'COMPLETED') return null;
-  const { fromMs, toMs } = recordingWindow(call);
+  const span = recordingWindow(call);
   let best: RecordingFile | null = null;
   let bestScore = 1;
   for (const file of files) {
     if (file.sizeBytes <= 0 || file.sizeBytes > MAX_RECORDING_BYTES) continue;
-    if (file.addedAtMs < fromMs || file.addedAtMs > toMs) continue;
+    if (!inRecordingWindow(file, span)) continue;
     const score = recordingScore(file, call);
     if (score > bestScore) {
       best = file;

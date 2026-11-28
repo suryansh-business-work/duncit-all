@@ -1,92 +1,94 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ScrollView } from 'react-native';
-import { useFocusEffect, useNavigation, type NavigationProp } from '@react-navigation/native';
-import { Text, XStack, YStack } from 'tamagui';
+import { RefreshControl, ScrollView } from 'react-native';
+import { useNavigation, type NavigationProp } from '@react-navigation/native';
+import { Text, XStack, YStack, useTheme } from 'tamagui';
+import { formatDate } from '@duncit/datetime';
 import { fireAndForget, logs } from '@duncit/logs';
 
 import { Card } from '@/components/Card';
 import { DuncitButton } from '@/components/DuncitButton';
-import { StateView } from '@/components/StateView';
-import { CrmAppRemindersDocument } from '@/graphql/reminders';
-import { todayWindow } from '@/features/reminders/reminderTime';
-import { useGqlQuery } from '@/hooks/useGqlQuery';
+import { QuickAction } from '@/components/mobile/QuickAction';
+import { SURFACE } from '@/components/surface';
+import { MOBILE } from '@/constants/design';
+import { useRemindersCalendar } from '@/features/reminders/useRemindersCalendar';
+import { usePhoneSetup } from '@/hooks/usePhoneSetup';
+import { useScrollTopOnTabEntry } from '@/hooks/useScrollTopOnTabEntry';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AppStackParamList } from '@/navigation/types';
-import { hasPhoneFeatures, readPermissions } from '@/services/permissions';
 import { useAuthStore } from '@/stores/auth.store';
-import { ReminderRow } from '@/screens/reminders/ReminderRow';
+import { HomeCalendar } from './HomeCalendar';
 
-/** Today at a glance: what is due, one tap to the dialer or search, and a nudge until calls are set up. */
+const SCOPE = 'crm-app/HomeScreen';
+
+/**
+ * The day at a glance: quick actions under the thumb (dialer, find a lead, a
+ * follow-up, the dashboard), a nudge until the phone's call features are set
+ * up, and the calendar — today, this week or this month of pending reminders
+ * and lead follow-ups. Pull down to refresh.
+ */
 export function HomeScreen() {
   const { t } = useTranslation();
+  const scrollRef = useScrollTopOnTabEntry<ScrollView>();
+  const theme = useTheme();
   const navigation = useNavigation<NavigationProp<AppStackParamList>>();
   const name = useAuthStore((s) => s.user?.first_name ?? '');
-  const filter = useMemo(() => ({ filter: { ...todayWindow(), status: 'PENDING' as const } }), []);
-  const reminders = useGqlQuery(CrmAppRemindersDocument, filter, {
-    fallbackError: t('crmApp.common.loadFailed'),
-    skip: true,
-  });
-  const { refetch } = reminders;
-  useFocusEffect(
-    useCallback(() => {
-      fireAndForget(refetch(), logs.mobileApp, 'crm-app/HomeScreen', 'refetch');
-    }, [refetch]),
-  );
-  const [phoneReady, setPhoneReady] = useState(true);
+  const calendar = useRemindersCalendar(t, { view: 'day', status: 'PENDING' });
+  const phone = usePhoneSetup();
 
-  useEffect(() => {
-    // An iPhone has no call features to set up, so nothing to nudge about.
-    if (!hasPhoneFeatures()) return;
-    readPermissions()
-      .then((p) => setPhoneReady(p.phone && p.call))
-      .catch(() => setPhoneReady(false));
-  }, []);
-
-  const due = reminders.data?.crmReminders ?? [];
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-      <Text fontSize="$8" fontWeight="800" role="heading">
-        {t('crmApp.home.greeting', { vars: { name } })}
-      </Text>
-      {phoneReady ? null : (
+    <ScrollView
+      ref={scrollRef}
+      contentContainerStyle={{ padding: MOBILE.gutter, gap: 16 }}
+      refreshControl={
+        <RefreshControl
+          refreshing={calendar.loading && calendar.loaded}
+          onRefresh={calendar.refresh}
+          tintColor={theme.accentText?.val}
+        />
+      }
+    >
+      <YStack gap="$1">
+        <Text fontSize="$8" fontWeight="800" role="heading">
+          {t('crmApp.home.greeting', { vars: { name } })}
+        </Text>
+        <Text color="$muted">{formatDate(new Date())}</Text>
+      </YStack>
+      <XStack {...SURFACE} padding="$2" testID="home-actions">
+        <QuickAction
+          icon={{ name: 'dialpad' }}
+          label={t('crmApp.tabs.dialer')}
+          onPress={() => navigation.navigate('Tabs', { screen: 'Dialer' })}
+          testID="home-dialer"
+        />
+        <QuickAction
+          icon={{ name: 'person-search' }}
+          label={t('crmApp.mobile.findLead')}
+          onPress={() => navigation.navigate('Tabs', { screen: 'Leads' })}
+          testID="home-leads"
+        />
+        <QuickAction
+          icon={{ name: 'alarm-add' }}
+          label={t('crmApp.mobile.followUp')}
+          onPress={() => navigation.navigate('AddReminder', {})}
+          testID="home-add-reminder"
+        />
+        <QuickAction
+          icon={{ name: 'insights' }}
+          label={t('shell.nav.dashboard')}
+          onPress={() => navigation.navigate('Dashboard')}
+          testID="home-dashboard"
+        />
+      </XStack>
+      {phone.ready ? null : (
         <Card title={t('crmApp.home.setupTitle')} testID="home-setup">
           <Text color="$muted">{t('crmApp.home.setupBody')}</Text>
           <DuncitButton
             label={t('crmApp.home.setupAction')}
-            onPress={() => navigation.navigate('Tabs', { screen: 'Settings' })}
+            onPress={() => fireAndForget(phone.setUp(), logs.mobileApp, SCOPE, 'setUp')}
+            testID="home-set-up"
           />
         </Card>
       )}
-      <XStack gap="$3">
-        <YStack flex={1}>
-          <DuncitButton
-            label={t('crmApp.home.openDialer')}
-            onPress={() => navigation.navigate('Tabs', { screen: 'Dialer' })}
-            fullWidth
-            testID="home-dialer"
-          />
-        </YStack>
-        <YStack flex={1}>
-          <DuncitButton
-            label={t('crmApp.home.searchLeads')}
-            onPress={() => navigation.navigate('Tabs', { screen: 'Leads' })}
-            variant="outline"
-            fullWidth
-            testID="home-leads"
-          />
-        </YStack>
-      </XStack>
-      <Card title={t('crmApp.home.dueToday')}>
-        <StateView
-          loading={!reminders.data && !reminders.error}
-          error={reminders.error}
-          empty={reminders.data && due.length === 0 ? t('crmApp.home.nothingDue') : null}
-          onRetry={reminders.refetch}
-        />
-        {due.map((r) => (
-          <ReminderRow key={r.id} reminder={r} onChanged={reminders.refetch} />
-        ))}
-      </Card>
+      <HomeCalendar calendar={calendar} />
     </ScrollView>
   );
 }

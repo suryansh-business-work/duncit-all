@@ -1,21 +1,13 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useLocation, useNavigationType } from 'react-router';
+import { scrollPageTo, shellPane } from './pageScroll';
 
 /** How far down each visited page was left, by history entry key. */
 const savedOffsets = new Map<string, number>();
 
-/** The shell's scroll pane when signed in; signed out, the window scrolls. */
-const shellPane = () => document.getElementById('main-scroll');
-
 function currentOffset(): number {
   const paneTop = shellPane()?.scrollTop ?? 0;
   return paneTop > 0 ? paneTop : globalThis.scrollY;
-}
-
-function scrollTo(top: number) {
-  const pane = shellPane();
-  if (pane) pane.scrollTop = top;
-  globalThis.scrollTo(0, top);
 }
 
 /**
@@ -48,11 +40,11 @@ export default function RouteScroll() {
     if (pathname === lastPathname.current) return undefined;
     lastPathname.current = pathname;
     const target = navigationType === 'POP' ? (savedOffsets.get(key) ?? 0) : 0;
-    scrollTo(target);
+    scrollPageTo(target);
     if (target === 0) return undefined;
     // A page still growing after its first layout (images, measured rails) may
     // not reach a deep offset yet — try once more after it has painted.
-    const frame = globalThis.requestAnimationFrame(() => scrollTo(target));
+    const frame = globalThis.requestAnimationFrame(() => scrollPageTo(target));
     return () => globalThis.cancelAnimationFrame(frame);
   }, [key, pathname, navigationType]);
 

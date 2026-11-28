@@ -29,10 +29,11 @@ export interface ConnectStart {
   challenge: string;
 }
 
-export function startConnect(provider: SocialProvider, userId: string, returnTo: SocialConnectReturn): ConnectStart {
+/** `appId` is the environment entry the marketer chose to connect through; '' means the category's default. */
+export function startConnect(provider: SocialProvider, userId: string, returnTo: SocialConnectReturn, appId = ''): ConnectStart {
   const nonce = randomUUID();
   return {
-    state: stateLink.sign(`${provider}.${userId}.${nonce}.${returnTo}`),
+    state: stateLink.sign(`${provider}.${userId}.${nonce}.${returnTo}.${appId}`),
     challenge: challengeFor(verifierFor(nonce)),
   };
 }
@@ -42,13 +43,15 @@ export interface ConnectState {
   userId: string;
   verifier: string;
   returnTo: SocialConnectReturn;
+  /** The chosen app's entry id, or '' for the default (and for a link signed before apps could be chosen). */
+  appId: string;
 }
 
 /** The state's contents, or null when it is forged, stale or malformed. */
 export function readConnectState(state: string): ConnectState | null {
   const payload = stateLink.verify(state);
   if (!payload) return null;
-  const [provider, userId, nonce, returnTo] = payload.split('.');
+  const [provider, userId, nonce, returnTo, appId = ''] = payload.split('.');
   if (!isProvider(provider) || !userId || !nonce || !isReturn(returnTo)) return null;
-  return { provider, userId, verifier: verifierFor(nonce), returnTo };
+  return { provider, userId, verifier: verifierFor(nonce), returnTo, appId };
 }

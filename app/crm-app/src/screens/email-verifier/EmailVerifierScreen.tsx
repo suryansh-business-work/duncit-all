@@ -79,9 +79,6 @@ export function EmailVerifierScreen() {
       ListHeaderComponent={
         <YStack gap="$3" marginBottom="$2">
           <Card title={t('crm.emailVerifier.singleTitle')}>
-            <Text color="$muted" fontSize="$2">
-              {t('crm.emailVerifier.singleSubtitle')}
-            </Text>
             <EmailVerifyForm onSubmit={check} />
             {error ? (
               <Text color="$danger" role="alert" testID="email-verify-error">
@@ -130,7 +127,7 @@ export function EmailVerifierScreen() {
         />
       }
       ListFooterComponent={
-        history.rows.length > 0 && history.loading ? <StateView loading /> : null
+        history.rows.length > 0 && history.loading ? <StateView loading inline /> : null
       }
     />
   );

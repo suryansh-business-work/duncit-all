@@ -31,6 +31,8 @@ export interface RecordingFile {
   name: string;
   sizeBytes: number;
   addedAtMs: number;
+  /** When the recorder last wrote the file; missing from app builds before it was read. */
+  modifiedAtMs?: number;
   durationMs: number;
   mimeType: string;
   relativePath: string;

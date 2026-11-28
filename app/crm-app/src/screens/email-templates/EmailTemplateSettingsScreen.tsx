@@ -6,7 +6,7 @@ import {
   type NavigationProp,
   type RouteProp,
 } from '@react-navigation/native';
-import { Text, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
 import { StateView } from '@/components/StateView';
 import { TabBar } from '@/components/TabBar';
@@ -51,7 +51,6 @@ export function EmailTemplateSettingsScreen() {
         contentContainerStyle={{ padding: 16, gap: 12 }}
         keyboardShouldPersistTaps="handled"
       >
-        <Text color="$muted">{t('crm.emailSettings.subtitle')}</Text>
         <TabBar tabs={tabs} active={tab} onChange={setTab} testID="email-settings-tab" />
         {body()}
       </ScrollView>

@@ -13,7 +13,28 @@ import type { NestedCatalogue } from '../catalogue';
  */
 export const CRM_APP_BUNDLE: NestedCatalogue = {
   crmApp: {
-    tabs: { home: 'Home', leads: 'Leads', dialer: 'Dialer', reminders: 'Reminders', settings: 'Settings' },
+    tabs: {
+      home: 'Home',
+      leads: 'Leads',
+      dialer: 'Dialer',
+      reminders: 'Reminders',
+      more: 'More',
+      // The app settings screen's title, opened from More (no longer a tab).
+      settings: 'Settings',
+    },
+    // The phone's own words for its controls: search, filters, quick actions and row menus.
+    mobile: {
+      clearSearch: 'Clear search',
+      leadKind: 'Lead type',
+      moreActionsFor: 'More actions for {name}',
+      openLead: 'Open lead',
+      note: 'Note',
+      followUp: 'Follow-up',
+      findLead: 'Find lead',
+      pageTools: 'More options',
+      // The empty fields of a lead's overview card, named on one line instead of a row of dashes each.
+      notFilled: 'Not filled: {fields}',
+    },
     common: {
       loading: 'Loading…',
       loadFailed: 'This could not be loaded.',
@@ -94,9 +115,34 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
       score: 'Score {score} · {label}',
       category: 'Category',
     },
-    menu: {
-      open: 'Open menu',
-      close: 'Close menu',
+    // Settings › Twilio: the CRM call line's keys, edited in the app behind the Tech portal's unlock.
+    twilio: {
+      title: 'Twilio',
+      editSettings: 'Twilio settings',
+      unlockBody: 'Twilio keys are protected. Email a code to the root admin ({sentTo}) and enter it to edit them in this session.',
+      sendCode: 'Email the code',
+      resendCode: 'Send a new code',
+      codeSent: 'A code was sent to {sentTo}.',
+      code: 'Code',
+      codeInvalid: 'Enter the 6-digit code.',
+      unlock: 'Unlock',
+      accountSidHint: 'Starts with AC, from the Twilio console.',
+      tokenSaved: 'A token is saved. Leave this blank to keep it.',
+      phoneHint: 'The caller ID calls are made from, as + and country code, e.g. +14155552671.',
+      agentNumber: 'Agent phone number (optional)',
+      agentHint: 'Rung for your side of a CRM call. Leave blank to use the signed-in person’s profile phone.',
+      required: 'This is required.',
+      phoneInvalid: 'Enter the number as + and country code, e.g. +14155552671.',
+      save: 'Save',
+      saved: 'Twilio settings saved.',
+      test: 'Test connection',
+    },
+
+    // The More tab: every other CRM page, the app's settings and sign-out.
+    more: {
+      app: 'App',
+      settingsHint: 'Calls, caller ID, permissions and sync',
+      signOutConfirm: 'You will need your email and password to sign in again.',
     },
     otp: {
       or: 'or',
@@ -134,6 +180,8 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
     },
     home: {
       greeting: 'Hello, {name}',
+      // Home's calendar section: today, this week or this month of reminders and follow-ups.
+      calendar: 'Your calendar',
       dueToday: 'Due today',
       nothingDue: 'Nothing due today.',
       openDialer: 'Open dialer',
@@ -366,6 +414,8 @@ export const CRM_APP_BUNDLE: NestedCatalogue = {
       recordingFolder: 'Call recordings on this phone',
       noRecordings: 'None found',
       noRecordingsHint: 'No call recordings in the last 30 days. Turn on automatic call recording in your Phone app’s settings, and allow Call recordings (audio files) above.',
+      audioNeeded: 'Audio access needed',
+      audioNeededHint: 'Android hides the phone’s call recordings from Duncit CRM until you allow access to music and audio. Allow it, and calls waiting for their recording upload on the next sync.',
       recordingsFound: '{count} call recordings found on this {maker} phone in the last 30 days.',
       openSettings: 'Open settings',
       roleUnavailable: 'This phone cannot make Duncit CRM the call redirecting app.',

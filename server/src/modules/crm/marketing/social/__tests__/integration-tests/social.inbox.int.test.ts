@@ -274,7 +274,8 @@ describe('replyToComment', () => {
       'Yes — beginners welcome!',
       CREDS
     );
-    expect(socialCredentials).toHaveBeenCalledWith('LINKEDIN');
+    // An account connected through the default app carries no app id, so the default answers.
+    expect(socialCredentials).toHaveBeenCalledWith('LINKEDIN', null);
     expect(result).toMatchObject({ id: t.id, status: 'REPLIED', review_status: 'REVIEWED' });
     expect(result.replies).toEqual([
       expect.objectContaining({ by_user_id: user.id, by_name: 'Asha Staff', text: 'Yes — beginners welcome!', external_id: 'urn:li:comment:reply', ok: true, error: '' }),

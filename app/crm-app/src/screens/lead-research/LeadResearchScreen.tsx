@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { XStack, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
-import { DuncitButton } from '@/components/DuncitButton';
+import { TabBar } from '@/components/TabBar';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Discoveries } from './Discoveries';
 import { ReviewQueue } from './ReviewQueue';
@@ -19,28 +19,17 @@ export function LeadResearchScreen() {
   const [jobId, setJobId] = useState<string | null>(null);
   return (
     <YStack flex={1} backgroundColor="$background">
-      <XStack gap="$2" padding="$3" paddingBottom="$1" role="tablist">
-        <YStack flex={1}>
-          <DuncitButton
-            label={t('crm.leadResearch.tabQueue')}
-            onPress={() => setTab('queue')}
-            variant={tab === 'queue' ? 'solid' : 'outline'}
-            size="sm"
-            fullWidth
-            testID="research-tab-queue"
-          />
-        </YStack>
-        <YStack flex={1}>
-          <DuncitButton
-            label={t('crm.leadResearch.tabDiscoveries')}
-            onPress={() => setTab('discoveries')}
-            variant={tab === 'discoveries' ? 'solid' : 'outline'}
-            size="sm"
-            fullWidth
-            testID="research-tab-discoveries"
-          />
-        </YStack>
-      </XStack>
+      <YStack paddingHorizontal="$4">
+        <TabBar
+          tabs={[
+            { key: 'queue', label: t('crm.leadResearch.tabQueue') },
+            { key: 'discoveries', label: t('crm.leadResearch.tabDiscoveries') },
+          ]}
+          active={tab}
+          onChange={(key) => setTab(key === 'discoveries' ? 'discoveries' : 'queue')}
+          testID="research-tab"
+        />
+      </YStack>
       {tab === 'queue' ? (
         <ReviewQueue jobId={jobId} onClearJob={() => setJobId(null)} />
       ) : (

@@ -44,8 +44,12 @@ const serve = (overrides: Map<unknown, Handler> = new Map()) =>
     throw new Error('unexpected operation');
   });
 const callsTo = (doc: unknown) => request.mock.calls.filter(([d]) => d === doc);
-const toggle = (id: string, on: boolean) =>
-  act(async () => fireEvent(screen.getByTestId(id), 'onCheckedChange', on));
+/** Flip a switch and check it landed where the step expects. */
+const toggle = async (id: string, on: boolean) => {
+  await act(async () => fireEvent.press(screen.getByTestId(id)));
+  if (on) expect(screen.getByTestId(id)).toBeChecked();
+  else expect(screen.getByTestId(id)).not.toBeChecked();
+};
 const addTitle = (title: string) => {
   fireEvent.changeText(screen.getByTestId('service-titles-input'), title);
   fireEvent.press(screen.getByTestId('service-titles-add'));

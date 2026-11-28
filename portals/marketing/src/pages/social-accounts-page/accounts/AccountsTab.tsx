@@ -40,6 +40,7 @@ export default function AccountsTab({ providers, accounts, onChanged, returnTo, 
             key={provider}
             provider={provider}
             configured={status.get(provider)?.configured ?? false}
+            apps={status.get(provider)?.apps ?? []}
             settingsTo={integrationsPath(status.get(provider)?.category)}
             accounts={accounts.filter((account) => account.provider === provider)}
             onConnect={actions.connect}

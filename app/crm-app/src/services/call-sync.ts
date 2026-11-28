@@ -11,10 +11,12 @@ import { CrmAppLogDeviceCallDocument } from '@/graphql/comms';
 import { callKey, planCall } from '@/features/calls/callPlan';
 import { readDirectoryStatus, syncDirectory } from '@/services/directory-sync';
 import { gqlRequest } from '@/services/graphql.client';
+import { hasAudioAccess } from '@/services/permissions';
 import {
   attachQueuedRecordings,
   clearRecordingQueue,
   queueRecording,
+  readQueue,
 } from '@/services/recording-queue';
 import { readValue, STORAGE_KEYS, writeValue } from '@/services/secure-storage';
 import {
@@ -56,6 +58,11 @@ export interface CallSyncResult {
   refused: number;
   /** Logged calls still waiting for their recording. */
   pendingRecordings: number;
+  /**
+   * Recordings are on but the app may not see audio files: nothing can be
+   * found, so the waiting calls are kept (not aged out) until access is given.
+   */
+  recordingsBlocked: boolean;
   failed: boolean;
 }
 
@@ -162,6 +169,7 @@ async function run(): Promise<CallSyncResult> {
     skipped: 0,
     refused: 0,
     pendingRecordings: 0,
+    recordingsBlocked: false,
     failed: false,
   };
   const { autoLog, recordings } = useFeaturesStore.getState();
@@ -176,6 +184,13 @@ async function run(): Promise<CallSyncResult> {
   if (!recordings) {
     // Switched off: what was waiting is never uploaded.
     await clearRecordingQueue();
+    return result;
+  }
+  // Without audio access the media store answers with nothing, which used to
+  // age every waiting call out of the queue unseen: hold them instead.
+  if (!(await hasAudioAccess())) {
+    result.recordingsBlocked = true;
+    result.pendingRecordings = (await readQueue()).length;
     return result;
   }
   const queue = await attachQueuedRecordings(phone);

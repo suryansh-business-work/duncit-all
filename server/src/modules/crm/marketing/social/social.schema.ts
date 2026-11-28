@@ -58,12 +58,22 @@ export const socialTypeDefs = gql`
     REVIEWED
   }
 
-  "Whether this network's app is set up under Marketing › Settings › Integrations (one entry per network)."
+  "One app a network can be connected through: an active entry with both keys, set up in Tech › Environment Variables or Marketing › Settings › Integrations. Only its id and name, never a key."
+  type SocialApp {
+    id: ID!
+    name: String!
+    "The category's default app, the one a Connect without an app uses."
+    is_default: Boolean!
+  }
+
+  "Whether this network has at least one app set up under Marketing › Settings › Integrations, and every app it can connect through."
   type SocialProviderStatus {
     provider: SocialProvider!
     configured: Boolean!
     "The environment category the app's entry lives in, for the settings page's link."
     category: String!
+    "Every active, complete app of this network, the default first."
+    apps: [SocialApp!]!
   }
 
   type SocialAccount {
@@ -94,6 +104,8 @@ export const socialTypeDefs = gql`
     health_checked_at: String
     health_ok: Boolean
     health_message: String
+    "The app (environment entry) the account was connected through and keeps using; null when it was connected through the default before apps could be chosen."
+    app_id: ID
   }
 
   type SocialPost {
@@ -279,7 +291,12 @@ export const socialTypeDefs = gql`
 
   extend type Mutation {
     "The provider's consent screen URL. The browser goes there; the provider comes back to <server>/social/callback, which sends it on to the return_to page."
-    socialConnectUrl(provider: SocialProvider!, return_to: SocialConnectReturn!): String!
+    socialConnectUrl(
+      provider: SocialProvider!
+      return_to: SocialConnectReturn!
+      "Which of the network's apps to connect through (SocialProviderStatus.apps); omitted means the default app."
+      app_id: ID
+    ): String!
     "Read the account now instead of waiting for the scheduler."
     syncSocialAccount(id: ID!): SocialAccount!
     "Remove the account, its tokens and everything read from it; the network is asked to forget the token too."

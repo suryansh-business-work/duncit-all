@@ -13,7 +13,7 @@ import { ExploreScreen } from '@/screens/ExploreScreen';
 import { HomeScreen } from '@/screens/HomeScreen';
 import { VenuesScreen } from '@/screens/VenuesScreen';
 import type { TabParamList } from '@/navigation/tabs';
-import { screenLayout } from '@/navigation/screenLayout';
+import { tabScreenLayout } from '@/navigation/screenLayout';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
@@ -29,7 +29,7 @@ export function MainTabs() {
     <>
       <Tab.Navigator
         screenOptions={{ headerShown: false, animation: 'none' }}
-        screenLayout={screenLayout}
+        screenLayout={tabScreenLayout}
         tabBar={renderTabBar}
       >
         <Tab.Screen name="HomeTab" component={HomeScreen} />

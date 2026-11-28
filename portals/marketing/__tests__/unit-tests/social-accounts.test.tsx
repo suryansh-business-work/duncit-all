@@ -31,7 +31,7 @@ import AccountRow from '../../src/pages/social-accounts-page/accounts/AccountRow
 import ProviderCard from '../../src/pages/social-accounts-page/accounts/ProviderCard';
 import AccountsTab from '../../src/pages/social-accounts-page/accounts/AccountsTab';
 import AiPoints from '../../src/pages/social-accounts-page/AiPoints';
-import type { SocialAccount, SocialProviderStatus } from '../../src/pages/social-accounts-page/queries';
+import type { SocialAccount, SocialApp, SocialProviderStatus } from '../../src/pages/social-accounts-page/queries';
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -204,6 +204,19 @@ describe('AccountRow', () => {
     expect(handlers.onDisconnect).toHaveBeenCalledWith(account);
   });
 
+  it('names the app it posts through only when told to, and warns when that app is gone', () => {
+    const { rerender } = renderWithProviders(<AccountRow account={makeSocialAccount()} {...rowHandlers()} />);
+    expect(screen.queryByTestId('social-app-line-sa1')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('social-app-missing-sa1')).not.toBeInTheDocument();
+
+    rerender(<AccountRow account={makeSocialAccount()} app={{ name: 'Brand two', missing: false }} {...rowHandlers()} />);
+    expect(screen.getByTestId('social-app-line-sa1')).toHaveTextContent('App: Brand two');
+
+    rerender(<AccountRow account={makeSocialAccount()} app={{ name: '', missing: true }} {...rowHandlers()} />);
+    expect(screen.queryByTestId('social-app-line-sa1')).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('The app this account was connected through was removed or switched off.');
+  });
+
   it('shows the account avatar when there is one', () => {
     const { container } = renderWithProviders(
       <AccountRow account={makeSocialAccount({ avatar_url: 'https://cdn.example/a.png' })} {...rowHandlers()} />,
@@ -211,6 +224,9 @@ describe('AccountRow', () => {
     expect(container.querySelector('img')).toHaveAttribute('src', 'https://cdn.example/a.png');
   });
 });
+
+const MAIN_APP: SocialApp = { id: 'main-app', name: 'Duncit', is_default: true };
+const BRAND_APP: SocialApp = { id: 'brand-app', name: 'Brand two', is_default: false };
 
 const cardHandlers = () => ({
   onConnect: vi.fn().mockResolvedValue(undefined),
@@ -225,6 +241,7 @@ describe('ProviderCard', () => {
       <ProviderCard
         provider="LINKEDIN"
         configured={false}
+        apps={[]}
         accounts={[]}
         settingsTo="/settings/integrations?selectedtab=SOCIAL_LINKEDIN"
         {...cardHandlers()}
@@ -244,7 +261,7 @@ describe('ProviderCard', () => {
   });
 
   it('leaves the link out when no settings tab is known for the network', () => {
-    renderWithProviders(<ProviderCard provider="THREADS" configured={false} accounts={[]} {...cardHandlers()} />);
+    renderWithProviders(<ProviderCard provider="THREADS" configured={false} apps={[]} accounts={[]} {...cardHandlers()} />);
     expect(screen.getByTestId('social-not-set-up-threads')).toHaveTextContent(
       'Not set up yet — add this network’s app under Settings › Integrations.',
     );
@@ -253,7 +270,7 @@ describe('ProviderCard', () => {
 
   it('invites the first connection of a configured network', () => {
     const handlers = cardHandlers();
-    renderWithProviders(<ProviderCard provider="INSTAGRAM" configured accounts={[]} {...handlers} />);
+    renderWithProviders(<ProviderCard provider="INSTAGRAM" configured apps={[MAIN_APP]} accounts={[]} {...handlers} />);
     const card = screen.getByTestId('social-provider-instagram');
     expect(within(card).getByTestId('InstagramIcon')).toBeInTheDocument();
     expect(within(card).queryByTestId('FacebookIcon')).not.toBeInTheDocument();
@@ -263,12 +280,15 @@ describe('ProviderCard', () => {
     const connect = screen.getByTestId('social-connect-instagram');
     expect(connect).toHaveTextContent(/^Connect$/);
     expect(connect).toHaveClass('MuiButton-contained');
+    // One app: straight to the consent screen through it, no menu to pick from.
+    expect(connect).not.toHaveAttribute('aria-haspopup');
     fireEvent.click(connect);
-    expect(handlers.onConnect).toHaveBeenCalledWith('INSTAGRAM');
+    expect(handlers.onConnect).toHaveBeenCalledWith('INSTAGRAM', 'main-app');
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
   it('draws the Threads mark for a Threads profile', () => {
-    renderWithProviders(<ProviderCard provider="THREADS" configured accounts={[]} {...cardHandlers()} />);
+    renderWithProviders(<ProviderCard provider="THREADS" configured apps={[MAIN_APP]} accounts={[]} {...cardHandlers()} />);
     expect(within(screen.getByTestId('social-provider-threads')).getByTestId('AlternateEmailIcon')).toBeInTheDocument();
   });
 
@@ -276,14 +296,17 @@ describe('ProviderCard', () => {
     const handlers = cardHandlers();
     const live = makeSocialAccount({ id: 'x1', provider: 'X', platform: 'X', name: 'Duncit X' });
     const expired = makeSocialAccount({ id: 'x2', provider: 'X', platform: 'X', name: 'Old X', status: 'EXPIRED' });
-    renderWithProviders(<ProviderCard provider="X" configured accounts={[live, expired]} {...handlers} />);
+    renderWithProviders(<ProviderCard provider="X" configured apps={[MAIN_APP]} accounts={[live, expired]} {...handlers} />);
     const connect = screen.getByTestId('social-connect-x');
     expect(connect).toHaveTextContent('Connect another');
     expect(connect).toHaveClass('MuiButton-outlined');
     expect(screen.queryByText('No account connected yet.')).not.toBeInTheDocument();
     expect(screen.getByTestId('social-account-x1')).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('social-reconnect-x2'));
-    expect(handlers.onConnect).toHaveBeenCalledWith('X');
+    // Connected through the default before apps could be chosen: no app, so the default answers.
+    expect(handlers.onConnect).toHaveBeenCalledWith('X', null);
+    // One app on the network: no row needs to say which.
+    expect(screen.queryByTestId('social-app-line-x1')).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('social-sync-x1'));
     expect(handlers.onSync).toHaveBeenCalledWith(live);
     fireEvent.click(screen.getByTestId('social-owner-x1'));
@@ -294,20 +317,60 @@ describe('ProviderCard', () => {
 
   it('still lists accounts a network brought in before its app was removed', () => {
     renderWithProviders(
-      <ProviderCard provider="LINKEDIN" configured={false} accounts={[makeSocialAccount()]} {...cardHandlers()} />,
+      <ProviderCard provider="LINKEDIN" configured={false} apps={[]} accounts={[makeSocialAccount()]} {...cardHandlers()} />,
     );
     expect(screen.getByTestId('social-not-set-up-linkedin')).toBeInTheDocument();
     expect(screen.getByTestId('social-account-sa1')).toBeInTheDocument();
   });
+
+  it('asks which app to connect through when the network has several, marking the default', () => {
+    const handlers = cardHandlers();
+    renderWithProviders(<ProviderCard provider="FACEBOOK" configured apps={[MAIN_APP, BRAND_APP]} accounts={[]} {...handlers} />);
+    const connect = screen.getByTestId('social-connect-facebook');
+    expect(connect).toHaveAttribute('aria-haspopup', 'menu');
+    fireEvent.click(connect);
+    expect(handlers.onConnect).not.toHaveBeenCalled();
+    const menu = screen.getByRole('menu', { name: 'Connect through which app' });
+    const items = within(menu).getAllByRole('menuitem');
+    expect(items.map((item) => item.textContent)).toEqual(['Connect via DuncitDefault', 'Connect via Brand two']);
+    fireEvent.click(screen.getByTestId('social-connect-facebook-app-brand-app'));
+    expect(handlers.onConnect).toHaveBeenCalledWith('FACEBOOK', 'brand-app');
+  });
+
+  it('names each account’s app once there are several, and reconnects through the account’s own app', () => {
+    const handlers = cardHandlers();
+    const onBrand = makeSocialAccount({ id: 'f1', provider: 'FACEBOOK', platform: 'FACEBOOK', app_id: 'brand-app', status: 'EXPIRED' });
+    const onDefault = makeSocialAccount({ id: 'f2', provider: 'FACEBOOK', platform: 'FACEBOOK', app_id: null });
+    renderWithProviders(
+      <ProviderCard provider="FACEBOOK" configured apps={[MAIN_APP, BRAND_APP]} accounts={[onBrand, onDefault]} {...handlers} />,
+    );
+    expect(screen.getByTestId('social-app-line-f1')).toHaveTextContent('App: Brand two');
+    // No app stored: it was connected through the default.
+    expect(screen.getByTestId('social-app-line-f2')).toHaveTextContent('App: Duncit');
+    fireEvent.click(screen.getByTestId('social-reconnect-f1'));
+    expect(handlers.onConnect).toHaveBeenCalledWith('FACEBOOK', 'brand-app');
+  });
+
+  it('warns on an account whose app was removed, even with one app left', () => {
+    const gone = makeSocialAccount({ id: 'g1', app_id: 'deleted-app' });
+    renderWithProviders(<ProviderCard provider="LINKEDIN" configured apps={[MAIN_APP]} accounts={[gone]} {...cardHandlers()} />);
+    expect(screen.getByTestId('social-app-missing-g1')).toBeInTheDocument();
+    expect(screen.queryByTestId('social-app-line-g1')).not.toBeInTheDocument();
+  });
+
+  it('offers no Connect button when the network reports no usable app', () => {
+    renderWithProviders(<ProviderCard provider="X" configured apps={[]} accounts={[]} {...cardHandlers()} />);
+    expect(screen.queryByTestId('social-connect-x')).not.toBeInTheDocument();
+  });
 });
 
 const PROVIDER_STATUS: SocialProviderStatus[] = [
-  { provider: 'INSTAGRAM', configured: false, category: 'SOCIAL_INSTAGRAM' },
-  { provider: 'FACEBOOK', configured: false, category: 'SOCIAL_FACEBOOK' },
-  { provider: 'THREADS', configured: false, category: 'SOCIAL_THREADS' },
-  { provider: 'YOUTUBE', configured: false, category: 'SOCIAL_YOUTUBE' },
-  { provider: 'LINKEDIN', configured: true, category: 'SOCIAL_LINKEDIN' },
-  { provider: 'X', configured: true, category: 'SOCIAL_X' },
+  { provider: 'INSTAGRAM', configured: false, category: 'SOCIAL_INSTAGRAM', apps: [] },
+  { provider: 'FACEBOOK', configured: false, category: 'SOCIAL_FACEBOOK', apps: [] },
+  { provider: 'THREADS', configured: false, category: 'SOCIAL_THREADS', apps: [] },
+  { provider: 'YOUTUBE', configured: false, category: 'SOCIAL_YOUTUBE', apps: [] },
+  { provider: 'LINKEDIN', configured: true, category: 'SOCIAL_LINKEDIN', apps: [{ id: 'li-app', name: 'Duncit LinkedIn', is_default: true }] },
+  { provider: 'X', configured: true, category: 'SOCIAL_X', apps: [{ id: 'x-app', name: 'Duncit X', is_default: true }] },
 ];
 
 const renderTab = (accounts: SocialAccount[], mocks: MockedResponse[] = []) => {
@@ -359,7 +422,7 @@ describe('AccountsTab', () => {
     it('sends the marketer to the consent screen the server returns', async () => {
       const assign = vi.fn();
       vi.spyOn(globalThis, 'location', 'get').mockReturnValue({ assign } as unknown as Location);
-      renderTab([], [socialConnectUrlMock('LINKEDIN', 'ACCOUNTS', 'https://www.linkedin.com/oauth/v2/authorization?x=1')]);
+      renderTab([], [socialConnectUrlMock('LINKEDIN', 'ACCOUNTS', 'https://www.linkedin.com/oauth/v2/authorization?x=1', 'li-app')]);
       fireEvent.click(screen.getByTestId('social-connect-linkedin'));
       await waitFor(() => expect(assign).toHaveBeenCalledWith('https://www.linkedin.com/oauth/v2/authorization?x=1'));
       expect(dialogsMock.notify).not.toHaveBeenCalled();
@@ -368,7 +431,7 @@ describe('AccountsTab', () => {
     it('stays put when the server returns no URL', async () => {
       const assign = vi.fn();
       vi.spyOn(globalThis, 'location', 'get').mockReturnValue({ assign } as unknown as Location);
-      const mock = socialConnectUrlMock('X', 'ACCOUNTS', null);
+      const mock = socialConnectUrlMock('X', 'ACCOUNTS', null, 'x-app');
       const resultFn = vi.fn(() => ({ data: { socialConnectUrl: null } }));
       renderTab([], [{ ...mock, result: resultFn }]);
       fireEvent.click(screen.getByTestId('social-connect-x'));
@@ -379,7 +442,7 @@ describe('AccountsTab', () => {
     });
 
     it('reports a refused connection', async () => {
-      renderTab([], [socialConnectUrlErrorMock('LINKEDIN', 'ACCOUNTS', 'LinkedIn app is misconfigured')]);
+      renderTab([], [socialConnectUrlErrorMock('LINKEDIN', 'ACCOUNTS', 'LinkedIn app is misconfigured', 'li-app')]);
       fireEvent.click(screen.getByTestId('social-connect-linkedin'));
       await waitFor(() => expect(dialogsMock.notify).toHaveBeenCalledWith('LinkedIn app is misconfigured', 'error'));
     });

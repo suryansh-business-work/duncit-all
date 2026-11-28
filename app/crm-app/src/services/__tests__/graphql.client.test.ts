@@ -57,6 +57,15 @@ it('words every failure for a person and keeps the server code', () => {
   );
 });
 
+it('says the server is busy for a gateway page with no GraphQL error, and "Request failed" otherwise', () => {
+  const gateway = (status: number) =>
+    new ClientError({ status, errors: undefined } as never, { query: '' });
+  const busy = toApiError(gateway(502));
+  expect(busy.message).toBe('Duncit is busy for a moment. Please try again.');
+  expect(busy.status).toBe(502);
+  expect(toApiError(gateway(413)).message).toBe('Request failed.');
+});
+
 it('posts to the API with the client headers and the session token', async () => {
   await setToken('tok-1');
   mockRequest.mockResolvedValue({ me: { user_id: 'u1' } });

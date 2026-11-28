@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { ScrollView } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { Text } from 'tamagui';
 
+import { FormLayout } from '@/components/mobile/FormLayout';
 import { CrmAppAddNoteDocument } from '@/graphql/leads';
 import { NoteForm, noteToHtml, type NoteValues } from '@/forms/note';
 import { gqlRequest } from '@/services/graphql.client';
+import { haptics } from '@/services/haptics';
 import { useTranslation } from '@/hooks/useTranslation';
 import { errorMessage } from '@/utils/errors';
 import type { AppStackParamList } from '@/navigation/types';
@@ -29,19 +30,18 @@ export function AddNoteScreen() {
           body_text: body,
         },
       });
+      haptics.success();
       navigation.goBack();
     } catch (err) {
+      haptics.error();
       setError(errorMessage(err, t('crmApp.common.saveFailed')));
     }
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={{ padding: 16, gap: 12 }}
-      keyboardShouldPersistTaps="handled"
-    >
+    <FormLayout>
       <Text color="$muted">{params.name}</Text>
       <NoteForm onSubmit={submit} error={error} />
-    </ScrollView>
+    </FormLayout>
   );
 }

@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack, useTheme } from 'tamagui';
 
-import { DuncitButton } from '@/components/DuncitButton';
+import { SelectChip } from '@/components/mobile/SelectChip';
 import {
   SERVICE_SORT_FIELDS,
   nextServiceSort,
@@ -39,13 +39,12 @@ export function ServiceSortBar({ sort, onChange }: Readonly<Props>) {
               : t('crmApp.servicesOffered.sortedDescending', { vars: { field: name } });
           }
           return (
-            <DuncitButton
+            <SelectChip
               key={field}
               label={name}
               accessibilityLabel={a11y}
               onPress={() => onChange(nextServiceSort(sort, field))}
-              size="sm"
-              variant={active ? 'solid' : 'outline'}
+              selected={active}
               icon={
                 active ? (
                   <MaterialIcons

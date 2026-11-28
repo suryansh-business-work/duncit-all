@@ -27411,6 +27411,7 @@ export type MutationSignupWithGoogleArgs = {
 
 
 export type MutationSocialConnectUrlArgs = {
+  app_id?: InputMaybe<Scalars['ID']['input']>;
   provider: SocialProvider;
   return_to: SocialConnectReturn;
 };
@@ -47421,6 +47422,8 @@ export type SmartIncentiveTopHost = {
 
 export type SocialAccount = {
   __typename?: 'SocialAccount';
+  /** The app (environment entry) the account was connected through and keeps using; null when it was connected through the default before apps could be chosen. */
+  app_id?: Maybe<Scalars['ID']['output']>;
   avatar_url?: Maybe<Scalars['String']['output']>;
   created_at?: Maybe<Scalars['String']['output']>;
   /** Why the last DM read failed; empty when it did not. */
@@ -47517,6 +47520,15 @@ export type SocialAnalyticsInput = {
   account_ids?: InputMaybe<Array<Scalars['ID']['input']>>;
   /** 7, 30 or 90. */
   days: Scalars['Int']['input'];
+};
+
+/** One app a network can be connected through: an active entry with both keys, set up in Tech › Environment Variables or Marketing › Settings › Integrations. Only its id and name, never a key. */
+export type SocialApp = {
+  __typename?: 'SocialApp';
+  id: Scalars['ID']['output'];
+  /** The category's default app, the one a Connect without an app uses. */
+  is_default: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
 };
 
 /** The federated sign-in doors. */
@@ -47981,9 +47993,11 @@ export type SocialProvider =
   | 'X'
   | 'YOUTUBE';
 
-/** Whether this network's app is set up under Marketing › Settings › Integrations (one entry per network). */
+/** Whether this network has at least one app set up under Marketing › Settings › Integrations, and every app it can connect through. */
 export type SocialProviderStatus = {
   __typename?: 'SocialProviderStatus';
+  /** Every active, complete app of this network, the default first. */
+  apps: Array<SocialApp>;
   /** The environment category the app's entry lives in, for the settings page's link. */
   category: Scalars['String']['output'];
   configured: Scalars['Boolean']['output'];

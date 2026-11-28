@@ -45,6 +45,7 @@ export const makeSocialAccount = (over: Partial<SocialAccount> = {}): SocialAcco
   messaging_missing_permission: null,
   dm_error: '',
   webhook_error: '',
+  app_id: null,
   ...over,
 });
 
@@ -66,8 +67,9 @@ export const socialConnectUrlMock = (
   provider: SocialProvider,
   returnTo: SocialConnectReturn,
   url: string | null,
+  appId: string | null = null,
 ): MockedResponse => ({
-  request: { query: SOCIAL_CONNECT_URL, variables: { provider, return_to: returnTo } },
+  request: { query: SOCIAL_CONNECT_URL, variables: { provider, return_to: returnTo, app_id: appId } },
   result: { data: { socialConnectUrl: url } },
 });
 
@@ -75,8 +77,9 @@ export const socialConnectUrlErrorMock = (
   provider: SocialProvider,
   returnTo: SocialConnectReturn,
   message: string,
+  appId: string | null = null,
 ): MockedResponse => ({
-  request: { query: SOCIAL_CONNECT_URL, variables: { provider, return_to: returnTo } },
+  request: { query: SOCIAL_CONNECT_URL, variables: { provider, return_to: returnTo, app_id: appId } },
   ...socialRejection(message),
 });
 

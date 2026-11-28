@@ -16,7 +16,14 @@ import { RemindersScreen } from '../reminders/RemindersScreen';
 
 jest.mock('crm-telephony', () => ({ CrmTelephony: null }));
 jest.mock('@/services/graphql.client', () => ({ gqlRequest: jest.fn() }));
-const mockNav = { navigate: jest.fn(), goBack: jest.fn(), setOptions: jest.fn() };
+const mockNav = {
+  // A tab screen also reads its tab navigator (useScrollTopOnTabEntry).
+  getState: () => undefined,
+  addListener: () => () => undefined,
+  navigate: jest.fn(),
+  goBack: jest.fn(),
+  setOptions: jest.fn(),
+};
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => mockNav,
   useRoute: () => ({ params: {} }),

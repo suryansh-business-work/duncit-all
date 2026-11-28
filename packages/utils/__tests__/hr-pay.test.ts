@@ -88,6 +88,8 @@ describe('currency', () => {
   it('uses the ISO code’s own symbol and falls back to the code itself', () => {
     expect(currencySymbol('INR')).toBe('₹');
     expect(currencySymbol('NOT')).toBe('NOT');
+    // Not a well-formed ISO code at all: Intl throws, and the input is shown as it is.
+    expect(currencySymbol('not a code')).toBe('not a code');
     expect(formatCurrency(125000, 'INR')).toBe('₹1,25,000');
     expect(formatCurrency(1234.5, 'INR', 2)).toBe('₹1,234.50');
   });

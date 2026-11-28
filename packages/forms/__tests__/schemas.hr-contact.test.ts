@@ -50,6 +50,11 @@ describe('makeHrContactSchema', () => {
 });
 
 describe('hrContactValuesFrom', () => {
+  it('starts an empty form, dial codes defaulted, when nothing is stored yet', () => {
+    expect(hrContactValuesFrom({})).toEqual(hrContactDefaults);
+    expect(hrContactValuesFrom({ emergency_contact: null })).toEqual(hrContactDefaults);
+  });
+
   it('fills the form from a stored record, defaulting the dial codes', () => {
     expect(
       hrContactValuesFrom({

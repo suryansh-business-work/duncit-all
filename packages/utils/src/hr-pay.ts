@@ -55,12 +55,12 @@ export function applySalaryTemplate(annualCtc: number, template: readonly HrTemp
   const monthlyCtc = Math.round(toPaise(annualCtc) / 12);
   const first = template[0];
   const basic = first ? linePaise(first, monthlyCtc, 0) : 0;
-  const amounts = template.map((line) => linePaise(line, monthlyCtc, basic));
-  const used = template.reduce((sum, line, i) => (line.calc === 'BALANCE' || line.type === 'DEDUCTION' ? sum : sum + (amounts[i] ?? 0)), 0);
-  return template.map((line, i) => ({
+  const priced = template.map((line) => ({ line, paise: linePaise(line, monthlyCtc, basic) }));
+  const used = priced.reduce((sum, { line, paise }) => (line.calc === 'BALANCE' || line.type === 'DEDUCTION' ? sum : sum + paise), 0);
+  return priced.map(({ line, paise }) => ({
     label: line.label,
     type: line.type,
-    monthly_amount: toRupees(line.calc === 'BALANCE' ? Math.max(0, monthlyCtc - used) : (amounts[i] ?? 0)),
+    monthly_amount: toRupees(line.calc === 'BALANCE' ? Math.max(0, monthlyCtc - used) : paise),
     target_linked: line.target_linked,
   }));
 }

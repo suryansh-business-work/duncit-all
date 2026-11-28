@@ -1,4 +1,4 @@
-import { Checkbox, Label, Text, XStack, YStack } from 'tamagui';
+import { Checkbox, Label, Text, XStack, YStack, useTheme } from 'tamagui';
 import { MaterialIcons } from '@expo/vector-icons';
 
 import { useTranslation } from '@/hooks/useTranslation';
@@ -21,6 +21,7 @@ interface Props {
 /** The four confirmations, worded exactly as on the portal's screen. */
 export function ConsentList({ consent, onChange, locationNotNeeded }: Readonly<Props>) {
   const { t } = useTranslation();
+  const theme = useTheme();
   return (
     <YStack gap="$3">
       <Text fontWeight="700" role="heading">
@@ -42,7 +43,7 @@ export function ConsentList({ consent, onChange, locationNotNeeded }: Readonly<P
               size="$5"
             >
               <Checkbox.Indicator>
-                <MaterialIcons name="check" size={18} />
+                <MaterialIcons name="check" size={18} color={theme.color?.val} />
               </Checkbox.Indicator>
             </Checkbox>
             <Label htmlFor={`consent-${key}`} flex={1} lineHeight="$4">

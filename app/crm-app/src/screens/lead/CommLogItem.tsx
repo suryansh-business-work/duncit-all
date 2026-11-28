@@ -83,6 +83,7 @@ export function CommLogItem({ log, onChanged, emailStatus }: Readonly<Props>) {
           <MaterialIcons
             name={open ? 'expand-less' : 'expand-more'}
             size={24}
+            color={theme.muted?.val}
             accessibilityElementsHidden
           />
         ) : null}

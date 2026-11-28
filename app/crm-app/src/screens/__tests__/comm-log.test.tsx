@@ -1,3 +1,4 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import { fireEvent, screen } from '@testing-library/react-native';
 
 import { renderWithTheme } from '@/test-utils';
@@ -87,5 +88,16 @@ describe('CommLogItem', () => {
     renderWithTheme(<CommLogItem log={call()} />);
     fireEvent.press(screen.getByText('Outgoing call'));
     expect(screen.getByTestId('comm-play')).toBeOnTheScreen();
+  });
+
+  it('draws the open/close arrow in the theme colour, both ways, never the icon default black', () => {
+    renderWithTheme(<CommLogItem log={call()} />);
+    const icon = (name: string) =>
+      screen.UNSAFE_getAllByType(MaterialIcons).find((i) => i.props.name === name);
+    const themed = icon('call')?.props.color;
+    expect(themed).toEqual(expect.any(String));
+    expect(icon('expand-more')?.props.color).toBe(themed);
+    fireEvent.press(screen.getByText('Outgoing call'));
+    expect(icon('expand-less')?.props.color).toBe(themed);
   });
 });

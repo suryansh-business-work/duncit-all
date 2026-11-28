@@ -7,3 +7,4 @@
  */
 export * from './branding.mock';
 export * from './auth.mock';
+export * from './employee.mock';

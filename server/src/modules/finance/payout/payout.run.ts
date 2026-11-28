@@ -6,8 +6,8 @@ import type { IPayoutState, PayoutSubjectKind } from './payout.model';
 import type { PayoutPurpose } from './razorpayX.gateway';
 
 /**
- * Send ONE claimed payout and record the answer — shared by withdrawals and
- * Send Money so the two cannot diverge on the part that moves money.
+ * Send ONE claimed payout and record the answer — shared by withdrawals, Send
+ * Money and payroll so they cannot diverge on the part that moves money.
  *
  * "Claimed" means the record is already PROCESSING under an idempotency key
  * (written in the same transaction as the decision, or by the create). This
@@ -32,7 +32,7 @@ interface PayoutCollection {
 export interface RunSpec {
   kind: PayoutSubjectKind;
   model: PayoutCollection;
-  idField: 'withdrawal_id' | 'transfer_id';
+  idField: 'withdrawal_id' | 'transfer_id' | 'line_ref';
   recordId: string;
   payee: PayoutPayee;
   amount: number;

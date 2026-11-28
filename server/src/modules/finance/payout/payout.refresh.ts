@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { WalletWithdrawalModel } from '@modules/finance/wallet/wallet.model';
-import { SendMoneyTransferModel, type PayoutSubjectKind } from './payout.model';
+import { SendMoneyTransferModel, type IPayoutState, type PayoutSubjectKind } from './payout.model';
+import { HrPayrollLineModel } from '@modules/hr/payroll/payroll.model';
 import { fetchPayout, payoutOutcomeOf } from './razorpayX.gateway';
 import { settlePayout, type SettleResult } from './payout.settle';
 import type { PayoutActor } from './payout.audit';
@@ -13,11 +14,14 @@ import type { PayoutActor } from './payout.audit';
  * same {@link settlePayout}, so refreshing a payout the webhook already settled
  * changes nothing.
  */
+async function payoutOf(kind: PayoutSubjectKind, recordId: string): Promise<{ payout?: IPayoutState | null } | null> {
+  if (kind === 'WITHDRAWAL') return WalletWithdrawalModel.findOne({ withdrawal_id: recordId }).select('payout').lean();
+  if (kind === 'PAYROLL') return HrPayrollLineModel.findOne({ line_ref: recordId }).select('payout').lean();
+  return SendMoneyTransferModel.findOne({ transfer_id: recordId }).select('payout').lean();
+}
+
 export async function refreshPayoutStatus(kind: PayoutSubjectKind, recordId: string, actor: PayoutActor): Promise<SettleResult> {
-  const row =
-    kind === 'WITHDRAWAL'
-      ? await WalletWithdrawalModel.findOne({ withdrawal_id: recordId }).select('payout').lean()
-      : await SendMoneyTransferModel.findOne({ transfer_id: recordId }).select('payout').lean();
+  const row = await payoutOf(kind, recordId);
   const payoutId = row?.payout?.razorpay_payout_id ?? '';
   if (!payoutId || row?.payout?.status !== 'PROCESSING') {
     throw new GraphQLError('There is no payout in progress to refresh.', { extensions: { code: 'BAD_USER_INPUT' } });

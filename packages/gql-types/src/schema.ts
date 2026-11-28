@@ -4346,6 +4346,20 @@ export type BankAccountVerificationInput = {
   upi_id?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type BankChangeRequestInput = {
+  account_holder_name: Scalars['String']['input'];
+  /** 6 to 18 digits. */
+  account_number: Scalars['String']['input'];
+  bank_name?: InputMaybe<Scalars['String']['input']>;
+  /** One id per press of Send; a repeated press returns the request the first one made. */
+  client_request_id?: InputMaybe<Scalars['String']['input']>;
+  /** 11 characters, for example HDFC0001234. */
+  ifsc: Scalars['String']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+  /** The upload hook's URL for folder hr-bank-proof: a cancelled cheque or the passbook's first page, image or PDF. */
+  proof_url: Scalars['String']['input'];
+};
+
 export type BankPayoutMethod =
   | 'IMPS'
   | 'NEFT'
@@ -8588,6 +8602,17 @@ export type CrmAppDownloadBuild = {
   /** The size of the file a phone installs: the APK on Android, the IPA on iOS. */
   size_mb?: Maybe<Scalars['Float']['output']>;
   version: Scalars['String']['output'];
+};
+
+/** How the Duncit CRM app behaves, set from CRM › CRM Mobile App › Settings (or the app's own Settings). */
+export type CrmAppSettings = {
+  __typename?: 'CrmAppSettings';
+  /**
+   * Whether a sign-in to the Duncit CRM app goes through the Security
+   * Verification screen (location and consent) first. On unless a CRM manager
+   * turned it off. The CRM web portal always asks.
+   */
+  security_verification: Scalars['Boolean']['output'];
 };
 
 export type CrmCallAction =
@@ -15606,6 +15631,48 @@ export type HrActor = {
   user_id: Scalars['ID']['output'];
 };
 
+/** A change of salary account an employee asked for. The account number is masked to its last four. */
+export type HrBankChangeRequest = {
+  __typename?: 'HrBankChangeRequest';
+  account_holder_name: Scalars['String']['output'];
+  account_number_masked: Scalars['String']['output'];
+  bank_name?: Maybe<Scalars['String']['output']>;
+  created_at?: Maybe<Scalars['String']['output']>;
+  decided_at?: Maybe<Scalars['String']['output']>;
+  decided_by?: Maybe<Scalars['String']['output']>;
+  decision_note?: Maybe<Scalars['String']['output']>;
+  employee_code: Scalars['String']['output'];
+  employee_id: Scalars['ID']['output'];
+  employee_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  ifsc: Scalars['String']['output'];
+  /** The employee's own note. */
+  note?: Maybe<Scalars['String']['output']>;
+  proof_kind: HrBankProofKind;
+  status: HrBankRequestStatus;
+};
+
+/** What HR checks before deciding. Opening it is recorded on the request. */
+export type HrBankChangeRequestDetail = {
+  __typename?: 'HrBankChangeRequestDetail';
+  /** The full new account number, to compare with the proof. */
+  account_number: Scalars['String']['output'];
+  /** The account on the HR record today. */
+  current?: Maybe<HrBankSummary>;
+  proof_expires_at: Scalars['String']['output'];
+  /** A short-lived link to the private proof document. */
+  proof_url: Scalars['String']['output'];
+  request: HrBankChangeRequest;
+};
+
+export type HrBankChangeRequestTablePage = {
+  __typename?: 'HrBankChangeRequestTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<HrBankChangeRequest>;
+  total: Scalars['Int']['output'];
+};
+
 /** The full details. Each read is written to the worker history. */
 export type HrBankDetails = {
   __typename?: 'HrBankDetails';
@@ -15627,6 +15694,16 @@ export type HrBankInput = {
   uan?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type HrBankProofKind =
+  | 'IMAGE'
+  | 'PDF';
+
+export type HrBankRequestStatus =
+  | 'APPROVED'
+  | 'CANCELLED'
+  | 'PENDING'
+  | 'REJECTED';
+
 /** Bank and statutory details as every read shows them: account number and PAN masked to their last four. */
 export type HrBankSummary = {
   __typename?: 'HrBankSummary';
@@ -15637,6 +15714,34 @@ export type HrBankSummary = {
   pan_masked?: Maybe<Scalars['String']['output']>;
   uan?: Maybe<Scalars['String']['output']>;
 };
+
+/** One thing on a day or a run of days. It carries data, not a sentence: the console writes the words. */
+export type HrCalendarEvent = {
+  __typename?: 'HrCalendarEvent';
+  /** The leave type, on team leave. */
+  detail?: Maybe<Scalars['String']['output']>;
+  end_date: Scalars['String']['output'];
+  half_day?: Maybe<HrHalfDay>;
+  kind: HrCalendarEventKind;
+  /** The holiday, the leave type, or (team leave) the colleague. */
+  name?: Maybe<Scalars['String']['output']>;
+  /** The payroll or target month the event is about (YYYY-MM). */
+  ref_month?: Maybe<Scalars['String']['output']>;
+  start_date: Scalars['String']['output'];
+  /** Leave status; for a payday SCHEDULED (released) or EXPECTED (from the settings). */
+  status?: Maybe<Scalars['String']['output']>;
+};
+
+export type HrCalendarEventKind =
+  | 'HOLIDAY'
+  /** Your own leave, waiting or approved. */
+  | 'LEAVE'
+  /** The day a month's salary is paid. */
+  | 'PAYDAY'
+  /** The last day to report on a monthly target. */
+  | 'TARGET_DUE'
+  /** Leave of someone who reports to you. */
+  | 'TEAM_LEAVE';
 
 /** One pay revision, in force from effective_from until the next revision starts. */
 export type HrCompensation = {
@@ -15862,6 +15967,24 @@ export type HrGender =
   | 'MALE'
   | 'OTHER';
 
+/** A half day is only allowed on a one-day request. */
+export type HrHalfDay =
+  | 'FIRST_HALF'
+  | 'SECOND_HALF';
+
+export type HrHoliday = {
+  __typename?: 'HrHoliday';
+  date: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+};
+
+export type HrHolidayInput = {
+  /** YYYY-MM-DD, one holiday per date. */
+  date: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+};
+
 export type HrJob = {
   __typename?: 'HrJob';
   date_of_joining: Scalars['String']['output'];
@@ -15908,6 +16031,148 @@ export type HrJobInput = {
   work_location?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** YEARLY grants the year's quota on its first day (or on joining); MONTHLY grants a twelfth each month. */
+export type HrLeaveAccrual =
+  | 'MONTHLY'
+  | 'YEARLY';
+
+export type HrLeaveAdjustment = {
+  __typename?: 'HrLeaveAdjustment';
+  by: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  days: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  leave_type_id: Scalars['ID']['output'];
+  leave_type_name: Scalars['String']['output'];
+  leave_year: Scalars['Int']['output'];
+  note: Scalars['String']['output'];
+};
+
+export type HrLeaveAdjustmentInput = {
+  /** Positive adds days, negative removes them; in halves. */
+  days: Scalars['Float']['input'];
+  employee_id: Scalars['ID']['input'];
+  leave_type_id: Scalars['ID']['input'];
+  /** The calendar year the leave year starts in. */
+  leave_year: Scalars['Int']['input'];
+  note: Scalars['String']['input'];
+};
+
+/** One leave type's figures for one leave year. available is null for unpaid leave. */
+export type HrLeaveBalance = {
+  __typename?: 'HrLeaveBalance';
+  adjusted: Scalars['Float']['output'];
+  available?: Maybe<Scalars['Float']['output']>;
+  carried: Scalars['Float']['output'];
+  granted: Scalars['Float']['output'];
+  leave_type: HrLeaveType;
+  pending: Scalars['Float']['output'];
+  taken: Scalars['Float']['output'];
+  year: Scalars['Int']['output'];
+};
+
+export type HrLeaveBalanceSheet = {
+  __typename?: 'HrLeaveBalanceSheet';
+  adjustments: Array<HrLeaveAdjustment>;
+  balances: Array<HrLeaveBalance>;
+  employee_id: Scalars['ID']['output'];
+  employee_name: Scalars['String']['output'];
+  year: Scalars['Int']['output'];
+};
+
+/** Dates are YYYY-MM-DD; days counts working days only. */
+export type HrLeaveRequest = {
+  __typename?: 'HrLeaveRequest';
+  /** Whether the employee may still cancel it: waiting, or approved and not started. */
+  can_cancel: Scalars['Boolean']['output'];
+  cancellation_note?: Maybe<Scalars['String']['output']>;
+  cancelled_at?: Maybe<Scalars['String']['output']>;
+  cancelled_by?: Maybe<Scalars['String']['output']>;
+  created_at?: Maybe<Scalars['String']['output']>;
+  days: Scalars['Float']['output'];
+  decided_as_hr?: Maybe<Scalars['Boolean']['output']>;
+  decided_at?: Maybe<Scalars['String']['output']>;
+  decided_by?: Maybe<Scalars['String']['output']>;
+  decision_note?: Maybe<Scalars['String']['output']>;
+  employee_code: Scalars['String']['output'];
+  employee_id: Scalars['ID']['output'];
+  employee_name: Scalars['String']['output'];
+  end_date: Scalars['String']['output'];
+  half_day?: Maybe<HrHalfDay>;
+  id: Scalars['ID']['output'];
+  leave_type_id: Scalars['ID']['output'];
+  leave_type_name: Scalars['String']['output'];
+  paid: Scalars['Boolean']['output'];
+  reason?: Maybe<Scalars['String']['output']>;
+  /** True when no reporting manager was on record, so HR decides. */
+  routed_to_hr: Scalars['Boolean']['output'];
+  start_date: Scalars['String']['output'];
+  status: HrLeaveStatus;
+};
+
+export type HrLeaveRequestTablePage = {
+  __typename?: 'HrLeaveRequestTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<HrLeaveRequest>;
+  total: Scalars['Int']['output'];
+};
+
+export type HrLeaveSettings = {
+  __typename?: 'HrLeaveSettings';
+  backdate_days: Scalars['Int']['output'];
+  current_leave_year: Scalars['Int']['output'];
+  /** 1 = January-December, 4 = April-March. */
+  leave_year_start_month: Scalars['Int']['output'];
+  /** Balances never carry forward from a year before this one. */
+  tracking_start_year: Scalars['Int']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+  /** 0 = Sunday ... 6 = Saturday. */
+  weekly_off_days: Array<Scalars['Int']['output']>;
+};
+
+export type HrLeaveSettingsInput = {
+  backdate_days: Scalars['Int']['input'];
+  leave_year_start_month: Scalars['Int']['input'];
+  weekly_off_days: Array<Scalars['Int']['input']>;
+};
+
+export type HrLeaveStatus =
+  | 'APPROVED'
+  | 'CANCELLED'
+  | 'PENDING'
+  | 'REJECTED';
+
+/** A kind of leave HR offers. Never deleted: switch it off to retire it. */
+export type HrLeaveType = {
+  __typename?: 'HrLeaveType';
+  accrual: HrLeaveAccrual;
+  active: Scalars['Boolean']['output'];
+  allow_half_day: Scalars['Boolean']['output'];
+  /** Days per leave year, in halves. */
+  annual_quota: Scalars['Float']['output'];
+  /** The most days a closing balance carries into the next leave year. */
+  carry_forward_max: Scalars['Float']['output'];
+  code: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  /** False for unpaid leave: no balance, and payroll deducts its days. */
+  paid: Scalars['Boolean']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type HrLeaveTypeInput = {
+  accrual: HrLeaveAccrual;
+  active: Scalars['Boolean']['input'];
+  allow_half_day: Scalars['Boolean']['input'];
+  annual_quota: Scalars['Float']['input'];
+  carry_forward_max: Scalars['Float']['input'];
+  /** 1-12 capital letters, digits or _, starting with a letter. Unique. */
+  code: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  paid: Scalars['Boolean']['input'];
+};
+
 export type HrNewAccountInput = {
   email: Scalars['String']['input'];
   phone_extension?: InputMaybe<Scalars['String']['input']>;
@@ -15935,6 +16200,242 @@ export type HrPayLineInput = {
   /** Only an EARNING can be linked to targets. */
   target_linked?: InputMaybe<Scalars['Boolean']['input']>;
   type: HrPayComponentType;
+};
+
+/** SAME_MONTH pays a month on its own pay day; NEXT_MONTH on that day of the month after. */
+export type HrPayTiming =
+  | 'NEXT_MONTH'
+  | 'SAME_MONTH';
+
+export type HrPayoutMode =
+  | 'IMPS'
+  | 'NEFT';
+
+export type HrPayoutStatus =
+  | 'FAILED'
+  | 'PAID'
+  | 'PROCESSING';
+
+export type HrPayrollAdjustment = {
+  __typename?: 'HrPayrollAdjustment';
+  amount: Scalars['Float']['output'];
+  at?: Maybe<Scalars['String']['output']>;
+  by: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  label: Scalars['String']['output'];
+  note?: Maybe<Scalars['String']['output']>;
+  type: HrPayrollAdjustmentType;
+};
+
+export type HrPayrollAdjustmentInput = {
+  /** Rupees, above zero, at most two decimals. */
+  amount: Scalars['Float']['input'];
+  label: Scalars['String']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+  type: HrPayrollAdjustmentType;
+};
+
+export type HrPayrollAdjustmentType =
+  | 'DEDUCTION'
+  | 'EARNING';
+
+export type HrPayrollAmount = {
+  __typename?: 'HrPayrollAmount';
+  /** What this month pays after joining, exit and unpaid leave. */
+  amount: Scalars['Float']['output'];
+  label: Scalars['String']['output'];
+  /** The monthly figure on the pay revision. */
+  monthly_amount: Scalars['Float']['output'];
+};
+
+export type HrPayrollEvent = {
+  __typename?: 'HrPayrollEvent';
+  action: Scalars['String']['output'];
+  actor: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  line_id?: Maybe<Scalars['ID']['output']>;
+  note?: Maybe<Scalars['String']['output']>;
+};
+
+/** NO_COMPENSATION, NO_BANK, NEGATIVE_NET and UNSUPPORTED_CURRENCY stop a salary being paid until fixed or held; the others are for information. */
+export type HrPayrollIssue =
+  | 'NEGATIVE_NET'
+  | 'NO_BANK'
+  | 'NO_COMPENSATION'
+  | 'PENDING_LEAVE'
+  | 'TARGET_NOT_REVIEWED'
+  | 'UNSUPPORTED_CURRENCY';
+
+export type HrPayrollLine = {
+  __typename?: 'HrPayrollLine';
+  adjustments: Array<HrPayrollAdjustment>;
+  bank_ifsc?: Maybe<Scalars['String']['output']>;
+  /** The account the salary goes to, copied at release. */
+  bank_last4?: Maybe<Scalars['String']['output']>;
+  currency: Scalars['String']['output'];
+  date_of_joining: Scalars['String']['output'];
+  days_in_month: Scalars['Int']['output'];
+  deductions: Array<HrPayrollAmount>;
+  deductions_total: Scalars['Float']['output'];
+  department?: Maybe<Scalars['String']['output']>;
+  earnings: Array<HrPayrollAmount>;
+  employee_code: Scalars['String']['output'];
+  employee_id: Scalars['ID']['output'];
+  employee_name: Scalars['String']['output'];
+  employer: Array<HrPayrollAmount>;
+  employer_total: Scalars['Float']['output'];
+  gross: Scalars['Float']['output'];
+  hold?: Maybe<HrPayrollStep>;
+  id: Scalars['ID']['output'];
+  issues: Array<HrPayrollIssue>;
+  job_title: Scalars['String']['output'];
+  last_working_day?: Maybe<Scalars['String']['output']>;
+  lop_days: Scalars['Float']['output'];
+  month: Scalars['String']['output'];
+  net: Scalars['Float']['output'];
+  payable_days: Scalars['Float']['output'];
+  payout?: Maybe<HrPayrollPayout>;
+  /** True once released: the employee can see this payslip. */
+  published: Scalars['Boolean']['output'];
+  run_id: Scalars['ID']['output'];
+  variable: Array<HrPayrollVariable>;
+};
+
+export type HrPayrollLineTablePage = {
+  __typename?: 'HrPayrollLineTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<HrPayrollLine>;
+  total: Scalars['Int']['output'];
+};
+
+export type HrPayrollPayout = {
+  __typename?: 'HrPayrollPayout';
+  attempt: Scalars['Int']['output'];
+  completed_at?: Maybe<Scalars['String']['output']>;
+  failure_reason?: Maybe<Scalars['String']['output']>;
+  initiated_at?: Maybe<Scalars['String']['output']>;
+  razorpay_payout_id?: Maybe<Scalars['String']['output']>;
+  status: HrPayoutStatus;
+  /** Bank reference, once paid. */
+  utr?: Maybe<Scalars['String']['output']>;
+};
+
+/** How the run's salaries stand with Razorpay. */
+export type HrPayrollPayoutSummary = {
+  __typename?: 'HrPayrollPayoutSummary';
+  failed: Scalars['Int']['output'];
+  held: Scalars['Int']['output'];
+  paid: Scalars['Int']['output'];
+  processing: Scalars['Int']['output'];
+  waiting: Scalars['Int']['output'];
+};
+
+export type HrPayrollRun = {
+  __typename?: 'HrPayrollRun';
+  approved?: Maybe<HrPayrollStep>;
+  /** The account that approved it — it may not release it. */
+  approved_by_id?: Maybe<Scalars['ID']['output']>;
+  computed_at?: Maybe<Scalars['String']['output']>;
+  computed_by: Scalars['String']['output'];
+  created_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  /** YYYY-MM */
+  month: Scalars['String']['output'];
+  /** True for a draft whose pay, leave, targets or employee records changed after it was computed: recompute before approving. */
+  needs_recompute: Scalars['Boolean']['output'];
+  /** The day Finance released it for; payouts start that day. */
+  pay_on?: Maybe<Scalars['String']['output']>;
+  payout_summary: HrPayrollPayoutSummary;
+  released?: Maybe<HrPayrollStep>;
+  /** The last time it was sent back to draft, and why. */
+  returned?: Maybe<HrPayrollStep>;
+  /** Send it back as expected_revision. */
+  revision: Scalars['Int']['output'];
+  /** The pay day from the payroll settings when the run was made. */
+  scheduled_pay_date: Scalars['String']['output'];
+  source: HrPayrollSource;
+  status: HrPayrollRunStatus;
+  totals: HrPayrollTotals;
+};
+
+/** DRAFT -> APPROVED (HR) -> RELEASED (Finance) -> COMPLETED (every payable salary paid). */
+export type HrPayrollRunStatus =
+  | 'APPROVED'
+  | 'COMPLETED'
+  | 'DRAFT'
+  | 'RELEASED';
+
+export type HrPayrollRunTablePage = {
+  __typename?: 'HrPayrollRunTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<HrPayrollRun>;
+  total: Scalars['Int']['output'];
+};
+
+export type HrPayrollSettings = {
+  __typename?: 'HrPayrollSettings';
+  /** The scheduler drafts a run this many days before its pay day. */
+  draft_lead_days: Scalars['Int']['output'];
+  /** 1-31; a day past the month's end means its last day. */
+  pay_day: Scalars['Int']['output'];
+  pay_timing: HrPayTiming;
+  payout_mode: HrPayoutMode;
+  /** False until the Razorpay keys and the RazorpayX account number are set in the Tech portal. */
+  payouts_configured: Scalars['Boolean']['output'];
+  scheduler_enabled: Scalars['Boolean']['output'];
+  upcoming?: Maybe<HrPayrollUpcoming>;
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type HrPayrollSettingsInput = {
+  draft_lead_days: Scalars['Int']['input'];
+  pay_day: Scalars['Int']['input'];
+  pay_timing: HrPayTiming;
+  payout_mode: HrPayoutMode;
+  scheduler_enabled: Scalars['Boolean']['input'];
+};
+
+export type HrPayrollSource =
+  | 'MANUAL'
+  | 'SCHEDULER';
+
+export type HrPayrollStep = {
+  __typename?: 'HrPayrollStep';
+  at?: Maybe<Scalars['String']['output']>;
+  by: Scalars['String']['output'];
+  note?: Maybe<Scalars['String']['output']>;
+};
+
+export type HrPayrollTotals = {
+  __typename?: 'HrPayrollTotals';
+  deductions: Scalars['Float']['output'];
+  employees: Scalars['Int']['output'];
+  employer: Scalars['Float']['output'];
+  gross: Scalars['Float']['output'];
+  held: Scalars['Int']['output'];
+  net: Scalars['Float']['output'];
+};
+
+/** The next run the settings point at. */
+export type HrPayrollUpcoming = {
+  __typename?: 'HrPayrollUpcoming';
+  draft_date: Scalars['String']['output'];
+  month: Scalars['String']['output'];
+  pay_date: Scalars['String']['output'];
+};
+
+/** Target-linked pay for one reviewed month. */
+export type HrPayrollVariable = {
+  __typename?: 'HrPayrollVariable';
+  amount: Scalars['Float']['output'];
+  base_amount: Scalars['Float']['output'];
+  completion_percent: Scalars['Int']['output'];
+  label: Scalars['String']['output'];
+  target_id: Scalars['ID']['output'];
+  target_month: Scalars['String']['output'];
 };
 
 /** Dates are YYYY-MM-DD. */
@@ -17253,6 +17754,18 @@ export type LeaderboardSettings = {
   points_per_venue_pod: Scalars['Float']['output'];
   rewards: Array<LeaderboardReward>;
   updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type LeaveRequestInput = {
+  /** One id per press of Apply; a repeated press returns the request the first one made. */
+  client_request_id?: InputMaybe<Scalars['String']['input']>;
+  /** YYYY-MM-DD, on or after start_date. */
+  end_date: Scalars['String']['input'];
+  half_day?: InputMaybe<HrHalfDay>;
+  leave_type_id: Scalars['ID']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
+  /** YYYY-MM-DD */
+  start_date: Scalars['String']['input'];
 };
 
 export type LegalDocument = {
@@ -19733,6 +20246,8 @@ export type Mutation = {
   addExpenseRefund: Expense;
   /** Add a pay revision from its effective date. Totals are derived from the lines. */
   addHrCompensation: HrCompensation;
+  /** Add a one-off earning or deduction to a salary in a draft. Never your own. */
+  addHrPayrollAdjustment: HrPayrollLine;
   addManualCaseComment: ManualTestComment;
   addMarketingLeadNote: MarketingLead;
   /** Onboarding staff add (or update) a holiday / leave day. */
@@ -19759,6 +20274,8 @@ export type Mutation = {
   adjustGiftCardDesignStock: GiftCardDesign;
   /**  Admin-only: append a delta with an optional remark. Returns the updated score.  */
   adjustHealth: HealthScore;
+  /** Add or remove days from a balance, with a reason. Never your own. */
+  adjustHrLeaveBalance: Scalars['Boolean']['output'];
   /**
    * Finance: hand one named account coins, or take them back.
    *
@@ -19831,6 +20348,8 @@ export type Mutation = {
   appBuildUploadAuth: AppBuildUploadAuth;
   /**  Appeal a deduction on your own account or venue. Once per deduction.  */
   appealHealthAdjustment: HealthAppealReceipt;
+  /** Employee console: ask for leave. Your reporting manager decides, or HR when you have none. */
+  applyLeave: HrLeaveRequest;
   /** Carry out a dry run's findings without scanning again. */
   applyMediaOrganizerRun: BackgroundJob;
   /**
@@ -19850,6 +20369,8 @@ export type Mutation = {
   approveEcommBrand: EcommBrand;
   approveHost: Host;
   approveHostRequest: HostRequest;
+  /** HR signs a draft off for Finance to release. Refused while anything blocks a salary or the inputs changed since the last compute. */
+  approveHrPayrollRun: HrPayrollRun;
   /** Approve an AI app on the consent page. allow_write grants tools that change data. */
   approveMcpAuthorization: McpAuthorizationDecision;
   /**
@@ -19992,6 +20513,8 @@ export type Mutation = {
   cancelFreeSpot: PodMember;
   /** Keep someone who is serving notice. */
   cancelHrEmployeeExit: HrEmployee;
+  /** Cancel a waiting or approved request; the employee is told why. */
+  cancelHrLeaveRequest: HrLeaveRequest;
   /** Stop a run: at once if it has not started, after its current step if it is running. */
   cancelMarketingRun: MarketingRun;
   /** Onboarding staff cancel a meeting with a reason — the applicant is emailed and asked to fill the survey again. */
@@ -20004,6 +20527,10 @@ export type Mutation = {
    * to call this. `rejectAccountDeletionRequest` is the way back now.
    */
   cancelMyAccountDeletionRequest: AccountDeletionRequest;
+  /** Employee console: withdraw a change that is still waiting. */
+  cancelMyBankChange: HrBankChangeRequest;
+  /** Employee console: cancel your own request while it waits, or approved leave that has not started. */
+  cancelMyLeave: HrLeaveRequest;
   /** Cancel the caller's own pending meeting (with a reason). */
   cancelMyMeeting: OnboardingMeeting;
   /** Buyer: withdraw a return nobody has decided yet. */
@@ -20231,6 +20758,8 @@ export type Mutation = {
   createGigCategory: GigCategory;
   createGigJob: GigJob;
   createHostLead: HostLead;
+  /** Prepare a month's payroll from the pay in force, unpaid leave and reviewed targets. One run per month. */
+  createHrPayrollRun: HrPayrollRun;
   createInterview: Interview;
   createInventoryProduct: InventoryProduct;
   /** Put the person into the Marketing pipeline (matched by Instagram handle) and link the conversation to the lead. */
@@ -20329,6 +20858,10 @@ export type Mutation = {
   dbBackupUploadAuth: DbBackupUploadPass;
   /** Approve or reject a proposed change. Permission is re-checked when it runs. */
   decideAskDuncitAction: AskDuncitAction;
+  /** HR console: approve a change (it becomes the salary account on the HR record) or decline it with a reason. Never your own. */
+  decideHrBankChangeRequest: HrBankChangeRequest;
+  /** Approve or decline a waiting request: as the employee's reporting manager, or as HR. Never your own. */
+  decideLeaveRequest: HrLeaveRequest;
   /** Decide a run that is waiting for approval. A note is required unless it is approved. */
   decideMarketingRun: MarketingRun;
   /** Onboarding staff approve or deny a DONE meeting themselves — approval drafts the onboarded host/venue/seller (or grants the club-admin role). No admin round-trip. */
@@ -20458,6 +20991,8 @@ export type Mutation = {
   deleteHostLead: Scalars['Boolean']['output'];
   /** Onboarding: permanently remove a host request record. */
   deleteHostRequest: Scalars['Boolean']['output'];
+  /** Delete a draft run. */
+  deleteHrPayrollRun: Scalars['Boolean']['output'];
   deleteIgLead: Scalars['Boolean']['output'];
   deleteInterview: Scalars['Boolean']['output'];
   deleteInventoryProduct: Scalars['Boolean']['output'];
@@ -20722,6 +21257,8 @@ export type Mutation = {
   handOverAskDuncitConversation: AskDuncitHandoverResult;
   /** Hire: create the HR record, its first pay revision, and grant the account the Employee console. */
   hireHrEmployee: HrEmployeeProfile;
+  /** Keep a salary out of the payout, with a reason. Never your own. */
+  holdHrPayrollLine: HrPayrollLine;
   /**
    * "Host again": a new draft holding one of the caller's own pods' content
    * (title, description, media, pricing, perks) with no date, slot or attendees,
@@ -21002,6 +21539,8 @@ export type Mutation = {
   /** Admin: offer the place to one matching partner. Nothing on the pod moves yet. */
   offerPodChange: PodChangeRequest;
   pauseEnrollment: OutreachEnrollment;
+  /** Finance: pay a salary HR held, once its reason is fixed. Reads the bank account fresh from the HR record. */
+  payHeldHrPayrollLine: HrPayrollLine;
   permanentlyDeleteInventoryProduct: Scalars['Boolean']['output'];
   /** Host: draw one competitor at random on the server, or reset the draw. */
   pickPodChallengeRandom: PodChallenge;
@@ -21117,6 +21656,8 @@ export type Mutation = {
   recheckPartnerIntegration: PartnerIntegration;
   /** What to make next, from this reel's numbers and the account's recent posts. */
   recommendNextReel: ReelRecommendations;
+  /** Work a draft out again from the records, keeping its adjustments and holds. */
+  recomputeHrPayrollRun: HrPayrollRun;
   /** Re-sync a non-terminal call's status from Twilio (fallback when the async callback is missed). */
   reconcileCrmCall: CrmAiCallResult;
   /** Re-read AiSensy and cache each template's category, which sets the rate. */
@@ -21202,6 +21743,8 @@ export type Mutation = {
   rejectVenueCounterOffer: Scalars['Boolean']['output'];
   /** Rejoin a pod the caller previously backed out of — no payment, until the pod completes. */
   rejoinPod: PodMember;
+  /** Finance: release an approved payroll for a pay date (today or up to 60 days ahead). Not by the person who approved it. Salaries are paid through RazorpayX on that day. */
+  releaseHrPayrollRun: HrPayrollRun;
   /**
    * Record that the guest closed the rating prompt for this pod, and whether to
    * ask again — so the pop-up stops reappearing on every page load.
@@ -21225,6 +21768,8 @@ export type Mutation = {
   removeExpenseRefund: Expense;
   /** Withdraw a pay revision that has not started yet. */
   removeHrCompensation: Scalars['Boolean']['output'];
+  removeHrHoliday: Scalars['Boolean']['output'];
+  removeHrPayrollAdjustment: HrPayrollLine;
   /** Onboarding staff remove a holiday / leave day. */
   removeMeetingHoliday: Scalars['Boolean']['output'];
   removePodChallengeEntry: PodChallenge;
@@ -21375,6 +21920,8 @@ export type Mutation = {
    */
   requestLoginOtp: PasswordResetRequestResult;
   requestMeeting: OnboardingMeeting;
+  /** Employee console: ask HR to pay your salary into a different account. Nothing changes until HR approves it. */
+  requestMyBankChange: HrBankChangeRequest;
   /** Auth-required: verify the current password (when the account has one) and email a confirmation OTP. */
   requestPasswordChangeOtp: OtpRequestResult;
   /**
@@ -21533,6 +22080,8 @@ export type Mutation = {
   resumeEnrollment: OutreachEnrollment;
   /** Run a finished, failed or cancelled discovery again with the same request. */
   retryCrmLeadDiscovery: CrmLeadDiscoveryJob;
+  /** Finance: get one salary's payout moving again — a new attempt if it failed, a resend or status check if it is in flight. */
+  retryHrPayrollPayout: HrPayrollLine;
   /** Run a failed or partly completed run again, through its own workflow. */
   retryMarketingRun: MarketingRun;
   /**
@@ -21554,6 +22103,8 @@ export type Mutation = {
   retryWaCampaign: WaCampaign;
   /** Start a failed or stalled payout again (a failed one is a new, deliberate attempt). */
   retryWithdrawalPayout: WalletWithdrawal;
+  /** Send an approved run back to draft, with what needs to change (HR, or Finance declining to release it). */
+  returnHrPayrollRun: HrPayrollRun;
   /** Validate a logged address again. The earlier validation is kept. */
   revalidateEmail: EmailValidation;
   /** Re-run the AI + Razorpay check on a case's latest evidence. */
@@ -21663,6 +22214,10 @@ export type Mutation = {
   saveGrievanceOfficer: GrievanceOfficer;
   /** Save a new calculation. The server recalculates every output from the inputs. */
   saveGrowthCalculation: GrowthCalculation;
+  /** Add a holiday (no id) or rename or move one. Requests already made keep the days they cost. */
+  saveHrHoliday: HrHoliday;
+  /** Add a leave type (no id) or change one. */
+  saveHrLeaveType: HrLeaveType;
   saveLeadSurveyResponse: LeadSurveyEntry;
   /** Create (no id) or update (with id) one of my saved addresses. */
   saveMyAddress: UserAddress;
@@ -22390,6 +22945,7 @@ export type Mutation = {
   unfollowClub: User;
   unfollowPod: User;
   unfollowUser: User;
+  unholdHrPayrollLine: HrPayrollLine;
   /** The pod page showed the offer: unlock it for the signed-in member. Idempotent; refused when the pod offers them none. */
   unlockSmartIncentive: PodSmartIncentive;
   unmuteChat: ChatMuteState;
@@ -22458,6 +23014,8 @@ export type Mutation = {
   updateCreatorLead: CreatorLead;
   /** Choose the Slack channels Duncit CRM builds announce to (each must be one the bot can see, or empty). CRM staff only. */
   updateCrmAppBuildSettings: CrmAppBuildSettings;
+  /** Turn the Duncit CRM app's Security Verification screen on or off for new sign-ins. CRM managers only. */
+  updateCrmAppSettings: CrmAppSettings;
   updateCrmCallPrompt: CrmCallPrompt;
   updateCrmDynamicField: CrmDynamicField;
   /** Edit one of the CRM email writer prompts (crm.email_mjml or crm.email_mjml.user). */
@@ -22519,6 +23077,8 @@ export type Mutation = {
   updateHrEmployeeBank: HrEmployee;
   /** Change name, birth date and contact details. */
   updateHrEmployeePersonal: HrEmployee;
+  updateHrLeaveSettings: HrLeaveSettings;
+  updateHrPayrollSettings: HrPayrollSettings;
   /** HR console: change HR settings. */
   updateHrSettings: HrSettings;
   updateIgLeadSettings: IgLeadSettings;
@@ -22843,6 +23403,12 @@ export type MutationAddHrCompensationArgs = {
 };
 
 
+export type MutationAddHrPayrollAdjustmentArgs = {
+  input: HrPayrollAdjustmentInput;
+  line_id: Scalars['ID']['input'];
+};
+
+
 export type MutationAddManualCaseCommentArgs = {
   body: Scalars['String']['input'];
   case_id: Scalars['ID']['input'];
@@ -22940,6 +23506,11 @@ export type MutationAdjustGiftCardDesignStockArgs = {
 
 export type MutationAdjustHealthArgs = {
   input: AdjustHealthInput;
+};
+
+
+export type MutationAdjustHrLeaveBalanceArgs = {
+  input: HrLeaveAdjustmentInput;
 };
 
 
@@ -23112,6 +23683,11 @@ export type MutationAppealHealthAdjustmentArgs = {
 };
 
 
+export type MutationApplyLeaveArgs = {
+  input: LeaveRequestInput;
+};
+
+
 export type MutationApplyMediaOrganizerRunArgs = {
   run_id: Scalars['ID']['input'];
   url?: InputMaybe<Scalars['String']['input']>;
@@ -23160,6 +23736,13 @@ export type MutationApproveHostArgs = {
 export type MutationApproveHostRequestArgs = {
   id: Scalars['ID']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationApproveHrPayrollRunArgs = {
+  expected_revision: Scalars['Int']['input'];
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -23435,6 +24018,12 @@ export type MutationCancelHrEmployeeExitArgs = {
 };
 
 
+export type MutationCancelHrLeaveRequestArgs = {
+  id: Scalars['ID']['input'];
+  note: Scalars['String']['input'];
+};
+
+
 export type MutationCancelMarketingRunArgs = {
   id: Scalars['ID']['input'];
 };
@@ -23443,6 +24032,17 @@ export type MutationCancelMarketingRunArgs = {
 export type MutationCancelMeetingArgs = {
   id: Scalars['ID']['input'];
   reason: Scalars['String']['input'];
+};
+
+
+export type MutationCancelMyBankChangeArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationCancelMyLeaveArgs = {
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -23961,6 +24561,11 @@ export type MutationCreateHostLeadArgs = {
 };
 
 
+export type MutationCreateHrPayrollRunArgs = {
+  month: Scalars['String']['input'];
+};
+
+
 export type MutationCreateInterviewArgs = {
   input: CreateInterviewInput;
 };
@@ -24274,6 +24879,20 @@ export type MutationDecideAskDuncitActionArgs = {
   approve: Scalars['Boolean']['input'];
   id: Scalars['ID']['input'];
   surface?: InputMaybe<AskDuncitSurface>;
+};
+
+
+export type MutationDecideHrBankChangeRequestArgs = {
+  approve: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationDecideLeaveRequestArgs = {
+  approve: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -24634,6 +25253,11 @@ export type MutationDeleteHostLeadArgs = {
 
 
 export type MutationDeleteHostRequestArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteHrPayrollRunArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -25422,6 +26046,12 @@ export type MutationHireHrEmployeeArgs = {
 };
 
 
+export type MutationHoldHrPayrollLineArgs = {
+  line_id: Scalars['ID']['input'];
+  reason: Scalars['String']['input'];
+};
+
+
 export type MutationHostAgainPodArgs = {
   pod_doc_id: Scalars['ID']['input'];
 };
@@ -25908,6 +26538,12 @@ export type MutationPauseEnrollmentArgs = {
 };
 
 
+export type MutationPayHeldHrPayrollLineArgs = {
+  line_id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationPermanentlyDeleteInventoryProductArgs = {
   product_doc_id: Scalars['ID']['input'];
 };
@@ -26117,6 +26753,12 @@ export type MutationRecheckPartnerIntegrationArgs = {
 
 export type MutationRecommendNextReelArgs = {
   project_id: Scalars['ID']['input'];
+};
+
+
+export type MutationRecomputeHrPayrollRunArgs = {
+  expected_revision: Scalars['Int']['input'];
+  id: Scalars['ID']['input'];
 };
 
 
@@ -26339,6 +26981,13 @@ export type MutationRejoinPodArgs = {
 };
 
 
+export type MutationReleaseHrPayrollRunArgs = {
+  id: Scalars['ID']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+  pay_on: Scalars['String']['input'];
+};
+
+
 export type MutationRemindPodFeedbackArgs = {
   choice: PodFeedbackReminderChoice;
   pod_id: Scalars['ID']['input'];
@@ -26387,6 +27036,17 @@ export type MutationRemoveExpenseRefundArgs = {
 
 export type MutationRemoveHrCompensationArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationRemoveHrHolidayArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationRemoveHrPayrollAdjustmentArgs = {
+  adjustment_id: Scalars['ID']['input'];
+  line_id: Scalars['ID']['input'];
 };
 
 
@@ -26600,6 +27260,11 @@ export type MutationRequestLoginOtpArgs = {
 export type MutationRequestMeetingArgs = {
   input: RequestMeetingInput;
   kind: SurveyKind;
+};
+
+
+export type MutationRequestMyBankChangeArgs = {
+  input: BankChangeRequestInput;
 };
 
 
@@ -26852,6 +27517,11 @@ export type MutationRetryCrmLeadDiscoveryArgs = {
 };
 
 
+export type MutationRetryHrPayrollPayoutArgs = {
+  line_id: Scalars['ID']['input'];
+};
+
+
 export type MutationRetryMarketingRunArgs = {
   id: Scalars['ID']['input'];
 };
@@ -26895,6 +27565,12 @@ export type MutationRetryWaCampaignArgs = {
 
 export type MutationRetryWithdrawalPayoutArgs = {
   withdrawal_id: Scalars['ID']['input'];
+};
+
+
+export type MutationReturnHrPayrollRunArgs = {
+  id: Scalars['ID']['input'];
+  note: Scalars['String']['input'];
 };
 
 
@@ -27145,6 +27821,18 @@ export type MutationSaveGrievanceOfficerArgs = {
 
 export type MutationSaveGrowthCalculationArgs = {
   input: SaveGrowthCalculationInput;
+};
+
+
+export type MutationSaveHrHolidayArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: HrHolidayInput;
+};
+
+
+export type MutationSaveHrLeaveTypeArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: HrLeaveTypeInput;
 };
 
 
@@ -28949,6 +29637,11 @@ export type MutationUnfollowUserArgs = {
 };
 
 
+export type MutationUnholdHrPayrollLineArgs = {
+  line_id: Scalars['ID']['input'];
+};
+
+
 export type MutationUnlockSmartIncentiveArgs = {
   pod_id: Scalars['ID']['input'];
 };
@@ -29215,6 +29908,11 @@ export type MutationUpdateCrmAppBuildSettingsArgs = {
 };
 
 
+export type MutationUpdateCrmAppSettingsArgs = {
+  input: UpdateCrmAppSettingsInput;
+};
+
+
 export type MutationUpdateCrmCallPromptArgs = {
   id: Scalars['ID']['input'];
   input: UpdateCrmCallPromptInput;
@@ -29471,6 +30169,16 @@ export type MutationUpdateHrEmployeePersonalArgs = {
   expected_revision: Scalars['Int']['input'];
   id: Scalars['ID']['input'];
   input: HrPersonalInput;
+};
+
+
+export type MutationUpdateHrLeaveSettingsArgs = {
+  input: HrLeaveSettingsInput;
+};
+
+
+export type MutationUpdateHrPayrollSettingsArgs = {
+  input: HrPayrollSettingsInput;
 };
 
 
@@ -30189,6 +30897,18 @@ export type MyAdminClubsFilter = {
   super_category_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
+export type MyBankAccount = {
+  __typename?: 'MyBankAccount';
+  /** False while a change waits, or once your employment has ended. */
+  can_request: Scalars['Boolean']['output'];
+  /** The salary account on your HR record. */
+  current: HrBankSummary;
+  /** Your last ten changes, newest first. */
+  history: Array<HrBankChangeRequest>;
+  /** Your change still waiting for HR. */
+  pending?: Maybe<HrBankChangeRequest>;
+};
+
 /** The signed-in member's own open request to one host or venue. */
 export type MyEventRequestState = {
   __typename?: 'MyEventRequestState';
@@ -30206,11 +30926,76 @@ export type MyGiftCards = {
   owned: Array<GiftCard>;
 };
 
+export type MyHrCalendar = {
+  __typename?: 'MyHrCalendar';
+  events: Array<HrCalendarEvent>;
+  is_manager: Scalars['Boolean']['output'];
+  month: Scalars['String']['output'];
+  /** 0 = Sunday ... 6 = Saturday. */
+  weekly_off_days: Array<Scalars['Int']['output']>;
+};
+
 /** Your own HR record and the pay in force today. */
 export type MyHrProfile = {
   __typename?: 'MyHrProfile';
   current_compensation?: Maybe<HrCompensation>;
   employee: HrEmployee;
+};
+
+/** The Employee console's Leave page in one read. */
+export type MyLeaveOverview = {
+  __typename?: 'MyLeaveOverview';
+  /** How many days back leave may be asked for. */
+  backdate_days: Scalars['Int']['output'];
+  balances: Array<HrLeaveBalance>;
+  /** False once employment has ended. */
+  can_apply: Scalars['Boolean']['output'];
+  employee_id: Scalars['ID']['output'];
+  /** True when someone reports to you, so you decide their leave. */
+  is_manager: Scalars['Boolean']['output'];
+  leave_year: Scalars['Int']['output'];
+  leave_year_from: Scalars['String']['output'];
+  leave_year_to: Scalars['String']['output'];
+  team_pending: Scalars['Int']['output'];
+  /** The types that can be asked for. */
+  types: Array<HrLeaveType>;
+  /** Waiting and approved leave that has not ended, soonest first. */
+  upcoming: Array<HrLeaveRequest>;
+  weekly_off_days: Array<Scalars['Int']['output']>;
+};
+
+/** What a request would cost: working days, and the balance before and after (null for unpaid leave). */
+export type MyLeavePreview = {
+  __typename?: 'MyLeavePreview';
+  available?: Maybe<Scalars['Float']['output']>;
+  available_after?: Maybe<Scalars['Float']['output']>;
+  days: Scalars['Float']['output'];
+};
+
+/** One released salary as its employee reads it. */
+export type MyPayslip = {
+  __typename?: 'MyPayslip';
+  adjustments: Array<HrPayrollAdjustment>;
+  bank_last4?: Maybe<Scalars['String']['output']>;
+  currency: Scalars['String']['output'];
+  days_in_month: Scalars['Int']['output'];
+  deductions: Array<HrPayrollAmount>;
+  deductions_total: Scalars['Float']['output'];
+  earnings: Array<HrPayrollAmount>;
+  employer: Array<HrPayrollAmount>;
+  employer_total: Scalars['Float']['output'];
+  gross: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  lop_days: Scalars['Float']['output'];
+  month: Scalars['String']['output'];
+  net: Scalars['Float']['output'];
+  paid_at?: Maybe<Scalars['String']['output']>;
+  pay_on?: Maybe<Scalars['String']['output']>;
+  payable_days: Scalars['Float']['output'];
+  /** Bank reference, once paid. */
+  reference?: Maybe<Scalars['String']['output']>;
+  status: PayslipStatus;
+  variable: Array<HrPayrollVariable>;
 };
 
 /**
@@ -32491,8 +33276,19 @@ export type PayoutStatus =
   | 'PROCESSING';
 
 export type PayoutSubject =
+  /** One salary line of a released HR payroll run. */
+  | 'PAYROLL'
   | 'SEND_MONEY'
   | 'WITHDRAWAL';
+
+/** ON_HOLD and NOT_PAYABLE are not being paid in this run; SCHEDULED waits for the pay day. */
+export type PayslipStatus =
+  | 'FAILED'
+  | 'NOT_PAYABLE'
+  | 'ON_HOLD'
+  | 'PAID'
+  | 'PROCESSING'
+  | 'SCHEDULED';
 
 export type PetProfile = {
   __typename?: 'PetProfile';
@@ -37840,6 +38636,8 @@ export type Query = {
   crmAppBuildSettings: CrmAppBuildSettings;
   /** The newest downloadable Duncit CRM Android and iOS builds per environment, for the CRM portal's Download app page. CRM staff only. */
   crmAppDownload: CrmAppDownload;
+  /** The Duncit CRM app's settings. CRM managers only. */
+  crmAppSettings: CrmAppSettings;
   /** Active CRM team members matching a name / email search — the Assigned To picker and @mentions. */
   crmAssignableUsers: Array<CrmStaffUser>;
   /** The configured Twilio caller-ID (From) number, shown on call dialogs. */
@@ -38221,6 +39019,10 @@ export type Query = {
   hostsTable: HostTablePage;
   /** HR console: active Duncit accounts to hire into, by name, email or phone (at most 20; 2+ characters). */
   hrAccountOptions: Array<HrAccountOption>;
+  /** HR console: one change with the full account number and the proof. Every call is recorded. */
+  hrBankChangeRequest: HrBankChangeRequestDetail;
+  /** HR console: salary account changes employees asked for (DUNCIT TABLE CONTRACT v1). */
+  hrBankChangeRequestsTable: HrBankChangeRequestTablePage;
   /** HR console: one person's record, pay history, reporting line, org-chart seats and the Targets link. */
   hrEmployee: HrEmployeeProfile;
   /** HR console: the full bank account number and PAN. Every call is written to the worker history. */
@@ -38233,8 +39035,28 @@ export type Query = {
   hrEmployeeTargets: Array<EmployeeTarget>;
   /** HR console: every employment record (DUNCIT TABLE CONTRACT v1), newest joiners first. */
   hrEmployeesTable: HrEmployeeTablePage;
+  /** The holidays in a calendar year. */
+  hrHolidays: Array<HrHoliday>;
+  /** HR console: one employee's balances and HR adjustments for a leave year (the current one by default). */
+  hrLeaveBalances: HrLeaveBalanceSheet;
+  /** HR console: every leave request (DUNCIT TABLE CONTRACT v1). */
+  hrLeaveRequestsTable: HrLeaveRequestTablePage;
+  hrLeaveSettings: HrLeaveSettings;
+  /** HR console: the leave types, switched-off ones too when asked. */
+  hrLeaveTypes: Array<HrLeaveType>;
   /** HR console: current employees to choose as a manager (at most 20). */
   hrManagerOptions: Array<HrEmployeeRef>;
+  hrPayrollLine: HrPayrollLine;
+  /** HR and Finance: one run's salaries (DUNCIT TABLE CONTRACT v1). */
+  hrPayrollLinesTable: HrPayrollLineTablePage;
+  hrPayrollRun: HrPayrollRun;
+  /** HR and Finance: what happened to a run, newest first. */
+  hrPayrollRunHistory: Array<HrPayrollEvent>;
+  /** HR and Finance: every payroll run (DUNCIT TABLE CONTRACT v1), newest month first. */
+  hrPayrollRunsTable: HrPayrollRunTablePage;
+  hrPayrollSettings: HrPayrollSettings;
+  /** HR: any salary line as a payslip PDF, a draft too. */
+  hrPayslipPdfBase64: Scalars['String']['output'];
   /** HR console: codes, departments, locations, defaults and the salary template. */
   hrSettings: HrSettings;
   /** HR console: accounts with Employee access but no HR record. */
@@ -38505,6 +39327,8 @@ export type Query = {
   myBackgroundJobs: Array<BackgroundJob>;
   myBadgeProgress: Array<BadgeProgress>;
   myBadges: Array<UserBadge>;
+  /** Employee console: your salary account and any change waiting for HR. Null until HR has added you. */
+  myBankAccount?: Maybe<MyBankAccount>;
   /**
    * The caller's JOINED pods whose time overlaps any of pod_doc_ids — asked just
    * before a booking so the member can free a clashing spot or book anyway.
@@ -38611,9 +39435,17 @@ export type Query = {
   myHostRequest?: Maybe<HostRequest>;
   myHostRequests: Array<HostRequest>;
   myHostTakenCategoryIds: Array<Scalars['ID']['output']>;
+  /** Employee console: holidays, your leave, your team's leave, payday and target due dates in a month (YYYY-MM). */
+  myHrCalendar: MyHrCalendar;
   /** Employee console: your own HR record. Null until HR has added you. */
   myHrProfile?: Maybe<MyHrProfile>;
   myInterviews: Array<Interview>;
+  /** Employee console: your leave balances, types and upcoming leave. Null until HR has added you. */
+  myLeaveOverview?: Maybe<MyLeaveOverview>;
+  /** Employee console: what a request would cost before you send it. */
+  myLeavePreview?: Maybe<MyLeavePreview>;
+  /** Employee console: your own leave requests (DUNCIT TABLE CONTRACT v1). */
+  myLeaveRequestsTable: HrLeaveRequestTablePage;
   /** The signed-in member's own recent sign-ins, newest first (default 50, at most 100). */
   myLoginActivity: LoginActivityHistory;
   /** The signed-in person's own mail preferences. */
@@ -38636,6 +39468,10 @@ export type Query = {
   /** One of the caller's own payments. Null when it does not exist or is not theirs — the checkout confirmation poll reads this instead of the whole history. */
   myPayment?: Maybe<Payment>;
   myPayments: Array<Payment>;
+  myPayslip: MyPayslip;
+  myPayslipPdfBase64: Scalars['String']['output'];
+  /** Employee console: your payslips, newest month first (the last three years). */
+  myPayslips: Array<MyPayslip>;
   /** An attended (past) pod the user has not yet rated — drives the post-pod feedback pop-up. */
   myPendingPodFeedback?: Maybe<BouncerPodInfo>;
   /**
@@ -38699,6 +39535,8 @@ export type Query = {
   /** Current user's submitted response for a survey (drives 'asked once'). */
   mySurveyResponse?: Maybe<SurveyResponse>;
   myTableApiAccess: TableApiAccess;
+  /** Employee console: leave requests from the people who report to you. */
+  myTeamLeaveRequestsTable: HrLeaveRequestTablePage;
   myTickets: Array<Ticket>;
   /** The signed-in member's current tracking choice. Null while they have made none. */
   myTrackingConsent?: Maybe<TrackingConsent>;
@@ -41752,6 +42590,16 @@ export type QueryHrAccountOptionsArgs = {
 };
 
 
+export type QueryHrBankChangeRequestArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryHrBankChangeRequestsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryHrEmployeeArgs = {
   id: Scalars['ID']['input'];
 };
@@ -41777,9 +42625,61 @@ export type QueryHrEmployeesTableArgs = {
 };
 
 
+export type QueryHrHolidaysArgs = {
+  year: Scalars['Int']['input'];
+};
+
+
+export type QueryHrLeaveBalancesArgs = {
+  employee_id: Scalars['ID']['input'];
+  year?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryHrLeaveRequestsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryHrLeaveTypesArgs = {
+  include_inactive?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
 export type QueryHrManagerOptionsArgs = {
   exclude_id?: InputMaybe<Scalars['ID']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryHrPayrollLineArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryHrPayrollLinesTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  run_id: Scalars['ID']['input'];
+};
+
+
+export type QueryHrPayrollRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryHrPayrollRunHistoryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryHrPayrollRunsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryHrPayslipPdfBase64Args = {
+  line_id: Scalars['ID']['input'];
 };
 
 
@@ -42471,6 +43371,21 @@ export type QueryMyHostPodsTableArgs = {
 };
 
 
+export type QueryMyHrCalendarArgs = {
+  month: Scalars['String']['input'];
+};
+
+
+export type QueryMyLeavePreviewArgs = {
+  input: LeaveRequestInput;
+};
+
+
+export type QueryMyLeaveRequestsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryMyLoginActivityArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -42499,6 +43414,16 @@ export type QueryMyPartnerIntegrationsArgs = {
 
 export type QueryMyPaymentArgs = {
   payment_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryMyPayslipArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryMyPayslipPdfBase64Args = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -42590,6 +43515,11 @@ export type QueryMySlotTemplatesArgs = {
 
 export type QueryMySurveyResponseArgs = {
   survey_id: Scalars['ID']['input'];
+};
+
+
+export type QueryMyTeamLeaveRequestsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -55069,6 +55999,11 @@ export type UpdateCrmAppBuildSettingsInput = {
   production_channel?: InputMaybe<Scalars['String']['input']>;
   /** Slack channel ID for staging builds; empty falls back to the production channel. */
   staging_channel?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateCrmAppSettingsInput = {
+  /** Off lets a Duncit CRM app sign-in through straight away, without the Security Verification screen. */
+  security_verification: Scalars['Boolean']['input'];
 };
 
 export type UpdateCrmCallPromptInput = {

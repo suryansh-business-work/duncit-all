@@ -18,6 +18,7 @@ import { LIFECYCLE_EMAILS } from './catalogue.lifecycle';
 import { VENUE_OFFER_EMAILS } from './catalogue.offers';
 import { HOST_PERFORMANCE_EMAILS } from './catalogue.hostPerformance';
 import { TARGETS_EMAILS } from './catalogue.targets';
+import { HR_EMAILS } from './catalogue.hr';
 import { CRM_EMAILS } from './catalogue.crm';
 import { PAYOUT_EMAILS } from './catalogue.payouts';
 import { RENTAL_EMAILS } from './catalogue.rentals';
@@ -59,6 +60,7 @@ export const EMAIL_CATALOGUE: readonly EmailDef[] = [
   ...APP_BUILD_EMAILS,
   ...LIFECYCLE_EMAILS,
   ...TARGETS_EMAILS,
+  ...HR_EMAILS,
   ...CRM_EMAILS,
   ...PAYOUT_EMAILS,
   ...RENTAL_EMAILS,

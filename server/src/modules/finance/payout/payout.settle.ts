@@ -1,7 +1,9 @@
 import { WalletWithdrawalModel, type IWalletWithdrawal } from '@modules/finance/wallet/wallet.model';
 import { SendMoneyTransferModel, type ISendMoneyTransfer, type PayoutSubjectKind } from './payout.model';
-import { SYSTEM_ACTOR, recordPayoutEvent, type PayoutActor } from './payout.audit';
+import { SYSTEM_ACTOR, recordPayoutEvent } from './payout.audit';
+import { payoutPatch, settleFilter, type SettleArgs, type SettleResult } from './payout.patch';
 import { notifyMoneyOut } from './payout.notify';
+import { settlePayrollLine } from '@modules/hr/payroll/payroll.settle';
 
 /**
  * The ONE place a payout becomes PAID or FAILED.
@@ -16,38 +18,7 @@ import { notifyMoneyOut } from './payout.notify';
  * system sets it.
  */
 
-export type SettleOutcome = 'PAID' | 'FAILED';
-export type SettleResult = 'APPLIED' | 'IGNORED';
-
-export interface SettleArgs {
-  kind: PayoutSubjectKind;
-  /** withdrawal_id or transfer_id — our reference, also Razorpay's `reference_id`. */
-  recordId: string;
-  outcome: SettleOutcome;
-  razorpayPayoutId: string;
-  utr?: string;
-  failureReason?: string;
-  /** Razorpay's event id, or the caller's own key; one settle per key. */
-  dedupeKey: string;
-  actor?: PayoutActor;
-}
-
-/** Only a payout that is still PROCESSING, and is THIS payout (or has none recorded yet). */
-const settleFilter = (recordIdField: string, args: SettleArgs) => ({
-  [recordIdField]: args.recordId,
-  'payout.status': 'PROCESSING',
-  'payout.razorpay_payout_id': { $in: [args.razorpayPayoutId, ''] },
-});
-
-function payoutPatch(args: SettleArgs, now: Date) {
-  return {
-    'payout.status': args.outcome,
-    'payout.razorpay_payout_id': args.razorpayPayoutId,
-    'payout.completed_at': now,
-    ...(args.outcome === 'PAID' ? { 'payout.utr': args.utr ?? '', 'payout.failure_reason': '' } : {}),
-    ...(args.outcome === 'FAILED' ? { 'payout.failure_reason': (args.failureReason ?? '').slice(0, 500) } : {}),
-  };
-}
+export type { SettleArgs, SettleOutcome, SettleResult } from './payout.patch';
 
 async function settleWithdrawal(args: SettleArgs): Promise<SettleResult> {
   const now = new Date();
@@ -127,12 +98,15 @@ async function settleTransfer(args: SettleArgs): Promise<SettleResult> {
 }
 
 export function settlePayout(args: SettleArgs): Promise<SettleResult> {
-  return args.kind === 'WITHDRAWAL' ? settleWithdrawal(args) : settleTransfer(args);
+  if (args.kind === 'WITHDRAWAL') return settleWithdrawal(args);
+  if (args.kind === 'PAYROLL') return settlePayrollLine(args);
+  return settleTransfer(args);
 }
 
 /** Which record a Razorpay payout belongs to, from the `reference_id` we gave it. Pure. */
 export function subjectOfReference(reference: string): { kind: PayoutSubjectKind; recordId: string } | null {
   if (reference.startsWith('wd_')) return { kind: 'WITHDRAWAL', recordId: reference };
   if (reference.startsWith('sm_')) return { kind: 'SEND_MONEY', recordId: reference };
+  if (reference.startsWith('pr_')) return { kind: 'PAYROLL', recordId: reference };
   return null;
 }

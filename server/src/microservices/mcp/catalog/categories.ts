@@ -172,6 +172,7 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   walletTypeDefs: 'finance',
   // Withdrawal approvals, Send Money and the payout audit trail.
   payoutTypeDefs: 'finance',
+  financePayrollTypeDefs: 'finance',
   founderTypeDefs: 'finance',
 
   coinTypeDefs: 'loyalty',
@@ -182,6 +183,10 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   employeeExpenseTypeDefs: 'employee',
   myEmployeeTargetTypeDefs: 'employee',
   myHrEmployeeTypeDefs: 'employee',
+  myHrLeaveTypeDefs: 'employee',
+  myPayrollTypeDefs: 'employee',
+  myBankRequestTypeDefs: 'employee',
+  myHrCalendarTypeDefs: 'employee',
 
   inventoryTypeDefs: 'partner-brand',
   productReviewTypeDefs: 'partner-brand',
@@ -245,6 +250,9 @@ export const MODULE_CATEGORY: Record<ModuleName, McpCategoryKey | null> = {
   teamStructureTypeDefs: 'hr',
   hrEmployeeTypeDefs: 'hr',
   hrSettingsTypeDefs: 'hr',
+  hrLeaveTypeDefs: 'hr',
+  hrPayrollTypeDefs: 'hr',
+  hrBankRequestTypeDefs: 'hr',
 
   policyTypeDefs: 'legal',
   policyAcceptanceTypeDefs: 'legal',

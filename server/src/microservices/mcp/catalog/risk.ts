@@ -117,6 +117,20 @@ const CONFIRM_FIELDS = new Set([
   'rehireHrEmployee',
   'restoreHrEmployeeAccess',
   'updateHrEmployeeBank',
+  // HR payroll, leave and bank changes. A salary adjustment, a hold or sending
+  // an approved run back changes what people are paid; turning the payroll
+  // scheduler on drafts runs by itself; a leave decision can deduct unpaid days;
+  // a bank-change decision or request decides where a salary goes.
+  'addHrPayrollAdjustment',
+  'holdHrPayrollLine',
+  'unholdHrPayrollLine',
+  'returnHrPayrollRun',
+  'updateHrPayrollSettings',
+  'decideLeaveRequest',
+  'applyLeave',
+  'adjustHrLeaveBalance',
+  'decideHrBankChangeRequest',
+  'requestMyBankChange',
   // The social Inbox writing to a real person as the brand: a direct message,
   // and a public reply under their comment. An agent drafts; a person agrees.
   'sendSocialMessage',

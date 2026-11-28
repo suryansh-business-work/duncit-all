@@ -1,7 +1,8 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { WalletWithdrawalModel, type IWalletWithdrawal } from '@modules/finance/wallet/wallet.model';
-import { assertPayoutsConfigured, idempotencyKeyFor } from './payout.dispatch';
+import { assertPayoutsConfigured } from './payout.dispatch';
+import { retryAttemptPatch } from './payout.patch';
 import type { PayoutActor } from './payout.audit';
 import { refreshPayoutStatus } from './payout.refresh';
 import { sendWithdrawalPayout } from './withdrawal.decision';
@@ -35,16 +36,7 @@ export async function retryWithdrawalPayout(id: string, actor: PayoutActor): Pro
     const claimed = await WalletWithdrawalModel.findOneAndUpdate(
       { _id: row._id, 'payout.status': 'FAILED', 'payout.attempt': payout.attempt },
       {
-        $set: {
-          'payout.status': 'PROCESSING',
-          'payout.attempt': attempt,
-          'payout.idempotency_key': idempotencyKeyFor(row.withdrawal_id, attempt),
-          'payout.razorpay_payout_id': '',
-          'payout.failure_reason': '',
-          'payout.initiated_by': actor.id ? new Types.ObjectId(actor.id) : null,
-          'payout.initiated_at': new Date(),
-          'payout.completed_at': null,
-        },
+        $set: retryAttemptPatch(row.withdrawal_id, attempt, actor.id ? new Types.ObjectId(actor.id) : null),
       },
       { new: true }
     );

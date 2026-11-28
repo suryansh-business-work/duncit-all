@@ -18,8 +18,8 @@ export type PayoutState = (typeof PAYOUT_STATES)[number];
 export const APPROVAL_STATES = ['PENDING', 'APPROVED', 'PARTIALLY_APPROVED', 'REJECTED'] as const;
 export type ApprovalState = (typeof APPROVAL_STATES)[number];
 
-/** Who a payout is for. */
-export type PayoutSubjectKind = 'WITHDRAWAL' | 'SEND_MONEY';
+/** Who a payout is for. PAYROLL is one salary line of a released HR payroll run. */
+export type PayoutSubjectKind = 'WITHDRAWAL' | 'SEND_MONEY' | 'PAYROLL';
 
 /** What the bank and Razorpay have said about one payout, and who started it. */
 export interface IPayoutState {
@@ -73,7 +73,7 @@ export type PayoutAction = (typeof PAYOUT_ACTIONS)[number];
 
 export interface IPayoutEvent extends Document {
   subject_kind: PayoutSubjectKind;
-  /** withdrawal_id, or transfer_id. */
+  /** withdrawal_id, transfer_id, or a payroll line's line_ref. */
   subject_id: string;
   action: PayoutAction;
   user_id: Types.ObjectId;
@@ -97,7 +97,7 @@ const IMMUTABLE_MESSAGE = 'Payout audit entries are append-only and cannot be ch
 
 const payoutEventSchema = new Schema<IPayoutEvent>(
   {
-    subject_kind: { type: String, enum: ['WITHDRAWAL', 'SEND_MONEY'], required: true, index: true },
+    subject_kind: { type: String, enum: ['WITHDRAWAL', 'SEND_MONEY', 'PAYROLL'], required: true, index: true },
     subject_id: { type: String, required: true, index: true },
     action: { type: String, enum: PAYOUT_ACTIONS, required: true },
     user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },

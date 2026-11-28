@@ -4,6 +4,7 @@ import { Types } from 'mongoose';
 import { UserModel } from '@modules/access/user/user.model';
 import { assertPayoutsConfigured, destinationOf, idempotencyKeyFor, type PayoutPayee } from './payout.dispatch';
 import { recordPayoutEvent, type PayoutActor } from './payout.audit';
+import { retryAttemptPatch } from './payout.patch';
 import { normalizeBankAccountInput } from '@modules/finance/finance/bankAccount';
 import {
   customAccount,
@@ -277,16 +278,7 @@ export async function retryTransfer(id: string, actor: PayoutActor): Promise<ISe
     const claimed = await SendMoneyTransferModel.findOneAndUpdate(
       { transfer_id: id, 'payout.status': 'FAILED', 'payout.attempt': payout.attempt },
       {
-        $set: {
-          'payout.status': 'PROCESSING',
-          'payout.attempt': attempt,
-          'payout.idempotency_key': idempotencyKeyFor(id, attempt),
-          'payout.razorpay_payout_id': '',
-          'payout.failure_reason': '',
-          'payout.initiated_by': actor.id ? new Types.ObjectId(actor.id) : null,
-          'payout.initiated_at': new Date(),
-          'payout.completed_at': null,
-        },
+        $set: retryAttemptPatch(id, attempt, actor.id ? new Types.ObjectId(actor.id) : null),
       },
       { new: true }
     );

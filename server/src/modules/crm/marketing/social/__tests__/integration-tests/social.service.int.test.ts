@@ -367,7 +367,8 @@ describe('completeConnect → the account picker', () => {
       ['X:x-2', '@x-2', false],
     ]);
     const raw = await mongoose.connection.collection('socialpendingconnects').findOne({});
-    expect(raw?.accounts[0].access_token).toMatch(/^enc:v1:/);
+    expect(raw?.accounts[0].tokens).toMatch(/^enc:v1:/);
+    expect(raw?.accounts[0].tokens).not.toContain('at-x-1');
     expect(JSON.stringify(view)).not.toContain('at-x-1');
   });
 

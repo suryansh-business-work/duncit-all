@@ -6,7 +6,7 @@ import { subscribeConnectedPages } from './social.dm.sync';
 import { SocialAccountModel } from './social.model';
 import type { ConnectState } from './social.oauth';
 import { openToken, sealToken } from './social.tokens';
-import { SOCIAL_PLATFORMS, SOCIAL_PROVIDERS, type DiscoveredAccount, type SocialPlatform, type SocialProvider } from './social.types';
+import { SOCIAL_PLATFORMS, SOCIAL_PROVIDERS, type DiscoveredAccount, type SocialPlatform, type SocialProvider, type SocialTokens } from './social.types';
 
 /**
  * Every grant is detected before anything is stored: a Meta login hands back
@@ -23,20 +23,13 @@ import { SOCIAL_PLATFORMS, SOCIAL_PROVIDERS, type DiscoveredAccount, type Social
  */
 const HOLD_MINUTES = 30;
 
+/** One account found: its identity, the profile the network gave, and its tokens sealed together as one value. */
 const heldAccountSchema = new Schema(
   {
     platform: { type: String, enum: SOCIAL_PLATFORMS, required: true },
     external_id: { type: String, required: true },
-    name: { type: String, default: '' },
-    handle: { type: String, default: '' },
-    avatar_url: { type: String, default: '' },
-    profile_url: { type: String, default: '' },
-    followers: { type: Number, default: 0 },
-    meta: { type: Schema.Types.Mixed, default: {} },
-    access_token: { type: String, default: '' },
-    refresh_token: { type: String, default: '' },
-    token_expires_at: { type: Date, default: null },
-    scopes: { type: [String], default: [] },
+    profile: { type: Schema.Types.Mixed, required: true },
+    tokens: { type: String, required: true },
   },
   { _id: false }
 );
@@ -52,19 +45,14 @@ const pendingSchema = new Schema({
 
 const SocialPendingConnectModel = model('SocialPendingConnect', pendingSchema);
 
+type HeldProfile = Omit<DiscoveredAccount, 'tokens'>;
+
 interface HeldAccount {
   platform: SocialPlatform;
   external_id: string;
-  name?: string | null;
-  handle?: string | null;
-  avatar_url?: string | null;
-  profile_url?: string | null;
-  followers?: number | null;
-  meta?: Record<string, string> | null;
-  access_token?: string | null;
-  refresh_token?: string | null;
-  token_expires_at?: Date | null;
-  scopes?: string[] | null;
+  profile: HeldProfile;
+  /** The grant's tokens as JSON, sealed (social.tokens.ts). */
+  tokens: string;
 }
 
 interface Pending {
@@ -90,11 +78,10 @@ export async function holdDiscovered(parsed: ConnectState, found: DiscoveredAcco
     env_entry_id: parsed.appId,
     reconnect: parsed.reconnect,
     accounts: found.map(({ tokens, ...profile }) => ({
-      ...profile,
-      access_token: sealToken(tokens.access_token),
-      refresh_token: sealToken(tokens.refresh_token),
-      token_expires_at: tokens.expires_at,
-      scopes: tokens.scopes,
+      platform: profile.platform,
+      external_id: profile.external_id,
+      profile,
+      tokens: sealToken(JSON.stringify(tokens)),
     })),
   });
   return String(doc._id);
@@ -134,30 +121,24 @@ export async function pendingConnection(id: string, userId: string) {
       key: accountKey(a),
       platform: a.platform,
       external_id: a.external_id,
-      name: a.name ?? '',
-      handle: a.handle ?? '',
-      avatar_url: a.avatar_url ?? '',
+      name: a.profile.name ?? '',
+      handle: a.profile.handle ?? '',
+      avatar_url: a.profile.avatar_url ?? '',
       connected: connected.has(accountKey(a)),
     })),
   };
 }
 
-const opened = (a: HeldAccount): DiscoveredAccount => ({
-  platform: a.platform,
-  external_id: a.external_id,
-  name: a.name ?? '',
-  handle: a.handle ?? '',
-  avatar_url: a.avatar_url ?? '',
-  profile_url: a.profile_url ?? '',
-  followers: a.followers ?? 0,
-  meta: a.meta ?? {},
-  tokens: { access_token: openToken(a.access_token), refresh_token: openToken(a.refresh_token), expires_at: a.token_expires_at ?? null, scopes: a.scopes ?? [] },
-});
+/** The account as a handshake returned it, tokens opened (the expiry comes back from JSON as text). */
+function opened(a: HeldAccount): DiscoveredAccount {
+  const tokens = JSON.parse(openToken(a.tokens)) as SocialTokens;
+  return { ...a.profile, tokens: { ...tokens, expires_at: tokens.expires_at ? new Date(tokens.expires_at) : null } };
+}
 
 /** The Pages to subscribe to the webhook: each one stored, and each one whose Instagram account was. */
 function pagesFor(all: HeldAccount[], saved: HeldAccount[]): HeldAccount[] {
   const keys = new Set(saved.map(accountKey));
-  const linked = new Set(saved.filter((a) => a.platform === 'INSTAGRAM').map((a) => a.meta?.page_id ?? '').filter(Boolean));
+  const linked = new Set(saved.filter((a) => a.platform === 'INSTAGRAM').map((a) => a.profile.meta?.page_id ?? '').filter(Boolean));
   return all.filter((a) => a.platform === 'FACEBOOK' && (keys.has(accountKey(a)) || linked.has(a.external_id)));
 }
 

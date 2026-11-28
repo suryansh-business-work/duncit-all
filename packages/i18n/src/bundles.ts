@@ -46,6 +46,7 @@ import { TESTS_UNIT_BUNDLE } from './bundles/tests-unit';
 import { TESTS_MANUAL_BUNDLE } from './bundles/tests-manual';
 import { INTEL_BUNDLE } from './bundles/intel';
 import { HR_BUNDLE } from './bundles/hr';
+import { HR_EMPLOYEE_BUNDLE } from './bundles/hr-employee';
 import { POD_REQUESTS_BUNDLE } from './bundles/pod-requests';
 import { CLUB_ADMIN_BUNDLE } from './bundles/club-admin';
 import { FULFILMENT_BUNDLE } from './bundles/fulfilment';
@@ -163,6 +164,7 @@ export {
   TESTS_MANUAL_BUNDLE,
   INTEL_BUNDLE,
   HR_BUNDLE,
+  HR_EMPLOYEE_BUNDLE,
   POD_REQUESTS_BUNDLE,
   CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
@@ -255,6 +257,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   testsManual: TESTS_MANUAL_BUNDLE,
   intel: INTEL_BUNDLE,
   hr: HR_BUNDLE,
+  hrEmployee: HR_EMPLOYEE_BUNDLE,
   podRequests: POD_REQUESTS_BUNDLE,
   clubAdmin: CLUB_ADMIN_BUNDLE,
   fulfilment: FULFILMENT_BUNDLE,

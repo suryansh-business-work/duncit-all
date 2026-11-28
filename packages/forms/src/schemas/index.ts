@@ -531,3 +531,14 @@ export {
   type EmailTemplateTarget,
   type EmailTestSendValues,
 } from './email-template';
+export {
+  HR_CONTACT_LIMITS,
+  hrContactDefaults,
+  hrContactValuesFrom,
+  makeHrContactSchema,
+  makeHrContactShape,
+  refineHrEmergency,
+  toHrContactOutput,
+  type HrContactOutput,
+  type HrContactValues,
+} from './hr-contact';

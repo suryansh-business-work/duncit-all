@@ -688,6 +688,43 @@ exports:
   - 'monthKeyOf'
   - 'dateOfMonthKey'
   - 'formatMonthKey'
+  - 'HR_EMPLOYEE_STATUSES'
+  - 'HR_EMPLOYEE_STATUS_COLORS'
+  - 'HR_EMPLOYEE_STATUS_KEYS'
+  - 'HR_EMPLOYEE_LIMITS'
+  - 'HR_SETTINGS_LIMITS'
+  - 'HR_EMPLOYMENT_TYPES'
+  - 'HR_EMPLOYMENT_TYPE_KEYS'
+  - 'HR_GENDERS'
+  - 'HR_GENDER_KEYS'
+  - 'HR_EXIT_TYPES'
+  - 'HR_EXIT_TYPE_KEYS'
+  - 'HR_JOB_CHANGE_REASONS'
+  - 'HR_JOB_CHANGE_REASON_KEYS'
+  - 'HR_PAY_COMPONENT_TYPES'
+  - 'HR_PAY_TYPE_KEYS'
+  - 'HR_REVISION_REASONS'
+  - 'HR_COMPENSATION_REASON_KEYS'
+  - 'HR_TEMPLATE_CALCS'
+  - 'HR_TEMPLATE_CALC_KEYS'
+  - 'HR_EVENT_KINDS'
+  - 'HR_EVENT_KIND_KEYS'
+  - 'hrOptions'
+  - 'canScheduleHrExit'
+  - 'canCancelHrExit'
+  - 'canRehireHrEmployee'
+  - 'isHrRecordEditable'
+  - 'HR_EMPLOYEE_SELECTION'
+  - 'HR_EMPLOYEE_REF_SELECTION'
+  - 'HR_COMPENSATION_SELECTION'
+  - 'HR_SETTINGS_SELECTION'
+  - 'hrPayTotals'
+  - 'applySalaryTemplate'
+  - 'currencySymbol'
+  - 'formatCurrency'
+  - 'dayKeyOf'
+  - 'dateOfDayKey'
+  - 'addMonthsToDayKey'
   - 'coinLedgerLabelKey'
   - 'ConsentCategory'
   - 'ConsentChoice'
@@ -3522,6 +3559,30 @@ row is caught in the form instead of coming back as an error. Change both togeth
 Whether a target is due is never worked out here. The reminder window is an admin setting
 read in the app's time zone, so the server sends `reminder_active` on every row and both
 consoles only display it.
+
+## Employee records (HR)
+
+`hr-employee.ts`, `hr-records.ts` and `hr-pay.ts` are the shape the HR console and the Employee
+console agree on for one HR record: who someone is, their job, their effective-dated pay, their
+bank details (masked) and their exit. HR hires, edits and exits people; the employee reads their
+own record and keeps their contact details up to date.
+
+```ts
+HR_EMPLOYEE_STATUSES; // ['ACTIVE', 'ON_NOTICE', 'EXITED']
+HR_EMPLOYEE_STATUS_KEYS.ON_NOTICE; // 'hrEmployee.status.ON_NOTICE'
+hrOptions(HR_EMPLOYMENT_TYPES, HR_EMPLOYMENT_TYPE_KEYS, t); // [{ value: 'FULL_TIME', label: … }, …] — any select
+canRehireHrEmployee('EXITED'); // true — the actions a status allows, the server's own rules
+HR_EMPLOYEE_SELECTION; // the GraphQL field list both consoles interpolate (brace-balanced)
+hrPayTotals(lines); // gross, net, employer, target-linked share and annual CTC — in paise, like the server
+applySalaryTemplate(1_200_000, template); // HR settings' template → monthly pay lines that add back up to the CTC
+formatCurrency(125000, 'INR'); // '₹1,25,000' — the symbol comes from the ISO code
+addMonthsToDayKey('2026-01-31', 1); // '2026-02-28' — probation ends, clamped to the shorter month
+```
+
+The enums and limits are twins of `server/src/modules/hr/employee/employee.rules.ts` and
+`hrSettings.rules.ts`. `hrPayTotals` is only a preview: the server derives the stored totals
+itself and never trusts a client's. Dates are `YYYY-MM-DD` day keys throughout, so a joining date
+never moves across midnight in another time zone.
 
 ## A link into another city
 

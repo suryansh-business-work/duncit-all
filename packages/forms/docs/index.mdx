@@ -733,6 +733,7 @@ directly.
 | `makeAddressSchema` | one saved address | recipient name, number and postal code from @duncit/regex |
 | `makeShipToSchema` | a brand correcting an order's courier ship-to | the address contract without `label`; name required, Indian mobile (last ten digits) and a six-digit PIN — see below |
 | `makeWithdrawSchema` | wallet withdrawal | balance ceiling, role-wise floor, per-method payout details |
+| `makeHrContactSchema` | an employee's own contact details | personal email, phone, addresses and an all-or-nothing emergency contact — the Employee console's "My contact details" and (via `makeHrContactShape` + `refineHrEmergency`) the contact half of the HR console's personal form |
 | `makeWalletStatementSchema` | wallet "Download statement" | a period preset or a custom range, and PDF or CSV — see below |
 | `makePasswordWithOtpSchema` | both password flows | what reset and change-password each aliased |
 | `makePasswordPairSchema` | recovery step 3 | the same pair WITHOUT a code — recovery proves its code a step earlier |

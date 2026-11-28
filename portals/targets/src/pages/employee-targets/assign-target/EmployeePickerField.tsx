@@ -6,7 +6,9 @@ import { useTranslation } from '@duncit/shell';
 import { TARGET_ASSIGNABLE_EMPLOYEES, type AssignableData, type AssigneeOption } from '../../../lib/employee-target-queries';
 import type { AssignTargetControl } from './assign-target.types';
 
-const labelOf = (option: AssigneeOption) => (option.email ? `${option.name} · ${option.email}` : option.name);
+/** Name, then what the HR directory adds (code, title, department), then the email. */
+const labelOf = (option: AssigneeOption) =>
+  [option.name, option.employee_code, option.job_title, option.department, option.email].filter(Boolean).join(' · ');
 
 interface Props {
   control: AssignTargetControl;

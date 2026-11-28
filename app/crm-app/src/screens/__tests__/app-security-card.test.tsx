@@ -17,20 +17,25 @@ const SWITCH = 'app-security-verification';
 
 /** Answers the read with `stored`, and each save with what it was asked (or `saveError`). */
 function serve(stored: boolean | Error, saveError?: Error) {
-  request.mockImplementation(async (doc: unknown, vars: { input?: { security_verification: boolean } } = {}) => {
-    if (doc === docs.CrmAppSecuritySettingsDocument) {
-      if (stored instanceof Error) throw stored;
-      return { crmAppSettings: { security_verification: stored } };
-    }
-    if (doc === docs.CrmAppUpdateSecuritySettingsDocument) {
-      if (saveError) throw saveError;
-      return { updateCrmAppSettings: { security_verification: vars.input?.security_verification } };
-    }
-    throw new Error('unexpected request');
-  });
+  request.mockImplementation(
+    async (doc: unknown, vars: { input?: { security_verification: boolean } } = {}) => {
+      if (doc === docs.CrmAppSecuritySettingsDocument) {
+        if (stored instanceof Error) throw stored;
+        return { crmAppSettings: { security_verification: stored } };
+      }
+      if (doc === docs.CrmAppUpdateSecuritySettingsDocument) {
+        if (saveError) throw saveError;
+        return {
+          updateCrmAppSettings: { security_verification: vars.input?.security_verification },
+        };
+      }
+      throw new Error('unexpected request');
+    },
+  );
 }
 
-const saves = () => request.mock.calls.filter(([d]) => d === docs.CrmAppUpdateSecuritySettingsDocument);
+const saves = () =>
+  request.mock.calls.filter(([d]) => d === docs.CrmAppUpdateSecuritySettingsDocument);
 
 beforeEach(() => jest.clearAllMocks());
 
@@ -71,7 +76,9 @@ describe('AppSecurityCard', () => {
     await waitFor(
       () =>
         expect(
-          screen.getByText('The Duncit CRM app will no longer ask for Security Verification at sign-in.'),
+          screen.getByText(
+            'The Duncit CRM app will no longer ask for Security Verification at sign-in.',
+          ),
         ).toBeOnTheScreen(),
       WAIT,
     );
@@ -91,7 +98,10 @@ describe('AppSecurityCard', () => {
     await act(async () => fireEvent.press(toggle));
 
     await waitFor(
-      () => expect(screen.getByText('The Duncit CRM app will ask for Security Verification at sign-in.')).toBeOnTheScreen(),
+      () =>
+        expect(
+          screen.getByText('The Duncit CRM app will ask for Security Verification at sign-in.'),
+        ).toBeOnTheScreen(),
       WAIT,
     );
     expect(screen.queryByText('Stop asking for Security Verification on the app?')).toBeNull();
@@ -107,7 +117,9 @@ describe('AppSecurityCard', () => {
     await act(async () => fireEvent.press(toggle));
     await act(async () => fireEvent.press(screen.getByTestId('app-security-confirm-confirm')));
 
-    expect(await screen.findByTestId('app-security-confirm-error', {}, WAIT)).toHaveTextContent('Access Denied');
+    expect(await screen.findByTestId('app-security-confirm-error', {}, WAIT)).toHaveTextContent(
+      'Access Denied',
+    );
     expect(screen.getByText('Stop asking for Security Verification on the app?')).toBeOnTheScreen();
     expect(screen.getByTestId(SWITCH)).toBeChecked();
   });
@@ -128,7 +140,9 @@ describe('AppSecurityCard', () => {
     serve(new ApiError(''));
     renderWithTheme(<AppSecurityCard />);
 
-    expect(await screen.findByText('The sign-in security setting could not be loaded.', {}, WAIT)).toBeOnTheScreen();
+    expect(
+      await screen.findByText('The sign-in security setting could not be loaded.', {}, WAIT),
+    ).toBeOnTheScreen();
     expect(screen.queryByTestId(SWITCH)).toBeNull();
   });
 });
